@@ -5,6 +5,10 @@ VisualStudioVersion = 15.0.27703.2047
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalPurchasing.Web", "DigitalPurchasing.Web\DigitalPurchasing.Web.csproj", "{23D4A449-B631-4AEF-ADDF-E0C0A8492072}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalPurchasing.Data", "DigitalPurchasing.Data\DigitalPurchasing.Data.csproj", "{54035EB4-2AB7-4AFF-AFF2-FC7C8B39C408}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalPurchasing.Models", "DigitalPurchasing.Models\DigitalPurchasing.Models.csproj", "{E718F6AC-9A8B-432F-9B80-93016A0E381C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{23D4A449-B631-4AEF-ADDF-E0C0A8492072}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{23D4A449-B631-4AEF-ADDF-E0C0A8492072}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{23D4A449-B631-4AEF-ADDF-E0C0A8492072}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54035EB4-2AB7-4AFF-AFF2-FC7C8B39C408}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54035EB4-2AB7-4AFF-AFF2-FC7C8B39C408}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54035EB4-2AB7-4AFF-AFF2-FC7C8B39C408}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54035EB4-2AB7-4AFF-AFF2-FC7C8B39C408}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E718F6AC-9A8B-432F-9B80-93016A0E381C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E718F6AC-9A8B-432F-9B80-93016A0E381C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E718F6AC-9A8B-432F-9B80-93016A0E381C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E718F6AC-9A8B-432F-9B80-93016A0E381C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
