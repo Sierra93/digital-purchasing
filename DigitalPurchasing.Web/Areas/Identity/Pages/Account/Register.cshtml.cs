@@ -51,6 +51,11 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account
             [Display(Name = "Password")]
             public string Password { get; set; }
 
+            [Required]
+            [DataType(DataType.PhoneNumber)]
+            [Display(Name = "Phone Number")]
+            public string PhoneNumber { get; set; }
+
             [DataType(DataType.Password)]
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
@@ -67,7 +72,7 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account
             returnUrl = returnUrl ?? Url.Content("~/");
             if (ModelState.IsValid)
             {
-                var user = new User { UserName = Input.Email, Email = Input.Email };
+                var user = new User { UserName = Input.Email, Email = Input.Email, PhoneNumber = Input.PhoneNumber };
                 var result = await _userManager.CreateAsync(user, Input.Password);
                 if (result.Succeeded)
                 {
