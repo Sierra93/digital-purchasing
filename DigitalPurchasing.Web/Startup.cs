@@ -4,11 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models.Identity;
+using DigitalPurchasing.Web.Core;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -60,6 +62,8 @@ namespace DigitalPurchasing.Web
             });
 
             services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
+
+            services.AddSingleton<IEmailSender, EmailSender>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
