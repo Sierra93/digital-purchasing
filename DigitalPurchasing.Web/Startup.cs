@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models.Identity;
+using DigitalPurchasing.Services;
 using DigitalPurchasing.Web.Core;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
@@ -64,6 +65,8 @@ namespace DigitalPurchasing.Web
             services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 
             services.AddSingleton<IEmailSender, EmailSender>();
+
+            services.AddTransient<ICompanyService, CompanyService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

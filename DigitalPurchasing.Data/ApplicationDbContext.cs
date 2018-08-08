@@ -1,4 +1,5 @@
 using System;
+using DigitalPurchasing.Models;
 using DigitalPurchasing.Models.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,8 @@ namespace DigitalPurchasing.Data
 {
     public class ApplicationDbContext : IdentityDbContext<User, Role, Guid, UserClaim, UserRole, UserLogin, RoleClaim, UserToken>
     {
+        public DbSet<Company> Companies { get; set; }
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }

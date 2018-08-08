@@ -8,6 +8,9 @@ namespace DigitalPurchasing.Models.Identity
         public User()
         {
             Id = Guid.NewGuid();
-        }
+        } 
+
+        public Guid CompanyId { get; set; }
+        public Company Company { get; set; }
     }
 }

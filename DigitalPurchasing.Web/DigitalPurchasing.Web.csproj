@@ -13,6 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\DigitalPurchasing.Data\DigitalPurchasing.Data.csproj" />
     <ProjectReference Include="..\DigitalPurchasing.Models\DigitalPurchasing.Models.csproj" />
+    <ProjectReference Include="..\DigitalPurchasing.Services\DigitalPurchasing.Services.csproj" />
   </ItemGroup>
 
   <ItemGroup>

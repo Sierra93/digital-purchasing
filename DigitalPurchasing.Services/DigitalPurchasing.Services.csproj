@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mapster" Version="3.1.8" />
+    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DigitalPurchasing.Data\DigitalPurchasing.Data.csproj" />
+    <ProjectReference Include="..\DigitalPurchasing.Models\DigitalPurchasing.Models.csproj" />
+  </ItemGroup>
+
+</Project>
