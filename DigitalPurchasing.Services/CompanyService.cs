@@ -7,7 +7,7 @@ namespace DigitalPurchasing.Services
 {
     public interface ICompanyService
     {
-        CompanyVm Create(string name);
+        CompanyResult Create(string name);
     }
 
     public class CompanyService : ICompanyService
@@ -16,15 +16,15 @@ namespace DigitalPurchasing.Services
 
         public CompanyService(ApplicationDbContext db) => _db = db;
 
-        public CompanyVm Create(string name)
+        public CompanyResult Create(string name)
         {
             var entry = _db.Companies.Add(new Company {Name = name});
             _db.SaveChanges();
-            return entry.Entity.Adapt<CompanyVm>();;
+            return entry.Entity.Adapt<CompanyResult>();;
         }
     }
 
-    public class CompanyVm
+    public class CompanyResult
     {
         public Guid Id { get; set; }
         public string Name { get; set; }

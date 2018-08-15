@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models.Identity;
 using DigitalPurchasing.Services;
 using DigitalPurchasing.Web.Core;
+using Mapster;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Hosting;
@@ -17,15 +19,13 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace DigitalPurchasing.Web
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
+        public Startup(IConfiguration configuration) => Configuration = configuration;
 
         public IConfiguration Configuration { get; }
 
@@ -64,14 +64,23 @@ namespace DigitalPurchasing.Web
 
             services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 
+            services.AddHttpContextAccessor();
+
             services.AddSingleton<IEmailSender, EmailSender>();
 
-            services.AddTransient<ICompanyService, CompanyService>();
+            services.AddScoped<IUserClaimsPrincipalFactory<User>, CustomUserClaimsPrincipalFactory>();
+
+            services.AddScoped<ITenantService, TenantService>();
+            services.AddScoped<ICompanyService, CompanyService>();
+            services.AddScoped<INomenclatureCategoryService, NomenclatureCategoryService>();
+            services.AddScoped<INomenclatureService, NomenclatureService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ApplicationDbContext dbContext)
         {
+            TypeAdapterConfig.GlobalSettings.Scan(typeof(NomenclatureService).Assembly/*DigitalPurchasing.Services*/);
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

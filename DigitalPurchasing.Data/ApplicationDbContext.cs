@@ -1,4 +1,7 @@
 using System;
+using System.Linq;
+using DigitalPurchasing.Core;
+using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Models;
 using DigitalPurchasing.Models.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -8,11 +11,14 @@ namespace DigitalPurchasing.Data
 {
     public class ApplicationDbContext : IdentityDbContext<User, Role, Guid, UserClaim, UserRole, UserLogin, RoleClaim, UserToken>
     {
-        public DbSet<Company> Companies { get; set; }
+        private readonly ITenantService _tenantService;
 
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
-        {
-        }
+        public DbSet<Company> Companies { get; set; }
+        public DbSet<Nomenclature> Nomenclatures { get; set; }
+        public DbSet<NomenclatureCategory> NomenclatureCategories { get; set; }
+        public DbSet<UnitsOfMeasurement> UnitsOfMeasurements { get; set; }
+
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ITenantService tenantService) : base(options) => _tenantService = tenantService;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -25,6 +31,31 @@ namespace DigitalPurchasing.Data
             builder.Entity<UserRole>().ToTable("UserRoles");
             builder.Entity<UserToken>().ToTable("UserTokens");
             builder.Entity<RoleClaim>().ToTable("RoleClaims");
+
+            builder.Entity<NomenclatureCategory>().HasOne(q => q.Parent).WithMany(q => q.Children).HasForeignKey(q => q.ParentId);
+            builder.Entity<NomenclatureCategory>().HasOne(q => q.Owner).WithMany(q => q.NomenclatureCategories).HasForeignKey(q => q.OwnerId);
+
+            builder.Entity<Nomenclature>().HasOne(q => q.Category).WithMany(q => q.Nomenclatures).HasForeignKey(q => q.CategoryId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<Nomenclature>().HasOne(q => q.BasicUoM).WithMany(q => q.BasicNomenclatures).HasForeignKey(q => q.BasicUoMId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<Nomenclature>().HasOne(q => q.MassUoM).WithMany(q => q.MassNomenclatures).HasForeignKey(q => q.MassUoMId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<Nomenclature>().HasOne(q => q.CycleUoM).WithMany(q => q.CycleNomenclatures).HasForeignKey(q => q.CycleUoMId).OnDelete(DeleteBehavior.Restrict);
+
+            // default filters to show company or common data
+            builder.Entity<NomenclatureCategory>().HasQueryFilter(q => q.OwnerId == _tenantService.Get().CompanyId);
+            builder.Entity<Nomenclature>().HasQueryFilter(q => q.OwnerId == _tenantService.Get().CompanyId);
+            builder.Entity<UnitsOfMeasurement>().HasQueryFilter(q => q.OwnerId == _tenantService.Get().CompanyId || !q.OwnerId.HasValue);
+        }
+
+        public override int SaveChanges()
+        {
+            var addedEntities = ChangeTracker.Entries().Where(c => c.State == EntityState.Added).Select(q => q.Entity).OfType<IHaveOwner>();
+
+            foreach (var entity in addedEntities) {
+                entity.OwnerId = _tenantService.Get().CompanyId;
+            }
+
+            return base.SaveChanges();
         }
     }
 }
+

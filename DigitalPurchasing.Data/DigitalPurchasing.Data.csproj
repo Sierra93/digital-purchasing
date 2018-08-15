@@ -9,6 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DigitalPurchasing.Core\DigitalPurchasing.Core.csproj" />
     <ProjectReference Include="..\DigitalPurchasing.Models\DigitalPurchasing.Models.csproj" />
   </ItemGroup>
 

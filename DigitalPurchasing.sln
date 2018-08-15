@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitalPurchasing.Data", "D
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitalPurchasing.Models", "DigitalPurchasing.Models\DigitalPurchasing.Models.csproj", "{E718F6AC-9A8B-432F-9B80-93016A0E381C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalPurchasing.Services", "DigitalPurchasing.Services\DigitalPurchasing.Services.csproj", "{A3A766B9-246B-4DBB-9921-110B6A08D831}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitalPurchasing.Services", "DigitalPurchasing.Services\DigitalPurchasing.Services.csproj", "{A3A766B9-246B-4DBB-9921-110B6A08D831}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalPurchasing.Core", "DigitalPurchasing.Core\DigitalPurchasing.Core.csproj", "{7E52EA54-9C3F-40D1-9277-BA4E5F19EFE9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{A3A766B9-246B-4DBB-9921-110B6A08D831}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A3A766B9-246B-4DBB-9921-110B6A08D831}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A3A766B9-246B-4DBB-9921-110B6A08D831}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E52EA54-9C3F-40D1-9277-BA4E5F19EFE9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E52EA54-9C3F-40D1-9277-BA4E5F19EFE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E52EA54-9C3F-40D1-9277-BA4E5F19EFE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E52EA54-9C3F-40D1-9277-BA4E5F19EFE9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

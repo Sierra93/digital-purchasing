@@ -1,0 +1,14 @@
+[
+  {
+    "outputFileName": "wwwroot/bundles/vue.min.js",
+    "inputFiles": [
+      "wwwroot/lib/js/vue/vue.min.js",
+      "wwwroot/lib/js/vue/vuetable-2"
+    ],
+    "minify": {
+      "enabled": true,
+      "renameLocals": true
+    },
+    "sourceMap": true
+  }
+]
