@@ -73,6 +73,7 @@ namespace DigitalPurchasing.Web
             services.AddScoped<ITenantService, TenantService>();
             services.AddScoped<ICompanyService, CompanyService>();
             services.AddScoped<INomenclatureCategoryService, NomenclatureCategoryService>();
+            services.AddScoped<IUomService, UomService>();
             services.AddScoped<INomenclatureService, NomenclatureService>();
         }
 
