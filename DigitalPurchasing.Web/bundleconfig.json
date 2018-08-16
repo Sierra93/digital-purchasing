@@ -2,8 +2,8 @@
   {
     "outputFileName": "wwwroot/bundles/vue.min.js",
     "inputFiles": [
-      "wwwroot/lib/js/vue/vue.min.js",
-      "wwwroot/lib/js/vue/vuetable-2.js"
+      "wwwroot/lib/vue/vue.min.js",
+      "wwwroot/lib/vue/vuetable-2.js"
     ],
     "minify": {
       "enabled": true,
