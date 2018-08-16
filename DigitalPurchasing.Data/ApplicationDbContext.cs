@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Linq.Expressions;
 using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Models;
@@ -12,6 +13,8 @@ namespace DigitalPurchasing.Data
     public class ApplicationDbContext : IdentityDbContext<User, Role, Guid, UserClaim, UserRole, UserLogin, RoleClaim, UserToken>
     {
         private readonly ITenantService _tenantService;
+
+        private Guid CompanyId => _tenantService.Get().CompanyId;
 
         public DbSet<Company> Companies { get; set; }
         public DbSet<Nomenclature> Nomenclatures { get; set; }
@@ -41,9 +44,9 @@ namespace DigitalPurchasing.Data
             builder.Entity<Nomenclature>().HasOne(q => q.CycleUoM).WithMany(q => q.CycleNomenclatures).HasForeignKey(q => q.CycleUoMId).OnDelete(DeleteBehavior.Restrict);
 
             // default filters to show company or common data
-            builder.Entity<NomenclatureCategory>().HasQueryFilter(q => q.OwnerId == _tenantService.Get().CompanyId);
-            builder.Entity<Nomenclature>().HasQueryFilter(q => q.OwnerId == _tenantService.Get().CompanyId);
-            builder.Entity<UnitsOfMeasurement>().HasQueryFilter(q => q.OwnerId == _tenantService.Get().CompanyId || !q.OwnerId.HasValue);
+            builder.Entity<NomenclatureCategory>().HasQueryFilter(o => o.OwnerId == CompanyId);
+            builder.Entity<Nomenclature>().HasQueryFilter(o => o.OwnerId == CompanyId);
+            builder.Entity<UnitsOfMeasurement>().HasQueryFilter(o => o.OwnerId == CompanyId || o.OwnerId == null);
         }
 
         public override int SaveChanges()
