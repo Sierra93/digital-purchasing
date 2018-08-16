@@ -48,10 +48,18 @@ namespace DigitalPurchasing.Data
 
         public override int SaveChanges()
         {
-            var addedEntities = ChangeTracker.Entries().Where(c => c.State == EntityState.Added).Select(q => q.Entity).OfType<IHaveOwner>();
+            var companyId = _tenantService.Get().CompanyId;
 
-            foreach (var entity in addedEntities) {
-                entity.OwnerId = _tenantService.Get().CompanyId;
+            var addedEntities = ChangeTracker.Entries().Where(c => c.State == EntityState.Added).Select(q => q.Entity).ToList();
+
+            foreach (var entity in addedEntities.OfType<IHaveOwner>())
+            {
+                entity.OwnerId = companyId;
+            }
+
+            foreach (var entity in addedEntities.OfType<IMayHaveOwner>())
+            {
+                entity.OwnerId = companyId;
             }
 
             return base.SaveChanges();
