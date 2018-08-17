@@ -75,6 +75,7 @@ namespace DigitalPurchasing.Web
             services.AddScoped<INomenclatureCategoryService, NomenclatureCategoryService>();
             services.AddScoped<IUomService, UomService>();
             services.AddScoped<INomenclatureService, NomenclatureService>();
+            services.AddScoped<IDictionaryService, DictionaryService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

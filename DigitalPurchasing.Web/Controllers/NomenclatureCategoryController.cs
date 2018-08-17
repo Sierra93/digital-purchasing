@@ -10,8 +10,13 @@ namespace DigitalPurchasing.Web.Controllers
     public class NomenclatureCategoryController : Controller
     {
         private readonly INomenclatureCategoryService _nomenclatureCategoryService;
+        private readonly IDictionaryService _dictionaryService;
 
-        public NomenclatureCategoryController(INomenclatureCategoryService nomenclatureCategoryService) => _nomenclatureCategoryService = nomenclatureCategoryService;
+        public NomenclatureCategoryController(INomenclatureCategoryService nomenclatureCategoryService, IDictionaryService dictionaryService)
+        {
+            _nomenclatureCategoryService = nomenclatureCategoryService;
+            _dictionaryService = dictionaryService;
+        }
 
         public IActionResult Index() => View();
 
@@ -29,7 +34,7 @@ namespace DigitalPurchasing.Web.Controllers
         {
             var vm = new CreateNomenclatureCategoryVm
             {
-                Categories = _nomenclatureCategoryService.GetAll().Select(q => new SelectListItem(q.Name, q.Id.ToString("N"))).ToList()
+                Categories = _dictionaryService.GetCategories()
             };
             vm.Categories.Insert(0, new SelectListItem("", ""));
             return View(vm);
@@ -43,6 +48,8 @@ namespace DigitalPurchasing.Web.Controllers
                 _nomenclatureCategoryService.CreateCategory(vm.Name, vm.ParentId);
                 return RedirectToAction("Index");
             }
+
+            vm.Categories = _dictionaryService.GetCategories();
 
             return View(vm);
         }

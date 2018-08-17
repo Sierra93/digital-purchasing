@@ -1,0 +1,72 @@
+@model NomenclatureCreateVm
+
+@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Create Nomenclature</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Code" class="control-label"></label>
+                <input asp-for="Code" class="form-control" />
+                <span asp-validation-for="Code" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="NameEng" class="control-label"></label>
+                <input asp-for="NameEng" class="form-control" />
+                <span asp-validation-for="NameEng" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="BatchUomId" class="control-label"></label>
+                <select asp-for="BatchUomId" class="form-control" asp-items="Model.BatchUoms"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="MassUomId" class="control-label"></label>
+                <select asp-for="MassUomId" class="form-control" asp-items="Model.MassUoms"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="MassUomValue" class="control-label"></label>
+                <input asp-for="MassUomValue" class="form-control" />
+                <span asp-validation-for="MassUomValue" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ResourceUomId" class="control-label"></label>
+                <select asp-for="ResourceUomId" class="form-control" asp-items="Model.ResourceUoms"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="ResourceUomValue" class="control-label"></label>
+                <input asp-for="ResourceUomValue" class="form-control" />
+                <span asp-validation-for="ResourceUomValue" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ResourceBatchUomId" class="control-label"></label>
+                <select asp-for="ResourceBatchUomId" class="form-control" asp-items="Model.ResourceBatchUoms"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="CategoryId" class="control-label"></label>
+                <select asp-for="CategoryId" class="form-control" asp-items="Model.Categories"></select>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-default" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

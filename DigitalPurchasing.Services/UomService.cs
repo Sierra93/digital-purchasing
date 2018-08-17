@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using DigitalPurchasing.Data;
@@ -12,6 +13,7 @@ namespace DigitalPurchasing.Services
     {
         UomDataResult GetData(int page, int perPage, string sortField, bool sortAsc);
         UomResult CreateUom(string name);
+        IEnumerable<UomResult> GetAll();
     }
 
     public class UomService : IUomService
@@ -44,6 +46,8 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
             return entry.Entity.Adapt<UomResult>();
         }
+
+        public IEnumerable<UomResult> GetAll() => _db.UnitsOfMeasurements.ProjectToType<UomResult>().ToList();
     }
 
     public class UomResultMapsterRegister : IRegister

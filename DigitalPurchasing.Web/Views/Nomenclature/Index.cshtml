@@ -1,6 +1,9 @@
 @model object
 
 <div id="app">
+
+    <a asp-action="Create" class="btn btn-default">Create</a>
+
     <vuetable ref="vuetable"
               api-url="@Url.Action("Data")"
               :fields="fields"
@@ -75,28 +78,63 @@
                         css: css,
                         fields: [
                             {
-                                title: 'Name 1',
-                                name: 'nameRus',
-                                sortField: 'NameRus'
+                                title: 'Категория',
+                                name: 'categoryName',
+                                sortField: 'Category.Name'
                             },
                             {
-                                title: 'Name 2',
+                                title: 'Код',
+                                name: 'code',
+                                sortField: 'Code'
+                            },
+                            {
+                                title: 'Наименование',
+                                name: 'name',
+                                sortField: 'Name'
+                            },
+                            {
+                                title: 'Наименование (eng)',
                                 name: 'nameEng',
                                 sortField: 'NameEng'
                             },
                             {
-                                title: 'Code',
-                                name: 'code',
-                                sortField: 'Code'
+                                title: 'ЕИ',
+                                name: 'batchUomName',
+                                sortField: 'BatchUom.Name'
+                            },
+                            {
+                                title: 'ЕИ массы',
+                                name: 'massUomName',
+                                sortField: 'MassUomName.Name'
+                            },
+                            {
+                                title: 'Масса 1 ЕИ, ЕИ массы',
+                                name: 'massUomValue',
+                                sortField: 'MassUomName.Value'
+                            },
+                            {
+                                title: 'Название ресурса',
+                                name: 'resourceUomName',
+                                sortField: 'ResourceUom.Name'
+                            },
+                            {
+                                title: 'Ресурс, 1 ЕИ ресурса',
+                                name: 'resourceUomValue',
+                                sortField: 'ResourceUom.Value'
+                            },
+                            {
+                                title: 'ЕИ ресурса',
+                                name: 'resourceBatchUomName',
+                                sortField: 'ResourceBatchUom.Name'
                             }
                         ],
                         sortOrder: [
                             {
-                                field: 'NameRus',
+                                field: 'name',
                                 direction: 'asc'
                             }
                         ]
-                    }
+                    };
                 }
             });
             window.app = new Vue({
@@ -106,28 +144,63 @@
                         css: css,
                         fields: [
                             {
-                                title: 'Name 1',
-                                name: 'nameRus',
-                                sortField: 'NameRus',
+                                title: 'Категория',
+                                name: 'categoryName',
+                                sortField: 'Category.Name'
                             },
                             {
-                                title: 'Name 2',
-                                name: 'nameEng',
-                                sortField: 'NameEng',
-                            },
-                            {
-                                title: 'Code',
+                                title: 'Код',
                                 name: 'code',
                                 sortField: 'Code'
+                            },
+                            {
+                                title: 'Наименование',
+                                name: 'name',
+                                sortField: 'Name'
+                            },
+                            {
+                                title: 'Наименование (eng)',
+                                name: 'nameEng',
+                                sortField: 'NameEng'
+                            },
+                            {
+                                title: 'ЕИ',
+                                name: 'batchUomName',
+                                sortField: 'BatchUom.Name'
+                            },
+                            {
+                                title: 'ЕИ массы',
+                                name: 'massUomName',
+                                sortField: 'MassUom.Name'
+                            },
+                            {
+                                title: 'Масса 1 ЕИ, ЕИ массы',
+                                name: 'massUomValue',
+                                sortField: 'MassUomValue'
+                            },
+                            {
+                                title: 'Название ресурса',
+                                name: 'resourceUomName',
+                                sortField: 'ResourceUom.Name'
+                            },
+                            {
+                                title: 'Ресурс, 1 ЕИ ресурса',
+                                name: 'resourceUomValue',
+                                sortField: 'ResourceUomValue'
+                            },
+                            {
+                                title: 'ЕИ ресурса',
+                                name: 'resourceBatchUomName',
+                                sortField: 'ResourceBatchUom.Name'
                             }
                         ],
                         sortOrder: [
                             {
-                                field: 'NameRus',
+                                field: 'name',
                                 direction: 'asc'
                             }
                         ]
-                    }
+                    };
                 },
                 methods: {
                     onPaginationData(paginationData) {
