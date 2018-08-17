@@ -4,17 +4,24 @@ namespace DigitalPurchasing.Models
 {
     public class Nomenclature : BaseModelWithOwner
     {
-        public string Name { get; set; }
         public string Code { get; set; }
 
-        public Guid BasicUoMId { get; set; }
-        public UnitsOfMeasurement BasicUoM { get; set; }
+        public string Name { get; set; }
+        public string NameEng { get; set; }
 
-        public Guid MassUoMId { get; set; }
-        public UnitsOfMeasurement MassUoM { get; set; }
+        public Guid BatchUomId { get; set; }
+        public UnitsOfMeasurement BatchUom { get; set; }
 
-        public Guid CycleUoMId { get; set; }
-        public UnitsOfMeasurement CycleUoM { get; set; }
+        public Guid MassUomId { get; set; }
+        public UnitsOfMeasurement MassUom { get; set; }
+        public decimal MassUomValue { get; set; }
+       
+        public Guid ResourceUomId { get; set; }
+        public UnitsOfMeasurement ResourceUom { get; set; }
+        public decimal ResourceUomValue { get; set; }
+
+        public Guid ResourceBatchUomId { get; set; }
+        public UnitsOfMeasurement ResourceBatchUom { get; set; }
 
         public Guid CategoryId { get; set; }
         public NomenclatureCategory Category { get; set; }

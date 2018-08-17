@@ -62,15 +62,22 @@
                                 title: 'Name',
                                 name: 'name',
                                 sortField: 'Name'
+                            },
+                            {
+                                title: 'Is System',
+                                name: 'isSystem',
+                                sortField: 'ParentId',
+                                callback: 'systemLabel'
                             }
                         ],
                         sortOrder: [
                             {
                                 field: 'Name',
+                                sortField: 'name',
                                 direction: 'asc'
                             }
                         ]
-                    }
+                    };
                 },
                 methods: {
                     onPaginationData(paginationData) {
@@ -79,6 +86,10 @@
                     },
                     onChangePage(page) {
                         this.$refs.vuetable.changePage(page);
+                    },
+                    systemLabel (value) {
+                        console.info(value);
+                        return value === true ? '<span class="label">Yes</span>' : '<span class="label">No</span>';
                     }
                 }
             });

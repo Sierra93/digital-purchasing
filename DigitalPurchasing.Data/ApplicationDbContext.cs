@@ -39,9 +39,10 @@ namespace DigitalPurchasing.Data
             builder.Entity<NomenclatureCategory>().HasOne(q => q.Owner).WithMany(q => q.NomenclatureCategories).HasForeignKey(q => q.OwnerId);
 
             builder.Entity<Nomenclature>().HasOne(q => q.Category).WithMany(q => q.Nomenclatures).HasForeignKey(q => q.CategoryId).OnDelete(DeleteBehavior.Restrict);
-            builder.Entity<Nomenclature>().HasOne(q => q.BasicUoM).WithMany(q => q.BasicNomenclatures).HasForeignKey(q => q.BasicUoMId).OnDelete(DeleteBehavior.Restrict);
-            builder.Entity<Nomenclature>().HasOne(q => q.MassUoM).WithMany(q => q.MassNomenclatures).HasForeignKey(q => q.MassUoMId).OnDelete(DeleteBehavior.Restrict);
-            builder.Entity<Nomenclature>().HasOne(q => q.CycleUoM).WithMany(q => q.CycleNomenclatures).HasForeignKey(q => q.CycleUoMId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<Nomenclature>().HasOne(q => q.BatchUom).WithMany(q => q.BatchNomenclatures).HasForeignKey(q => q.BatchUomId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<Nomenclature>().HasOne(q => q.MassUom).WithMany(q => q.MassNomenclatures).HasForeignKey(q => q.MassUomId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<Nomenclature>().HasOne(q => q.ResourceUom).WithMany(q => q.ResourceNomenclatures).HasForeignKey(q => q.ResourceUomId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<Nomenclature>().HasOne(q => q.ResourceBatchUom).WithMany(q => q.ResourceBatchNomenclatures).HasForeignKey(q => q.ResourceBatchUomId).OnDelete(DeleteBehavior.Restrict);
 
             // default filters to show company or common data
             builder.Entity<NomenclatureCategory>().HasQueryFilter(o => o.OwnerId == CompanyId);

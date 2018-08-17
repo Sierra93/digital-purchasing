@@ -46,10 +46,16 @@ namespace DigitalPurchasing.Services
         }
     }
 
+    public class UomResultMapsterRegister : IRegister
+    {
+        public void Register(TypeAdapterConfig config) => config.NewConfig<UnitsOfMeasurement, UomResult>().Map(d => d.IsSystem, s => !s.OwnerId.HasValue);
+    }
+
     public class UomResult
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
+        public bool IsSystem { get; set; }
     }
 
     public class UomDataResult : BaseDataResult<UomResult>
