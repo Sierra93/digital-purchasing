@@ -13,6 +13,12 @@
               :css="css"
               @@vuetable:pagination-data="onPaginationData"
               @@vuetable:cell-clicked="onCellClicked">
+        <div slot="slot-actions" slot-scope="props">
+            <div class="btn-group" role="group" aria-label="...">
+                <button type="button" class="btn btn-default" @@click="editRow(props.rowData, props.rowIndex)"><i class="far fa-edit"></i></button>
+                <button type="button" class="btn btn-default" @@click="deleteRow(props.rowData, props.rowIndex)"><i class="far fa-trash-alt"></i></button>
+            </div>
+        </div>
     </vuetable>
     <div>
         <vuetable-pagination-info ref="paginationInfo"
@@ -192,6 +198,12 @@
                                 title: 'ЕИ ресурса',
                                 name: 'resourceBatchUomName',
                                 sortField: 'ResourceBatchUom.Name'
+                            },
+                            {
+                                name: 'slot-actions',
+                                title: 'Действия',
+                                titleClass: 'text-center',
+                                dataClass: 'text-center'
                             }
                         ],
                         sortOrder: [
@@ -212,6 +224,12 @@
                     },
                     onCellClicked(dataItem, field, event) {
                         this.$refs.vuetable.toggleDetailRow(dataItem.data.id);
+                    },
+                    editRow(rowData, rowIndex) {
+
+                    },
+                    deleteRow(rowData, rowIndex) {
+
                     }
                 }
             });
