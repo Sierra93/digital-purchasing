@@ -15,7 +15,7 @@
               @@vuetable:cell-clicked="onCellClicked">
         <div slot="slot-actions" slot-scope="props">
             <div class="btn-group" role="group" aria-label="...">
-                <button type="button" class="btn btn-default" @@click="editRow(props.rowData, props.rowIndex)"><i class="far fa-edit"></i></button>
+                <a class="btn btn-default" :href="props.rowData.editUrl"><i class="far fa-edit"></i></a>
                 <button type="button" class="btn btn-default" @@click="deleteRow(props.rowData, props.rowIndex)"><i class="far fa-trash-alt"></i></button>
             </div>
         </div>

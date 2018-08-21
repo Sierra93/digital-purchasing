@@ -11,6 +11,8 @@ namespace DigitalPurchasing.Services
     {
         NomenclatureDataResult GetData(int page, int perPage, string sortField, bool sortAsc);
         NomenclatureResult Create(NomenclatureResult model);
+        NomenclatureResult GetById(Guid id);
+        bool Update(NomenclatureResult model);
     }
 
     public class NomenclatureService : INomenclatureService
@@ -42,8 +44,37 @@ namespace DigitalPurchasing.Services
         {
             var entry = _db.Nomenclatures.Add(model.Adapt<Nomenclature>());
             _db.SaveChanges();
-            var result = entry.Adapt<NomenclatureResult>();
+            var result = entry.Entity.Adapt<NomenclatureResult>();
             return result;
+        }
+
+        public NomenclatureResult GetById(Guid id)
+        {
+            var entity = _db.Nomenclatures.Find(id);
+            var result = entity.Adapt<NomenclatureResult>();
+            return result;
+        }
+
+        public bool Update(NomenclatureResult model)
+        {
+            var entity = _db.Nomenclatures.Find(model.Id);
+            if (entity == null) return false;
+
+            entity.Name = model.Name;
+            entity.NameEng = model.NameEng;
+
+            entity.ResourceUomId = model.ResourceUomId;
+            entity.ResourceUomValue = model.ResourceUomValue;
+            entity.ResourceBatchUomId = model.ResourceBatchUomId;
+
+            entity.BatchUomId = model.BatchUomId;
+
+            entity.MassUomId = model.MassUomId;
+
+            entity.MassUomValue = model.MassUomValue;
+            
+            _db.SaveChanges();
+            return true;
         }
     }
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using DigitalPurchasing.Services;
 using DigitalPurchasing.Web.Core;
@@ -27,7 +28,12 @@ namespace DigitalPurchasing.Web.Controllers
             var result = _nomenclatureService.GetData(request.Page, request.PerPage, request.SortField, request.SortAsc);
             var nextUrl = Url.Action("Data", "Nomenclature", request.NextPageRequest(), Request.Scheme);
             var prevUrl = Url.Action("Data", "Nomenclature", request.PrevPageRequest(), Request.Scheme);
-            return Json(new VueTableResponse<NomenclatureResult>(result.Data, request, result.Total, nextUrl, prevUrl));
+            var data = result.Data.Adapt<List<NomenclatureDataVm>>();
+            foreach (var d in data)
+            {
+                d.EditUrl = Url.Action("Edit", new { id = d.Id });
+            }
+            return Json(new VueTableResponse<NomenclatureDataVm>(data, request, result.Total, nextUrl, prevUrl));
         }
 
         public IActionResult Create()
@@ -44,13 +50,43 @@ namespace DigitalPurchasing.Web.Controllers
             if (ModelState.IsValid)
             {
                 _nomenclatureService.Create(vm.Adapt<NomenclatureResult>());
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
 
             vm.BatchUoms = vm.ResourceBatchUoms = vm.MassUoms = vm.ResourceUoms = _dictionaryService.GetUoms();
             vm.Categories = _dictionaryService.GetCategories();
 
             return View(vm);
+        }
+
+        public IActionResult Edit(Guid id)
+        {
+            if (id == Guid.Empty) return NotFound();
+
+            var data = _nomenclatureService.GetById(id);
+            if (data == null) return NotFound();
+
+            var vm = data.Adapt<NomenclatureCreateVm>();
+
+            vm.BatchUoms = vm.ResourceBatchUoms = vm.MassUoms = vm.ResourceUoms = _dictionaryService.GetUoms();
+            vm.Categories = _dictionaryService.GetCategories();
+
+            return View(nameof(Create), vm);
+        }
+
+        [HttpPost]
+        public IActionResult Edit(NomenclatureCreateVm vm)
+        {
+            if (ModelState.IsValid)
+            {
+                _nomenclatureService.Update(vm.Adapt<NomenclatureResult>());
+                return RedirectToAction(nameof(Index));
+            }
+
+            vm.BatchUoms = vm.ResourceBatchUoms = vm.MassUoms = vm.ResourceUoms = _dictionaryService.GetUoms();
+            vm.Categories = _dictionaryService.GetCategories();
+
+            return View(nameof(Create), vm);
         }
     }
 }
