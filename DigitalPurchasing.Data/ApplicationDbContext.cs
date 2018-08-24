@@ -20,6 +20,9 @@ namespace DigitalPurchasing.Data
         public DbSet<Nomenclature> Nomenclatures { get; set; }
         public DbSet<NomenclatureCategory> NomenclatureCategories { get; set; }
         public DbSet<UnitsOfMeasurement> UnitsOfMeasurements { get; set; }
+        public DbSet<PurchasingRequest> PurchasingRequests { get; set; }
+        public DbSet<PurchasingRequestItem> PurchasingRequestItems { get; set; }
+        public DbSet<RawPurchasingRequestItem> RawPurchasingRequestItems { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ITenantService tenantService) : base(options) => _tenantService = tenantService;
 
@@ -44,8 +47,12 @@ namespace DigitalPurchasing.Data
             builder.Entity<Nomenclature>().HasOne(q => q.ResourceUom).WithMany(q => q.ResourceNomenclatures).HasForeignKey(q => q.ResourceUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<Nomenclature>().HasOne(q => q.ResourceBatchUom).WithMany(q => q.ResourceBatchNomenclatures).HasForeignKey(q => q.ResourceBatchUomId).OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<PurchasingRequest>().HasMany(q => q.RawItems).WithOne(q => q.PurchasingRequest).HasForeignKey(q => q.PurchasingRequestId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<PurchasingRequest>().HasMany(q => q.Items).WithOne(q => q.PurchasingRequest).HasForeignKey(q => q.PurchasingRequestId).OnDelete(DeleteBehavior.Restrict);
+
             // default filters to show company or common data
             builder.Entity<NomenclatureCategory>().HasQueryFilter(o => o.OwnerId == CompanyId);
+            builder.Entity<PurchasingRequest>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<Nomenclature>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<UnitsOfMeasurement>().HasQueryFilter(o => o.OwnerId == CompanyId || o.OwnerId == null);
         }

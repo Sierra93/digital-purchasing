@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DigitalPurchasing.Web.Controllers
 {
-    public class NomenclatureCategoryController : Controller
+    public class NomenclatureCategoryController : BaseController
     {
         private readonly INomenclatureCategoryService _nomenclatureCategoryService;
         private readonly IDictionaryService _dictionaryService;

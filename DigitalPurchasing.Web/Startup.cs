@@ -20,6 +20,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using DigitalPurchasing.Core.Interfaces;
+using DigitalPurchasing.ExcelReader;
 
 namespace DigitalPurchasing.Web
 {
@@ -76,6 +78,8 @@ namespace DigitalPurchasing.Web
             services.AddScoped<IUomService, UomService>();
             services.AddScoped<INomenclatureService, NomenclatureService>();
             services.AddScoped<IDictionaryService, DictionaryService>();
+            services.AddScoped<IExcelRequestReader, ExcelRequestReader>();
+            services.AddScoped<IPurchasingRequestService, PurchasingRequestService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

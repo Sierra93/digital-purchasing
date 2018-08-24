@@ -1,10 +1,9 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace DigitalPurchasing.Web.Controllers
+namespace DigitalPurchasing.Web.Core
 {
-    [Authorize]
-    public class BaseController : Controller
+    public class BasePageModel : PageModel
     {
         public new IActionResult LocalRedirect(string localUrl)
         {

@@ -1,0 +1,39 @@
+@using DigitalPurchasing.Core.Interfaces
+@model DigitalPurchasing.Core.Interfaces.PurchasingRequestDetailsResponse
+
+@{
+    ViewBag.Title = "title";
+    Layout = "_Layout";
+}
+
+<h2>title</h2>
+
+@if (Model.ExcelTable != null && Model.Type == PurchasingRequestType.AppropriateColumns)
+{
+    <h2>Заявка в формате Клиента</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                @foreach (var column in Model.ExcelTable.Columns)
+                {
+                <th>@column.Header</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                var rowsCount = Model.ExcelTable.Columns.Find(q => q.Type == TableColumnType.Name).Values.Count;
+            }
+            @for (int i = 0; i < rowsCount; i++)
+            {
+                <tr>
+                    @foreach (var column in Model.ExcelTable.Columns)
+                    {
+                        <td>@column.Values[i]</td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+

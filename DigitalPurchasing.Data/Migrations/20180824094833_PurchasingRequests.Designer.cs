@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20180824094833_PurchasingRequests")]
+    partial class PurchasingRequests
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -270,15 +272,11 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<DateTime>("CreatedOn");
 
-                    b.Property<Guid>("OwnerId");
-
                     b.Property<string>("RawData");
 
                     b.Property<int>("Type");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("OwnerId");
 
                     b.ToTable("PurchasingRequests");
                 });
@@ -441,20 +439,12 @@ namespace DigitalPurchasing.Data.Migrations
                         .HasForeignKey("ParentId");
                 });
 
-            modelBuilder.Entity("DigitalPurchasing.Models.PurchasingRequest", b =>
-                {
-                    b.HasOne("DigitalPurchasing.Models.Company", "Owner")
-                        .WithMany()
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
             modelBuilder.Entity("DigitalPurchasing.Models.PurchasingRequestItem", b =>
                 {
                     b.HasOne("DigitalPurchasing.Models.PurchasingRequest", "PurchasingRequest")
                         .WithMany("Items")
                         .HasForeignKey("PurchasingRequestId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.RawPurchasingRequestItem", b =>
@@ -462,7 +452,7 @@ namespace DigitalPurchasing.Data.Migrations
                     b.HasOne("DigitalPurchasing.Models.PurchasingRequest", "PurchasingRequest")
                         .WithMany("RawItems")
                         .HasForeignKey("PurchasingRequestId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.UnitsOfMeasurement", b =>

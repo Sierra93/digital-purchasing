@@ -1,11 +1,12 @@
-@using DigitalPurchasing.Core
-@inject ITenantService TenantService
+@{
+    const string appName = "Digital Purchasing";
+}
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - DigitalPurchasing.Web</title>
+    <title>@ViewData["Title"] - @appName</title>
 
     <environment include="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
@@ -30,16 +31,21 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a asp-area="" asp-controller="Home" asp-action="Index" class="navbar-brand">DigitalPurchasing.Web</a>
+                <a asp-area="" asp-controller="Home" asp-action="Index" class="navbar-brand">@appName</a>
             </div>
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
                     @if (User.Identity.IsAuthenticated)
                     {
+                        <li><a asp-area="" asp-controller="Dashboard" asp-action="Index">Home</a></li>
+                        <li><a asp-area="" asp-controller="PurchasingRequest" asp-action="Index">RFP</a></li>
                         <li><a asp-area="" asp-controller="Nomenclature" asp-action="Index">Nomenclatures</a></li>
                         <li><a asp-area="" asp-controller="NomenclatureCategory" asp-action="Index">Categories</a></li>
                         <li><a asp-area="" asp-controller="Uom" asp-action="Index">Unit of measurements</a></li>
+                    }
+                    else
+                    {
+                        <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
                     }
                 </ul>
                 <partial name="_LoginPartial" />
@@ -50,7 +56,6 @@
     <partial name="_CookieConsentPartial" />
 
     <div class="container body-content">
-        <p>Debug data - Company: @TenantService.Get().CompanyId, User: @TenantService.Get().UserId</p>
         @RenderBody()
     </div>
 

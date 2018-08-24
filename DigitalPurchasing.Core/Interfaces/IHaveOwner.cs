@@ -6,9 +6,4 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         Guid OwnerId { get; set; }
     }
-
-    public interface IMayHaveOwner
-    {
-        Guid? OwnerId { get; set; }
-    }
 }

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalPurchasing.Web.Controllers
 {
-    public class UomController : Controller
+    public class UomController : BaseController
     {
         private readonly IUomService _uomService;
 
