@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using DigitalPurchasing.Core;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
 using Mapster;
@@ -104,7 +105,7 @@ namespace DigitalPurchasing.Services
         public string CategoryName { get; set; }
     }
 
-    public class NomenclatureDataResult : BaseDataResult<NomenclatureResult>
+    public class NomenclatureDataResult : BaseDataResponse<NomenclatureResult>
     {
     }
 }

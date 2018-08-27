@@ -2,15 +2,15 @@
 @model DigitalPurchasing.Core.Interfaces.PurchasingRequestDetailsResponse
 
 @{
-    ViewBag.Title = "title";
+    ViewBag.Title = $"Заявка № {Model.PublicId} от {Model.CreatedOn:dd.MM.yyyy hh:mm}";
     Layout = "_Layout";
 }
 
-<h2>title</h2>
+<h2>@ViewBag.Title</h2>
 
 @if (Model.ExcelTable != null && Model.Type == PurchasingRequestType.AppropriateColumns)
 {
-    <h2>Заявка в формате Клиента</h2>
+    <h3>Заявка в формате Клиента</h3>
     <table class="table table-striped">
         <thead>
             <tr>

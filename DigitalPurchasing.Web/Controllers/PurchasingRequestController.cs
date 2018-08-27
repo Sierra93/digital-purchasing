@@ -4,6 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core.Interfaces;
+using DigitalPurchasing.Web.Core;
+using DigitalPurchasing.Web.ViewModels;
+using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,9 +18,20 @@ namespace DigitalPurchasing.Web.Controllers
 
         public PurchasingRequestController(IPurchasingRequestService purchasingRequestService) => _purchasingRequestService = purchasingRequestService;
 
-        public IActionResult Index()
+        public IActionResult Index() => View();
+
+        [HttpGet]
+        public IActionResult Data(VueTableRequest request)
         {
-            return View();
+            var result = _purchasingRequestService.GetData(request.Page, request.PerPage, request.SortField, request.SortAsc);
+            var nextUrl = Url.Action("Data", "PurchasingRequest", request.NextPageRequest(), Request.Scheme);
+            var prevUrl = Url.Action("Data", "PurchasingRequest", request.PrevPageRequest(), Request.Scheme);
+            var data = result.Data.Adapt<List<PurchasingRequestDataVm>>();
+            foreach (var d in data)
+            {
+                d.EditUrl = Url.Action("Edit", new { id = d.Id });
+            }
+            return Json(new VueTableResponse<PurchasingRequestDataVm>(data, request, result.Total, nextUrl, prevUrl));
         }
 
         public IActionResult Edit(Guid id)

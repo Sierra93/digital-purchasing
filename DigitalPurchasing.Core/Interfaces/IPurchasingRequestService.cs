@@ -6,6 +6,7 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         Guid CreateFromFile(string filePath);
         PurchasingRequestDetailsResponse GetById(Guid id);
+        PurchasingRequestDataResponse GetData(int page, int perPage, string sortField, bool sortAsc);
     }
 
     public enum PurchasingRequestType
@@ -17,11 +18,25 @@ namespace DigitalPurchasing.Core.Interfaces
     public class PurchasingRequestDetailsResponse
     {
         public Guid Id { get; set; }
+        public int PublicId { get; set; }
+
+        public DateTime CreatedOn { get; set; }
 
         public PurchasingRequestType Type { get; set; } 
 
         public ExcelTable ExcelTable { get; set; }
 
         public bool IsUploaded => ExcelTable != null;
+    }
+
+    public class PurchasingRequestData
+    {
+        public Guid Id { get; set; }
+        public int PublicId { get; set; }
+        public DateTime CreatedOn { get; set; }
+    }
+
+    public class PurchasingRequestDataResponse : BaseDataResponse<PurchasingRequestData>
+    {
     }
 }

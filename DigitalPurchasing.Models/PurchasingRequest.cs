@@ -1,12 +1,13 @@
 using DigitalPurchasing.Core.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace DigitalPurchasing.Models
 {
     public class PurchasingRequest : BaseModelWithOwner
     {
+        public int PublicId { get; set; }
+
         public PurchasingRequestType Type { get; set; }
 
         public ICollection<PurchasingRequestItem> Items { get; set; } = new List<PurchasingRequestItem>();

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using DigitalPurchasing.Core;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
 using Mapster;
@@ -62,7 +63,7 @@ namespace DigitalPurchasing.Services
         public bool IsSystem { get; set; }
     }
 
-    public class UomDataResult : BaseDataResult<UomResult>
+    public class UomDataResult : BaseDataResponse<UomResult>
     {
     }
 }

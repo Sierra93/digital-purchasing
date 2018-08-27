@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 
-namespace DigitalPurchasing.Services
+namespace DigitalPurchasing.Core
 {
-    public abstract class BaseDataResult<TData> where TData: class 
+    public abstract class BaseDataResponse<TData> where TData: class 
     {
         public int Total { get; set; }
         public List<TData> Data { get; set; } = new List<TData>();

@@ -84,7 +84,7 @@ namespace DigitalPurchasing.Services
         public string ParentName { get; set; }
     }
 
-    public class NomenclatureCategoryDataResult : BaseDataResult<NomenclatureCategoryResult>
+    public class NomenclatureCategoryDataResult : BaseDataResponse<NomenclatureCategoryResult>
     {
     }
 }

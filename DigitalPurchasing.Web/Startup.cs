@@ -80,6 +80,7 @@ namespace DigitalPurchasing.Web
             services.AddScoped<IDictionaryService, DictionaryService>();
             services.AddScoped<IExcelRequestReader, ExcelRequestReader>();
             services.AddScoped<IPurchasingRequestService, PurchasingRequestService>();
+            services.AddScoped<IPRCounterService, PRCounterService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

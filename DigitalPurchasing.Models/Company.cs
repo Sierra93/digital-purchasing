@@ -9,5 +9,6 @@ namespace DigitalPurchasing.Models
         public ICollection<User> Users { get; set; } = new List<User>();
         public ICollection<UnitsOfMeasurement> UnitsOfMeasurements { get; set; }
         public ICollection<NomenclatureCategory> NomenclatureCategories { get; set; }
+        public ICollection<PRCounter> PRCounters { get; set; }
     }
 }

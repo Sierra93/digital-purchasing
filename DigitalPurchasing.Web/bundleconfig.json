@@ -1,9 +1,10 @@
 [
   {
-    "outputFileName": "wwwroot/bundles/vue.min.js",
+    "outputFileName": "wwwroot/bundles/vendor.min.js",
     "inputFiles": [
       "wwwroot/lib/vue/vue.min.js",
-      "wwwroot/lib/vue/vuetable-2.js"
+      "wwwroot/lib/vue/vuetable-2.js",
+      "wwwroot/lib/momentjs/moment.js"
     ],
     "minify": {
       "enabled": true,
