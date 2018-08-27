@@ -37,15 +37,20 @@
                 <ul class="nav navbar-nav">
                     @if (User.Identity.IsAuthenticated)
                     {
-                        <li><a asp-area="" asp-controller="Dashboard" asp-action="Index">Home</a></li>
-                        <li><a asp-area="" asp-controller="PurchasingRequest" asp-action="Index">RFP</a></li>
-                        <li><a asp-area="" asp-controller="Nomenclature" asp-action="Index">Nomenclatures</a></li>
-                        <li><a asp-area="" asp-controller="NomenclatureCategory" asp-action="Index">Categories</a></li>
-                        <li><a asp-area="" asp-controller="Uom" asp-action="Index">Unit of measurements</a></li>
+                        <li><a asp-area="" asp-controller="Dashboard" asp-action="Index">Главная</a></li>
+                        <li><a asp-area="" asp-controller="PurchasingRequest" asp-action="Index">Заявки клиентов</a></li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Справочники&nbsp;<span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a asp-area="" asp-controller="Nomenclature" asp-action="Index">Наименования материалов</a></li>
+                                <li><a asp-area="" asp-controller="NomenclatureCategory" asp-action="Index">Категории материалов</a></li>
+                                <li><a asp-area="" asp-controller="Uom" asp-action="Index">Единицы измерения</a></li>
+                            </ul>
+                        </li>
                     }
                     else
                     {
-                        <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
+                        <li><a asp-area="" asp-controller="Home" asp-action="Index">Главная</a></li>
                     }
                 </ul>
                 <partial name="_LoginPartial" />

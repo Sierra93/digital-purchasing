@@ -8,6 +8,34 @@
 
 <h2>@ViewBag.Title</h2>
 
+<h3>Сопоставление названия колонок из заявки клиента с названиями колонок системы</h3>
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>Колонки в Системе</th>
+        <th>№</th>
+        <th>Код</th>
+        <th>Наименование</th>
+        <th>ЕИ</th>
+        <th>Количество</th>
+        <th>Дата поставки</th>
+        <th>Грузополучатель</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>Колонки в Заявке</td>
+        <td>Сопоставить</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    </tbody>
+</table>
+
 @if (Model.ExcelTable != null && Model.Type == PurchasingRequestType.AppropriateColumns)
 {
     <h3>Заявка в формате Клиента</h3>
