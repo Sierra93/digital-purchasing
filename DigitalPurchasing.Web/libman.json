@@ -9,6 +9,14 @@
         "moment.min.js",
         "moment.js"
       ]
+    },
+    {
+      "library": "vue-resource@1.5.1",
+      "destination": "wwwroot/lib/vue-resource/",
+      "files": [
+        "vue-resource.min.js",
+        "vue-resource.js"
+      ]
     }
   ]
 }

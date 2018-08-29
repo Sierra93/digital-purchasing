@@ -4,6 +4,7 @@
     "inputFiles": [
       "wwwroot/lib/vue/vue.min.js",
       "wwwroot/lib/vue/vuetable-2.js",
+      "wwwroot/lib/vue-resource/vue-resource.js",
       "wwwroot/lib/momentjs/moment.js"
     ],
     "minify": {

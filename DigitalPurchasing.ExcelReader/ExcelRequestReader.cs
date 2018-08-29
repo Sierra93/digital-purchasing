@@ -68,7 +68,7 @@ namespace DigitalPurchasing.ExcelReader
             {
                 result.Columns.Add(new ExcelTableColumn
                 {
-                    Type = TableColumnType.UnitOfMeasurement,
+                    Type = TableColumnType.Uom,
                     Header = GetHeaderValue(uomAddr),
                     Values = GetValuesForHeader(uomAddr)
                 });
@@ -79,7 +79,7 @@ namespace DigitalPurchasing.ExcelReader
             {
                 result.Columns.Add(new ExcelTableColumn
                 {
-                    Type = TableColumnType.Quantity,
+                    Type = TableColumnType.Qty,
                     Header = GetHeaderValue(qtyAddr),
                     Values = GetValuesForHeader(qtyAddr)
                 });

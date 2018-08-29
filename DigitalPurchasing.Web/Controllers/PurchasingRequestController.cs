@@ -42,6 +42,19 @@ namespace DigitalPurchasing.Web.Controllers
             return View(response);
         }
 
+        public IActionResult ColumnsData(Guid id)
+        {
+            var response = _purchasingRequestService.GetColumnsById(id);
+            return Json(response);
+        }
+
+        [HttpPost]
+        public IActionResult SaveColumnsData([FromBody]SavePurchasingRequestColumnsVm model)
+        {
+            _purchasingRequestService.SaveColumns(model.PurchasingRequestId, model);
+            return Ok();
+        }
+
         [HttpPost]
         public async Task<IActionResult> Upload(IFormFile file)
         {

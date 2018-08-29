@@ -1,3 +1,4 @@
+using System;
 using DigitalPurchasing.Core.Interfaces;
 
 namespace DigitalPurchasing.Web.ViewModels
@@ -6,4 +7,9 @@ namespace DigitalPurchasing.Web.ViewModels
     {
         public string EditUrl { get; set; }
     }
+
+    public class SavePurchasingRequestColumnsVm : PurchasingRequestColumns
+    {
+        public Guid PurchasingRequestId { get; set; }
+    } 
 }

@@ -2,41 +2,73 @@
 @model DigitalPurchasing.Core.Interfaces.PurchasingRequestDetailsResponse
 
 @{
-    ViewBag.Title = $"Заявка № {Model.PublicId} от {Model.CreatedOn:dd.MM.yyyy hh:mm}";
+    ViewBag.Title = $"Заявка № {Model.PublicId} от {Model.CreatedOn:dd.MM.yyyy HH:mm}";
     Layout = "_Layout";
 }
 
 <h2>@ViewBag.Title</h2>
 
 <h3>Сопоставление названия колонок из заявки клиента с названиями колонок системы</h3>
-<table class="table table-striped">
-    <thead>
-    <tr>
-        <th>Колонки в Системе</th>
-        <th>№</th>
-        <th>Код</th>
-        <th>Наименование</th>
-        <th>ЕИ</th>
-        <th>Количество</th>
-        <th>Дата поставки</th>
-        <th>Грузополучатель</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr>
-        <td>Колонки в Заявке</td>
-        <td>Сопоставить</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-    </tr>
-    </tbody>
-</table>
+<div id="app">
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Колонки в Системе</th>
+            <th>№</th>
+            <th>Код</th>
+            <th>Наименование</th>
+            <th>ЕИ</th>
+            <th>Количество</th>
+            <th>Дата поставки</th>
+            <th>Грузополучатель</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>Колонки в Заявке</td>
+            <td>
+                <select class="form-control" v-model="columnId">
+                    <option v-for="option in columns" v-bind:value="option.value">{{option.text}}</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control" v-model="columnCode">
+                    <option v-for="option in columns" v-bind:value="option.value">{{option.text}}</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control" v-model="columnName">
+                    <option v-for="option in columns" v-bind:value="option.value">{{option.text}}</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control" v-model="columnUom">
+                    <option v-for="option in columns" v-bind:value="option.value">{{option.text}}</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control" v-model="columnQty">
+                    <option v-for="option in columns" v-bind:value="option.value">{{option.text}}</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control" v-model="columnDate">
+                    <option v-for="option in columns" v-bind:value="option.value">{{option.text}}</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control" v-model="columnReceiver">
+                    <option v-for="option in columns" v-bind:value="option.value">{{option.text}}</option>
+                </select>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <button v-on:click="saveColumns" class="btn btn-primary">Сохранить соответствие столбцов</button>&nbsp;
+    <label v-if="isSaved">Сохранено!</label>
+</div>
 
-@if (Model.ExcelTable != null && Model.Type == PurchasingRequestType.AppropriateColumns)
+@if (Model.IsUploaded && Model.Type == PurchasingRequestType.AppropriateColumns)
 {
     <h3>Заявка в формате Клиента</h3>
     <table class="table table-striped">
@@ -65,3 +97,67 @@
     </table>
 }
 
+@section Scripts
+{
+    <script>
+        (function() {
+            var app = new Vue({
+                el: '#app',
+                data: function() {
+                    return {
+                        columnId: null,
+                        columnCode: null,
+                        columnName: null,
+                        columnUom: null,
+                        columnQty: null,
+                        columnDate: null,
+                        columnReceiver: null,
+                        columns: [],
+                        isSaved: false
+                    };
+                },
+                created: function () {
+                    var $this = this;
+                    this.$http.get('@Url.Action("ColumnsData", new { id = Model.Id })').then(response => {
+                        var data = response.body;
+                        data.columns.forEach(function(el) {
+                            $this.columns.push({ text: el, value: el });
+                        });
+                        $this.columnId = data.id;
+                        $this.columnCode = data.code;
+                        $this.columnName = data.name;
+                        $this.columnUom = data.uom;
+                        $this.columnQty = data.qty;
+                        $this.columnDate = data.date;
+                        $this.columnReceiver = data.receiver;
+                        $this.isSaved = data.isSaved;
+                        //this.someData = ;
+                    }, response => {
+                        alert('error');
+                    });
+                },
+                methods: {
+                    saveColumns: function() {
+                        var $this = this;
+                        var data = {
+                            purchasingRequestId: '@Model.Id',
+                            id: this.columnId,
+                            code: this.columnCode,
+                            name: this.columnName,
+                            uom: this.columnUom,
+                            qty: this.columnQty,
+                            date: this.columnDate,
+                            receiver: this.columnReceiver
+                        };
+                        this.$http.post('@Url.Action("SaveColumnsData")', data).then(res => {
+                            $this.isSaved = true;
+                        }, res => {
+
+                        });
+                        console.log('saveColumns', data);
+                    }
+                }
+            });
+        })();
+    </script>
+}
