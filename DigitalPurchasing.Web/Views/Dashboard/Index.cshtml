@@ -5,17 +5,21 @@
 }
 
 <h2>Dashboard</h2>
-
 <form method="post" enctype="multipart/form-data" asp-action="Upload" asp-controller="PurchasingRequest">
-    <div class="form-group">
-        <div class="col-md-10">
-            <p>Upload one or more files using this form:</p>
-            <input type="file" name="file" />
-        </div>
-    </div>
-    <div class="form-group">
-        <div class="col-md-10">
-            <input type="submit" value="Загрузить заявку" />
-        </div>
-    </div>
+    <label class="btn btn-default btn-file">
+        Загрузить заявку <input type="file" style="display: none;" name="file">
+    </label>
 </form>
+
+@section Scripts
+    {
+    <script>
+        $(document).on('change', ':file', function () {
+            var $input = $(this),
+                numFiles = $input.get(0).files ? $input.get(0).files.length : 1,
+                label = $input.val().replace(/\\/g, '/').replace(/.*\//, '');
+            //$input.trigger('fileselect', [numFiles, label]);
+            $input.parents('form').submit();
+        });
+    </script>
+}
