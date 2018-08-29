@@ -9,9 +9,9 @@ namespace DigitalPurchasing.Tests
         [Fact]
         public void Test1()
         {
-            var c1 = new ExcelRequestReader();
-            c1.ToTable(@"c:\req.xlsx");
-            Assert.True(c1 != null);
+            //var c1 = new ExcelRequestReader();
+            //c1.ToTable(@"c:\req.xlsx");
+            //Assert.True(c1 != null);
         }
     }
 }

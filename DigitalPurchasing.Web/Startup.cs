@@ -81,6 +81,7 @@ namespace DigitalPurchasing.Web
             services.AddScoped<IExcelRequestReader, ExcelRequestReader>();
             services.AddScoped<IPurchasingRequestService, PurchasingRequestService>();
             services.AddScoped<IPRCounterService, PRCounterService>();
+            services.AddScoped<IColumnNameService, ColumnNameService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

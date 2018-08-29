@@ -9,9 +9,13 @@ namespace DigitalPurchasing.ExcelReader
 {
     public class ExcelRequestReader : IExcelRequestReader
     {
+        private readonly IColumnNameService _columnNameService;
+
         private ExcelPackage _package;
         private ExcelWorksheet _ws;
         private string _allCells;
+
+        public ExcelRequestReader(IColumnNameService columnNameService) => _columnNameService = columnNameService;
 
         public ExcelTable ToTable(string filePath)
         {
@@ -27,7 +31,7 @@ namespace DigitalPurchasing.ExcelReader
             _ws = GetDefaultWorksheet();
             _allCells = _ws.Dimension.Address;
             
-            var idAddr = SearchHeader("#", "№");
+            var idAddr = SearchHeader(_columnNameService.GetNames(TableColumnType.Id));
             if (idAddr != null)
             {
                 result.Columns.Add(new ExcelTableColumn
@@ -38,7 +42,7 @@ namespace DigitalPurchasing.ExcelReader
                 });
             }
 
-            var codeAddr = SearchHeader("Code", "Код");
+            var codeAddr = SearchHeader(_columnNameService.GetNames(TableColumnType.Code));
             if (codeAddr != null)
             {
                 result.Columns.Add(new ExcelTableColumn
@@ -50,7 +54,12 @@ namespace DigitalPurchasing.ExcelReader
             }
 
             var nameCount = -1;
-            var nameAddr = SearchHeader("Название", "Наименование", "Name", "Наименование товара");
+            var names = _columnNameService.GetNames(TableColumnType.Name);
+            if (names.Length == 0)
+            {
+                names = new[] {"Название", "Наименование", "Name", "Наименование товара"};
+            }
+            var nameAddr = SearchHeader(names);
             if (nameAddr != null)
             {
                 var values = GetValuesForHeader(nameAddr, true);
@@ -63,7 +72,7 @@ namespace DigitalPurchasing.ExcelReader
                 nameCount = values.Count;
             }
 
-            var uomAddr = SearchHeader("Ед.изм.", "Единица измерения", "ЕИ");
+            var uomAddr = SearchHeader(_columnNameService.GetNames(TableColumnType.Uom));
             if (uomAddr != null)
             {
                 result.Columns.Add(new ExcelTableColumn
@@ -74,7 +83,7 @@ namespace DigitalPurchasing.ExcelReader
                 });
             }
 
-            var qtyAddr = SearchHeader("Количество", "Кол-во", "Q-ty", "Quantity", "Qty");
+            var qtyAddr = SearchHeader(_columnNameService.GetNames(TableColumnType.Qty));
             if (qtyAddr != null)
             {
                 result.Columns.Add(new ExcelTableColumn
@@ -85,9 +94,39 @@ namespace DigitalPurchasing.ExcelReader
                 });
             }
 
+            var receiverAddr = SearchHeader(_columnNameService.GetNames(TableColumnType.Receiver));
+            if (receiverAddr != null)
+            {
+                result.Columns.Add(new ExcelTableColumn
+                {
+                    Type = TableColumnType.Receiver,
+                    Header = GetHeaderValue(receiverAddr),
+                    Values = GetValuesForHeader(receiverAddr)
+                });
+            }
+
+            var dateAddr = SearchHeader(_columnNameService.GetNames(TableColumnType.Date));
+            if (dateAddr != null)
+            {
+                result.Columns.Add(new ExcelTableColumn
+                {
+                    Type = TableColumnType.Date,
+                    Header = GetHeaderValue(dateAddr),
+                    Values = GetValuesForHeader(dateAddr)
+                });
+            }
+
             var foundHeaderAddresses = new List<string>
-                { idAddr?.Address, codeAddr?.Address, nameAddr?.Address, uomAddr?.Address, qtyAddr?.Address };
-            var headerRows = new List<int?> { idAddr?.Row, codeAddr?.Row, nameAddr?.Row, uomAddr?.Row, qtyAddr?.Row };
+                { idAddr?.Address, codeAddr?.Address, nameAddr?.Address, uomAddr?.Address, qtyAddr?.Address, receiverAddr?.Address, dateAddr?.Address };
+
+            // can't recognize table structure
+            if (foundHeaderAddresses.Count == 0)
+            {
+                return null; 
+            }
+
+            var headerRows = new List<int?> { idAddr?.Row, codeAddr?.Row, nameAddr?.Row, uomAddr?.Row, qtyAddr?.Row, receiverAddr?.Row, dateAddr?.Row };
+
             var uniqueHeaderRows = headerRows.Where(q => q.HasValue).Select(q => q.Value).Distinct().ToList();
             if (uniqueHeaderRows.Count > 1)
             {

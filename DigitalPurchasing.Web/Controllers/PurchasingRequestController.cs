@@ -71,6 +71,10 @@ namespace DigitalPurchasing.Web.Controllers
                 await file.CopyToAsync(output);
 
             var id = _purchasingRequestService.CreateFromFile(filePath);
+            if (id == Guid.Empty)
+            {
+                return RedirectToAction(nameof(Index));
+            }
 
             return RedirectToAction(nameof(Edit), new { id });
         }

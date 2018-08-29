@@ -24,6 +24,7 @@ namespace DigitalPurchasing.Data
         public DbSet<PurchasingRequestItem> PurchasingRequestItems { get; set; }
         public DbSet<RawPurchasingRequestItem> RawPurchasingRequestItems { get; set; }
         public DbSet<PRCounter> PRCounters { get; set; }
+        public DbSet<ColumnName> ColumnNames { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ITenantService tenantService) : base(options) => _tenantService = tenantService;
 
@@ -56,6 +57,7 @@ namespace DigitalPurchasing.Data
             builder.Entity<PRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<PurchasingRequest>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<Nomenclature>().HasQueryFilter(o => o.OwnerId == CompanyId);
+            builder.Entity<ColumnName>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<UnitsOfMeasurement>().HasQueryFilter(o => o.OwnerId == CompanyId || o.OwnerId == null);
         }
 
