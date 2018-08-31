@@ -12,13 +12,10 @@ namespace DigitalPurchasing.Core.Interfaces
     public enum TableColumnType
     {
         Unknown = 0,
-        Id = 10,
         Code = 20,
         Name = 30,
         Qty = 40,
-        Uom = 50,
-        Date = 60,
-        Receiver = 70
+        Uom = 50
     }
 
     public class ExcelTable

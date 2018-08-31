@@ -61,13 +61,10 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class PurchasingRequestColumns
     {
-        public string Id { get; set; }
         public string Code { get; set; }
         public string Name { get; set; }
         public string Uom { get; set; }
         public string Qty { get; set; }
-        public string Date { get; set; }
-        public string Receiver { get; set; }
     }
 
     public class PurchasingRequestColumnsResponse : PurchasingRequestColumns

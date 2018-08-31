@@ -63,13 +63,10 @@ namespace DigitalPurchasing.Services
             // load from raw columns first
             var result = new PurchasingRequestColumnsResponse
             {
-                Id = entity.RawColumns != null ? entity.RawColumns.Id : excelTable.Columns.FirstOrDefault(q => q.Type == TableColumnType.Id)?.Header ?? "",
                 Code = entity.RawColumns != null ? entity.RawColumns.Code : excelTable.Columns.FirstOrDefault(q => q.Type == TableColumnType.Code)?.Header ?? "",
                 Name = entity.RawColumns != null ? entity.RawColumns.Name : excelTable.Columns.FirstOrDefault(q => q.Type == TableColumnType.Name)?.Header ?? "",
                 Qty = entity.RawColumns != null ? entity.RawColumns.Qty : excelTable.Columns.FirstOrDefault(q => q.Type == TableColumnType.Qty)?.Header ?? "",
                 Uom = entity.RawColumns != null ? entity.RawColumns.Uom : excelTable.Columns.FirstOrDefault(q => q.Type == TableColumnType.Uom)?.Header ?? "",
-                Date = entity.RawColumns != null ? entity.RawColumns.Date : excelTable.Columns.FirstOrDefault(q => q.Type == TableColumnType.Date)?.Header ?? "",
-                Receiver = entity.RawColumns != null ? entity.RawColumns.Receiver : excelTable.Columns.FirstOrDefault(q => q.Type == TableColumnType.Receiver)?.Header ?? "",
                 Columns = excelTable.Columns.Select(q => q.Header).ToList(),
                 IsSaved = entity.RawColumns != null 
             };
@@ -88,12 +85,9 @@ namespace DigitalPurchasing.Services
             entity.RawColumns = purchasingRequestColumns.Adapt(entity.RawColumns);
             _db.SaveChanges();
 
-            if (!string.IsNullOrEmpty(purchasingRequestColumns.Id)) _columnNameService.SaveName(TableColumnType.Id, purchasingRequestColumns.Id);
             if (!string.IsNullOrEmpty(purchasingRequestColumns.Name)) _columnNameService.SaveName(TableColumnType.Name, purchasingRequestColumns.Name);
             if (!string.IsNullOrEmpty(purchasingRequestColumns.Code)) _columnNameService.SaveName(TableColumnType.Code, purchasingRequestColumns.Code);
             if (!string.IsNullOrEmpty(purchasingRequestColumns.Qty)) _columnNameService.SaveName(TableColumnType.Qty, purchasingRequestColumns.Qty);
-            if (!string.IsNullOrEmpty(purchasingRequestColumns.Receiver)) _columnNameService.SaveName(TableColumnType.Receiver, purchasingRequestColumns.Receiver);
-            if (!string.IsNullOrEmpty(purchasingRequestColumns.Date)) _columnNameService.SaveName(TableColumnType.Date, purchasingRequestColumns.Date);
             if (!string.IsNullOrEmpty(purchasingRequestColumns.Uom)) _columnNameService.SaveName(TableColumnType.Uom, purchasingRequestColumns.Uom);
         }
 

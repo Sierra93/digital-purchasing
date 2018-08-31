@@ -1,0 +1,53 @@
+
+@{
+    ViewData["Title"] = "Таблица соответсвия названий колонок";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Таблица соответсвия названий колонок</h2>
+
+<div id="app">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th style="width: 20%">Название колонки в системе</th>
+                <th>Соответствия</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-for="col in cols">
+                <td>{{col.name}}</td>
+                <td><span v-for="altName in col.altNames">{{altName}}</span></td>
+                @*<td>
+                    <button type="button" class="btn btn-default" v-on:click="removeRow(r)" v-if="getRowIndex(r)>1"><i class="far fa-minus-square"></i></button>
+                    <button type="button" class="btn btn-default" v-on:click="addRow(r)"><i class="far fa-plus-square"></i></button>
+                </td>*@
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        (function() {
+            var app = new Vue({
+                el: '#app',
+                data: function() {
+                    return {
+                        cols: []
+                    };
+                },
+                created: function() {
+                    var $this = this;
+                    this.$http.get('@Url.Action("Data")').then(response => {
+                        var data = response.body;
+                        $this.cols = data.columns;
+                        console.log(data);
+                    }, response => {
+                        alert('error');
+                    });
+                }
+            });
+        })();
+    </script>
+}

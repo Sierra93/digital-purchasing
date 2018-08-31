@@ -30,17 +30,6 @@ namespace DigitalPurchasing.ExcelReader
             _package = new ExcelPackage(new FileInfo(filePath));
             _ws = GetDefaultWorksheet();
             _allCells = _ws.Dimension.Address;
-            
-            var idAddr = SearchHeader(_columnNameService.GetNames(TableColumnType.Id));
-            if (idAddr != null)
-            {
-                result.Columns.Add(new ExcelTableColumn
-                {
-                    Type = TableColumnType.Id,
-                    Header = GetHeaderValue(idAddr),
-                    Values = GetValuesForHeader(idAddr)
-                });
-            }
 
             var codeAddr = SearchHeader(_columnNameService.GetNames(TableColumnType.Code));
             if (codeAddr != null)
@@ -54,12 +43,7 @@ namespace DigitalPurchasing.ExcelReader
             }
 
             var nameCount = -1;
-            var names = _columnNameService.GetNames(TableColumnType.Name);
-            if (names.Length == 0)
-            {
-                names = new[] {"Название", "Наименование", "Name", "Наименование товара"};
-            }
-            var nameAddr = SearchHeader(names);
+            var nameAddr = SearchHeader(_columnNameService.GetNames(TableColumnType.Name));
             if (nameAddr != null)
             {
                 var values = GetValuesForHeader(nameAddr, true);
@@ -94,30 +78,8 @@ namespace DigitalPurchasing.ExcelReader
                 });
             }
 
-            var receiverAddr = SearchHeader(_columnNameService.GetNames(TableColumnType.Receiver));
-            if (receiverAddr != null)
-            {
-                result.Columns.Add(new ExcelTableColumn
-                {
-                    Type = TableColumnType.Receiver,
-                    Header = GetHeaderValue(receiverAddr),
-                    Values = GetValuesForHeader(receiverAddr)
-                });
-            }
-
-            var dateAddr = SearchHeader(_columnNameService.GetNames(TableColumnType.Date));
-            if (dateAddr != null)
-            {
-                result.Columns.Add(new ExcelTableColumn
-                {
-                    Type = TableColumnType.Date,
-                    Header = GetHeaderValue(dateAddr),
-                    Values = GetValuesForHeader(dateAddr)
-                });
-            }
-
             var foundHeaderAddresses = new List<string>
-                { idAddr?.Address, codeAddr?.Address, nameAddr?.Address, uomAddr?.Address, qtyAddr?.Address, receiverAddr?.Address, dateAddr?.Address };
+                { codeAddr?.Address, nameAddr?.Address, uomAddr?.Address, qtyAddr?.Address };
 
             // can't recognize table structure
             if (foundHeaderAddresses.Count == 0)
@@ -125,7 +87,7 @@ namespace DigitalPurchasing.ExcelReader
                 return null; 
             }
 
-            var headerRows = new List<int?> { idAddr?.Row, codeAddr?.Row, nameAddr?.Row, uomAddr?.Row, qtyAddr?.Row, receiverAddr?.Row, dateAddr?.Row };
+            var headerRows = new List<int?> { codeAddr?.Row, nameAddr?.Row, uomAddr?.Row, qtyAddr?.Row };
 
             var uniqueHeaderRows = headerRows.Where(q => q.HasValue).Select(q => q.Value).Distinct().ToList();
             if (uniqueHeaderRows.Count > 1)

@@ -17,14 +17,14 @@ namespace DigitalPurchasing.Services
 
         public string[] GetNames(TableColumnType type)
         {
-            var entity = _db.ColumnNames.FirstOrDefault(q => q.Type == type);
+            var entity = _db.ColumnNames.AsQueryable().FirstOrDefault(q => q.Type == type);
             if (entity == null) return new string[0];
             return entity.Names.Split(Separator);
         }
 
         public void SaveName(TableColumnType type, string name)
         {
-            var entity = _db.ColumnNames.FirstOrDefault(q => q.Type == type);
+            var entity = _db.ColumnNames.AsQueryable().FirstOrDefault(q => q.Type == type);
             if (entity == null)
             {
                 _db.ColumnNames.Add(new ColumnName { Type = type, Names = name });
@@ -37,6 +37,30 @@ namespace DigitalPurchasing.Services
             names.Add(name);
             entity.Names = string.Join(Separator, names);
             _db.SaveChanges();
+        }
+
+        public ColumnResponse GetAllNames()
+        {
+            var result = new ColumnResponse();
+            var columnNames = _db.ColumnNames.AsQueryable().ToList();
+            foreach (var columnName in columnNames)
+            {
+                result.AddColumn(DefaultName(columnName.Type), columnName.Names.Split(Separator).ToArray());
+            }
+            return result;
+        }
+
+        public string DefaultName(TableColumnType type)
+        {
+            switch (type)
+            {
+                case TableColumnType.Code: return "Код";
+                case TableColumnType.Name: return "Наименование";
+                case TableColumnType.Qty: return "Количество";
+                case TableColumnType.Uom: return "ЕИ";
+                default:
+                    return "";
+            }
         }
     }
 }
