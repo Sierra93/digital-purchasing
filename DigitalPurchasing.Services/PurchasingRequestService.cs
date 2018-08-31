@@ -1,6 +1,7 @@
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using DigitalPurchasing.Models;
@@ -34,7 +35,7 @@ namespace DigitalPurchasing.Services
             var entry = _db.PurchasingRequests.Add(new PurchasingRequest
             {
                 RawData = JsonConvert.SerializeObject(table),
-                Type = PurchasingRequestType.AppropriateColumns,
+                Status = PurchasingRequestStatus.UploadedFile,
                 PublicId = _counterService.GetNextId()
             });
 
@@ -94,6 +95,46 @@ namespace DigitalPurchasing.Services
             if (!string.IsNullOrEmpty(purchasingRequestColumns.Receiver)) _columnNameService.SaveName(TableColumnType.Receiver, purchasingRequestColumns.Receiver);
             if (!string.IsNullOrEmpty(purchasingRequestColumns.Date)) _columnNameService.SaveName(TableColumnType.Date, purchasingRequestColumns.Date);
             if (!string.IsNullOrEmpty(purchasingRequestColumns.Uom)) _columnNameService.SaveName(TableColumnType.Uom, purchasingRequestColumns.Uom);
+        }
+
+        public void GenerateRawItems(Guid id)
+        {
+            _db.RemoveRange(_db.RawPurchasingRequestItems.Where(q => q.PurchasingRequestId == id));
+            _db.SaveChanges();
+
+            var entity = _db.PurchasingRequests.Include(q => q.RawColumns).First(q => q.Id == id);
+            var table = JsonConvert.DeserializeObject<ExcelTable>(entity.RawData);
+            var rawItems = new List<RawPurchasingRequestItem>();
+            for (var i = 0; i < table.Columns.First(q => q.Type == TableColumnType.Name).Values.Count; i++)
+            {
+                var rawItem = new RawPurchasingRequestItem
+                {
+                    PurchasingRequestId = id,
+                    Position = i + 1,
+                    Code = string.IsNullOrEmpty(entity.RawColumns.Code) ? "" : table.GetValue(entity.RawColumns.Code, i),
+                    Name = string.IsNullOrEmpty(entity.RawColumns.Name) ? "" : table.GetValue(entity.RawColumns.Name, i),
+                    Qty = string.IsNullOrEmpty(entity.RawColumns.Qty) ? 0 : table.GetDecimalValue(entity.RawColumns.Qty, i),
+                    Uom = string.IsNullOrEmpty(entity.RawColumns.Uom) ? "" : table.GetValue(entity.RawColumns.Uom, i)
+                };
+
+                rawItems.Add(rawItem);
+            }
+
+            _db.RawPurchasingRequestItems.AddRange(rawItems);
+            _db.SaveChanges();
+        }
+
+        public RawItemResponse GetRawItems(Guid id)
+        {
+            var items = _db.RawPurchasingRequestItems.Where(q => q.PurchasingRequestId == id).ProjectToType<RawItemResponse.RawItem>().ToList();
+            return new RawItemResponse {Items = items};
+        }
+
+        public void UpdateStatus(Guid id, PurchasingRequestStatus status)
+        {
+            var entity = _db.PurchasingRequests.Find(id);
+            entity.Status = status;
+            _db.SaveChanges();
         }
 
         public PurchasingRequestDataResponse GetData(int page, int perPage, string sortField, bool sortAsc)

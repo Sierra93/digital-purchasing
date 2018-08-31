@@ -39,6 +39,24 @@ namespace DigitalPurchasing.Web.Controllers
             var response = _purchasingRequestService.GetById(id);
             if (response == null) return NotFound();
 
+            if (response.Status == PurchasingRequestStatus.UploadedFile)
+            {
+                return View(response);
+            }
+
+            if (response.Status == PurchasingRequestStatus.ManualInput)
+            {
+                return View("EditManual", response);
+            }
+
+            return NotFound();
+        }
+
+        public IActionResult EditManual(Guid id)
+        {
+            var response = _purchasingRequestService.GetById(id);
+            if (response == null) return NotFound();
+
             return View(response);
         }
 
@@ -52,7 +70,15 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult SaveColumnsData([FromBody]SavePurchasingRequestColumnsVm model)
         {
             _purchasingRequestService.SaveColumns(model.PurchasingRequestId, model);
+            _purchasingRequestService.GenerateRawItems(model.PurchasingRequestId);
+            _purchasingRequestService.UpdateStatus(model.PurchasingRequestId, PurchasingRequestStatus.ManualInput);
             return Ok();
+        }
+
+        public IActionResult RawItemsData(Guid id)
+        {
+            var response = _purchasingRequestService.GetRawItems(id);
+            return Json(response);
         }
 
         [HttpPost]

@@ -10,12 +10,15 @@ namespace DigitalPurchasing.Core.Interfaces
         PurchasingRequestColumnsResponse GetColumnsById(Guid id);
         void SaveColumns(Guid id, PurchasingRequestColumns purchasingRequestColumns);
         PurchasingRequestDataResponse GetData(int page, int perPage, string sortField, bool sortAsc);
+        void GenerateRawItems(Guid id);
+        RawItemResponse GetRawItems(Guid id);
+        void UpdateStatus(Guid id, PurchasingRequestStatus status);
     }
 
-    public enum PurchasingRequestType
+    public enum PurchasingRequestStatus
     {
-        AppropriateColumns = 0,
-        ManualInput = 10
+        UploadedFile = -10,
+        ManualInput = 0
     }
 
     public class PurchasingRequestDetailsResponse
@@ -25,7 +28,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public DateTime CreatedOn { get; set; }
 
-        public PurchasingRequestType Type { get; set; } 
+        public PurchasingRequestStatus Status { get; set; } 
 
         public ExcelTable ExcelTable { get; set; }
 
@@ -41,6 +44,19 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class PurchasingRequestDataResponse : BaseDataResponse<PurchasingRequestData>
     {
+    }
+
+    public class RawItemResponse
+    {
+        public class RawItem
+        {
+            public string Code { get; set; }
+            public string Name { get; set; }
+            public string Uom { get; set; }
+            public decimal Qty { get; set; }
+        }
+
+        public List<RawItem> Items { get; set; }
     }
 
     public class PurchasingRequestColumns

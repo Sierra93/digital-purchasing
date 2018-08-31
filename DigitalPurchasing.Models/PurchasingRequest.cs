@@ -9,7 +9,7 @@ namespace DigitalPurchasing.Models
     {
         public int PublicId { get; set; }
 
-        public PurchasingRequestType Type { get; set; }
+        public PurchasingRequestStatus Status { get; set; }
 
         public ICollection<PurchasingRequestItem> Items { get; set; } = new List<PurchasingRequestItem>();
         public ICollection<RawPurchasingRequestItem> RawItems { get; set; } = new List<RawPurchasingRequestItem>();

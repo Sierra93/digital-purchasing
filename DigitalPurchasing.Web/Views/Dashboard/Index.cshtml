@@ -4,22 +4,17 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Dashboard</h2>
+<h2>Главная</h2>
 <form method="post" enctype="multipart/form-data" asp-action="Upload" asp-controller="PurchasingRequest">
     <label class="btn btn-default btn-file">
         Загрузить заявку <input type="file" style="display: none;" name="file">
     </label>
 </form>
 
-@section Scripts
-    {
+@section Scripts {
     <script>
         $(document).on('change', ':file', function () {
-            var $input = $(this),
-                numFiles = $input.get(0).files ? $input.get(0).files.length : 1,
-                label = $input.val().replace(/\\/g, '/').replace(/.*\//, '');
-            //$input.trigger('fileselect', [numFiles, label]);
-            $input.parents('form').submit();
+            $(this).parents('form').submit();
         });
     </script>
 }
