@@ -43,7 +43,7 @@ namespace DigitalPurchasing.ExcelReader
             }
 
             var nameCount = -1;
-            var nameAddr = SearchHeader(_columnNameService.GetNames(TableColumnType.Name));
+            var nameAddr = SearchHeader(_columnNameService.GetNames(TableColumnType.Name)) ?? SearchHeader("Наименование", "Наименование товара", "Name");
             if (nameAddr != null)
             {
                 var values = GetValuesForHeader(nameAddr, true);
