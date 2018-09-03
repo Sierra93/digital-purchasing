@@ -4,6 +4,7 @@ using System.Linq;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
+using Microsoft.IdentityModel.Tokens;
 
 namespace DigitalPurchasing.Services
 {
@@ -24,15 +25,21 @@ namespace DigitalPurchasing.Services
 
         public void SaveName(TableColumnType type, string name)
         {
+            if (string.IsNullOrEmpty(name)) return;
+            
+            var defaultName = DefaultName(type);
             var entity = _db.ColumnNames.AsQueryable().FirstOrDefault(q => q.Type == type);
             if (entity == null)
             {
-                _db.ColumnNames.Add(new ColumnName { Type = type, Names = name });
-                _db.SaveChanges();
+                if (!defaultName.Equals(name, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    _db.ColumnNames.Add(new ColumnName { Type = type, Names = name });
+                    _db.SaveChanges();
+                }                
                 return;
             }
 
-            var names = entity.Names.Split(Separator).ToList();
+            var names = entity.Names.Split(Separator, StringSplitOptions.RemoveEmptyEntries).Union(new [] { defaultName }).ToList();
             if (names.Contains(name, StringComparer.InvariantCultureIgnoreCase)) return;
             names.Add(name);
             entity.Names = string.Join(Separator, names);
