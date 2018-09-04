@@ -9,6 +9,26 @@
 <h2>@ViewBag.Title</h2>
 
 <div id="app">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="customer">Клиент</label>
+                <input type="text" class="form-control" id="customer" placeholder="">
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="name">ФИО заявителя</label>
+                <input type="text" class="form-control" id="name" placeholder="">
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="consignee">Грузополучатель</label>
+                <input type="text" class="form-control" id="consignee" placeholder="">
+            </div>
+        </div>
+    </div>
     <table class="table table-striped">
         <thead>
         <tr>
@@ -25,10 +45,10 @@
             <td class="text-center">
                 <label>{{getRowIndex(r)}}</label>
             </td>
-            <td><input type="text" class="form-control" v-model="r.code" /></td>
-            <td><input type="text" class="form-control" v-model="r.name" /></td>
-            <td><input type="number" class="form-control" v-model="r.qty" /></td>
-            <td><input type="text" class="form-control" v-model="r.uom" /></td>
+            <td><input type="text" class="form-control" v-model="r.code"/></td>
+            <td><input type="text" class="form-control" v-model="r.name"/></td>
+            <td><input type="number" class="form-control" v-model="r.qty"/></td>
+            <td><input type="text" class="form-control" v-model="r.uom"/></td>
             <td>
                 <button type="button" class="btn btn-default" v-on:click="removeRow(r)" v-if="getRowIndex(r)>1"><i class="far fa-minus-square"></i></button>
                 <button type="button" class="btn btn-default" v-on:click="addRow(r)"><i class="far fa-plus-square"></i></button>
@@ -36,6 +56,62 @@
         </tr>
         </tbody>
     </table>
+    <button v-on:click="saveRawItems" class="btn btn-default">Сохранить изменения</button>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="datetime">Дата и время поставки</label>
+                <input type="text" class="form-control" id="datetime" placeholder="13.07.2018">
+            </div>
+            <div class="form-group">
+                <label for="...">Инкотермс (условия доставки)</label>
+                <select class="form-control" id="...">
+                    <option>111</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="...">Условия оплаты</label>
+                <select class="form-control" id="...">
+                    <option>111</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="datetime">Отсрочка платежа, дней</label>
+                <input type="number" class="form-control" id="datetime" placeholder="30">
+            </div>
+            <div class="form-group">
+                <label for="datetime">Адрес доставки</label>
+                <div class="row">
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" id="country" placeholder="Страна">
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" id="city" placeholder="Город/Населенный пункт">
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 15px;">
+                    <div class="col-md-12">
+                        <input type="text" class="form-control" id="address" placeholder="Улица">
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 15px;">
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" id="datetime" placeholder="Дом">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" id="datetime" placeholder="Корпус">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" id="datetime" placeholder="Строение">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" id="datetime" placeholder="Офис/квартира">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 @section Scripts
@@ -74,6 +150,19 @@
                     removeRow: function(item) {
                         var index = this.rows.indexOf(item);
                         this.rows.splice(index, 1);
+                    },
+                    saveRawItems: function() {
+                        var $this = this;
+                        var data = {
+                            purchasingRequestId: '@Model.Id',
+                            items: $this.rows
+                        };
+                        this.$http.post('@Url.Action("SaveRawItemsData")', data).then(response => {
+                            var data = response.body;
+                            //$this.rows = data.items;
+                        }, response => {
+                            alert('error');
+                        });
                     }
                 }
             });

@@ -5,13 +5,14 @@ namespace DigitalPurchasing.Core.Interfaces
 {
     public interface IPurchasingRequestService
     {
-        Guid CreateFromFile(string filePath);
+        CreateFromFileResponse CreateFromFile(string filePath);
         PurchasingRequestDetailsResponse GetById(Guid id);
         PurchasingRequestColumnsResponse GetColumnsById(Guid id);
         void SaveColumns(Guid id, PurchasingRequestColumns purchasingRequestColumns);
         PurchasingRequestDataResponse GetData(int page, int perPage, string sortField, bool sortAsc);
         void GenerateRawItems(Guid id);
         RawItemResponse GetRawItems(Guid id);
+        void SaveRawItems(Guid id, IEnumerable<RawItemResponse.RawItem> items);
         void UpdateStatus(Guid id, PurchasingRequestStatus status);
     }
 
@@ -19,6 +20,13 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         UploadedFile = -10,
         ManualInput = 0
+    }
+
+    public class CreateFromFileResponse
+    {
+        public bool IsSuccess { get; set; }
+        public string Message { get; set; }
+        public Guid Id { get; set; }
     }
 
     public class PurchasingRequestDetailsResponse

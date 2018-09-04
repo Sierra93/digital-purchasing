@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
+using DigitalPurchasing.Web.ViewModels.PurchasingRequest;
 using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +19,10 @@ namespace DigitalPurchasing.Web.Controllers
 
         public PurchasingRequestController(IPurchasingRequestService purchasingRequestService) => _purchasingRequestService = purchasingRequestService;
 
-        public IActionResult Index() => View();
+        public IActionResult Index()
+        {
+            return View();
+        }
 
         [HttpGet]
         public IActionResult Data(VueTableRequest request)
@@ -82,6 +86,14 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         [HttpPost]
+        public IActionResult SaveRawItemsData([FromBody] SaveRawItemsDataVm model)
+        {
+            var id = model.PurchasingRequestId;
+            _purchasingRequestService.SaveRawItems(id, model.Items);
+            return Ok();
+        }
+
+        [HttpPost]
         public async Task<IActionResult> Upload(IFormFile file)
         {
             if (file == null)
@@ -96,13 +108,14 @@ namespace DigitalPurchasing.Web.Controllers
             using (var output = System.IO.File.Create(filePath))
                 await file.CopyToAsync(output);
 
-            var id = _purchasingRequestService.CreateFromFile(filePath);
-            if (id == Guid.Empty)
+            var response = _purchasingRequestService.CreateFromFile(filePath);
+            if (!response.IsSuccess)
             {
+                TempData["Message"] = response.Message;
                 return RedirectToAction(nameof(Index));
             }
 
-            return RedirectToAction(nameof(Edit), new { id });
+            return RedirectToAction(nameof(Edit), new { id = response.Id });
         }
     }
 }

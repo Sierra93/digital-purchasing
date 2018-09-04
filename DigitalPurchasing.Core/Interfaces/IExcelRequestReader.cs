@@ -6,7 +6,7 @@ namespace DigitalPurchasing.Core.Interfaces
 {
     public interface IExcelRequestReader
     {
-        ExcelTable ToTable(string filePath);
+        ExcelTableResponse ToTable(string filePath);
     }
 
     public enum TableColumnType
@@ -64,5 +64,15 @@ namespace DigitalPurchasing.Core.Interfaces
         public string Header { get; set; }
         public TableColumnType Type { get; set; }
         public List<string> Values { get; set; } = new List<string>();
+    }
+
+    public class ExcelTableResponse
+    {
+        public bool IsSuccess { get; set; }
+        public ExcelTable Table { get; set; }
+        public string Message { get; set; }
+
+        public static ExcelTableResponse Success(ExcelTable table) => new ExcelTableResponse { Table = table, IsSuccess = true };
+        public static ExcelTableResponse Error(string message) => new ExcelTableResponse { IsSuccess = false, Message = message };
     }
 }

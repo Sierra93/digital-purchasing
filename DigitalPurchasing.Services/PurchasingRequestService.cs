@@ -27,21 +27,21 @@ namespace DigitalPurchasing.Services
             _columnNameService = columnNameService;
         }
 
-        public Guid CreateFromFile(string filePath)
+        public CreateFromFileResponse CreateFromFile(string filePath)
         {
-            var table = _excelRequestReader.ToTable(filePath);
-            if (table == null) return Guid.Empty;
+            var result = _excelRequestReader.ToTable(filePath);
+            if (result == null || !result.IsSuccess) return new CreateFromFileResponse { IsSuccess = false, Message = result?.Message };
 
             var entry = _db.PurchasingRequests.Add(new PurchasingRequest
             {
-                RawData = JsonConvert.SerializeObject(table),
+                RawData = JsonConvert.SerializeObject(result.Table),
                 Status = PurchasingRequestStatus.UploadedFile,
                 PublicId = _counterService.GetNextId()
             });
 
             _db.SaveChanges();
 
-            return entry.Entity.Id;
+            return new CreateFromFileResponse { IsSuccess = true, Id = entry.Entity.Id };
         }
 
         public PurchasingRequestDetailsResponse GetById(Guid id)
@@ -120,8 +120,28 @@ namespace DigitalPurchasing.Services
 
         public RawItemResponse GetRawItems(Guid id)
         {
-            var items = _db.RawPurchasingRequestItems.Where(q => q.PurchasingRequestId == id).ProjectToType<RawItemResponse.RawItem>().ToList();
+            var items = _db.RawPurchasingRequestItems
+                .Where(q => q.PurchasingRequestId == id)
+                .OrderBy(q => q.Position)
+                .ProjectToType<RawItemResponse.RawItem>()
+                .ToList();
+
             return new RawItemResponse {Items = items};
+        }
+
+        public void SaveRawItems(Guid id, IEnumerable<RawItemResponse.RawItem> items)
+        {
+            _db.RawPurchasingRequestItems.RemoveRange(_db.RawPurchasingRequestItems.Where(q => q.PurchasingRequestId == id));
+            _db.SaveChanges();
+            var rawItems = items.Adapt<List<RawPurchasingRequestItem>>().ToList();
+            var index = 0;
+            foreach (var rawItem in rawItems)
+            {
+                rawItem.PurchasingRequestId = id;
+                rawItem.Position = ++index;
+            }
+            _db.RawPurchasingRequestItems.AddRange(rawItems);
+            _db.SaveChanges();
         }
 
         public void UpdateStatus(Guid id, PurchasingRequestStatus status)

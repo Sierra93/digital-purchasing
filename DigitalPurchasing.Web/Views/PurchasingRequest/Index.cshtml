@@ -4,7 +4,16 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Заявки на закупку от клиентов
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-danger alert-dismissible" role="alert" style="margin-top: 15px;">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        @TempData["Message"]
+    </div>
+}
+
+<h2>
+    Заявки на закупку от клиентов
     <form method="post" enctype="multipart/form-data" asp-action="Upload" asp-controller="PurchasingRequest" style="display: inline-block">
         <label class="btn btn-default btn-file">
             Загрузить заявку <input type="file" style="display: none;" name="file">
