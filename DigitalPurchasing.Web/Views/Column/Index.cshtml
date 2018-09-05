@@ -15,37 +15,73 @@
             </tr>
         </thead>
         <tbody>
-            <tr v-for="col in cols">
+            <tr v-for="col in cols" v-if="!isLoading">
                 <td>{{col.name}}</td>
-                <td><span v-for="altName in col.altNames">{{altName}}</span></td>
-                @*<td>
-                    <button type="button" class="btn btn-default" v-on:click="removeRow(r)" v-if="getRowIndex(r)>1"><i class="far fa-minus-square"></i></button>
-                    <button type="button" class="btn btn-default" v-on:click="addRow(r)"><i class="far fa-plus-square"></i></button>
-                </td>*@
+                <td>
+                    <vue-tags-input v-model="col.altName" :tags="col.altNames" v-on:tags-changed="col.altNames = $event" placeholder="Добавить название" />
+                </td>
+            </tr>
+            <tr v-if="isLoading">
+                <td colspan="2">Загрузка...</td>
             </tr>
         </tbody>
     </table>
+    <button type="button" class="btn btn-default" v-on:click="saveAltNames()">Сохранить</button>
 </div>
 
 @section Scripts {
     <script>
+
         (function() {
             var app = new Vue({
                 el: '#app',
                 data: function() {
                     return {
-                        cols: []
+                        cols: [],
+                        isLoading: false
                     };
                 },
                 created: function() {
                     var $this = this;
-                    this.$http.get('@Url.Action("Data")').then(response => {
-                        var data = response.body;
-                        $this.cols = data.columns;
-                        console.log(data);
-                    }, response => {
-                        alert('error');
+                    $this.isLoading = true;
+                    this.$http.get('@Url.Action("Data")').then(function(response) {
+                        response.body.columns.map(function (colData, key) {
+                            var col = {
+                                name: colData.name,
+                                altName: '',
+                                altNames: []
+                            };
+                            colData.altNames.map(function(altName, key) {
+                                col.altNames.push({ text: altName });
+                            });
+                            $this.cols.push(col);
+                        });
+                        $this.isLoading = false;
+                    }, function(response) {
+                        $this.isLoading = false;
+                        alert('Ошибка загрузки');
                     });
+                },
+                methods: {
+                    saveAltNames: function() {
+                        var $this = this;
+                        var data = [];
+                        this.cols.map(function(col, key) {
+                            var o = {
+                                name: col.name,
+                                altNames: []
+                            };
+                            col.altNames.map(function(tag, key) {
+                                o.altNames.push(tag.text);
+                            });
+                            data.push(o);
+                        });
+                        this.$http.post('@Url.Action("SaveData")', { columns: data }).then(function(res) {
+
+                        }, function(res) {
+                            alert('Ошибка сохранения');
+                        });
+                    }
                 }
             });
         })();

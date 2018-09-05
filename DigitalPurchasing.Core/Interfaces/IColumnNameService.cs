@@ -7,6 +7,7 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         string[] GetNames(TableColumnType type);
         void SaveName(TableColumnType type, string name);
+        void SaveAllNames(ColumnResponse model);
         ColumnResponse GetAllNames();
     }
 
@@ -20,9 +21,6 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public List<Column> Columns = new List<Column>();
 
-        public void AddColumn(string name, params string[] aNames)
-        {
-            Columns.Add(new Column { Name = name, AltNames = aNames.ToList() });
-        }
+        public void AddColumn(string name, string[] altNames) => Columns.Add(new Column { Name = name, AltNames = altNames.ToList() });
     }
 }

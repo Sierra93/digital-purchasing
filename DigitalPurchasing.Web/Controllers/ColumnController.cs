@@ -20,5 +20,12 @@ namespace DigitalPurchasing.Web.Controllers
             var names = _columnNameService.GetAllNames();
             return Json(names);
         }
+
+        [HttpPost]
+        public IActionResult SaveData([FromBody] ColumnResponse model)
+        {
+            _columnNameService.SaveAllNames(model);
+            return Ok();
+        }
     }
 }
