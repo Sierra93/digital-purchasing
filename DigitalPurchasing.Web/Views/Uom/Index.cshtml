@@ -1,8 +1,16 @@
 @model object
 
+@{
+    ViewBag.Title = "Единицы измерения";
+}
+
+<h2>@ViewBag.Title
+    <a asp-action="Create" class="btn btn-default">Добавить</a>
+</h2>
+
 <div id="app">
 
-    <a asp-action="Create" class="btn btn-default">Create</a>
+    
 
     <vuetable ref="vuetable"
               api-url="@Url.Action("Data")"
@@ -24,72 +32,43 @@
     </div>
 </div>
 
-
 @section Scripts {
     <script>
         (function () {
-            var css = {
-                tableClass: 'table table-striped table-bordered',
-                loadingClass: 'loading',
-                ascendingIcon: 'glyphicon glyphicon-chevron-up',
-                descendingIcon: 'glyphicon glyphicon-chevron-down',
-                handleIcon: 'glyphicon glyphicon-menu-hamburger',
-                pagination: {
-                    infoClass: 'pull-left',
-                    wrapperClass: 'vuetable-pagination pull-right',
-                    activeClass: 'btn-primary',
-                    disabledClass: 'disabled',
-                    pageClass: 'btn btn-border',
-                    linkClass: 'btn btn-border',
-                    icons: {
-                        first: '',
-                        prev: '',
-                        next: '',
-                        last: ''
-                    }
-                }
-            };
-
             Vue.use(Vuetable);
 
             window.app = new Vue({
                 el: '#app',
                 data: function () {
                     return {
-                        css: css,
+                        css: cssTable,
                         fields: [
                             {
-                                title: 'Name',
+                                title: 'Название',
                                 name: 'name',
                                 sortField: 'Name'
                             },
                             {
-                                title: 'Is System',
+                                title: 'Системная',
                                 name: 'isSystem',
-                                sortField: 'ParentId',
-                                callback: 'systemLabel'
+                                sortField: 'OwnerId',
+                                formatter: this.formatYesNo
                             }
                         ],
-                        sortOrder: [
-                            {
-                                field: 'Name',
-                                sortField: 'name',
-                                direction: 'asc'
-                            }
-                        ]
+                        sortOrder: [{ sortField: 'Name', direction: 'asc' }]
                     };
                 },
                 methods: {
-                    onPaginationData(paginationData) {
+                    onPaginationData: function(paginationData) {
                         this.$refs.pagination.setPaginationData(paginationData);
                         this.$refs.paginationInfo.setPaginationData(paginationData);
                     },
-                    onChangePage(page) {
+                    onChangePage: function(page) {
                         this.$refs.vuetable.changePage(page);
                     },
-                    systemLabel (value) {
-                        console.info(value);
-                        return value === true ? '<span class="label">Yes</span>' : '<span class="label">No</span>';
+                    formatYesNo: function (value) {
+                        if (value === null) return '';
+                        return value === true ? 'Да' : 'Нет';
                     }
                 }
             });

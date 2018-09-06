@@ -64,6 +64,23 @@ namespace DigitalPurchasing.Data
             builder.Entity<ColumnName>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<UnitsOfMeasurement>().HasQueryFilter(o => o.OwnerId == CompanyId || o.OwnerId == null);
             builder.Entity<UomConversionRate>().HasQueryFilter(o => o.OwnerId == CompanyId || o.OwnerId == null);
+
+            builder.Entity<UnitsOfMeasurement>().HasData(
+                new UnitsOfMeasurement { Id = new Guid("0a45a476e69f4ebbbb540ae92c88e64b"), OwnerId = null, Name = "шт"},
+                new UnitsOfMeasurement { Id = new Guid("5d8949a33c3d44c0b22ee9ec1881faf0"), OwnerId = null, Name = "тыс шт"},
+                new UnitsOfMeasurement { Id = new Guid("e6fe6c76ef6841ddbe4a07f46f274334"), OwnerId = null, Name = "кг"}
+            );
+
+            builder.Entity<UomConversionRate>().HasData(
+                new UomConversionRate
+                {
+                    Id = new Guid("f57c690afbb147e29ab01472a514d88f"),
+                    OwnerId = null,
+                    FromUomId = new Guid("5d8949a33c3d44c0b22ee9ec1881faf0"),
+                    Factor = 1000,
+                    ToUomId = new Guid("0a45a476e69f4ebbbb540ae92c88e64b")
+                }
+            );
         }
 
         public override int SaveChanges()

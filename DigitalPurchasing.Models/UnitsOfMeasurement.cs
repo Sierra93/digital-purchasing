@@ -33,5 +33,8 @@ namespace DigitalPurchasing.Models
 
         public Guid ToUomId { get; set; }
         public UnitsOfMeasurement ToUom { get; set; }
+
+        public Guid? NomenclatureId { get; set; }
+        public Nomenclature Nomenclature { get; set; }
     }
 }
