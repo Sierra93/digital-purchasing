@@ -20,6 +20,7 @@ namespace DigitalPurchasing.Data
         public DbSet<Nomenclature> Nomenclatures { get; set; }
         public DbSet<NomenclatureCategory> NomenclatureCategories { get; set; }
         public DbSet<UnitsOfMeasurement> UnitsOfMeasurements { get; set; }
+        public DbSet<UomConversionRate> UomConversionRates { get; set; }
         public DbSet<PurchasingRequest> PurchasingRequests { get; set; }
         public DbSet<PurchasingRequestItem> PurchasingRequestItems { get; set; }
         public DbSet<RawPurchasingRequestItem> RawPurchasingRequestItems { get; set; }
@@ -52,6 +53,9 @@ namespace DigitalPurchasing.Data
             builder.Entity<PurchasingRequest>().HasMany(q => q.RawItems).WithOne(q => q.PurchasingRequest).HasForeignKey(q => q.PurchasingRequestId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<PurchasingRequest>().HasMany(q => q.Items).WithOne(q => q.PurchasingRequest).HasForeignKey(q => q.PurchasingRequestId).OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<UomConversionRate>().HasOne(q => q.FromUom).WithMany(q => q.FromConversionRates).HasForeignKey(q => q.FromUomId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<UomConversionRate>().HasOne(q => q.ToUom).WithMany(q => q.ToConversionRates).HasForeignKey(q => q.ToUomId).OnDelete(DeleteBehavior.Restrict);
+
             // default filters to show company or common data
             builder.Entity<NomenclatureCategory>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<PRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
@@ -59,6 +63,7 @@ namespace DigitalPurchasing.Data
             builder.Entity<Nomenclature>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<ColumnName>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<UnitsOfMeasurement>().HasQueryFilter(o => o.OwnerId == CompanyId || o.OwnerId == null);
+            builder.Entity<UomConversionRate>().HasQueryFilter(o => o.OwnerId == CompanyId || o.OwnerId == null);
         }
 
         public override int SaveChanges()
