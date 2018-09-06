@@ -18,8 +18,9 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public enum PurchasingRequestStatus
     {
-        UploadedFile = -10,
-        ManualInput = 0
+        MatchColumns = -10,
+        ManualInput = 0,
+        MatchItems = 10
     }
 
     public class CreateFromFileResponse

@@ -159,6 +159,7 @@
                         };
                         this.$http.post('@Url.Action("SaveRawItemsData")', data).then(response => {
                             var data = response.body;
+                            window.location.reload(true); 
                             //$this.rows = data.items;
                         }, response => {
                             alert('error');

@@ -19,10 +19,7 @@ namespace DigitalPurchasing.Web.Controllers
 
         public PurchasingRequestController(IPurchasingRequestService purchasingRequestService) => _purchasingRequestService = purchasingRequestService;
 
-        public IActionResult Index()
-        {
-            return View();
-        }
+        public IActionResult Index() => View();
 
         [HttpGet]
         public IActionResult Data(VueTableRequest request)
@@ -43,14 +40,19 @@ namespace DigitalPurchasing.Web.Controllers
             var response = _purchasingRequestService.GetById(id);
             if (response == null) return NotFound();
 
-            if (response.Status == PurchasingRequestStatus.UploadedFile)
+            if (response.Status == PurchasingRequestStatus.MatchColumns)
             {
-                return View(response);
+                return View("EditMatchColumns", response);
             }
 
             if (response.Status == PurchasingRequestStatus.ManualInput)
             {
                 return View("EditManual", response);
+            }
+
+            if (response.Status == PurchasingRequestStatus.MatchItems)
+            {
+                return View("EditMatchItems", response);
             }
 
             return NotFound();
@@ -73,9 +75,10 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpPost]
         public IActionResult SaveColumnsData([FromBody]SavePurchasingRequestColumnsVm model)
         {
-            _purchasingRequestService.SaveColumns(model.PurchasingRequestId, model);
-            _purchasingRequestService.GenerateRawItems(model.PurchasingRequestId);
-            _purchasingRequestService.UpdateStatus(model.PurchasingRequestId, PurchasingRequestStatus.ManualInput);
+            var id = model.PurchasingRequestId;
+            _purchasingRequestService.SaveColumns(id, model);
+            _purchasingRequestService.GenerateRawItems(id);
+            _purchasingRequestService.UpdateStatus(id, PurchasingRequestStatus.ManualInput);
             return Ok();
         }
 
@@ -90,6 +93,7 @@ namespace DigitalPurchasing.Web.Controllers
         {
             var id = model.PurchasingRequestId;
             _purchasingRequestService.SaveRawItems(id, model.Items);
+            _purchasingRequestService.UpdateStatus(id, PurchasingRequestStatus.MatchItems);
             return Ok();
         }
 

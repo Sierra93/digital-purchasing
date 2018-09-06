@@ -1,0 +1,87 @@
+@model DigitalPurchasing.Core.Interfaces.PurchasingRequestDetailsResponse
+
+@{
+    ViewBag.Title = $"Заявка № {Model.PublicId} от {Model.CreatedOn:dd.MM.yyyy HH:mm}";
+    Layout = "_Layout";
+}
+
+<h2>@ViewBag.Title</h2>
+
+<h3>Подбор соответсвия номенклатуры в заявке клиента номенклатуре предприятия</h3>
+
+<div id="app">
+    <div class="row">
+        <div class="col-md-5">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th style="width: 5%" class="text-center">№</th>
+                    <th style="width: 20%">Код</th>
+                    <th>Наименование</th>
+                    <th style="width: 10%">ЕИ</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="ri in rawItems">
+                    <td class="text-center">{{getRowIndex(ri)}}</td>
+                    <td>{{ri.code}}</td>
+                    <td>{{ri.name}}</td>
+                    <td>{{ri.uom}}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-7">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th style="width: 5%" class="text-center">№</th>
+                    <th style="width: 20%">Код</th>
+                    <th>Наименование</th>
+                    <th style="width: 10%">ЕИ</th>
+                    <th style="width: 10%">Коэф.</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="ri in rawItems">
+                    <td class="text-center">{{getRowIndex(ri)}}</td>
+                    <td>{{ri.code}}</td>
+                    <td>{{ri.name}}</td>
+                    <td>{{ri.uom}}</td>
+                    <td>1</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function() {
+            var ppp = new Vue({
+                el: '#app',
+                data: function() {
+                    return {
+                        rawItems: [
+                            { code: '123-321-55', name: 'Болт М16-8gх55.88.0112', uom: 'шт' },
+                            { code: '123-321-60', name: 'Болт М16-8gх60.88.0112', uom: 'шт' },
+                            { code: '123-321-70', name: 'Болт М16-8gх70.88.0112', uom: 'шт' }
+                        ]
+                    };
+                },
+                created: function() {
+
+                },
+                methods: {
+                    getRowIndex0: function(item) {
+                        return this.rawItems.indexOf(item);
+                    },
+                    getRowIndex: function(item) {
+                        return this.getRowIndex0(item) + 1;
+                    }
+                }
+            });
+        })();
+    </script>
+}

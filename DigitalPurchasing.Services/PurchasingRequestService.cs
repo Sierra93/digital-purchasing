@@ -35,7 +35,7 @@ namespace DigitalPurchasing.Services
             var entry = _db.PurchasingRequests.Add(new PurchasingRequest
             {
                 RawData = JsonConvert.SerializeObject(result.Table),
-                Status = PurchasingRequestStatus.UploadedFile,
+                Status = PurchasingRequestStatus.MatchColumns,
                 PublicId = _counterService.GetNextId()
             });
 
