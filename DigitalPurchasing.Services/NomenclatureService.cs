@@ -1,21 +1,16 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using DigitalPurchasing.Core;
+using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
 using Mapster;
+using Microsoft.EntityFrameworkCore;
 
 namespace DigitalPurchasing.Services
 {
-    public interface INomenclatureService
-    {
-        NomenclatureDataResult GetData(int page, int perPage, string sortField, bool sortAsc);
-        NomenclatureResult Create(NomenclatureResult model);
-        NomenclatureResult GetById(Guid id);
-        bool Update(NomenclatureResult model);
-    }
-
     public class NomenclatureService : INomenclatureService
     {
         private readonly ApplicationDbContext _db;
@@ -77,35 +72,26 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
             return true;
         }
-    }
 
-    public class NomenclatureResult
-    {
-        public Guid Id { get; set; }
-        public string Code { get; set; }
+        public NomenclatureAutocompleteResult Autocomplete(string q)
+        {
+            var resultQry = _db.Nomenclatures.AsNoTracking().Include(w => w.BatchUom).Where(w =>
+                w.Name.Contains(q, StringComparison.InvariantCultureIgnoreCase)
+                || w.NameEng.Contains(q, StringComparison.InvariantCultureIgnoreCase)
+                || w.Code.Contains(q, StringComparison.InvariantCultureIgnoreCase));
 
-        public string Name { get; set; }
-        public string NameEng { get; set; }
+            var result = resultQry.ToList();
+            return new NomenclatureAutocompleteResult
+            {
+                Items = result.Adapt<List<NomenclatureAutocompleteResult.AutocompleteResultItem>>()
+            };
+        }
 
-        public Guid BatchUomId { get; set; }
-        public string BatchUomName { get; set; }
-
-        public Guid MassUomId { get; set; }
-        public string MassUomName { get; set; }
-        public decimal MassUomValue { get; set; }
-       
-        public Guid ResourceUomId { get; set; }
-        public string ResourceUomName { get; set; }
-        public decimal ResourceUomValue { get; set; }
-
-        public Guid ResourceBatchUomId { get; set; }
-        public string ResourceBatchUomName { get; set; }
-
-        public Guid CategoryId { get; set; }
-        public string CategoryName { get; set; }
-    }
-
-    public class NomenclatureDataResult : BaseDataResponse<NomenclatureResult>
-    {
+        public BaseResult<NomenclatureAutocompleteResult.AutocompleteResultItem> AutocompleteSingle(Guid id)
+        {
+            var entity = _db.Nomenclatures.AsNoTracking().Include(w => w.BatchUom).FirstOrDefault(q => q.Id == id);
+            var data = entity?.Adapt<NomenclatureAutocompleteResult.AutocompleteResultItem>();
+            return new BaseResult<NomenclatureAutocompleteResult.AutocompleteResultItem>(data);
+        }
     }
 }

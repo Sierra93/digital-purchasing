@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,11 +23,11 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account
             _logger = logger;
         }
 
-        public void OnGet()
-        {
-        }
+        public async Task<IActionResult> OnGet(string returnUrl = null) => await SignOutAsync(returnUrl);
 
-        public async Task<IActionResult> OnPost(string returnUrl = null)
+        public async Task<IActionResult> OnPost(string returnUrl = null) => await SignOutAsync(returnUrl);
+
+        private async Task<IActionResult> SignOutAsync(string returnUrl)
         {
             await _signInManager.SignOutAsync();
             _logger.LogInformation("User logged out.");
@@ -35,10 +35,8 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account
             {
                 return LocalRedirect(returnUrl);
             }
-            else
-            {
-                return Page();
-            }
+
+            return Page();
         }
     }
 }

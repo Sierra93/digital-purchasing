@@ -17,6 +17,11 @@
         "vue-resource.min.js",
         "vue-resource.js"
       ]
+    },
+    {
+      "provider": "cdnjs",
+      "library": "uiv@0.26.2",
+      "destination": "wwwroot/lib/uiv/"
     }
   ]
 }

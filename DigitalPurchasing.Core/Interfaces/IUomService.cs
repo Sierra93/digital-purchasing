@@ -5,10 +5,12 @@ namespace DigitalPurchasing.Core.Interfaces
 {
     public interface IUomService
     {
-        UomDataResult GetData(int page, int perPage, string sortField, bool sortAsc);
+        UomDataResponse GetData(int page, int perPage, string sortField, bool sortAsc);
         UomResult CreateUom(string name);
         IEnumerable<UomResult> GetAll();
-        UomConversionRateResult GetConversionRate(Guid fromUomId, Guid toUomId, Guid nomenclatureId);
+        UomConversionRateResponse GetConversionRate(Guid fromUomId, Guid toUomId, Guid nomenclatureId);
+        UomAutocompleteResponse Autocomplete(string s);
+        BaseResult<UomAutocompleteResponse.AutocompleteItem> AutocompleteSingle(Guid id);
     }
 
     public class UomResult
@@ -18,13 +20,24 @@ namespace DigitalPurchasing.Core.Interfaces
         public bool IsSystem { get; set; }
     }
 
-    public class UomDataResult : BaseDataResponse<UomResult>
+    public class UomDataResponse : BaseDataResponse<UomResult>
     {
     }
 
-    public class UomConversionRateResult
+    public class UomConversionRateResponse
     {
         public decimal NomenclatureFactor { get; set; }
         public decimal CommonFactor { get; set; }
+    }
+
+    public class UomAutocompleteResponse
+    {
+        public class AutocompleteItem
+        {
+            public Guid Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        public List<AutocompleteItem> Items = new List<AutocompleteItem>();
     }
 }

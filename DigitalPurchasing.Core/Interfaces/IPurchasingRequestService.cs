@@ -14,6 +14,8 @@ namespace DigitalPurchasing.Core.Interfaces
         RawItemResponse GetRawItems(Guid id);
         void SaveRawItems(Guid id, IEnumerable<RawItemResponse.RawItem> items);
         void UpdateStatus(Guid id, PurchasingRequestStatus status);
+        MatchItemsResponse MatchItemsData(Guid id);
+        void SaveMatch(Guid id, Guid nomenclatureId, Guid uomId);
     }
 
     public enum PurchasingRequestStatus
@@ -59,10 +61,10 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         public class RawItem
         {
-            public string Code { get; set; }
-            public string Name { get; set; }
-            public string Uom { get; set; }
-            public decimal Qty { get; set; }
+            public string RawCode { get; set; }
+            public string RawName { get; set; }
+            public string RawUom { get; set; }
+            public decimal RawQty { get; set; }
         }
 
         public List<RawItem> Items { get; set; }
@@ -80,5 +82,26 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         public List<string> Columns { get; set; }
         public bool IsSaved { get; set; }
+    }
+
+    public class MatchItemsResponse
+    {
+        public class Item
+        {
+            public Guid Id { get; set; }
+            public string RawCode { get; set; }
+            public string RawName { get; set; }
+            public string RawUom { get; set; }
+            public decimal RawQty { get; set; }
+            public Guid? NomenclatureId { get; set; }
+            public Guid? RawUomMatchId { get; set; }
+            public bool IsMatched => NomenclatureId.HasValue && RawUomMatchId.HasValue;
+
+            public string NomenclatureName { get; set; }
+            public string NomenclatureCode { get; set; }
+            public string NomenclatureUom { get; set; }
+        }
+
+        public List<Item> Items { get; set; }
     }
 }

@@ -45,10 +45,10 @@
             <td class="text-center">
                 <label>{{getRowIndex(r)}}</label>
             </td>
-            <td><input type="text" class="form-control" v-model="r.code"/></td>
-            <td><input type="text" class="form-control" v-model="r.name"/></td>
-            <td><input type="number" class="form-control" v-model="r.qty"/></td>
-            <td><input type="text" class="form-control" v-model="r.uom"/></td>
+            <td><input type="text" class="form-control" v-model="r.rawCode"/></td>
+            <td><input type="text" class="form-control" v-model="r.rawName"/></td>
+            <td><input type="number" class="form-control" v-model="r.rawQty"/></td>
+            <td><input type="text" class="form-control" v-model="r.rawUom"/></td>
             <td>
                 <button type="button" class="btn btn-default" v-on:click="removeRow(r)" v-if="getRowIndex(r)>1"><i class="far fa-minus-square"></i></button>
                 <button type="button" class="btn btn-default" v-on:click="addRow(r)"><i class="far fa-plus-square"></i></button>
@@ -144,7 +144,7 @@
                     },
                     addRow: function(item) {
                         var index = this.getRowIndex(item);
-                        var newRow = { code: '', name: '', uom: '', qty: 0 };
+                        var newRow = { rawCode: '', rawName: '', rawUom: '', rawQty: 0 };
                         this.rows.splice(index, 0, newRow);
                     },
                     removeRow: function(item) {

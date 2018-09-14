@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
+using DigitalPurchasing.Core.Interfaces;
 
 namespace DigitalPurchasing.Web.ViewModels
 {

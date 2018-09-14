@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Services;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
@@ -35,6 +36,12 @@ namespace DigitalPurchasing.Web.Controllers
             }
             return Json(new VueTableResponse<NomenclatureDataVm>(data, request, result.Total, nextUrl, prevUrl));
         }
+
+        [HttpGet]
+        public IActionResult Autocomplete([FromQuery] string q) => Json(_nomenclatureService.Autocomplete(q));
+
+        [HttpGet]
+        public IActionResult AutocompleteSingle([FromQuery] Guid id) => Json(_nomenclatureService.AutocompleteSingle(id));
 
         public IActionResult Create()
         {

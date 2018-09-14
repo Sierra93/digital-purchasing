@@ -23,7 +23,6 @@ namespace DigitalPurchasing.Data
         public DbSet<UomConversionRate> UomConversionRates { get; set; }
         public DbSet<PurchasingRequest> PurchasingRequests { get; set; }
         public DbSet<PurchasingRequestItem> PurchasingRequestItems { get; set; }
-        public DbSet<RawPurchasingRequestItem> RawPurchasingRequestItems { get; set; }
         public DbSet<PRCounter> PRCounters { get; set; }
         public DbSet<ColumnName> ColumnNames { get; set; }
 
@@ -50,8 +49,9 @@ namespace DigitalPurchasing.Data
             builder.Entity<Nomenclature>().HasOne(q => q.ResourceUom).WithMany(q => q.ResourceNomenclatures).HasForeignKey(q => q.ResourceUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<Nomenclature>().HasOne(q => q.ResourceBatchUom).WithMany(q => q.ResourceBatchNomenclatures).HasForeignKey(q => q.ResourceBatchUomId).OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<PurchasingRequest>().HasMany(q => q.RawItems).WithOne(q => q.PurchasingRequest).HasForeignKey(q => q.PurchasingRequestId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<PurchasingRequest>().HasMany(q => q.Items).WithOne(q => q.PurchasingRequest).HasForeignKey(q => q.PurchasingRequestId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<PurchasingRequestItem>().HasOne(q => q.Nomenclature).WithMany(q => q.PurchasingRequestItems).HasForeignKey(q => q.NomenclatureId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<PurchasingRequestItem>().HasOne(q => q.RawUomMatch).WithMany(q => q.PurchasingRequestItems).HasForeignKey(q => q.RawUomMatchId).OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<UomConversionRate>().HasOne(q => q.FromUom).WithMany(q => q.FromConversionRates).HasForeignKey(q => q.FromUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<UomConversionRate>().HasOne(q => q.ToUom).WithMany(q => q.ToConversionRates).HasForeignKey(q => q.ToUomId).OnDelete(DeleteBehavior.Restrict);

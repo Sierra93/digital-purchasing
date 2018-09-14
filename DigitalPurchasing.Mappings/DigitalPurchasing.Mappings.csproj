@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
@@ -6,12 +6,10 @@
 
   <ItemGroup>
     <PackageReference Include="Mapster" Version="3.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.1" />
-    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.8.13" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DigitalPurchasing.Data\DigitalPurchasing.Data.csproj" />
+    <ProjectReference Include="..\DigitalPurchasing.Core\DigitalPurchasing.Core.csproj" />
     <ProjectReference Include="..\DigitalPurchasing.Models\DigitalPurchasing.Models.csproj" />
   </ItemGroup>
 

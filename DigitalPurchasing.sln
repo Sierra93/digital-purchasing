@@ -13,9 +13,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitalPurchasing.Services"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitalPurchasing.Core", "DigitalPurchasing.Core\DigitalPurchasing.Core.csproj", "{7E52EA54-9C3F-40D1-9277-BA4E5F19EFE9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalPurchasing.ExcelReader", "DigitalPurchasing.ExcelReader\DigitalPurchasing.ExcelReader.csproj", "{4C3528E5-C27D-44B6-9D44-E6FEDCDCD755}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitalPurchasing.ExcelReader", "DigitalPurchasing.ExcelReader\DigitalPurchasing.ExcelReader.csproj", "{4C3528E5-C27D-44B6-9D44-E6FEDCDCD755}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalPurchasing.Tests", "DigitalPurchasing.Tests\DigitalPurchasing.Tests.csproj", "{E60563FA-1F30-4D4D-82BB-685748838CFF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitalPurchasing.Tests", "DigitalPurchasing.Tests\DigitalPurchasing.Tests.csproj", "{E60563FA-1F30-4D4D-82BB-685748838CFF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalPurchasing.Mappings", "DigitalPurchasing.Mappings\DigitalPurchasing.Mappings.csproj", "{920704F1-D312-4225-AB52-870F31A07F6F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +53,10 @@ Global
 		{E60563FA-1F30-4D4D-82BB-685748838CFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E60563FA-1F30-4D4D-82BB-685748838CFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E60563FA-1F30-4D4D-82BB-685748838CFF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{920704F1-D312-4225-AB52-870F31A07F6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{920704F1-D312-4225-AB52-870F31A07F6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{920704F1-D312-4225-AB52-870F31A07F6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{920704F1-D312-4225-AB52-870F31A07F6F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

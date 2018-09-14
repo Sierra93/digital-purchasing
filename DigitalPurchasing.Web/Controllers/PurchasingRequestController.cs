@@ -72,6 +72,20 @@ namespace DigitalPurchasing.Web.Controllers
             return Json(response);
         }
 
+        [HttpGet]
+        public IActionResult MatchItemsData(Guid id)
+        {
+            var response = _purchasingRequestService.MatchItemsData(id);
+            return Json(response);
+        }
+
+        [HttpPost]
+        public IActionResult SaveMatchItem([FromBody] SaveMatchItemVm model)
+        {
+            _purchasingRequestService.SaveMatch(model.ItemId, model.NomenclatureId, model.UomId);
+            return Ok();
+        }
+
         [HttpPost]
         public IActionResult SaveColumnsData([FromBody]SavePurchasingRequestColumnsVm model)
         {
@@ -82,6 +96,7 @@ namespace DigitalPurchasing.Web.Controllers
             return Ok();
         }
 
+        [HttpGet]
         public IActionResult RawItemsData(Guid id)
         {
             var response = _purchasingRequestService.GetRawItems(id);

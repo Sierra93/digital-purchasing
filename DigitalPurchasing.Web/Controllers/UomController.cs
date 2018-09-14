@@ -1,3 +1,4 @@
+using System;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Services;
 using DigitalPurchasing.Web.Core;
@@ -37,5 +38,15 @@ namespace DigitalPurchasing.Web.Controllers
 
             return View(vm);
         }
+
+        [HttpGet]
+        public IActionResult Autocomplete(string q)
+        {
+            var response = _uomService.Autocomplete(q);
+            return Json(response);
+        }
+
+        [HttpGet]
+        public IActionResult AutocompleteSingle([FromQuery] Guid id) => Json(_uomService.AutocompleteSingle(id));
     }
 }

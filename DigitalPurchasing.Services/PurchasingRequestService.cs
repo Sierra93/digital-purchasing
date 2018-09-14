@@ -8,6 +8,7 @@ using DigitalPurchasing.Models;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using MatchItemsResponse = DigitalPurchasing.Core.Interfaces.MatchItemsResponse;
 using PurchasingRequestColumns = DigitalPurchasing.Core.Interfaces.PurchasingRequestColumns;
 
 namespace DigitalPurchasing.Services
@@ -93,34 +94,34 @@ namespace DigitalPurchasing.Services
 
         public void GenerateRawItems(Guid id)
         {
-            _db.RemoveRange(_db.RawPurchasingRequestItems.Where(q => q.PurchasingRequestId == id));
+            _db.RemoveRange(_db.PurchasingRequestItems.Where(q => q.PurchasingRequestId == id));
             _db.SaveChanges();
 
             var entity = _db.PurchasingRequests.Include(q => q.RawColumns).First(q => q.Id == id);
             var table = JsonConvert.DeserializeObject<ExcelTable>(entity.RawData);
-            var rawItems = new List<RawPurchasingRequestItem>();
+            var rawItems = new List<PurchasingRequestItem>();
             for (var i = 0; i < table.Columns.First(q => q.Type == TableColumnType.Name).Values.Count; i++)
             {
-                var rawItem = new RawPurchasingRequestItem
+                var rawItem = new PurchasingRequestItem
                 {
                     PurchasingRequestId = id,
                     Position = i + 1,
-                    Code = string.IsNullOrEmpty(entity.RawColumns.Code) ? "" : table.GetValue(entity.RawColumns.Code, i),
-                    Name = string.IsNullOrEmpty(entity.RawColumns.Name) ? "" : table.GetValue(entity.RawColumns.Name, i),
-                    Qty = string.IsNullOrEmpty(entity.RawColumns.Qty) ? 0 : table.GetDecimalValue(entity.RawColumns.Qty, i),
-                    Uom = string.IsNullOrEmpty(entity.RawColumns.Uom) ? "" : table.GetValue(entity.RawColumns.Uom, i)
+                    RawCode = string.IsNullOrEmpty(entity.RawColumns.Code) ? "" : table.GetValue(entity.RawColumns.Code, i),
+                    RawName = string.IsNullOrEmpty(entity.RawColumns.Name) ? "" : table.GetValue(entity.RawColumns.Name, i),
+                    RawQty = string.IsNullOrEmpty(entity.RawColumns.Qty) ? 0 : table.GetDecimalValue(entity.RawColumns.Qty, i),
+                    RawUom = string.IsNullOrEmpty(entity.RawColumns.Uom) ? "" : table.GetValue(entity.RawColumns.Uom, i)
                 };
 
                 rawItems.Add(rawItem);
             }
 
-            _db.RawPurchasingRequestItems.AddRange(rawItems);
+            _db.PurchasingRequestItems.AddRange(rawItems);
             _db.SaveChanges();
         }
 
         public RawItemResponse GetRawItems(Guid id)
         {
-            var items = _db.RawPurchasingRequestItems
+            var items = _db.PurchasingRequestItems
                 .Where(q => q.PurchasingRequestId == id)
                 .OrderBy(q => q.Position)
                 .ProjectToType<RawItemResponse.RawItem>()
@@ -131,16 +132,16 @@ namespace DigitalPurchasing.Services
 
         public void SaveRawItems(Guid id, IEnumerable<RawItemResponse.RawItem> items)
         {
-            _db.RawPurchasingRequestItems.RemoveRange(_db.RawPurchasingRequestItems.Where(q => q.PurchasingRequestId == id));
+            _db.PurchasingRequestItems.RemoveRange(_db.PurchasingRequestItems.Where(q => q.PurchasingRequestId == id));
             _db.SaveChanges();
-            var rawItems = items.Adapt<List<RawPurchasingRequestItem>>().ToList();
+            var rawItems = items.Adapt<List<PurchasingRequestItem>>().ToList();
             var index = 0;
             foreach (var rawItem in rawItems)
             {
                 rawItem.PurchasingRequestId = id;
                 rawItem.Position = ++index;
             }
-            _db.RawPurchasingRequestItems.AddRange(rawItems);
+            _db.PurchasingRequestItems.AddRange(rawItems);
             _db.SaveChanges();
         }
 
@@ -148,6 +149,27 @@ namespace DigitalPurchasing.Services
         {
             var entity = _db.PurchasingRequests.Find(id);
             entity.Status = status;
+            _db.SaveChanges();
+        }
+
+        public MatchItemsResponse MatchItemsData(Guid id)
+        {
+            var entity = _db.PurchasingRequestItems
+                .Include(q => q.Nomenclature).ThenInclude(q => q.BatchUom)
+                .Include(q => q.RawUomMatch)
+                .Where(q => q.PurchasingRequestId == id)
+                .OrderBy(q => q.Position).ToList();
+
+            var res = new MatchItemsResponse {Items = entity.Adapt<List<MatchItemsResponse.Item>>()};
+
+            return res;
+        }
+
+        public void SaveMatch(Guid itemId, Guid nomenclatureId, Guid uomId)
+        {
+            var entity = _db.PurchasingRequestItems.Find(itemId);
+            entity.NomenclatureId = nomenclatureId;
+            entity.RawUomMatchId = uomId;
             _db.SaveChanges();
         }
 

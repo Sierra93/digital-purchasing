@@ -11,5 +11,12 @@ namespace DigitalPurchasing.Web.ViewModels
     public class SavePurchasingRequestColumnsVm : PurchasingRequestColumns
     {
         public Guid PurchasingRequestId { get; set; }
-    } 
+    }
+
+    public class SaveMatchItemVm
+    {
+        public Guid ItemId { get; set; }
+        public Guid NomenclatureId { get; set; }
+        public Guid UomId { get; set; }
+    }
 }

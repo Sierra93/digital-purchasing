@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DigitalPurchasing.Models
 {
@@ -15,10 +16,14 @@ namespace DigitalPurchasing.Models
 
         public Guid MassUomId { get; set; }
         public UnitsOfMeasurement MassUom { get; set; }
+
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal MassUomValue { get; set; }
        
         public Guid ResourceUomId { get; set; }
         public UnitsOfMeasurement ResourceUom { get; set; }
+
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal ResourceUomValue { get; set; }
 
         public Guid ResourceBatchUomId { get; set; }
@@ -28,5 +33,7 @@ namespace DigitalPurchasing.Models
         public NomenclatureCategory Category { get; set; }
 
         public ICollection<UomConversionRate> ConversionRates { get; set; }
+
+        public ICollection<PurchasingRequestItem> PurchasingRequestItems { get; set; }
     }
 }

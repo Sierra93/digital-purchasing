@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using DigitalPurchasing.Core.Interfaces;
 
 namespace DigitalPurchasing.Models
@@ -18,6 +19,8 @@ namespace DigitalPurchasing.Models
 
         public ICollection<UomConversionRate> FromConversionRates { get; set; }
         public ICollection<UomConversionRate> ToConversionRates { get; set; }
+
+        public ICollection<PurchasingRequestItem> PurchasingRequestItems { get; set; }
     }
 
     public class UomConversionRate : BaseModel, IMayHaveOwner
@@ -29,6 +32,7 @@ namespace DigitalPurchasing.Models
         public Guid FromUomId { get; set; }
         public UnitsOfMeasurement FromUom { get; set; }
 
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal Factor { get; set; }
 
         public Guid ToUomId { get; set; }

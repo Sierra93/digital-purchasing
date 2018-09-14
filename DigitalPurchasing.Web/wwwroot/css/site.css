@@ -69,3 +69,19 @@ body {
     cursor: inherit;
     display: block;
   }
+
+table .border-left {
+  border-left: 1px solid #ddd
+}
+
+table .form-group {
+  margin-bottom: 0;
+}
+
+table tr td {
+  vertical-align: middle!important;
+}
+
+.modal-body .table {
+  margin-bottom: 0 !important;
+}

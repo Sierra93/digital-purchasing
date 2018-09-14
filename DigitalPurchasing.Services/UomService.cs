@@ -17,7 +17,7 @@ namespace DigitalPurchasing.Services
 
         public UomService(ApplicationDbContext db) => _db = db;
 
-        public UomDataResult GetData(int page, int perPage, string sortField, bool sortAsc)
+        public UomDataResponse GetData(int page, int perPage, string sortField, bool sortAsc)
         {
             if (string.IsNullOrEmpty(sortField))
             {
@@ -28,7 +28,7 @@ namespace DigitalPurchasing.Services
             var total = qry.Count();
             var orderedResults = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}");
             var result = orderedResults.Skip((page-1)*perPage).Take(perPage).ProjectToType<UomResult>().ToList();
-            return new UomDataResult
+            return new UomDataResponse
             {
                 Total = total,
                 Data = result
@@ -44,7 +44,7 @@ namespace DigitalPurchasing.Services
 
         public IEnumerable<UomResult> GetAll() => _db.UnitsOfMeasurements.ProjectToType<UomResult>().ToList();
 
-        public UomConversionRateResult GetConversionRate(Guid fromUomId, Guid toUomId, Guid nomenclatureId)
+        public UomConversionRateResponse GetConversionRate(Guid fromUomId, Guid toUomId, Guid nomenclatureId)
         {
             var conversionRates = _db.UomConversionRates.AsNoTracking()
                 .Where(q =>
@@ -56,7 +56,7 @@ namespace DigitalPurchasing.Services
                 return null;
             }
 
-            var result = new UomConversionRateResult();
+            var result = new UomConversionRateResponse();
             var commonConversionRate = conversionRates.FirstOrDefault(q => q.NomenclatureId == null);
             var nomenclatureConversionRate = conversionRates.FirstOrDefault(q => q.NomenclatureId == nomenclatureId);
 
@@ -76,10 +76,23 @@ namespace DigitalPurchasing.Services
 
             return result;
         }
-    }
 
-    public class UomResultMapsterRegister : IRegister
-    {
-        public void Register(TypeAdapterConfig config) => config.NewConfig<UnitsOfMeasurement, UomResult>().Map(d => d.IsSystem, s => !s.OwnerId.HasValue);
+        public UomAutocompleteResponse Autocomplete(string s)
+        {
+            var autocompleteItems = _db.UnitsOfMeasurements
+                .AsNoTracking()
+                .Where(q => q.Name.Contains(s))
+                .ProjectToType<UomAutocompleteResponse.AutocompleteItem>()
+                .ToList();
+
+            return new UomAutocompleteResponse { Items = autocompleteItems };
+        }
+
+        public BaseResult<UomAutocompleteResponse.AutocompleteItem> AutocompleteSingle(Guid id)
+        {
+            var entity = _db.UnitsOfMeasurements.Find(id);
+            var data = entity?.Adapt<UomAutocompleteResponse.AutocompleteItem>();
+            return new BaseResult<UomAutocompleteResponse.AutocompleteItem>(data);
+        }
     }
 }

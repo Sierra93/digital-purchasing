@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
-using DigitalPurchasing.Core;
+using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
 using Mapster;
@@ -10,13 +10,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DigitalPurchasing.Services
 {
-    public interface INomenclatureCategoryService
-    {
-        NomenclatureCategoryDataResult GetData(int page, int perPage, string sortField, bool sortAsc);
-        NomenclatureCategoryResult CreateCategory(string name, Guid? parentId);
-        IEnumerable<NomenclatureCategoryResult> GetAll();
-    }
-
     public class NomenclatureCategoryService : INomenclatureCategoryService
     {
         private readonly ApplicationDbContext _db;
@@ -63,28 +56,5 @@ namespace DigitalPurchasing.Services
             var result = _db.NomenclatureCategories.Include(q => q.Parent).ProjectToType<NomenclatureCategoryResult>().ToList();
             return result;
         }
-    }
-
-    public class MapsterRegister : IRegister
-    {
-        public void Register(TypeAdapterConfig config)
-        {
-            config.NewConfig<NomenclatureCategory, NomenclatureCategoryResult>().Map(d => d.ParentName, s => s.Parent != null ? s.Parent.Name : null);
-        }
-    }
-
-    public class NomenclatureCategoryResult
-    {
-        public Guid Id { get; set; }
-
-        public string Name { get; set; }
-
-        public Guid? ParentId { get; set; }
-
-        public string ParentName { get; set; }
-    }
-
-    public class NomenclatureCategoryDataResult : BaseDataResponse<NomenclatureCategoryResult>
-    {
     }
 }
