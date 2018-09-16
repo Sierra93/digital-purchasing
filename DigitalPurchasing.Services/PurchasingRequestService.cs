@@ -19,13 +19,15 @@ namespace DigitalPurchasing.Services
         private readonly IExcelRequestReader _excelRequestReader;
         private readonly IPRCounterService _counterService;
         private readonly IColumnNameService _columnNameService;
+        private readonly IUomService _uomService;
 
-        public PurchasingRequestService(ApplicationDbContext db, IExcelRequestReader excelFileReader, IPRCounterService counterService, IColumnNameService columnNameService)
+        public PurchasingRequestService(ApplicationDbContext db, IExcelRequestReader excelFileReader, IPRCounterService counterService, IColumnNameService columnNameService, IUomService uomService)
         {
             _db = db;
             _excelRequestReader = excelFileReader;
             _counterService = counterService;
             _columnNameService = columnNameService;
+            _uomService = uomService;
         }
 
         public CreateFromFileResponse CreateFromFile(string filePath)
@@ -136,10 +138,28 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
             var rawItems = items.Adapt<List<PurchasingRequestItem>>().ToList();
             var index = 0;
+
+            var uoms = new Dictionary<string, Guid>();
             foreach (var rawItem in rawItems)
             {
                 rawItem.PurchasingRequestId = id;
                 rawItem.Position = ++index;
+
+                if (string.IsNullOrEmpty(rawItem.RawUom)) continue;
+
+                if (uoms.ContainsKey(rawItem.RawUom))
+                {
+                    rawItem.RawUomMatchId = uoms[rawItem.RawUom];
+                }
+                else
+                {
+                    var res = _uomService.Autocomplete(rawItem.RawUom);
+                    if (res.Items == null || res.Items.Count == 0) continue;
+                    var match = res.Items.FirstOrDefault(q => q.Name.Equals(rawItem.RawUom, StringComparison.InvariantCultureIgnoreCase));
+                    if (match == null) continue;
+                    uoms.Add(res.Items[0].Name, res.Items[0].Id);
+                    rawItem.RawUomMatchId = res.Items[0].Id;
+                }
             }
             _db.PurchasingRequestItems.AddRange(rawItems);
             _db.SaveChanges();
