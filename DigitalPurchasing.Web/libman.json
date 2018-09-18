@@ -22,6 +22,14 @@
       "provider": "cdnjs",
       "library": "uiv@0.26.2",
       "destination": "wwwroot/lib/uiv/"
+    },
+    {
+      "library": "lodash.js@4.17.11",
+      "destination": "wwwroot/lib/lodash.js/",
+      "files": [
+        "lodash.js",
+        "lodash.min.js"
+      ]
     }
   ]
 }

@@ -193,6 +193,20 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
         }
 
+        public void SaveCompanyName(Guid prId, string companyName)
+        {
+            var entity = _db.PurchasingRequests.Find(prId);
+            entity.CompanyName = companyName;
+            _db.SaveChanges();
+        }
+
+        public void SaveCustomerName(Guid prId, string customerName)
+        {
+            var entity = _db.PurchasingRequests.Find(prId);
+            entity.CustomerName = customerName;
+            _db.SaveChanges();
+        }
+
         public PurchasingRequestDataResponse GetData(int page, int perPage, string sortField, bool sortAsc)
         {
             if (string.IsNullOrEmpty(sortField))

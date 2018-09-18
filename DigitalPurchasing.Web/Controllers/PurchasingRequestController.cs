@@ -4,11 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core.Interfaces;
+using DigitalPurchasing.Models.Identity;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.PurchasingRequest;
 using Mapster;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalPurchasing.Web.Controllers
@@ -16,8 +18,18 @@ namespace DigitalPurchasing.Web.Controllers
     public class PurchasingRequestController : BaseController
     {
         private readonly IPurchasingRequestService _purchasingRequestService;
+        private readonly ICompanyService _companyService;
+        private readonly UserManager<User> _userManager;
 
-        public PurchasingRequestController(IPurchasingRequestService purchasingRequestService) => _purchasingRequestService = purchasingRequestService;
+        public PurchasingRequestController(
+            IPurchasingRequestService purchasingRequestService,
+            ICompanyService companyService,
+            UserManager<User> userManager)
+        {
+            _purchasingRequestService = purchasingRequestService;
+            _companyService = companyService;
+            _userManager = userManager;
+        }
 
         public IActionResult Index() => View();
 
@@ -107,8 +119,17 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult SaveRawItemsData([FromBody] SaveRawItemsDataVm model)
         {
             var id = model.PurchasingRequestId;
+            var userId = Guid.Parse(_userManager.GetUserId(User));
+            _purchasingRequestService.SaveCompanyName(id, _companyService.GetByUser(userId).Name);
             _purchasingRequestService.SaveRawItems(id, model.Items);
             _purchasingRequestService.UpdateStatus(id, PurchasingRequestStatus.MatchItems);
+            return Ok();
+        }
+
+        [HttpPost]
+        public IActionResult SaveCustomerName([FromBody] SaveCustomerNameVm model)
+        {
+            _purchasingRequestService.SaveCustomerName(model.Id, model.Name);
             return Ok();
         }
 

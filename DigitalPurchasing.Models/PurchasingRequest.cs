@@ -7,6 +7,9 @@ namespace DigitalPurchasing.Models
     {
         public int PublicId { get; set; }
 
+        public string CompanyName { get; set; }
+        public string CustomerName { get; set; }
+
         public PurchasingRequestStatus Status { get; set; }
 
         public ICollection<PurchasingRequestItem> Items { get; set; } = new List<PurchasingRequestItem>();

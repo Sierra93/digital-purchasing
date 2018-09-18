@@ -13,7 +13,7 @@
         <div class="col-md-4">
             <div class="form-group">
                 <label for="customer">Клиент</label>
-                <input type="text" class="form-control" id="customer" placeholder="">
+                <input type="text" class="form-control" placeholder="" v-model="customerName" v-on:input="updateCustomerName">
             </div>
         </div>
         <div class="col-md-4">
@@ -122,6 +122,7 @@
                 el: '#app',
                 data: function() {
                     return {
+                        customerName: '@Model.CustomerName',
                         // { code: '123-321', name: 'Болт 123-321 XYZ', uom: 'шт.', qty: 100 }
                         rows: []
                     };
@@ -164,7 +165,14 @@
                         }, response => {
                             alert('error');
                         });
-                    }
+                    },
+                    updateCustomerName: _.debounce(function (e) {
+                        var data = { name: e.target.value, id: this.prId };
+                        this.$http.post('@Url.Action("SaveCustomerName", "PurchasingRequest")', data).then(function(res) {
+                        }, function(res) {
+                            alert('error');
+                        });
+                    }, 300)
                 }
             });
         })();

@@ -16,6 +16,8 @@ namespace DigitalPurchasing.Core.Interfaces
         void UpdateStatus(Guid id, PurchasingRequestStatus status);
         MatchItemsResponse MatchItemsData(Guid id);
         void SaveMatch(Guid id, Guid nomenclatureId, Guid uomId);
+        void SaveCompanyName(Guid prId, string companyName);
+        void SaveCustomerName(Guid prId, string customerName);
     }
 
     public enum PurchasingRequestStatus
@@ -36,6 +38,9 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         public Guid Id { get; set; }
         public int PublicId { get; set; }
+
+        public string CompanyName { get; set; }
+        public string CustomerName { get; set; }
 
         public DateTime CreatedOn { get; set; }
 

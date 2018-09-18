@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Models.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -17,15 +18,18 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly IEmailSender _emailSender;
+        private readonly ICompanyService _companyService;
 
         public IndexModel(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            ICompanyService companyService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
+            _companyService = companyService;
         }
 
         public string Username { get; set; }
@@ -41,12 +45,15 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
         public class InputModel
         {
             [Required]
-            [EmailAddress]
+            [EmailAddress, Display(Name = "E-mail")]
             public string Email { get; set; }
 
             [Phone]
-            [Display(Name = "Phone number")]
+            [Display(Name = "Номер телефона")]
             public string PhoneNumber { get; set; }
+
+            [Required, Display(Name = "Название организации")]
+            public string CompanyName { get; set; }
         }
 
         public async Task<IActionResult> OnGetAsync()
@@ -66,7 +73,8 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
             Input = new InputModel
             {
                 Email = email,
-                PhoneNumber = phoneNumber
+                PhoneNumber = phoneNumber,
+                CompanyName = _companyService.GetByUser(user.Id).Name
             };
 
             IsEmailConfirmed = await _userManager.IsEmailConfirmedAsync(user);
@@ -108,6 +116,8 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
                     throw new InvalidOperationException($"Unexpected error occurred setting phone number for user with ID '{userId}'.");
                 }
             }
+
+            _companyService.UpdateName(user.Id, Input.CompanyName);
 
             await _signInManager.RefreshSignInAsync(user);
             StatusMessage = "Your profile has been updated";
