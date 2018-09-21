@@ -52,8 +52,7 @@ namespace DigitalPurchasing.Core.Interfaces
             public Guid Id { get; set; }
             public string Code { get; set; }
             public string BatchUomName { get; set; }
-
-            public string FullName => string.IsNullOrEmpty(NameEng) ? $"[{Code}] {Name}" : $"[{Code}] {Name} / {NameEng}";
+            public Guid BatchUomId { get; set; }
         }
 
         public List<AutocompleteResultItem> Items { get; set; } = new List<AutocompleteResultItem>();

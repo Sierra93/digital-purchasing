@@ -3,6 +3,7 @@ using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Services;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
+using DigitalPurchasing.Web.ViewModels.Uom;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalPurchasing.Web.Controllers
@@ -48,5 +49,8 @@ namespace DigitalPurchasing.Web.Controllers
 
         [HttpGet]
         public IActionResult AutocompleteSingle([FromQuery] Guid id) => Json(_uomService.AutocompleteSingle(id));
+
+        [HttpPost]
+        public IActionResult Factor([FromBody]UomFactorVm m) => Json(_uomService.GetConversionRate(m.FromId, m.ToId, m.NomenclatureId));
     }
 }

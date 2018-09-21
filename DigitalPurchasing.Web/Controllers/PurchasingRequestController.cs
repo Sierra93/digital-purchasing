@@ -18,17 +18,23 @@ namespace DigitalPurchasing.Web.Controllers
     public class PurchasingRequestController : BaseController
     {
         private readonly IPurchasingRequestService _purchasingRequestService;
+        private readonly INomenclatureService _nomenclatureService;
         private readonly ICompanyService _companyService;
         private readonly UserManager<User> _userManager;
+        private readonly IUomService _uomService;
 
         public PurchasingRequestController(
             IPurchasingRequestService purchasingRequestService,
+            INomenclatureService nomenclatureService,
             ICompanyService companyService,
-            UserManager<User> userManager)
+            UserManager<User> userManager,  
+            IUomService uomService)
         {
             _purchasingRequestService = purchasingRequestService;
+            _nomenclatureService = nomenclatureService;
             _companyService = companyService;
             _userManager = userManager;
+            _uomService = uomService;
         }
 
         public IActionResult Index() => View();
@@ -94,6 +100,8 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpPost]
         public IActionResult SaveMatchItem([FromBody] SaveMatchItemVm model)
         {
+            var nomenclature = _nomenclatureService.AutocompleteSingle(model.NomenclatureId);
+            _uomService.SaveConversionRate(model.UomId, nomenclature.Data.BatchUomId, nomenclature.Data.Id, model.FactorC, model.FactorN);
             _purchasingRequestService.SaveMatch(model.ItemId, model.NomenclatureId, model.UomId);
             return Ok();
         }

@@ -145,8 +145,8 @@ namespace DigitalPurchasing.Services
                 rawItem.PurchasingRequestId = id;
                 rawItem.Position = ++index;
 
+                #region Try to find UoM in db
                 if (string.IsNullOrEmpty(rawItem.RawUom)) continue;
-
                 if (uoms.ContainsKey(rawItem.RawUom))
                 {
                     rawItem.RawUomMatchId = uoms[rawItem.RawUom];
@@ -157,9 +157,10 @@ namespace DigitalPurchasing.Services
                     if (res.Items == null || res.Items.Count == 0) continue;
                     var match = res.Items.FirstOrDefault(q => q.Name.Equals(rawItem.RawUom, StringComparison.InvariantCultureIgnoreCase));
                     if (match == null) continue;
-                    uoms.Add(res.Items[0].Name, res.Items[0].Id);
-                    rawItem.RawUomMatchId = res.Items[0].Id;
+                    uoms.Add(match.Name, match.Id);
+                    rawItem.RawUomMatchId = match.Id;
                 }
+                #endregion
             }
             _db.PurchasingRequestItems.AddRange(rawItems);
             _db.SaveChanges();
@@ -174,13 +175,29 @@ namespace DigitalPurchasing.Services
 
         public MatchItemsResponse MatchItemsData(Guid id)
         {
-            var entity = _db.PurchasingRequestItems
+            var entities = _db.PurchasingRequestItems
                 .Include(q => q.Nomenclature).ThenInclude(q => q.BatchUom)
                 .Include(q => q.RawUomMatch)
                 .Where(q => q.PurchasingRequestId == id)
                 .OrderBy(q => q.Position).ToList();
 
-            var res = new MatchItemsResponse {Items = entity.Adapt<List<MatchItemsResponse.Item>>()};
+            var res = new MatchItemsResponse();
+
+            foreach (var prItem in entities)
+            {
+                var resItem = prItem.Adapt<MatchItemsResponse.Item>();
+                if (prItem.RawUomMatchId.HasValue && prItem.NomenclatureId.HasValue)
+                {
+                    var rate = _uomService.GetConversionRate(
+                        prItem.RawUomMatchId.Value,
+                        prItem.Nomenclature.BatchUomId,
+                        prItem.NomenclatureId.Value);
+
+                    resItem.UomNomenclatureFactor = rate.NomenclatureFactor;
+                    resItem.UomCommonFactor = rate.CommonFactor;
+                }
+                res.Items.Add(resItem);
+            }
 
             return res;
         }

@@ -11,6 +11,7 @@ namespace DigitalPurchasing.Core.Interfaces
         UomConversionRateResponse GetConversionRate(Guid fromUomId, Guid toUomId, Guid nomenclatureId);
         UomAutocompleteResponse Autocomplete(string s);
         BaseResult<UomAutocompleteResponse.AutocompleteItem> AutocompleteSingle(Guid id);
+        void SaveConversionRate(Guid fromUomId, Guid toUomId, Guid nomenclatureId, decimal factorC, decimal factorN);
     }
 
     public class UomResult

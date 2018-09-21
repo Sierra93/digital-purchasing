@@ -51,12 +51,13 @@ namespace DigitalPurchasing.Services
                     ( q.FromUomId == fromUomId && q.ToUomId == toUomId ) ||
                     ( q.FromUomId == toUomId && q.ToUomId == fromUomId ));
 
+            var result = new UomConversionRateResponse { CommonFactor = 0, NomenclatureFactor = 0 };
+
             if (!conversionRates.Any())
             {
-                return null;
+                return result;
             }
-
-            var result = new UomConversionRateResponse();
+            
             var commonConversionRate = conversionRates.FirstOrDefault(q => q.NomenclatureId == null);
             var nomenclatureConversionRate = conversionRates.FirstOrDefault(q => q.NomenclatureId == nomenclatureId);
 
@@ -93,6 +94,33 @@ namespace DigitalPurchasing.Services
             var entity = _db.UnitsOfMeasurements.Find(id);
             var data = entity?.Adapt<UomAutocompleteResponse.AutocompleteItem>();
             return new BaseResult<UomAutocompleteResponse.AutocompleteItem>(data);
+        }
+
+        public void SaveConversionRate(Guid fromUomId, Guid toUomId, Guid nomenclatureId, decimal factorC, decimal factorN)
+        {
+            var rateQry = _db.UomConversionRates.Where(q =>
+                (q.FromUomId == fromUomId && q.ToUomId == toUomId) || (q.FromUomId == toUomId && q.ToUomId == fromUomId));
+
+            var rate = factorC > 0 ? rateQry.FirstOrDefault() : rateQry.FirstOrDefault(q => q.NomenclatureId == nomenclatureId);
+            if (rate == null)
+            {
+                var newRate = new UomConversionRate { FromUomId = fromUomId, ToUomId = toUomId };
+                if (factorC > 0)
+                {
+                    newRate.Factor = factorC;
+                }
+                else
+                {
+                    newRate.Factor = factorN;
+                    newRate.NomenclatureId = nomenclatureId;
+                }
+                _db.UomConversionRates.Add(newRate);
+            }
+            else
+            {
+                rate.Factor = factorC;
+            }
+            _db.SaveChanges();
         }
     }
 }
