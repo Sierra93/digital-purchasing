@@ -46,7 +46,7 @@ namespace DigitalPurchasing.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                _nomenclatureCategoryService.CreateCategory(vm.Name, vm.ParentId);
+                _nomenclatureCategoryService.CreateOrUpdate(vm.Name, vm.ParentId);
                 return RedirectToAction("Index");
             }
 

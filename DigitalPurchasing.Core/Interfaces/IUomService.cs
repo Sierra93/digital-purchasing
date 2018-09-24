@@ -6,7 +6,7 @@ namespace DigitalPurchasing.Core.Interfaces
     public interface IUomService
     {
         UomDataResponse GetData(int page, int perPage, string sortField, bool sortAsc);
-        UomResult CreateUom(string name);
+        UomResult CreateOrUpdate(string name);
         IEnumerable<UomResult> GetAll();
         UomConversionRateResponse GetConversionRate(Guid fromUomId, Guid toUomId, Guid nomenclatureId);
         UomAutocompleteResponse Autocomplete(string s);

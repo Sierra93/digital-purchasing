@@ -33,7 +33,7 @@ namespace DigitalPurchasing.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                _uomService.CreateUom(vm.Name);
+                _uomService.CreateOrUpdate(vm.Name);
                 return RedirectToAction("Index");
             }
 

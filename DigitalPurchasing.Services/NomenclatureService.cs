@@ -36,9 +36,24 @@ namespace DigitalPurchasing.Services
             };
         }
 
-        public NomenclatureResult Create(NomenclatureResult model)
+        public NomenclatureResult CreateOrUpdate(NomenclatureResult vm)
         {
-            var entry = _db.Nomenclatures.Add(model.Adapt<Nomenclature>());
+            var oldEntity = _db.Nomenclatures.FirstOrDefault(q => q.Name.Equals(vm.Name, StringComparison.InvariantCultureIgnoreCase));
+            if (oldEntity != null)
+            {
+                oldEntity.Code = vm.Code;
+                oldEntity.BatchUomId = vm.BatchUomId;
+                oldEntity.MassUomId = vm.MassUomId;
+                oldEntity.ResourceUomId = vm.ResourceUomId;
+                oldEntity.ResourceBatchUomId = vm.ResourceBatchUomId;
+                oldEntity.ResourceUomValue = vm.ResourceUomValue;
+                oldEntity.MassUomValue = vm.MassUomValue;
+                _db.SaveChanges();
+                return oldEntity.Adapt<NomenclatureResult>();
+            }
+
+            var entity = vm.Adapt<Nomenclature>();
+            var entry = _db.Nomenclatures.Add(entity);
             _db.SaveChanges();
             var result = entry.Entity.Adapt<NomenclatureResult>();
             return result;

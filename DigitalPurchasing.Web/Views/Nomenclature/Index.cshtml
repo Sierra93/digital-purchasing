@@ -1,8 +1,19 @@
 @model object
 
+@{
+    ViewData["Title"] = "Наименования материалов";
+}
+
 <div id="app">
 
-    <a asp-action="Create" class="btn btn-default">Create</a>
+    <a asp-action="Create" class="btn btn-default">Создать</a>
+    <a asp-action="Template" class="btn btn-link">Скачать шаблон</a>
+
+    <form method="post" enctype="multipart/form-data" asp-action="UploadTemplate" asp-controller="Nomenclature">
+        <label class="btn btn-default btn-file">
+            Загрузить заполненный шаблон <input type="file" style="display: none;" name="file">
+        </label>
+    </form>
 
     <vuetable ref="vuetable"
               api-url="@Url.Action("Data")"
@@ -43,6 +54,11 @@
 </template>
 
 @section Scripts {
+    <script>
+        $(document).on('change', ':file', function () {
+            $(this).parents('form').submit();
+        });
+    </script>
     <script>
         (function () {
             Vue.use(Vuetable);

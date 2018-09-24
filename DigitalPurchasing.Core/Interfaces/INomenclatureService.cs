@@ -6,7 +6,7 @@ namespace DigitalPurchasing.Core.Interfaces
     public interface INomenclatureService
     {
         NomenclatureDataResult GetData(int page, int perPage, string sortField, bool sortAsc);
-        NomenclatureResult Create(NomenclatureResult model);
+        NomenclatureResult CreateOrUpdate(NomenclatureResult model);
         NomenclatureResult GetById(Guid id);
         bool Update(NomenclatureResult model);
         NomenclatureAutocompleteResult Autocomplete(string q);

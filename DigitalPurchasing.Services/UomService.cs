@@ -35,11 +35,20 @@ namespace DigitalPurchasing.Services
             };
         }
 
-        public UomResult CreateUom(string name)
+        public UomResult CreateOrUpdate(string name)
         {
-            var entry = _db.UnitsOfMeasurements.Add(new UnitsOfMeasurement {Name = name});
-            _db.SaveChanges();
-            return entry.Entity.Adapt<UomResult>();
+            var entity =
+                _db.UnitsOfMeasurements.FirstOrDefault(q =>
+                    q.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
+
+            if (entity == null)
+            {
+                var entry = _db.UnitsOfMeasurements.Add(new UnitsOfMeasurement {Name = name});
+                _db.SaveChanges();
+                entity = entry.Entity;
+            }
+
+            return entity.Adapt<UomResult>();
         }
 
         public IEnumerable<UomResult> GetAll() => _db.UnitsOfMeasurements.ProjectToType<UomResult>().ToList();

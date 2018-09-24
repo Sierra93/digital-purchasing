@@ -37,8 +37,16 @@ namespace DigitalPurchasing.Services
             };
         }
 
-        public NomenclatureCategoryResult CreateCategory(string name, Guid? parentId)
+        public NomenclatureCategoryResult CreateOrUpdate(string name, Guid? parentId)
         {
+            var oldEntity = _db.NomenclatureCategories.FirstOrDefault(
+                q => q.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase) && q.ParentId == parentId);
+
+            if (oldEntity != null)
+            {
+                return oldEntity.Adapt<NomenclatureCategoryResult>();
+            }
+
             var entry = _db.NomenclatureCategories.Add(new NomenclatureCategory
             {
                 Name = name,
