@@ -76,8 +76,6 @@ namespace DigitalPurchasing.ExcelReader
                     c.SkipCastingErrors();
                 }).Where(q => q.Code != "Код"); // c.WithoutHeaderRow(); don't work for some reason, bug?
 
-                var anc1 = NumberFormatInfo.CurrentInfo.CurrencyDecimalSeparator;
-                var anc2 = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator;
                 var result = items.Select(q => new TemplateData
                 {
                     Category = q.Category,

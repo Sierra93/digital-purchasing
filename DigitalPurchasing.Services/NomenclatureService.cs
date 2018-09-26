@@ -14,8 +14,13 @@ namespace DigitalPurchasing.Services
     public class NomenclatureService : INomenclatureService
     {
         private readonly ApplicationDbContext _db;
+        private readonly INomenclatureCategoryService _categoryService;
 
-        public NomenclatureService(ApplicationDbContext dbContext) => _db = dbContext;
+        public NomenclatureService(ApplicationDbContext dbContext, INomenclatureCategoryService categoryService)
+        {
+            _db = dbContext;
+            _categoryService = categoryService;
+        }
 
         public NomenclatureDataResult GetData(int page, int perPage, string sortField, bool sortAsc)
         {
@@ -24,10 +29,15 @@ namespace DigitalPurchasing.Services
                 sortField = "Name";
             }
 
-            var qry = _db.Nomenclatures.AsQueryable();
-            var total = _db.Nomenclatures.Count();
+            var qry = _db.Nomenclatures.Where(q => !q.IsDeleted);
+            var total = qry.Count();
             var orderedResults = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}");
-            var result = orderedResults.Skip((page-1)*perPage).Take(perPage).ProjectToType<NomenclatureResult>().ToList();
+            var result = orderedResults.Skip((page-1)*perPage).Take(perPage).ProjectToType<NomenclatureDataResultItem>().ToList();
+
+            foreach (var nomenclatureResult in result)
+            {
+                nomenclatureResult.CategoryFullName = _categoryService.FullCategoryName(nomenclatureResult.CategoryId);
+            }
 
             return new NomenclatureDataResult
             {
@@ -91,9 +101,10 @@ namespace DigitalPurchasing.Services
         public NomenclatureAutocompleteResult Autocomplete(string q)
         {
             var resultQry = _db.Nomenclatures.AsNoTracking().Include(w => w.BatchUom).Where(w =>
-                w.Name.Contains(q, StringComparison.InvariantCultureIgnoreCase)
-                || w.NameEng.Contains(q, StringComparison.InvariantCultureIgnoreCase)
-                || w.Code.Contains(q, StringComparison.InvariantCultureIgnoreCase));
+                !w.IsDeleted &&
+                (w.Name.Contains(q, StringComparison.InvariantCultureIgnoreCase)
+                    || w.NameEng.Contains(q, StringComparison.InvariantCultureIgnoreCase)
+                    || w.Code.Contains(q, StringComparison.InvariantCultureIgnoreCase)));
 
             var result = resultQry.ToList();
             return new NomenclatureAutocompleteResult
@@ -107,6 +118,14 @@ namespace DigitalPurchasing.Services
             var entity = _db.Nomenclatures.AsNoTracking().Include(w => w.BatchUom).FirstOrDefault(q => q.Id == id);
             var data = entity?.Adapt<NomenclatureAutocompleteResult.AutocompleteResultItem>();
             return new BaseResult<NomenclatureAutocompleteResult.AutocompleteResultItem>(data);
+        }
+
+        public void Delete(Guid id)
+        {
+            var entity = _db.Nomenclatures.FirstOrDefault(q => q.Id == id && !q.IsDeleted);
+            if (entity == null) return;
+            entity.IsDeleted = true;
+            _db.SaveChanges();
         }
     }
 }

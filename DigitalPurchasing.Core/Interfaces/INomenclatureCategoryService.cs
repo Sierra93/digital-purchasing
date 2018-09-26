@@ -8,6 +8,7 @@ namespace DigitalPurchasing.Core.Interfaces
         NomenclatureCategoryDataResult GetData(int page, int perPage, string sortField, bool sortAsc);
         NomenclatureCategoryResult CreateOrUpdate(string name, Guid? parentId);
         IEnumerable<NomenclatureCategoryResult> GetAll();
+        string FullCategoryName(Guid categoryId);
     }
 
     public class NomenclatureCategoryResult
@@ -19,6 +20,8 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid? ParentId { get; set; }
 
         public string ParentName { get; set; }
+
+        public string FullName { get; set; }
     }
 
     public class NomenclatureCategoryDataResult : BaseDataResponse<NomenclatureCategoryResult>
