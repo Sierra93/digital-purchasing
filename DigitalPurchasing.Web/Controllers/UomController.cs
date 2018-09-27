@@ -51,6 +51,6 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult AutocompleteSingle([FromQuery] Guid id) => Json(_uomService.AutocompleteSingle(id));
 
         [HttpPost]
-        public IActionResult Factor([FromBody]UomFactorVm m) => Json(_uomService.GetConversionRate(m.FromId, m.ToId, m.NomenclatureId));
+        public IActionResult Factor([FromBody]UomFactorVm m) => Json(_uomService.GetConversionRate(m.FromId, m.NomenclatureId));
     }
 }

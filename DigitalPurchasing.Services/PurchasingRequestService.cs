@@ -20,14 +20,22 @@ namespace DigitalPurchasing.Services
         private readonly IPRCounterService _counterService;
         private readonly IColumnNameService _columnNameService;
         private readonly IUomService _uomService;
+        private readonly INomenclatureService _nomenclatureService;
 
-        public PurchasingRequestService(ApplicationDbContext db, IExcelRequestReader excelFileReader, IPRCounterService counterService, IColumnNameService columnNameService, IUomService uomService)
+        public PurchasingRequestService(
+            ApplicationDbContext db,
+            IExcelRequestReader excelFileReader,
+            IPRCounterService counterService,
+            IColumnNameService columnNameService,
+            IUomService uomService,
+            INomenclatureService nomenclatureService)
         {
             _db = db;
             _excelRequestReader = excelFileReader;
             _counterService = counterService;
             _columnNameService = columnNameService;
             _uomService = uomService;
+            _nomenclatureService = nomenclatureService;
         }
 
         public CreateFromFileResponse CreateFromFile(string filePath)
@@ -140,12 +148,14 @@ namespace DigitalPurchasing.Services
             var index = 0;
 
             var uoms = new Dictionary<string, Guid>();
+            var noms = new Dictionary<string, Guid>();
             foreach (var rawItem in rawItems)
             {
                 rawItem.PurchasingRequestId = id;
                 rawItem.Position = ++index;
 
                 #region Try to find UoM in db
+
                 if (string.IsNullOrEmpty(rawItem.RawUom)) continue;
                 if (uoms.ContainsKey(rawItem.RawUom))
                 {
@@ -160,6 +170,35 @@ namespace DigitalPurchasing.Services
                     uoms.Add(match.Name, match.Id);
                     rawItem.RawUomMatchId = match.Id;
                 }
+
+                #endregion
+                #region Try to find in nomeclature
+                
+                if (noms.ContainsKey(rawItem.RawName))
+                {
+                    rawItem.RawUomMatchId = noms[rawItem.RawName];
+                }
+                else
+                {
+                    var nomRes = _nomenclatureService.Autocomplete(rawItem.RawName);
+                    if (nomRes.Items == null || nomRes.Items.Count == 0) continue;
+                    var nomMatch = nomRes.Items.FirstOrDefault(q => q.Name.Equals(rawItem.RawName, StringComparison.InvariantCultureIgnoreCase));
+                    if (nomMatch == null) continue;
+                    noms.Add(nomMatch.Name, nomMatch.Id);
+                    rawItem.NomenclatureId = nomMatch.Id;
+                }
+
+                #endregion
+
+                #region Calc UoMs factor
+
+                if (rawItem.NomenclatureId != null)
+                {
+                    var rate = _uomService.GetConversionRate(rawItem.RawUomMatchId.Value, rawItem.NomenclatureId.Value);
+                    rawItem.CommonFactor = rate.CommonFactor;
+                    rawItem.NomenclatureFactor = rate.NomenclatureFactor;
+                }
+
                 #endregion
             }
             _db.PurchasingRequestItems.AddRange(rawItems);
@@ -181,32 +220,18 @@ namespace DigitalPurchasing.Services
                 .Where(q => q.PurchasingRequestId == id)
                 .OrderBy(q => q.Position).ToList();
 
-            var res = new MatchItemsResponse();
-
-            foreach (var prItem in entities)
-            {
-                var resItem = prItem.Adapt<MatchItemsResponse.Item>();
-                if (prItem.RawUomMatchId.HasValue && prItem.NomenclatureId.HasValue)
-                {
-                    var rate = _uomService.GetConversionRate(
-                        prItem.RawUomMatchId.Value,
-                        prItem.Nomenclature.BatchUomId,
-                        prItem.NomenclatureId.Value);
-
-                    resItem.UomNomenclatureFactor = rate.NomenclatureFactor;
-                    resItem.UomCommonFactor = rate.CommonFactor;
-                }
-                res.Items.Add(resItem);
-            }
+            var res = new MatchItemsResponse { Items = entities.Adapt<List<MatchItemsResponse.Item>>() };
 
             return res;
         }
 
-        public void SaveMatch(Guid itemId, Guid nomenclatureId, Guid uomId)
+        public void SaveMatch(Guid itemId, Guid nomenclatureId, Guid uomId, decimal factorC, decimal factorN)
         {
             var entity = _db.PurchasingRequestItems.Find(itemId);
             entity.NomenclatureId = nomenclatureId;
             entity.RawUomMatchId = uomId;
+            entity.CommonFactor = factorC;
+            entity.NomenclatureFactor = factorN;
             _db.SaveChanges();
         }
 

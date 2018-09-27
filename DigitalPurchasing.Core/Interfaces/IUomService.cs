@@ -8,7 +8,7 @@ namespace DigitalPurchasing.Core.Interfaces
         UomDataResponse GetData(int page, int perPage, string sortField, bool sortAsc);
         UomResult CreateOrUpdate(string name);
         IEnumerable<UomResult> GetAll();
-        UomConversionRateResponse GetConversionRate(Guid fromUomId, Guid toUomId, Guid nomenclatureId);
+        UomConversionRateResponse GetConversionRate(Guid fromUomId, Guid nomenclatureId);
         UomAutocompleteResponse Autocomplete(string s);
         BaseResult<UomAutocompleteResponse.AutocompleteItem> AutocompleteSingle(Guid id);
         void SaveConversionRate(Guid fromUomId, Guid toUomId, Guid nomenclatureId, decimal factorC, decimal factorN);

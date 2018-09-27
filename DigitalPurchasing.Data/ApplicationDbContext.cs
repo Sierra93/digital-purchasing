@@ -65,10 +65,12 @@ namespace DigitalPurchasing.Data
             builder.Entity<UnitsOfMeasurement>().HasQueryFilter(o => o.OwnerId == CompanyId || o.OwnerId == null);
             builder.Entity<UomConversionRate>().HasQueryFilter(o => o.OwnerId == CompanyId || o.OwnerId == null);
 
+            var createdOn = new DateTime(2018, 09, 27, 0, 0, 0, DateTimeKind.Utc);
+
             builder.Entity<UnitsOfMeasurement>().HasData(
-                new UnitsOfMeasurement { Id = new Guid("0a45a476e69f4ebbbb540ae92c88e64b"), OwnerId = null, Name = "шт"},
-                new UnitsOfMeasurement { Id = new Guid("5d8949a33c3d44c0b22ee9ec1881faf0"), OwnerId = null, Name = "тыс шт"},
-                new UnitsOfMeasurement { Id = new Guid("e6fe6c76ef6841ddbe4a07f46f274334"), OwnerId = null, Name = "кг"}
+                new UnitsOfMeasurement { Id = new Guid("0a45a476e69f4ebbbb540ae92c88e64b"), OwnerId = null, Name = "шт", CreatedOn = createdOn },
+                new UnitsOfMeasurement { Id = new Guid("5d8949a33c3d44c0b22ee9ec1881faf0"), OwnerId = null, Name = "тыс шт", CreatedOn = createdOn },
+                new UnitsOfMeasurement { Id = new Guid("e6fe6c76ef6841ddbe4a07f46f274334"), OwnerId = null, Name = "кг", CreatedOn = createdOn }
             );
 
             builder.Entity<UomConversionRate>().HasData(
@@ -78,7 +80,8 @@ namespace DigitalPurchasing.Data
                     OwnerId = null,
                     FromUomId = new Guid("5d8949a33c3d44c0b22ee9ec1881faf0"),
                     Factor = 1000,
-                    ToUomId = new Guid("0a45a476e69f4ebbbb540ae92c88e64b")
+                    ToUomId = new Guid("0a45a476e69f4ebbbb540ae92c88e64b"),
+                    CreatedOn = createdOn
                 }
             );
         }

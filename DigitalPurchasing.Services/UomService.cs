@@ -53,8 +53,9 @@ namespace DigitalPurchasing.Services
 
         public IEnumerable<UomResult> GetAll() => _db.UnitsOfMeasurements.ProjectToType<UomResult>().ToList();
 
-        public UomConversionRateResponse GetConversionRate(Guid fromUomId, Guid toUomId, Guid nomenclatureId)
+        public UomConversionRateResponse GetConversionRate(Guid fromUomId, Guid nomenclatureId)
         {
+            var toUomId = _db.Nomenclatures.First(q => q.Id == nomenclatureId).BatchUomId;
             var conversionRates = _db.UomConversionRates.AsNoTracking()
                 .Where(q =>
                     ( q.FromUomId == fromUomId && q.ToUomId == toUomId ) ||

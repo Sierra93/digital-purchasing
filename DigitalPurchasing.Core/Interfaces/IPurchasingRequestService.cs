@@ -15,7 +15,7 @@ namespace DigitalPurchasing.Core.Interfaces
         void SaveRawItems(Guid id, IEnumerable<RawItemResponse.RawItem> items);
         void UpdateStatus(Guid id, PurchasingRequestStatus status);
         MatchItemsResponse MatchItemsData(Guid id);
-        void SaveMatch(Guid id, Guid nomenclatureId, Guid uomId);
+        void SaveMatch(Guid id, Guid nomenclatureId, Guid uomId, decimal factorC, decimal factorN);
         void SaveCompanyName(Guid prId, string companyName);
         void SaveCustomerName(Guid prId, string customerName);
     }
@@ -107,8 +107,8 @@ namespace DigitalPurchasing.Core.Interfaces
             public string NomenclatureCode { get; set; }
             public string NomenclatureUom { get; set; }
 
-            public decimal UomNomenclatureFactor { get; set; }
-            public decimal UomCommonFactor { get; set; }
+            public decimal NomenclatureFactor { get; set; }
+            public decimal CommonFactor { get; set; }
         }
 
         public List<Item> Items { get; set; } = new List<Item>();

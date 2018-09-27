@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20180927144017_Nomenclature_Factors")]
+    partial class Nomenclature_Factors
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -413,9 +415,9 @@ namespace DigitalPurchasing.Data.Migrations
                     b.ToTable("UnitsOfMeasurements");
 
                     b.HasData(
-                        new { Id = new Guid("0a45a476-e69f-4ebb-bb54-0ae92c88e64b"), CreatedOn = new DateTime(2018, 9, 27, 0, 0, 0, 0, DateTimeKind.Utc), Name = "шт" },
-                        new { Id = new Guid("5d8949a3-3c3d-44c0-b22e-e9ec1881faf0"), CreatedOn = new DateTime(2018, 9, 27, 0, 0, 0, 0, DateTimeKind.Utc), Name = "тыс шт" },
-                        new { Id = new Guid("e6fe6c76-ef68-41dd-be4a-07f46f274334"), CreatedOn = new DateTime(2018, 9, 27, 0, 0, 0, 0, DateTimeKind.Utc), Name = "кг" }
+                        new { Id = new Guid("0a45a476-e69f-4ebb-bb54-0ae92c88e64b"), CreatedOn = new DateTime(2018, 9, 27, 14, 40, 16, 435, DateTimeKind.Utc), Name = "шт" },
+                        new { Id = new Guid("5d8949a3-3c3d-44c0-b22e-e9ec1881faf0"), CreatedOn = new DateTime(2018, 9, 27, 14, 40, 16, 435, DateTimeKind.Utc), Name = "тыс шт" },
+                        new { Id = new Guid("e6fe6c76-ef68-41dd-be4a-07f46f274334"), CreatedOn = new DateTime(2018, 9, 27, 14, 40, 16, 435, DateTimeKind.Utc), Name = "кг" }
                     );
                 });
 
@@ -450,7 +452,7 @@ namespace DigitalPurchasing.Data.Migrations
                     b.ToTable("UomConversionRates");
 
                     b.HasData(
-                        new { Id = new Guid("f57c690a-fbb1-47e2-9ab0-1472a514d88f"), CreatedOn = new DateTime(2018, 9, 27, 0, 0, 0, 0, DateTimeKind.Utc), Factor = 1000m, FromUomId = new Guid("5d8949a3-3c3d-44c0-b22e-e9ec1881faf0"), ToUomId = new Guid("0a45a476-e69f-4ebb-bb54-0ae92c88e64b") }
+                        new { Id = new Guid("f57c690a-fbb1-47e2-9ab0-1472a514d88f"), CreatedOn = new DateTime(2018, 9, 27, 14, 40, 16, 435, DateTimeKind.Utc), Factor = 1000m, FromUomId = new Guid("5d8949a3-3c3d-44c0-b22e-e9ec1881faf0"), ToUomId = new Guid("0a45a476-e69f-4ebb-bb54-0ae92c88e64b") }
                     );
                 });
 
