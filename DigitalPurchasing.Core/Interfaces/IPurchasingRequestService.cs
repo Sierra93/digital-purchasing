@@ -73,6 +73,8 @@ namespace DigitalPurchasing.Core.Interfaces
         }
 
         public List<RawItem> Items { get; set; }
+
+        public string CustomerName { get; set; }
     }
 
     public class PurchasingRequestColumns
@@ -112,5 +114,7 @@ namespace DigitalPurchasing.Core.Interfaces
         }
 
         public List<Item> Items { get; set; } = new List<Item>();
+
+        public string CustomerName { get; set; }
     }
 }

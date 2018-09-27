@@ -67,9 +67,7 @@ namespace DigitalPurchasing.Web.Controllers
 
             return View(response);
         }
-
-
-
+        
         [HttpGet]
         public IActionResult RawItemsData(Guid id)
         {

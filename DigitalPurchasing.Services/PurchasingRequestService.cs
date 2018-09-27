@@ -131,13 +131,19 @@ namespace DigitalPurchasing.Services
 
         public RawItemResponse GetRawItems(Guid id)
         {
+            var pr = _db.PurchasingRequests.Find(id);
+            if (pr == null)
+            {
+                return null;
+            }
+
             var items = _db.PurchasingRequestItems
                 .Where(q => q.PurchasingRequestId == id)
                 .OrderBy(q => q.Position)
                 .ProjectToType<RawItemResponse.RawItem>()
                 .ToList();
 
-            return new RawItemResponse {Items = items};
+            return new RawItemResponse { Items = items, CustomerName = pr.CustomerName };
         }
 
         public void SaveRawItems(Guid id, IEnumerable<RawItemResponse.RawItem> items)
@@ -214,13 +220,19 @@ namespace DigitalPurchasing.Services
 
         public MatchItemsResponse MatchItemsData(Guid id)
         {
+            var pr = _db.PurchasingRequests.Find(id);
+            if (pr == null)
+            {
+                return null;
+            }
+
             var entities = _db.PurchasingRequestItems
                 .Include(q => q.Nomenclature).ThenInclude(q => q.BatchUom)
                 .Include(q => q.RawUomMatch)
                 .Where(q => q.PurchasingRequestId == id)
                 .OrderBy(q => q.Position).ToList();
 
-            var res = new MatchItemsResponse { Items = entities.Adapt<List<MatchItemsResponse.Item>>() };
+            var res = new MatchItemsResponse { Items = entities.Adapt<List<MatchItemsResponse.Item>>(), CustomerName = pr.CustomerName };
 
             return res;
         }

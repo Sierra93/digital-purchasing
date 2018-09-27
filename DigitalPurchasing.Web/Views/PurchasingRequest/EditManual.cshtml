@@ -123,7 +123,7 @@
                 data: function() {
                     return {
                         prId: '@Model.Id',
-                        customerName: '@Model.CustomerName',
+                        customerName: '',
                         // { code: '123-321', name: 'Болт 123-321 XYZ', uom: 'шт.', qty: 100 }
                         rows: []
                     };
@@ -133,6 +133,7 @@
                     this.$http.get('@Url.Action("RawItemsData", new { id = Model.Id })').then(response => {
                         var data = response.body;
                         $this.rows = data.items;
+                        $this.customerName = data.customerName;
                     }, response => {
                         alert('error');
                     });
@@ -168,7 +169,7 @@
                         });
                     },
                     updateCustomerName: _.debounce(function (e) {
-                        var data = { name: e.target.value, id: this.prId };
+                        var data = { name: this.customerName, id: this.prId };
                         this.$http.post('@Url.Action("SaveCustomerName", "PurchasingRequest")', data).then(function(res) {
                         }, function(res) {
                             alert('error');
