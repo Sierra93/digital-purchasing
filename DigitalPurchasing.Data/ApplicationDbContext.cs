@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Linq.Expressions;
 using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Models;
@@ -18,6 +17,7 @@ namespace DigitalPurchasing.Data
 
         public DbSet<Company> Companies { get; set; }
         public DbSet<Nomenclature> Nomenclatures { get; set; }
+        public DbSet<NomenclatureAlternative> NomenclatureAlternatives { get; set; }
         public DbSet<NomenclatureCategory> NomenclatureCategories { get; set; }
         public DbSet<UnitsOfMeasurement> UnitsOfMeasurements { get; set; }
         public DbSet<UomConversionRate> UomConversionRates { get; set; }
@@ -48,6 +48,7 @@ namespace DigitalPurchasing.Data
             builder.Entity<Nomenclature>().HasOne(q => q.MassUom).WithMany(q => q.MassNomenclatures).HasForeignKey(q => q.MassUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<Nomenclature>().HasOne(q => q.ResourceUom).WithMany(q => q.ResourceNomenclatures).HasForeignKey(q => q.ResourceUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<Nomenclature>().HasOne(q => q.ResourceBatchUom).WithMany(q => q.ResourceBatchNomenclatures).HasForeignKey(q => q.ResourceBatchUomId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<NomenclatureAlternative>().HasOne(q => q.Nomenclature).WithMany(q => q.Alternatives).HasForeignKey(q => q.NomenclatureId).OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<PurchasingRequest>().HasMany(q => q.Items).WithOne(q => q.PurchasingRequest).HasForeignKey(q => q.PurchasingRequestId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<PurchasingRequestItem>().HasOne(q => q.Nomenclature).WithMany(q => q.PurchasingRequestItems).HasForeignKey(q => q.NomenclatureId).OnDelete(DeleteBehavior.Restrict);
@@ -57,10 +58,11 @@ namespace DigitalPurchasing.Data
             builder.Entity<UomConversionRate>().HasOne(q => q.ToUom).WithMany(q => q.ToConversionRates).HasForeignKey(q => q.ToUomId).OnDelete(DeleteBehavior.Restrict);
 
             // default filters to show company or common data
-            builder.Entity<NomenclatureCategory>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<PRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<PurchasingRequest>().HasQueryFilter(o => o.OwnerId == CompanyId);
+            builder.Entity<PRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<Nomenclature>().HasQueryFilter(o => o.OwnerId == CompanyId);
+            builder.Entity<NomenclatureAlternative>().HasQueryFilter(o => o.OwnerId == CompanyId);
+            builder.Entity<NomenclatureCategory>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<ColumnName>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<UnitsOfMeasurement>().HasQueryFilter(o => o.OwnerId == CompanyId || o.OwnerId == null);
             builder.Entity<UomConversionRate>().HasQueryFilter(o => o.OwnerId == CompanyId || o.OwnerId == null);

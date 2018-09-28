@@ -9,9 +9,11 @@ namespace DigitalPurchasing.Core.Interfaces
         NomenclatureResult CreateOrUpdate(NomenclatureResult model);
         NomenclatureResult GetById(Guid id);
         bool Update(NomenclatureResult model);
-        NomenclatureAutocompleteResult Autocomplete(string q);
+        NomenclatureAutocompleteResult Autocomplete(string q, bool alts = false, string customer = null);
         BaseResult<NomenclatureAutocompleteResult.AutocompleteResultItem> AutocompleteSingle(Guid id);
         void Delete(Guid id);
+        void AddAlternative(Guid nomenclatureId, string name, string customerName);
+        void AddAlternative(Guid nomenclatureId, Guid prItemId);
     }
 
     public class NomenclatureDataResultItem

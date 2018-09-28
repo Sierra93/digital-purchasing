@@ -148,6 +148,9 @@ namespace DigitalPurchasing.Services
 
         public void SaveRawItems(Guid id, IEnumerable<RawItemResponse.RawItem> items)
         {
+            var pr = _db.PurchasingRequests.Find(id);
+            if (pr == null) return;
+
             _db.PurchasingRequestItems.RemoveRange(_db.PurchasingRequestItems.Where(q => q.PurchasingRequestId == id));
             _db.SaveChanges();
             var rawItems = items.Adapt<List<PurchasingRequestItem>>().ToList();
@@ -170,11 +173,15 @@ namespace DigitalPurchasing.Services
                 else
                 {
                     var res = _uomService.Autocomplete(rawItem.RawUom);
-                    if (res.Items == null || res.Items.Count == 0) continue;
-                    var match = res.Items.FirstOrDefault(q => q.Name.Equals(rawItem.RawUom, StringComparison.InvariantCultureIgnoreCase));
-                    if (match == null) continue;
-                    uoms.Add(match.Name, match.Id);
-                    rawItem.RawUomMatchId = match.Id;
+                    if (res.Items != null && res.Items.Any())
+                    {
+                        var match = res.Items.FirstOrDefault(q => q.Name.Equals(rawItem.RawUom, StringComparison.InvariantCultureIgnoreCase));
+                        if (match != null)
+                        {
+                            uoms.Add(match.Name, match.Id);
+                            rawItem.RawUomMatchId = match.Id;
+                        }
+                    }
                 }
 
                 #endregion
@@ -186,19 +193,25 @@ namespace DigitalPurchasing.Services
                 }
                 else
                 {
-                    var nomRes = _nomenclatureService.Autocomplete(rawItem.RawName);
-                    if (nomRes.Items == null || nomRes.Items.Count == 0) continue;
-                    var nomMatch = nomRes.Items.FirstOrDefault(q => q.Name.Equals(rawItem.RawName, StringComparison.InvariantCultureIgnoreCase));
-                    if (nomMatch == null) continue;
-                    noms.Add(nomMatch.Name, nomMatch.Id);
-                    rawItem.NomenclatureId = nomMatch.Id;
+                    var nomRes = _nomenclatureService.Autocomplete(rawItem.RawName, true, pr.CustomerName);
+                    if (nomRes.Items != null && nomRes.Items.Count() == 1)
+                    {
+                        //var nomMatch = nomRes.Items.FirstOrDefault(q => q.Name.Equals(rawItem.RawName, StringComparison.InvariantCultureIgnoreCase));
+                        //if (nomMatch != null)
+                        //{
+                        //    noms.Add(nomMatch.Name, nomMatch.Id);
+                        //    rawItem.NomenclatureId = nomMatch.Id;
+                        //}
+                        noms.Add(nomRes.Items[0].Name, nomRes.Items[0].Id);
+                        rawItem.NomenclatureId = nomRes.Items[0].Id;
+                    }
                 }
 
                 #endregion
 
                 #region Calc UoMs factor
 
-                if (rawItem.NomenclatureId != null)
+                if (rawItem.NomenclatureId != null && rawItem.RawUomMatchId != null)
                 {
                     var rate = _uomService.GetConversionRate(rawItem.RawUomMatchId.Value, rawItem.NomenclatureId.Value);
                     rawItem.CommonFactor = rate.CommonFactor;
@@ -257,7 +270,7 @@ namespace DigitalPurchasing.Services
         public void SaveCustomerName(Guid prId, string customerName)
         {
             var entity = _db.PurchasingRequests.Find(prId);
-            entity.CustomerName = customerName;
+          entity.CustomerName = customerName;
             _db.SaveChanges();
         }
 

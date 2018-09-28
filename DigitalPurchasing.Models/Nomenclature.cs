@@ -37,5 +37,7 @@ namespace DigitalPurchasing.Models
         public ICollection<PurchasingRequestItem> PurchasingRequestItems { get; set; }
 
         public bool IsDeleted { get; set; }
+
+        public ICollection<NomenclatureAlternative> Alternatives { get; set; }
     }
 }

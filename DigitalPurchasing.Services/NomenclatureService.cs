@@ -8,6 +8,7 @@ using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace DigitalPurchasing.Services
 {
@@ -98,18 +99,35 @@ namespace DigitalPurchasing.Services
             return true;
         }
 
-        public NomenclatureAutocompleteResult Autocomplete(string q)
+        public NomenclatureAutocompleteResult Autocomplete(string q, bool alts = false, string customer = null)
         {
-            var resultQry = _db.Nomenclatures.AsNoTracking().Include(w => w.BatchUom).Where(w =>
-                !w.IsDeleted &&
-                (w.Name.Contains(q, StringComparison.InvariantCultureIgnoreCase)
-                    || w.NameEng.Contains(q, StringComparison.InvariantCultureIgnoreCase)
-                    || w.Code.Contains(q, StringComparison.InvariantCultureIgnoreCase)));
+            var resultQry = _db.Nomenclatures
+                .AsNoTracking()
+                .Include(w => w.BatchUom)
+                .Where(w => !w.IsDeleted &&
+                    (w.Name.Contains(q, StringComparison.InvariantCultureIgnoreCase)
+                        || w.NameEng.Contains(q, StringComparison.InvariantCultureIgnoreCase)
+                        || w.Code.Contains(q, StringComparison.InvariantCultureIgnoreCase)));
 
-            var result = resultQry.ToList();
+            var mainResults = resultQry.ToList();
+            
+            if (alts)
+            {
+                var altNomIds = _db.NomenclatureAlternatives
+                    .Where(w => w.Name.Contains(q, StringComparison.InvariantCultureIgnoreCase))
+                    .Select(w => w.NomenclatureId).ToList();
+
+                if (altNomIds.Any())
+                {
+                    var mainNomIds = mainResults.Select(w => w.Id);
+                    var altResults = _db.Nomenclatures.Where(w => altNomIds.Contains(w.Id) && !mainNomIds.Contains(w.Id) && !w.IsDeleted).ToList();
+                    mainResults = mainResults.Union(altResults).ToList();
+                }
+            }
+
             return new NomenclatureAutocompleteResult
             {
-                Items = result.Adapt<List<NomenclatureAutocompleteResult.AutocompleteResultItem>>()
+                Items = mainResults.Adapt<List<NomenclatureAutocompleteResult.AutocompleteResultItem>>()
             };
         }
 
@@ -126,6 +144,34 @@ namespace DigitalPurchasing.Services
             if (entity == null) return;
             entity.IsDeleted = true;
             _db.SaveChanges();
+        }
+
+        public void AddAlternative(Guid nomenclatureId, Guid prItemId)
+        {
+            var pr =_db.PurchasingRequestItems.Include(q => q.PurchasingRequest).First(q => q.Id == prItemId);
+            AddAlternative(nomenclatureId, pr.RawName, pr.PurchasingRequest.CustomerName);
+        }
+
+        public void AddAlternative(Guid nomenclatureId, string name, string customerName)
+        {
+            name = name.Trim();
+
+            var entity = _db.Nomenclatures.Find(nomenclatureId);
+            if (entity == null) return;
+
+            if (!name.Equals(entity.Name, StringComparison.InvariantCultureIgnoreCase) && !name.Equals(entity.NameEng, StringComparison.InvariantCultureIgnoreCase))
+            {
+                if (!_db.NomenclatureAlternatives.Any(q => q.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    _db.NomenclatureAlternatives.Add(new NomenclatureAlternative
+                    {
+                        NomenclatureId = nomenclatureId,
+                        Name = name,
+                        CustomerName = customerName
+                    });
+                    _db.SaveChanges();
+                }
+            }
         }
     }
 }
