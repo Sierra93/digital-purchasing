@@ -33,7 +33,7 @@ namespace DigitalPurchasing.Web.Core
                 allCategories = allCategories.Where(q => q.Id != exceptId.Value);
             }
 
-            return allCategories.Select(q => new SelectListItem(q.Name, q.Id.ToString("N"))).ToList();
+            return allCategories.Select(q => new SelectListItem(q.Name, q.Id.ToString("D"))).ToList();
         }
 
         public List<SelectListItem> GetUoms(Guid? exceptId = null)
@@ -44,7 +44,7 @@ namespace DigitalPurchasing.Web.Core
                 allUoms = allUoms.Where(q => q.Id != exceptId.Value);
             }
 
-            return allUoms.Select(q => new SelectListItem(q.Name, q.Id.ToString("N"))).ToList();
+            return allUoms.Select(q => new SelectListItem(q.Name, q.Id.ToString("D"))).ToList();
         }
     }
 }
