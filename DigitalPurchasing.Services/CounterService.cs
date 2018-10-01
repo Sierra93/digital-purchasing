@@ -7,21 +7,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DigitalPurchasing.Services
 {
-    public class PRCounterService : IPRCounterService
+    public class CounterService : ICounterService
     {
         private readonly ApplicationDbContext _db;
 
-        public PRCounterService(ApplicationDbContext db) => _db = db;
+        public CounterService(ApplicationDbContext db) => _db = db;
 
-        public int GetNextId()
+        private int GetNextId<TEntity>() where TEntity : Counter, new()
         {
-            var counter = _db.PRCounters.FirstOrDefault();
+            var dbSet = _db.Set<TEntity>();
+
+            var counter = dbSet.FirstOrDefault();
             if (counter == null)
             {
-                var counterEntry = _db.PRCounters.Add(new PRCounter
-                {
-                    CurrentId = 0
-                });
+                var counterEntry = dbSet.Add(new TEntity { CurrentId = 0 });
                  _db.SaveChanges();
                 counter = counterEntry.Entity;
             }
@@ -40,7 +39,7 @@ namespace DigitalPurchasing.Services
                 {
                     foreach (var entry in ex.Entries)
                     {
-                        if (entry.Entity is PRCounter)
+                        if (entry.Entity is TEntity)
                         {
                             var proposedValues = entry.CurrentValues;
                             var databaseValues = entry.GetDatabaseValues();
@@ -68,5 +67,9 @@ namespace DigitalPurchasing.Services
             }
             return nextId;
         }
+
+        public int GetQRNextId() => GetNextId<QRCounter>();
+
+        public int GetPRNextId() => GetNextId<PRCounter>();
     }
 }

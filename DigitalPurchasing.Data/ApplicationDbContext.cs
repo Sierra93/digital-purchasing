@@ -24,6 +24,7 @@ namespace DigitalPurchasing.Data
         public DbSet<PurchasingRequest> PurchasingRequests { get; set; }
         public DbSet<PurchasingRequestItem> PurchasingRequestItems { get; set; }
         public DbSet<PRCounter> PRCounters { get; set; }
+        public DbSet<QRCounter> QRCounters { get; set; }
         public DbSet<ColumnName> ColumnNames { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ITenantService tenantService) : base(options) => _tenantService = tenantService;
@@ -60,6 +61,7 @@ namespace DigitalPurchasing.Data
             // default filters to show company or common data
             builder.Entity<PurchasingRequest>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<PRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
+            builder.Entity<QRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<Nomenclature>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<NomenclatureAlternative>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<NomenclatureCategory>().HasQueryFilter(o => o.OwnerId == CompanyId);

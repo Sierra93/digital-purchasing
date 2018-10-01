@@ -17,7 +17,7 @@ namespace DigitalPurchasing.Services
     {
         private readonly ApplicationDbContext _db;
         private readonly IExcelRequestReader _excelRequestReader;
-        private readonly IPRCounterService _counterService;
+        private readonly ICounterService _counterService;
         private readonly IColumnNameService _columnNameService;
         private readonly IUomService _uomService;
         private readonly INomenclatureService _nomenclatureService;
@@ -25,7 +25,7 @@ namespace DigitalPurchasing.Services
         public PurchasingRequestService(
             ApplicationDbContext db,
             IExcelRequestReader excelFileReader,
-            IPRCounterService counterService,
+            ICounterService counterService,
             IColumnNameService columnNameService,
             IUomService uomService,
             INomenclatureService nomenclatureService)
@@ -47,7 +47,7 @@ namespace DigitalPurchasing.Services
             {
                 RawData = JsonConvert.SerializeObject(result.Table),
                 Status = PurchasingRequestStatus.MatchColumns,
-                PublicId = _counterService.GetNextId()
+                PublicId = _counterService.GetPRNextId()
             });
 
             _db.SaveChanges();

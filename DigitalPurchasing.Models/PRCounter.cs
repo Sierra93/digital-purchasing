@@ -2,9 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DigitalPurchasing.Models
 {
-    public class PRCounter : BaseModelWithOwner
+    public class PRCounter : Counter
     {
-        [ConcurrencyCheck]
-        public int CurrentId { get; set; }
     }
 }

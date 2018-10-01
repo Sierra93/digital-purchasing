@@ -81,7 +81,7 @@ namespace DigitalPurchasing.Web
             services.AddScoped<IDictionaryService, DictionaryService>();
             services.AddScoped<IExcelRequestReader, ExcelRequestReader>();
             services.AddScoped<IPurchasingRequestService, PurchasingRequestService>();
-            services.AddScoped<IPRCounterService, PRCounterService>();
+            services.AddScoped<ICounterService, CounterService>();
             services.AddScoped<IColumnNameService, ColumnNameService>();
         }
 
