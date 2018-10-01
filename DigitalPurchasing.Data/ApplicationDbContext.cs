@@ -23,6 +23,7 @@ namespace DigitalPurchasing.Data
         public DbSet<UomConversionRate> UomConversionRates { get; set; }
         public DbSet<PurchasingRequest> PurchasingRequests { get; set; }
         public DbSet<PurchasingRequestItem> PurchasingRequestItems { get; set; }
+        public DbSet<QuotationRequest> QuotationRequests { get; set; }
         public DbSet<PRCounter> PRCounters { get; set; }
         public DbSet<QRCounter> QRCounters { get; set; }
         public DbSet<ColumnName> ColumnNames { get; set; }
@@ -60,6 +61,7 @@ namespace DigitalPurchasing.Data
 
             // default filters to show company or common data
             builder.Entity<PurchasingRequest>().HasQueryFilter(o => o.OwnerId == CompanyId);
+            builder.Entity<QuotationRequest>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<PRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<QRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<Nomenclature>().HasQueryFilter(o => o.OwnerId == CompanyId);
