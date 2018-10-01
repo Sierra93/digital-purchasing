@@ -1,5 +1,5 @@
 @using DigitalPurchasing.Core.Interfaces
-@model DigitalPurchasing.Core.Interfaces.PurchasingRequestDetailsResponse
+@model DigitalPurchasing.Core.Interfaces.PurchaseRequestDetailsResponse
 
 @{
     ViewBag.Title = $"Заявка № {Model.PublicId} от {Model.CreatedOn:dd.MM.yyyy HH:mm}";
@@ -50,7 +50,7 @@
     <label v-if="isSaved">Сохранено!</label>
 </div>
 
-@if (Model.IsUploaded && Model.Status == PurchasingRequestStatus.MatchColumns)
+@if (Model.IsUploaded && Model.Status == PurchaseRequestStatus.MatchColumns)
 {
     <h3>Заявка в формате Клиента</h3>
     <table class="table table-striped">
@@ -116,7 +116,7 @@
                     saveColumns: function() {
                         var $this = this;
                         var data = {
-                            purchasingRequestId: '@Model.Id',
+                            purchaseRequestId: '@Model.Id',
                             code: this.columnCode,
                             name: this.columnName,
                             uom: this.columnUom,

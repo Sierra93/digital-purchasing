@@ -9,11 +9,10 @@ using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using MatchItemsResponse = DigitalPurchasing.Core.Interfaces.MatchItemsResponse;
-using PurchasingRequestColumns = DigitalPurchasing.Core.Interfaces.PurchasingRequestColumns;
 
 namespace DigitalPurchasing.Services
 {
-    public class PurchasingRequestService : IPurchasingRequestService
+    public class PurchaseRequestService : IPurchaseRequestService
     {
         private readonly ApplicationDbContext _db;
         private readonly IExcelRequestReader _excelRequestReader;
@@ -22,7 +21,7 @@ namespace DigitalPurchasing.Services
         private readonly IUomService _uomService;
         private readonly INomenclatureService _nomenclatureService;
 
-        public PurchasingRequestService(
+        public PurchaseRequestService(
             ApplicationDbContext db,
             IExcelRequestReader excelFileReader,
             ICounterService counterService,
@@ -43,10 +42,10 @@ namespace DigitalPurchasing.Services
             var result = _excelRequestReader.ToTable(filePath);
             if (result == null || !result.IsSuccess) return new CreateFromFileResponse { IsSuccess = false, Message = result?.Message };
 
-            var entry = _db.PurchasingRequests.Add(new PurchasingRequest
+            var entry = _db.PurchaseRequests.Add(new PurchaseRequest
             {
                 RawData = JsonConvert.SerializeObject(result.Table),
-                Status = PurchasingRequestStatus.MatchColumns,
+                Status = PurchaseRequestStatus.MatchColumns,
                 PublicId = _counterService.GetPRNextId()
             });
 
@@ -55,24 +54,24 @@ namespace DigitalPurchasing.Services
             return new CreateFromFileResponse { IsSuccess = true, Id = entry.Entity.Id };
         }
 
-        public PurchasingRequestDetailsResponse GetById(Guid id)
+        public PurchaseRequestDetailsResponse GetById(Guid id)
         {
-            var entity = _db.PurchasingRequests.Find(id);
+            var entity = _db.PurchaseRequests.Find(id);
 
-            var result = entity.Adapt<PurchasingRequestDetailsResponse>();
+            var result = entity.Adapt<PurchaseRequestDetailsResponse>();
             result.ExcelTable =
                 entity.RawData != null ? JsonConvert.DeserializeObject<ExcelTable>(entity.RawData) : null;
 
             return result;
         }
 
-        public PurchasingRequestColumnsResponse GetColumnsById(Guid id)
+        public PurchaseRequestColumnsResponse GetColumnsById(Guid id)
         {
-            var entity = _db.PurchasingRequests.Include(q => q.RawColumns).First(q => q.Id == id);
+            var entity = _db.PurchaseRequests.Include(q => q.RawColumns).First(q => q.Id == id);
             var excelTable = JsonConvert.DeserializeObject<ExcelTable>(entity.RawData);
 
             // load from raw columns first
-            var result = new PurchasingRequestColumnsResponse
+            var result = new PurchaseRequestColumnsResponse
             {
                 Code = entity.RawColumns != null ? entity.RawColumns.Code : excelTable.Columns.FirstOrDefault(q => q.Type == TableColumnType.Code)?.Header ?? "",
                 Name = entity.RawColumns != null ? entity.RawColumns.Name : excelTable.Columns.FirstOrDefault(q => q.Type == TableColumnType.Name)?.Header ?? "",
@@ -85,9 +84,9 @@ namespace DigitalPurchasing.Services
             return result;
         }
 
-        public void SaveColumns(Guid id, PurchasingRequestColumns purchasingRequestColumns)
+        public void SaveColumns(Guid id, PurchaseRequestColumns purchasingRequestColumns)
         {
-            var entity = _db.PurchasingRequests.Include(q => q.RawColumns).First(q => q.Id == id);
+            var entity = _db.PurchaseRequests.Include(q => q.RawColumns).First(q => q.Id == id);
             if (entity.RawColumns == null)
             {
                 entity.RawColumns = new RawColumns();
@@ -104,17 +103,17 @@ namespace DigitalPurchasing.Services
 
         public void GenerateRawItems(Guid id)
         {
-            _db.RemoveRange(_db.PurchasingRequestItems.Where(q => q.PurchasingRequestId == id));
+            _db.RemoveRange(_db.PurchaseRequestItems.Where(q => q.PurchaseRequestId == id));
             _db.SaveChanges();
 
-            var entity = _db.PurchasingRequests.Include(q => q.RawColumns).First(q => q.Id == id);
+            var entity = _db.PurchaseRequests.Include(q => q.RawColumns).First(q => q.Id == id);
             var table = JsonConvert.DeserializeObject<ExcelTable>(entity.RawData);
-            var rawItems = new List<PurchasingRequestItem>();
+            var rawItems = new List<PurchaseRequestItem>();
             for (var i = 0; i < table.Columns.First(q => q.Type == TableColumnType.Name).Values.Count; i++)
             {
-                var rawItem = new PurchasingRequestItem
+                var rawItem = new PurchaseRequestItem
                 {
-                    PurchasingRequestId = id,
+                    PurchaseRequestId = id,
                     Position = i + 1,
                     RawCode = string.IsNullOrEmpty(entity.RawColumns.Code) ? "" : table.GetValue(entity.RawColumns.Code, i),
                     RawName = string.IsNullOrEmpty(entity.RawColumns.Name) ? "" : table.GetValue(entity.RawColumns.Name, i),
@@ -125,20 +124,20 @@ namespace DigitalPurchasing.Services
                 rawItems.Add(rawItem);
             }
 
-            _db.PurchasingRequestItems.AddRange(rawItems);
+            _db.PurchaseRequestItems.AddRange(rawItems);
             _db.SaveChanges();
         }
 
         public RawItemResponse GetRawItems(Guid id)
         {
-            var pr = _db.PurchasingRequests.Find(id);
+            var pr = _db.PurchaseRequests.Find(id);
             if (pr == null)
             {
                 return null;
             }
 
-            var items = _db.PurchasingRequestItems
-                .Where(q => q.PurchasingRequestId == id)
+            var items = _db.PurchaseRequestItems
+                .Where(q => q.PurchaseRequestId == id)
                 .OrderBy(q => q.Position)
                 .ProjectToType<RawItemResponse.RawItem>()
                 .ToList();
@@ -148,19 +147,19 @@ namespace DigitalPurchasing.Services
 
         public void SaveRawItems(Guid id, IEnumerable<RawItemResponse.RawItem> items)
         {
-            var pr = _db.PurchasingRequests.Find(id);
+            var pr = _db.PurchaseRequests.Find(id);
             if (pr == null) return;
 
-            _db.PurchasingRequestItems.RemoveRange(_db.PurchasingRequestItems.Where(q => q.PurchasingRequestId == id));
+            _db.PurchaseRequestItems.RemoveRange(_db.PurchaseRequestItems.Where(q => q.PurchaseRequestId == id));
             _db.SaveChanges();
-            var rawItems = items.Adapt<List<PurchasingRequestItem>>().ToList();
+            var rawItems = items.Adapt<List<PurchaseRequestItem>>().ToList();
             var index = 0;
 
             var uoms = new Dictionary<string, Guid>();
             var noms = new Dictionary<string, Guid>();
             foreach (var rawItem in rawItems)
             {
-                rawItem.PurchasingRequestId = id;
+                rawItem.PurchaseRequestId = id;
                 rawItem.Position = ++index;
 
                 #region Try to find UoM in db
@@ -220,29 +219,29 @@ namespace DigitalPurchasing.Services
 
                 #endregion
             }
-            _db.PurchasingRequestItems.AddRange(rawItems);
+            _db.PurchaseRequestItems.AddRange(rawItems);
             _db.SaveChanges();
         }
 
-        public void UpdateStatus(Guid id, PurchasingRequestStatus status)
+        public void UpdateStatus(Guid id, PurchaseRequestStatus status)
         {
-            var entity = _db.PurchasingRequests.Find(id);
+            var entity = _db.PurchaseRequests.Find(id);
             entity.Status = status;
             _db.SaveChanges();
         }
 
         public MatchItemsResponse MatchItemsData(Guid id)
         {
-            var pr = _db.PurchasingRequests.Find(id);
+            var pr = _db.PurchaseRequests.Find(id);
             if (pr == null)
             {
                 return null;
             }
 
-            var entities = _db.PurchasingRequestItems
+            var entities = _db.PurchaseRequestItems
                 .Include(q => q.Nomenclature).ThenInclude(q => q.BatchUom)
                 .Include(q => q.RawUomMatch)
-                .Where(q => q.PurchasingRequestId == id)
+                .Where(q => q.PurchaseRequestId == id)
                 .OrderBy(q => q.Position).ToList();
 
             var res = new MatchItemsResponse { Items = entities.Adapt<List<MatchItemsResponse.Item>>(), CustomerName = pr.CustomerName };
@@ -252,7 +251,7 @@ namespace DigitalPurchasing.Services
 
         public void SaveMatch(Guid itemId, Guid nomenclatureId, Guid uomId, decimal factorC, decimal factorN)
         {
-            var entity = _db.PurchasingRequestItems.Find(itemId);
+            var entity = _db.PurchaseRequestItems.Find(itemId);
             entity.NomenclatureId = nomenclatureId;
             entity.RawUomMatchId = uomId;
             entity.CommonFactor = factorC;
@@ -262,30 +261,30 @@ namespace DigitalPurchasing.Services
 
         public void SaveCompanyName(Guid prId, string companyName)
         {
-            var entity = _db.PurchasingRequests.Find(prId);
+            var entity = _db.PurchaseRequests.Find(prId);
             entity.CompanyName = companyName;
             _db.SaveChanges();
         }
 
         public void SaveCustomerName(Guid prId, string customerName)
         {
-            var entity = _db.PurchasingRequests.Find(prId);
+            var entity = _db.PurchaseRequests.Find(prId);
           entity.CustomerName = customerName;
             _db.SaveChanges();
         }
 
-        public PurchasingRequestDataResponse GetData(int page, int perPage, string sortField, bool sortAsc)
+        public PurchaseRequestDataResponse GetData(int page, int perPage, string sortField, bool sortAsc)
         {
             if (string.IsNullOrEmpty(sortField))
             {
                 sortField = "Id";
             }
 
-            var qry =  _db.PurchasingRequests.AsNoTracking();
+            var qry =  _db.PurchaseRequests.AsNoTracking();
             var total = qry.Count();
             var orderedResults = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}");
             var result = orderedResults.Skip((page-1)*perPage).Take(perPage).ProjectToType<PurchasingRequestData>().ToList();
-            return new PurchasingRequestDataResponse
+            return new PurchaseRequestDataResponse
             {
                 Total = total,
                 Data = result

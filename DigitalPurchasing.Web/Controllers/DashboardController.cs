@@ -11,9 +11,9 @@ namespace DigitalPurchasing.Web.Controllers
 {
     public class DashboardController : BaseController
     {
-        private readonly IPurchasingRequestService _purchasingRequestService;
+        private readonly IPurchaseRequestService _purchasingRequestService;
 
-        public DashboardController(IPurchasingRequestService purchasingRequestService)
+        public DashboardController(IPurchaseRequestService purchasingRequestService)
         {
             _purchasingRequestService = purchasingRequestService;
         }

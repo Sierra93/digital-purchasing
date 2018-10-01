@@ -3,10 +3,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DigitalPurchasing.Models
 {
-    public class PurchasingRequestItem : BaseModel
+    public class PurchaseRequestItem : BaseModel
     {
-        public PurchasingRequest PurchasingRequest { get; set; }
-        public Guid PurchasingRequestId { get; set; }
+        public PurchaseRequest PurchaseRequest { get; set; }
+        public Guid PurchaseRequestId { get; set; }
 
         public Nomenclature Nomenclature { get; set; }
         public Guid? NomenclatureId { get; set; }

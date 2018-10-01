@@ -15,16 +15,16 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalPurchasing.Web.Controllers
 {
-    public partial class PurchasingRequestController : BaseController
+    public partial class PurchaseRequestController : BaseController
     {
-        private readonly IPurchasingRequestService _purchasingRequestService;
+        private readonly IPurchaseRequestService _purchasingRequestService;
         private readonly INomenclatureService _nomenclatureService;
         private readonly ICompanyService _companyService;
         private readonly UserManager<User> _userManager;
         private readonly IUomService _uomService;
 
-        public PurchasingRequestController(
-            IPurchasingRequestService purchasingRequestService,
+        public PurchaseRequestController(
+            IPurchaseRequestService purchasingRequestService,
             INomenclatureService nomenclatureService,
             ICompanyService companyService,
             UserManager<User> userManager,  
@@ -42,17 +42,17 @@ namespace DigitalPurchasing.Web.Controllers
             var response = _purchasingRequestService.GetById(id);
             if (response == null) return NotFound();
 
-            if (response.Status == PurchasingRequestStatus.MatchColumns)
+            if (response.Status == PurchaseRequestStatus.MatchColumns)
             {
                 return View("EditMatchColumns", response);
             }
 
-            if (response.Status == PurchasingRequestStatus.ManualInput)
+            if (response.Status == PurchaseRequestStatus.ManualInput)
             {
                 return View("EditManual", response);
             }
 
-            if (response.Status == PurchasingRequestStatus.MatchItems)
+            if (response.Status == PurchaseRequestStatus.MatchItems)
             {
                 return View("EditMatchItems", response);
             }
@@ -82,7 +82,7 @@ namespace DigitalPurchasing.Web.Controllers
             var userId = Guid.Parse(_userManager.GetUserId(User));
             _purchasingRequestService.SaveCompanyName(id, _companyService.GetByUser(userId).Name);
             _purchasingRequestService.SaveRawItems(id, model.Items);
-            _purchasingRequestService.UpdateStatus(id, PurchasingRequestStatus.MatchItems);
+            _purchasingRequestService.UpdateStatus(id, PurchaseRequestStatus.MatchItems);
             return Ok();
         }
 

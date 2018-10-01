@@ -3,24 +3,24 @@ using System.Collections.Generic;
 
 namespace DigitalPurchasing.Core.Interfaces
 {
-    public interface IPurchasingRequestService
+    public interface IPurchaseRequestService
     {
         CreateFromFileResponse CreateFromFile(string filePath);
-        PurchasingRequestDetailsResponse GetById(Guid id);
-        PurchasingRequestColumnsResponse GetColumnsById(Guid id);
-        void SaveColumns(Guid id, PurchasingRequestColumns purchasingRequestColumns);
-        PurchasingRequestDataResponse GetData(int page, int perPage, string sortField, bool sortAsc);
+        PurchaseRequestDetailsResponse GetById(Guid id);
+        PurchaseRequestColumnsResponse GetColumnsById(Guid id);
+        void SaveColumns(Guid id, PurchaseRequestColumns purchasingRequestColumns);
+        PurchaseRequestDataResponse GetData(int page, int perPage, string sortField, bool sortAsc);
         void GenerateRawItems(Guid id);
         RawItemResponse GetRawItems(Guid id);
         void SaveRawItems(Guid id, IEnumerable<RawItemResponse.RawItem> items);
-        void UpdateStatus(Guid id, PurchasingRequestStatus status);
+        void UpdateStatus(Guid id, PurchaseRequestStatus status);
         MatchItemsResponse MatchItemsData(Guid id);
         void SaveMatch(Guid id, Guid nomenclatureId, Guid uomId, decimal factorC, decimal factorN);
         void SaveCompanyName(Guid prId, string companyName);
         void SaveCustomerName(Guid prId, string customerName);
     }
 
-    public enum PurchasingRequestStatus
+    public enum PurchaseRequestStatus
     {
         MatchColumns = -10,
         ManualInput = 0,
@@ -34,7 +34,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid Id { get; set; }
     }
 
-    public class PurchasingRequestDetailsResponse
+    public class PurchaseRequestDetailsResponse
     {
         public Guid Id { get; set; }
         public int PublicId { get; set; }
@@ -44,7 +44,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public DateTime CreatedOn { get; set; }
 
-        public PurchasingRequestStatus Status { get; set; } 
+        public PurchaseRequestStatus Status { get; set; } 
 
         public ExcelTable ExcelTable { get; set; }
 
@@ -58,7 +58,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public DateTime CreatedOn { get; set; }
     }
 
-    public class PurchasingRequestDataResponse : BaseDataResponse<PurchasingRequestData>
+    public class PurchaseRequestDataResponse : BaseDataResponse<PurchasingRequestData>
     {
     }
 
@@ -77,7 +77,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public string CustomerName { get; set; }
     }
 
-    public class PurchasingRequestColumns
+    public class PurchaseRequestColumns
     {
         public string Code { get; set; }
         public string Name { get; set; }
@@ -85,7 +85,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public string Qty { get; set; }
     }
 
-    public class PurchasingRequestColumnsResponse : PurchasingRequestColumns
+    public class PurchaseRequestColumnsResponse : PurchaseRequestColumns
     {
         public List<string> Columns { get; set; }
         public bool IsSaved { get; set; }

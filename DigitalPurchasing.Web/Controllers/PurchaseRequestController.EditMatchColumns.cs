@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalPurchasing.Web.Controllers
 {
-    public partial class PurchasingRequestController
+    public partial class PurchaseRequestController
     {
         public IActionResult ColumnsData(Guid id)
         {
@@ -17,12 +17,12 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         [HttpPost]
-        public IActionResult SaveColumnsData([FromBody]SavePurchasingRequestColumnsVm model)
+        public IActionResult SaveColumnsData([FromBody]SavePurchaseRequestColumnsVm model)
         {
-            var id = model.PurchasingRequestId;
+            var id = model.PurchaseRequestId;
             _purchasingRequestService.SaveColumns(id, model);
             _purchasingRequestService.GenerateRawItems(id);
-            _purchasingRequestService.UpdateStatus(id, PurchasingRequestStatus.ManualInput);
+            _purchasingRequestService.UpdateStatus(id, PurchaseRequestStatus.ManualInput);
             return Ok();
         }
     }

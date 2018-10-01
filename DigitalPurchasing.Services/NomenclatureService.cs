@@ -101,6 +101,15 @@ namespace DigitalPurchasing.Services
 
         public NomenclatureAutocompleteResult Autocomplete(string q, bool alts = false, string customer = null)
         {
+            var result =  new NomenclatureAutocompleteResult
+            {
+                Items = new List<NomenclatureAutocompleteResult.AutocompleteResultItem>()
+            };
+
+            if (string.IsNullOrEmpty(q)) return result;
+
+            q = q.Trim();
+
             var resultQry = _db.Nomenclatures
                 .AsNoTracking()
                 .Include(w => w.BatchUom)
@@ -125,10 +134,9 @@ namespace DigitalPurchasing.Services
                 }
             }
 
-            return new NomenclatureAutocompleteResult
-            {
-                Items = mainResults.Adapt<List<NomenclatureAutocompleteResult.AutocompleteResultItem>>()
-            };
+            result.Items.AddRange(mainResults.Adapt<List<NomenclatureAutocompleteResult.AutocompleteResultItem>>());
+
+            return result;
         }
 
         public BaseResult<NomenclatureAutocompleteResult.AutocompleteResultItem> AutocompleteSingle(Guid id)
@@ -148,8 +156,8 @@ namespace DigitalPurchasing.Services
 
         public void AddAlternative(Guid nomenclatureId, Guid prItemId)
         {
-            var pr =_db.PurchasingRequestItems.Include(q => q.PurchasingRequest).First(q => q.Id == prItemId);
-            AddAlternative(nomenclatureId, pr.RawName, pr.PurchasingRequest.CustomerName);
+            var pr =_db.PurchaseRequestItems.Include(q => q.PurchaseRequest).First(q => q.Id == prItemId);
+            AddAlternative(nomenclatureId, pr.RawName, pr.PurchaseRequest.CustomerName);
         }
 
         public void AddAlternative(Guid nomenclatureId, string name, string customerName)

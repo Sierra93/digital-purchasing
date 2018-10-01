@@ -1,5 +1,5 @@
 @using DigitalPurchasing.Core.Interfaces
-@model DigitalPurchasing.Core.Interfaces.PurchasingRequestDetailsResponse
+@model DigitalPurchasing.Core.Interfaces.PurchaseRequestDetailsResponse
 
 @{
     ViewBag.Title = $"Заявка № {Model.PublicId} от {Model.CreatedOn:dd.MM.yyyy HH:mm}";
@@ -170,7 +170,7 @@
                     },
                     updateCustomerName: _.debounce(function (e) {
                         var data = { name: this.customerName, id: this.prId };
-                        this.$http.post('@Url.Action("SaveCustomerName", "PurchasingRequest")', data).then(function(res) {
+                        this.$http.post('@Url.Action("SaveCustomerName", "PurchaseRequest")', data).then(function(res) {
                         }, function(res) {
                             alert('error');
                         });

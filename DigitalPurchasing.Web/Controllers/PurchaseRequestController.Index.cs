@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalPurchasing.Web.Controllers
 {
-    public partial class PurchasingRequestController
+    public partial class PurchaseRequestController
     {
         public IActionResult Index() => View();
 
@@ -14,14 +14,14 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult Data(VueTableRequest request)
         {
             var result = _purchasingRequestService.GetData(request.Page, request.PerPage, request.SortField, request.SortAsc);
-            var nextUrl = Url.Action("Data", "PurchasingRequest", request.NextPageRequest(), Request.Scheme);
-            var prevUrl = Url.Action("Data", "PurchasingRequest", request.PrevPageRequest(), Request.Scheme);
-            var data = result.Data.Adapt<List<PurchasingRequestDataVm>>();
+            var nextUrl = Url.Action("Data", "PurchaseRequest", request.NextPageRequest(), Request.Scheme);
+            var prevUrl = Url.Action("Data", "PurchaseRequest", request.PrevPageRequest(), Request.Scheme);
+            var data = result.Data.Adapt<List<PurchaseRequestDataVm>>();
             foreach (var d in data)
             {
                 d.EditUrl = Url.Action("Edit", new { id = d.Id });
             }
-            return Json(new VueTableResponse<PurchasingRequestDataVm>(data, request, result.Total, nextUrl, prevUrl));
+            return Json(new VueTableResponse<PurchaseRequestDataVm>(data, request, result.Total, nextUrl, prevUrl));
         }
     }
 }

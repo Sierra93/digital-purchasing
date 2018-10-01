@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalPurchasing.Web.Controllers
 {
-    public partial class PurchasingRequestController
+    public partial class PurchaseRequestController
     {
         [HttpGet]
         public IActionResult MatchItemsData(Guid id)

@@ -80,7 +80,7 @@ namespace DigitalPurchasing.Web
             services.AddScoped<INomenclatureService, NomenclatureService>();
             services.AddScoped<IDictionaryService, DictionaryService>();
             services.AddScoped<IExcelRequestReader, ExcelRequestReader>();
-            services.AddScoped<IPurchasingRequestService, PurchasingRequestService>();
+            services.AddScoped<IPurchaseRequestService, PurchaseRequestService>();
             services.AddScoped<ICounterService, CounterService>();
             services.AddScoped<IColumnNameService, ColumnNameService>();
         }

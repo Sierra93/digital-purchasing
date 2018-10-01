@@ -3,14 +3,14 @@ using DigitalPurchasing.Core.Interfaces;
 
 namespace DigitalPurchasing.Web.ViewModels
 {
-    public class PurchasingRequestDataVm : PurchasingRequestData
+    public class PurchaseRequestDataVm : PurchasingRequestData
     {
         public string EditUrl { get; set; }
     }
 
-    public class SavePurchasingRequestColumnsVm : PurchasingRequestColumns
+    public class SavePurchaseRequestColumnsVm : PurchaseRequestColumns
     {
-        public Guid PurchasingRequestId { get; set; }
+        public Guid PurchaseRequestId { get; set; }
     }
 
     public class SaveMatchItemVm
