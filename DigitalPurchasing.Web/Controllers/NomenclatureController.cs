@@ -52,6 +52,12 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         [HttpGet]
+        public IActionResult DataDetails()
+        {
+            return null;
+        }
+
+        [HttpGet]
         public IActionResult Autocomplete([FromQuery] string q) => Json(_nomenclatureService.Autocomplete(q));
 
         [HttpGet]

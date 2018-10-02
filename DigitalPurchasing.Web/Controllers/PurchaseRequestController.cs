@@ -59,40 +59,7 @@ namespace DigitalPurchasing.Web.Controllers
 
             return NotFound();
         }
-
-        public IActionResult EditManual(Guid id)
-        {
-            var response = _purchasingRequestService.GetById(id);
-            if (response == null) return NotFound();
-
-            return View(response);
-        }
-        
-        [HttpGet]
-        public IActionResult RawItemsData(Guid id)
-        {
-            var response = _purchasingRequestService.GetRawItems(id);
-            return Json(response);
-        }
-
-        [HttpPost]
-        public IActionResult SaveRawItemsData([FromBody] SaveRawItemsDataVm model)
-        {
-            var id = model.PurchasingRequestId;
-            var userId = Guid.Parse(_userManager.GetUserId(User));
-            _purchasingRequestService.SaveCompanyName(id, _companyService.GetByUser(userId).Name);
-            _purchasingRequestService.SaveRawItems(id, model.Items);
-            _purchasingRequestService.UpdateStatus(id, PurchaseRequestStatus.MatchItems);
-            return Ok();
-        }
-
-        [HttpPost]
-        public IActionResult SaveCustomerName([FromBody] SaveCustomerNameVm model)
-        {
-            _purchasingRequestService.SaveCustomerName(model.Id, model.Name);
-            return Ok();
-        }
-
+    
         [HttpPost]
         public async Task<IActionResult> Upload(IFormFile file)
         {
@@ -118,6 +85,4 @@ namespace DigitalPurchasing.Web.Controllers
             return RedirectToAction(nameof(Edit), new { id = response.Id });
         }
     }
-
-   
 }

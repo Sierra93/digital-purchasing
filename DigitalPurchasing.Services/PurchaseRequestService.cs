@@ -152,33 +152,46 @@ namespace DigitalPurchasing.Services
 
             _db.PurchaseRequestItems.RemoveRange(_db.PurchaseRequestItems.Where(q => q.PurchaseRequestId == id));
             _db.SaveChanges();
-            var rawItems = items.Adapt<List<PurchaseRequestItem>>().ToList();
+            var prItems = items.Adapt<List<PurchaseRequestItem>>().ToList();
             var index = 0;
 
             var uoms = new Dictionary<string, Guid>();
             var noms = new Dictionary<string, Guid>();
-            foreach (var rawItem in rawItems)
+            foreach (var prItem in prItems)
             {
-                rawItem.PurchaseRequestId = id;
-                rawItem.Position = ++index;
+                prItem.PurchaseRequestId = id;
+                prItem.Position = ++index;
+
+                #region Try to fill RawUoM
+
+                var anotherRecord = _db.PurchaseRequestItems
+                    .Include(q => q.PurchaseRequest)
+                    .FirstOrDefault(q => q.RawName == prItem.RawName && q.PurchaseRequest.CustomerName == pr.CustomerName && !string.IsNullOrEmpty(q.RawUom));
+
+                if (anotherRecord != null)
+                {
+                    prItem.RawUom = anotherRecord.RawUom;
+                }
+
+                #endregion
 
                 #region Try to find UoM in db
 
-                if (string.IsNullOrEmpty(rawItem.RawUom)) continue;
-                if (uoms.ContainsKey(rawItem.RawUom))
+                if (string.IsNullOrEmpty(prItem.RawUom)) continue;
+                if (uoms.ContainsKey(prItem.RawUom))
                 {
-                    rawItem.RawUomMatchId = uoms[rawItem.RawUom];
+                    prItem.RawUomMatchId = uoms[prItem.RawUom];
                 }
                 else
                 {
-                    var res = _uomService.Autocomplete(rawItem.RawUom);
+                    var res = _uomService.Autocomplete(prItem.RawUom);
                     if (res.Items != null && res.Items.Any())
                     {
-                        var match = res.Items.FirstOrDefault(q => q.Name.Equals(rawItem.RawUom, StringComparison.InvariantCultureIgnoreCase));
+                        var match = res.Items.FirstOrDefault(q => q.Name.Equals(prItem.RawUom, StringComparison.InvariantCultureIgnoreCase));
                         if (match != null)
                         {
                             uoms.Add(match.Name, match.Id);
-                            rawItem.RawUomMatchId = match.Id;
+                            prItem.RawUomMatchId = match.Id;
                         }
                     }
                 }
@@ -186,13 +199,13 @@ namespace DigitalPurchasing.Services
                 #endregion
                 #region Try to find in nomeclature
                 
-                if (noms.ContainsKey(rawItem.RawName))
+                if (noms.ContainsKey(prItem.RawName))
                 {
-                    rawItem.RawUomMatchId = noms[rawItem.RawName];
+                    prItem.RawUomMatchId = noms[prItem.RawName];
                 }
                 else
                 {
-                    var nomRes = _nomenclatureService.Autocomplete(rawItem.RawName, true, pr.CustomerName);
+                    var nomRes = _nomenclatureService.Autocomplete(prItem.RawName, true, pr.CustomerName);
                     if (nomRes.Items != null && nomRes.Items.Count() == 1)
                     {
                         //var nomMatch = nomRes.Items.FirstOrDefault(q => q.Name.Equals(rawItem.RawName, StringComparison.InvariantCultureIgnoreCase));
@@ -202,7 +215,7 @@ namespace DigitalPurchasing.Services
                         //    rawItem.NomenclatureId = nomMatch.Id;
                         //}
                         noms.Add(nomRes.Items[0].Name, nomRes.Items[0].Id);
-                        rawItem.NomenclatureId = nomRes.Items[0].Id;
+                        prItem.NomenclatureId = nomRes.Items[0].Id;
                     }
                 }
 
@@ -210,16 +223,16 @@ namespace DigitalPurchasing.Services
 
                 #region Calc UoMs factor
 
-                if (rawItem.NomenclatureId != null && rawItem.RawUomMatchId != null)
+                if (prItem.NomenclatureId != null && prItem.RawUomMatchId != null)
                 {
-                    var rate = _uomService.GetConversionRate(rawItem.RawUomMatchId.Value, rawItem.NomenclatureId.Value);
-                    rawItem.CommonFactor = rate.CommonFactor;
-                    rawItem.NomenclatureFactor = rate.NomenclatureFactor;
+                    var rate = _uomService.GetConversionRate(prItem.RawUomMatchId.Value, prItem.NomenclatureId.Value);
+                    prItem.CommonFactor = rate.CommonFactor;
+                    prItem.NomenclatureFactor = rate.NomenclatureFactor;
                 }
 
                 #endregion
             }
-            _db.PurchaseRequestItems.AddRange(rawItems);
+            _db.PurchaseRequestItems.AddRange(prItems);
             _db.SaveChanges();
         }
 
