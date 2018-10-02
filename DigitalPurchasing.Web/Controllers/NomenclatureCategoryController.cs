@@ -28,7 +28,7 @@ namespace DigitalPurchasing.Web.Controllers
             var nextUrl = Url.Action("Data", "NomenclatureCategory", request.NextPageRequest(), Request.Scheme);
             var prevUrl = Url.Action("Data", "NomenclatureCategory", request.PrevPageRequest(), Request.Scheme);
 
-            return Json(new VueTableResponse<NomenclatureCategoryResult>(result.Data, request, result.Total, nextUrl, prevUrl));
+            return Json(new VueTableResponse<NomenclatureCategoryResult, VueTableRequest>(result.Data, request, result.Total, nextUrl, prevUrl));
         }
 
         public IActionResult Create()

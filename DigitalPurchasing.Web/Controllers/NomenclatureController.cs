@@ -48,13 +48,17 @@ namespace DigitalPurchasing.Web.Controllers
             {
                 d.EditUrl = Url.Action("Edit", new { id = d.Id });
             }
-            return Json(new VueTableResponse<NomenclatureDataVm>(data, request, result.Total, nextUrl, prevUrl));
+            return Json(new VueTableResponse<NomenclatureDataVm, VueTableRequest>(data, request, result.Total, nextUrl, prevUrl));
         }
 
-        [HttpGet]
-        public IActionResult DataDetails()
+        [HttpGet, Route("/nomenclature/datadetails/{id}")]
+        public IActionResult DataDetails(VueTableRequestWithId request)
         {
-            return null;
+            var result = _nomenclatureService.GetDetailsData(request.Id, request.Page, request.PerPage, request.SortField, request.SortAsc);
+            var nextUrl = Url.Action("DataDetails", "Nomenclature", request.NextPageRequest(), Request.Scheme);
+            var prevUrl = Url.Action("DataDetails", "Nomenclature", request.PrevPageRequest(), Request.Scheme);
+
+            return Json(new VueTableResponse<NomenclatureDetails, VueTableRequestWithId>(result.Data, request, result.Total, nextUrl, prevUrl));
         }
 
         [HttpGet]

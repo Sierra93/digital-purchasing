@@ -9,5 +9,7 @@ namespace DigitalPurchasing.Models
 
         public string Name { get; set; }
         public string CustomerName { get; set; }
+        public string Code { get; set; }
+        public string Uom { get; set; }
     }
 }

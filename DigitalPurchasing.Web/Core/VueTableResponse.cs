@@ -4,7 +4,9 @@ using Newtonsoft.Json;
 
 namespace DigitalPurchasing.Web.Core
 {
-    public class VueTableResponse<TData> where TData: class
+    public class VueTableResponse<TData, TRequest>
+        where TData: class
+        where TRequest: VueTableRequest<TRequest>
     {
         [JsonProperty("total")]
         public int Total { get; set; }
@@ -33,7 +35,7 @@ namespace DigitalPurchasing.Web.Core
         [JsonProperty("data")]
         public List<TData> Data { get; set; }
 
-        public VueTableResponse(List<TData> data, VueTableRequest request, int total, string nextPageUrl, string prevPageUrl)
+        public VueTableResponse(List<TData> data, VueTableRequest<TRequest> request, int total, string nextPageUrl, string prevPageUrl)
         {
             Data = data;
             CurrentPage = request.Page;

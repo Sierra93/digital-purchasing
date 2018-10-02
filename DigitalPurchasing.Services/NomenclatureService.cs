@@ -47,6 +47,25 @@ namespace DigitalPurchasing.Services
             };
         }
 
+        public NomenclatureDetailsDataResult GetDetailsData(Guid nomId, int page, int perPage, string sortField, bool sortAsc)
+        {
+            if (string.IsNullOrEmpty(sortField))
+            {
+                sortField = "Name";
+            }
+
+            var qry = _db.NomenclatureAlternatives.Where(q => q.NomenclatureId == nomId);
+            var total = qry.Count();
+            var orderedResults = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}");
+            var result = orderedResults.Skip((page-1)*perPage).Take(perPage).ProjectToType<NomenclatureDetails>().ToList();
+
+            return new NomenclatureDetailsDataResult
+            {
+                Total = total,
+                Data = result
+            };
+        }
+
         public NomenclatureResult CreateOrUpdate(NomenclatureResult vm)
         {
             var oldEntity = _db.Nomenclatures.FirstOrDefault(q => q.Name.Equals(vm.Name, StringComparison.InvariantCultureIgnoreCase));
@@ -157,10 +176,10 @@ namespace DigitalPurchasing.Services
         public void AddAlternative(Guid nomenclatureId, Guid prItemId)
         {
             var pr =_db.PurchaseRequestItems.Include(q => q.PurchaseRequest).First(q => q.Id == prItemId);
-            AddAlternative(nomenclatureId, pr.RawName, pr.PurchaseRequest.CustomerName);
+            AddAlternative(nomenclatureId, pr.RawName, pr.PurchaseRequest.CustomerName, pr.RawUom, pr.RawCode);
         }
 
-        public void AddAlternative(Guid nomenclatureId, string name, string customerName)
+        private void AddAlternative(Guid nomenclatureId, string name, string customerName, string uom, string code)
         {
             name = name.Trim();
 
@@ -175,7 +194,9 @@ namespace DigitalPurchasing.Services
                     {
                         NomenclatureId = nomenclatureId,
                         Name = name,
-                        CustomerName = customerName
+                        CustomerName = customerName,
+                        Code = code,
+                        Uom = uom
                     });
                     _db.SaveChanges();
                 }

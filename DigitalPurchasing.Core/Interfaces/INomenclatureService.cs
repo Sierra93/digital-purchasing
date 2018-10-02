@@ -6,14 +6,27 @@ namespace DigitalPurchasing.Core.Interfaces
     public interface INomenclatureService
     {
         NomenclatureDataResult GetData(int page, int perPage, string sortField, bool sortAsc);
+        NomenclatureDetailsDataResult GetDetailsData(Guid nomId, int page, int perPage, string sortField, bool sortAsc);
         NomenclatureResult CreateOrUpdate(NomenclatureResult model);
         NomenclatureResult GetById(Guid id);
         bool Update(NomenclatureResult model);
         NomenclatureAutocompleteResult Autocomplete(string q, bool alts = false, string customer = null);
         BaseResult<NomenclatureAutocompleteResult.AutocompleteResultItem> AutocompleteSingle(Guid id);
         void Delete(Guid id);
-        void AddAlternative(Guid nomenclatureId, string name, string customerName);
         void AddAlternative(Guid nomenclatureId, Guid prItemId);
+    }
+
+    public class NomenclatureDetails
+    {
+        public Guid Id { get; set; }
+        public string CustomerName { get; set; }
+        public string Code { get; set; }
+        public string Name { get; set; }
+        public string Uom { get; set; }
+    }
+
+    public class NomenclatureDetailsDataResult : BaseDataResponse<NomenclatureDetails>
+    {
     }
 
     public class NomenclatureDataResultItem

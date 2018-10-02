@@ -1,8 +1,19 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using System;
+using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalPurchasing.Web.Core
 {
-    public class VueTableRequest
+    public class VueTableRequestWithId : VueTableRequest<VueTableRequestWithId>
+    {
+        [FromRoute(Name="id")]
+        public Guid Id { get; set; }
+    }
+
+    public class VueTableRequest : VueTableRequest<VueTableRequest>
+    {
+    }
+
+    public class VueTableRequest<T> where T: VueTableRequest<T>
     {
         [FromQuery(Name="sort")]
         public string Sort { get; set; }
@@ -13,19 +24,19 @@ namespace DigitalPurchasing.Web.Core
         [FromQuery(Name="per_page")]
         public int PerPage { get; set; }
 
-        public VueTableRequest NextPageRequest()
+        public T NextPageRequest()
         {
             var next = this;
             next.Page += 1;
-            return next;
+            return (T) next;
         }
 
-        public VueTableRequest PrevPageRequest()
+        public T PrevPageRequest()
         {
             var prev = this;
             prev.Page -= 1;
             if (prev.Page <= 0) prev.Page = 1;
-            return prev;
+            return (T) prev;
         }
 
         public string SortField

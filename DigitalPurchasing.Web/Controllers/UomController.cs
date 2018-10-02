@@ -23,7 +23,7 @@ namespace DigitalPurchasing.Web.Controllers
             var nextUrl = Url.Action("Data", "Uom", request.NextPageRequest(), Request.Scheme);
             var prevUrl = Url.Action("Data", "Uom", request.PrevPageRequest(), Request.Scheme);
 
-            return Json(new VueTableResponse<UomResult>(result.Data, request, result.Total, nextUrl, prevUrl));
+            return Json(new VueTableResponse<UomResult, VueTableRequest>(result.Data, request, result.Total, nextUrl, prevUrl));
         }
 
         public IActionResult Create() => View(new UomCreateVm());

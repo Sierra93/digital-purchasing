@@ -21,7 +21,7 @@ namespace DigitalPurchasing.Web.Controllers
             {
                 d.EditUrl = Url.Action("Edit", new { id = d.Id });
             }
-            return Json(new VueTableResponse<PurchaseRequestDataVm>(data, request, result.Total, nextUrl, prevUrl));
+            return Json(new VueTableResponse<PurchaseRequestDataVm, VueTableRequest>(data, request, result.Total, nextUrl, prevUrl));
         }
     }
 }
