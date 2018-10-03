@@ -16,7 +16,7 @@
                 <th colspan="4" class="form-inline">
                     <div class="form-group">
                         <label class="control-label">Номенклатура клиента</label>&nbsp;
-                        <input class="form-control" type="text" v-model="customerName" v-on:input="updateCustomerName" />
+                        <input class="form-control" type="text" v-model="customerName" readonly="readonly"/>
                     </div>
                 <th colspan="4" class="form-inline">
                     <div class="form-group">
@@ -334,13 +334,6 @@
                                 alert('error');
                             });
                         } else { $this.factor = 'c' }
-                    }, 300),
-                    updateCustomerName: _.debounce(function (e) {
-                        var data = { name: this.customerName, id: this.prId };
-                        this.$http.post('@Url.Action("SaveCustomerName", "PurchaseRequest")', data).then(function(res) {
-                        }, function(res) {
-                            alert('error');
-                        });
                     }, 300)
                 }
             });

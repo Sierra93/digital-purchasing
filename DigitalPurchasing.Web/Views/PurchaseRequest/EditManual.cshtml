@@ -11,9 +11,10 @@
 <div id="app">
     <div class="row">
         <div class="col-md-4">
-            <div class="form-group">
+            <div class="form-group" v-bind:class="customerNameClass">
                 <label for="customer">Клиент</label>
                 <input type="text" class="form-control" placeholder="" v-model="customerName" v-on:input="updateCustomerName">
+                <span class="help-block" v-show="customerNameHasError">Укажите имя клиента</span>
             </div>
         </div>
         <div class="col-md-4">
@@ -56,7 +57,7 @@
         </tr>
         </tbody>
     </table>
-    <button v-on:click="saveRawItems" class="btn btn-default">Сохранить изменения</button>
+    <button v-on:click="saveRawItems" class="btn btn-primary" v-bind:disabled="isSaveDisabled">Сохранить изменения</button>
     <div class="row">
         <div class="col-md-6">
             <div class="form-group">
@@ -118,6 +119,13 @@
 {
     <script>
         (function() {
+            function getInputClass(hasError) {
+                return {
+                    'has-error': hasError,
+                    'has-success': !hasError
+                };
+            };
+
             var app = new Vue({
                 el: '#app',
                 data: function() {
@@ -137,6 +145,20 @@
                     }, response => {
                         alert('error');
                     });
+                },
+                computed: {
+                    customerNameHasError: function() {
+                        if (!this.customerName) {
+                            return true;
+                        }
+                        return false;
+                    },
+                    customerNameClass: function() {
+                        return getInputClass(this.customerNameHasError);
+                    },
+                    isSaveDisabled: function() {
+                        return this.customerNameHasError;
+                    }
                 },
                 methods: {
                     getRowIndex0: function (item) {
