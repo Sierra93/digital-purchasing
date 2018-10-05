@@ -8,5 +8,8 @@ namespace DigitalPurchasing.Models
 
         public PurchaseRequest PurchaseRequest { get; set; }
         public Guid PurchaseRequestId { get; set; }
+
+        public Delivery Delivery { get; set; }
+        public Guid? DeliveryId { get; set; }
     }
 }

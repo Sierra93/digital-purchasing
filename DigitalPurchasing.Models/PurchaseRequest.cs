@@ -1,3 +1,4 @@
+using System;
 using DigitalPurchasing.Core.Interfaces;
 using System.Collections.Generic;
 
@@ -17,5 +18,8 @@ namespace DigitalPurchasing.Models
         public string RawData { get; set; }
 
         public RawColumns RawColumns { get; set; }
+
+        public Delivery Delivery { get; set; }
+        public Guid? DeliveryId { get; set; }
     }
 }
