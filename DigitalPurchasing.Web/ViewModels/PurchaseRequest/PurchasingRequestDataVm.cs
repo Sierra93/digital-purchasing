@@ -3,7 +3,7 @@ using DigitalPurchasing.Core.Interfaces;
 
 namespace DigitalPurchasing.Web.ViewModels
 {
-    public class PurchaseRequestDataVm : PurchasingRequestData
+    public class PurchaseRequestDataVm : PurchasingRequestIndexDataItem
     {
         public string EditUrl { get; set; }
     }

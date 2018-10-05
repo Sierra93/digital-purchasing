@@ -234,6 +234,14 @@ namespace DigitalPurchasing.Services
             }
             _db.PurchaseRequestItems.AddRange(prItems);
             _db.SaveChanges();
+
+            foreach (var prItem in prItems)
+            {
+                if (prItem.NomenclatureId != null && prItem.RawUomMatchId != null && ( prItem.CommonFactor > 0 || prItem.NomenclatureFactor > 0 ))
+                {
+                    _nomenclatureService.AddAlternative(prItem.NomenclatureId.Value, prItem.Id);
+                }
+            }
         }
 
         public void UpdateStatus(Guid id, PurchaseRequestStatus status)
@@ -286,7 +294,7 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
         }
 
-        public PurchaseRequestDataResponse GetData(int page, int perPage, string sortField, bool sortAsc)
+        public PurchaseRequestIndexData GetData(int page, int perPage, string sortField, bool sortAsc)
         {
             if (string.IsNullOrEmpty(sortField))
             {
@@ -296,8 +304,8 @@ namespace DigitalPurchasing.Services
             var qry =  _db.PurchaseRequests.AsNoTracking();
             var total = qry.Count();
             var orderedResults = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}");
-            var result = orderedResults.Skip((page-1)*perPage).Take(perPage).ProjectToType<PurchasingRequestData>().ToList();
-            return new PurchaseRequestDataResponse
+            var result = orderedResults.Skip((page-1)*perPage).Take(perPage).ProjectToType<PurchasingRequestIndexDataItem>().ToList();
+            return new PurchaseRequestIndexData
             {
                 Total = total,
                 Data = result

@@ -9,7 +9,7 @@ namespace DigitalPurchasing.Core.Interfaces
         PurchaseRequestDetailsResponse GetById(Guid id);
         PurchaseRequestColumnsResponse GetColumnsById(Guid id);
         void SaveColumns(Guid id, PurchaseRequestColumns purchasingRequestColumns);
-        PurchaseRequestDataResponse GetData(int page, int perPage, string sortField, bool sortAsc);
+        PurchaseRequestIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
         void GenerateRawItems(Guid id);
         RawItemResponse GetRawItems(Guid id);
         void SaveRawItems(Guid id, IEnumerable<RawItemResponse.RawItem> items);
@@ -51,14 +51,15 @@ namespace DigitalPurchasing.Core.Interfaces
         public bool IsUploaded => ExcelTable != null;
     }
 
-    public class PurchasingRequestData
+    public class PurchasingRequestIndexDataItem
     {
         public Guid Id { get; set; }
         public int PublicId { get; set; }
         public DateTime CreatedOn { get; set; }
+        public string CustomerName { get; set; }
     }
 
-    public class PurchaseRequestDataResponse : BaseDataResponse<PurchasingRequestData>
+    public class PurchaseRequestIndexData : BaseDataResponse<PurchasingRequestIndexDataItem>
     {
     }
 

@@ -7,6 +7,7 @@
   <ItemGroup>
     <Compile Remove="Migrations\20180927143535_Nomenclature_Factors.cs" />
     <Compile Remove="Migrations\20180927154409_Fix_CreatedOn.cs" />
+    <Compile Remove="Migrations\20181004123723_QuotationRequest_PurchaseRequest.cs" />
   </ItemGroup>
 
   <ItemGroup>
