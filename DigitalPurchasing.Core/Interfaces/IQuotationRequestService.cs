@@ -20,6 +20,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class QuotationRequestDetails
     {
+        public Guid Id { get; set; }
         public int PublicId { get; set; }
         public DateTime CreatedOn { get; set; }
     }

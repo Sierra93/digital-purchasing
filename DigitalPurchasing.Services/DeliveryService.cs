@@ -50,7 +50,11 @@ namespace DigitalPurchasing.Services
         public void CreateOrUpdate(DeliveryVm req, Guid? prId, Guid? qrId)
         {
             var delivery = prId.HasValue ? GetByPrId(prId.Value) : qrId.HasValue ? GetByQrId(qrId.Value) : null;
-            if (delivery == null || delivery.Id == Guid.Empty)
+            if (delivery == null)
+            {
+                throw new ApplicationException("no delivery");
+            }
+            if (delivery.Id == Guid.Empty)
             {
                 var newEntity = req.Adapt<Delivery>();
                 var entry = _db.Deliveries.Add(newEntity);

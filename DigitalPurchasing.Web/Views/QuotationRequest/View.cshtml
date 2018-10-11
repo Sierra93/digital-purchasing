@@ -1,8 +1,36 @@
 @model DigitalPurchasing.Core.Interfaces.QuotationRequestDetails
 
 @{
-    ViewBag.Title = $"Заявка № {Model.PublicId} от {Model.CreatedOn:dd.MM.yyyy HH:mm}";
+    ViewBag.Title = $"Коммерческое предложение № {Model.PublicId} от {Model.CreatedOn:dd.MM.yyyy HH:mm}";
     Layout = "_Layout";
 }
 
 <h2>@ViewBag.Title</h2>
+
+<div id="app">
+    <div class="row">
+        <div class="col-md-6">
+            <address-form v-bind:qr="qrId"></address-form>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <partial name="~/Views/Shared/Delivery/_AddressFormComponent.cshtml" />
+    <script>
+        (function() {
+            var app = new Vue({
+                el: '#app',
+                data: function() {
+                    return {
+                        qrId: '@Model.Id'
+                    };
+                },
+                created: function () {},
+                computed: {},
+                methods: {}
+            });
+        })();
+    </script>
+}

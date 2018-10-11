@@ -14,12 +14,17 @@ namespace DigitalPurchasing.Services
         private readonly ApplicationDbContext _db;
         private readonly ICounterService _counterService;
         private readonly IPurchaseRequestService _purchaseRequestService;
+        private readonly IDeliveryService _deliveryService;
 
-        public QuotationRequestService(ApplicationDbContext db, ICounterService counterService, IPurchaseRequestService purchaseRequestService)
+        public QuotationRequestService(ApplicationDbContext db,
+            ICounterService counterService,
+            IPurchaseRequestService purchaseRequestService,
+            IDeliveryService deliveryService)
         {
             _db = db;
             _counterService = counterService;
             _purchaseRequestService = purchaseRequestService;
+            _deliveryService = deliveryService;
         }
 
         public QuotationRequestIndexData GetData(int page, int perPage, string sortField, bool sortAsc)
@@ -50,6 +55,12 @@ namespace DigitalPurchasing.Services
             var publicId = _counterService.GetQRNextId();
             var entry = _db.QuotationRequests.Add(new QuotationRequest {PublicId = publicId, PurchaseRequestId = purchaseRequestId});
             _db.SaveChanges();
+
+            // copy delivery to QR
+            var prDelivery = _deliveryService.GetByPrId(purchaseRequestId);
+            prDelivery.Id = Guid.Empty;
+            _deliveryService.CreateOrUpdate(prDelivery, null, entry.Entity.Id);
+            
             return entry.Entity.Id;
         }
 
