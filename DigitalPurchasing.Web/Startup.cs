@@ -84,12 +84,13 @@ namespace DigitalPurchasing.Web
             services.AddScoped<IQuotationRequestService, QuotationRequestService>();
             services.AddScoped<ICounterService, CounterService>();
             services.AddScoped<IColumnNameService, ColumnNameService>();
+            services.AddScoped<IDeliveryService, DeliveryService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ApplicationDbContext dbContext)
         {
-            TypeAdapterConfig.GlobalSettings.Scan(typeof(EmptyMappings).Assembly/*DigitalPurchasing.Mappings*/);
+            TypeAdapterConfig.GlobalSettings.Scan(typeof(EmptyMappings).Assembly/*DigitalPurchasing.Mappings*/, typeof(DeliveryMappings).Assembly /*DigitalPurchasing.Services*/);
 
             if (env.IsDevelopment())
             {

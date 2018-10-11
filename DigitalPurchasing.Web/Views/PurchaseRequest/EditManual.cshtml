@@ -32,91 +32,42 @@
     </div>
     <table class="table table-striped">
         <thead>
-        <tr>
-            <th style="width: 5%" class="text-center">№</th>
-            <th style="width: 20%">Код</th>
-            <th>Наименование</th>
-            <th style="width: 10%">Количество</th>
-            <th style="width: 10%">ЕИ</th>
-            <th style="width: 10%"></th>
-        </tr>
+            <tr>
+                <th style="width: 5%" class="text-center">№</th>
+                <th style="width: 20%">Код</th>
+                <th>Наименование</th>
+                <th style="width: 10%">Количество</th>
+                <th style="width: 10%">ЕИ</th>
+                <th style="width: 10%"></th>
+            </tr>
         </thead>
         <tbody>
-        <tr v-for="r in rows">
-            <td class="text-center">
-                <label>{{getRowIndex(r)}}</label>
-            </td>
-            <td><input type="text" class="form-control" v-model="r.rawCode"/></td>
-            <td><input type="text" class="form-control" v-model="r.rawName"/></td>
-            <td><input type="number" class="form-control" v-model="r.rawQty"/></td>
-            <td><input type="text" class="form-control" v-model="r.rawUom"/></td>
-            <td>
-                <button type="button" class="btn btn-default" v-on:click="removeRow(r)" v-if="getRowIndex(r)>1"><i class="far fa-minus-square"></i></button>
-                <button type="button" class="btn btn-default" v-on:click="addRow(r)"><i class="far fa-plus-square"></i></button>
-            </td>
-        </tr>
+            <tr v-for="r in rows">
+                <td class="text-center">
+                    <label>{{getRowIndex(r)}}</label>
+                </td>
+                <td><input type="text" class="form-control" v-model="r.rawCode" /></td>
+                <td><input type="text" class="form-control" v-model="r.rawName" /></td>
+                <td><input type="number" class="form-control" v-model="r.rawQty" /></td>
+                <td><input type="text" class="form-control" v-model="r.rawUom" /></td>
+                <td>
+                    <button type="button" class="btn btn-default" v-on:click="removeRow(r)" v-if="getRowIndex(r)>1"><i class="far fa-minus-square"></i></button>
+                    <button type="button" class="btn btn-default" v-on:click="addRow(r)"><i class="far fa-plus-square"></i></button>
+                </td>
+            </tr>
         </tbody>
     </table>
     <button v-on:click="saveRawItems" class="btn btn-primary" v-bind:disabled="isSaveDisabled">Сохранить изменения</button>
     <div class="row">
         <div class="col-md-6">
-            <div class="form-group">
-                <label for="datetime">Дата и время поставки</label>
-                <input type="text" class="form-control" id="datetime" placeholder="13.07.2018">
-            </div>
-            <div class="form-group">
-                <label for="...">Инкотермс (условия доставки)</label>
-                <select class="form-control" id="...">
-                    <option>111</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="...">Условия оплаты</label>
-                <select class="form-control" id="...">
-                    <option>111</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="datetime">Отсрочка платежа, дней</label>
-                <input type="number" class="form-control" id="datetime" placeholder="30">
-            </div>
-            <div class="form-group">
-                <label for="datetime">Адрес доставки</label>
-                <div class="row">
-                    <div class="col-md-6">
-                        <input type="text" class="form-control" id="country" placeholder="Страна">
-                    </div>
-                    <div class="col-md-6">
-                        <input type="text" class="form-control" id="city" placeholder="Город/Населенный пункт">
-                    </div>
-                </div>
-                <div class="row" style="margin-top: 15px;">
-                    <div class="col-md-12">
-                        <input type="text" class="form-control" id="address" placeholder="Улица">
-                    </div>
-                </div>
-                <div class="row" style="margin-top: 15px;">
-                    <div class="col-md-3">
-                        <input type="text" class="form-control" id="datetime" placeholder="Дом">
-                    </div>
-                    <div class="col-md-3">
-                        <input type="text" class="form-control" id="datetime" placeholder="Корпус">
-                    </div>
-                    <div class="col-md-3">
-                        <input type="text" class="form-control" id="datetime" placeholder="Строение">
-                    </div>
-                    <div class="col-md-3">
-                        <input type="text" class="form-control" id="datetime" placeholder="Офис/квартира">
-                    </div>
-                </div>
-            </div>
+            <address-form v-bind:pr="prId"></address-form>
         </div>
     </div>
-
 </div>
 
 @section Scripts
 {
+    <partial name="~/Views/Shared/Delivery/_AddressFormComponent.cshtml"/>
     <script>
         (function() {
             function getInputClass(hasError) {

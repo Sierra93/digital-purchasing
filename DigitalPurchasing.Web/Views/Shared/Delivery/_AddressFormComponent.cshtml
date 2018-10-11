@@ -1,0 +1,233 @@
+<script type="text/x-template" id="address-form">
+    <div>
+        <dropdown class="form-group">
+            <label>Дата поставки</label>
+            <div class="input-group">
+                <input class="form-control" type="text" v-model="date" readonly="readonly">
+                <div class="input-group-btn">
+                    <btn class="dropdown-toggle"><i class="far fa-calendar-alt"></i></btn>
+                </div>
+            </div>
+            <template slot="dropdown">
+                <li>
+                    <date-picker v-model="date"
+                                 format="dd.MM.yyyy"
+                                 icon-control-left="fas fa-angle-left"
+                                 icon-control-right="fas fa-angle-right"
+                                 :week-starts-with="1"
+                                 :limit-from="dateMin"
+                                 :date-parser="dateParse"
+                                 :locale="localeRU" />
+                </li>
+            </template>
+        </dropdown>
+        <dropdown class="form-group">
+            <label>Время поставки</label>
+            <div class="input-group">
+                <input class="form-control" type="text" :value="timeStr" readonly="readonly">
+                <div class="input-group-btn">
+                    <btn class="dropdown-toggle"><i class="far fa-clock"></i></btn>
+                </div>
+            </div>
+            <template slot="dropdown">
+                <li style="padding: 10px">
+                    <time-picker v-model="time"
+                                 icon-control-up="fas fa-angle-up"
+                                 icon-control-down="fas fa-angle-down"
+                                 :show-meridian="false"
+                                 :min-step="timeMinStep" />
+                </li>
+            </template>
+        </dropdown>
+        <div class="form-group">
+            <label for="...">Инкотермс (условия доставки)</label>
+            <select v-model="deliveryTerms" class="form-control">
+                <option v-for="option in deliveryTermsOptions" v-bind:value="option.value">{{ option.text }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="...">Условия оплаты</label>
+            <select v-model="paymentTerms" class="form-control">
+                <option v-for="option in paymentTermsOptions" v-bind:value="option.value">{{ option.text }}</option>
+            </select>
+        </div>
+        <div class="form-group" v-if="paymentTerms == 20">
+            <label for="datetime">Отсрочка платежа, дней</label>
+            <input type="number" class="form-control" placeholder="30" v-model="payWithinDays">
+        </div>
+        <div class="form-group">
+            <label for="datetime">Адрес доставки</label>
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="text" class="form-control" placeholder="Страна" v-model="country">
+                </div>
+                <div class="col-md-6">
+                    <input type="text" class="form-control" placeholder="Город/Населенный пункт" v-model="city">
+                </div>
+            </div>
+            <div class="row" style="margin-top: 15px;">
+                <div class="col-md-12">
+                    <input type="text" class="form-control" placeholder="Улица" v-model="street">
+                </div>
+            </div>
+            <div class="row" style="margin-top: 15px;">
+                <div class="col-md-3">
+                    <input type="text" class="form-control" placeholder="Дом" v-model="house">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control" placeholder="Корпус" v-model="building">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control" placeholder="Строение" v-model="structure">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control" placeholder="Офис/квартира" v-model="officeOrApartment">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <button class="btn btn-primary" v-on:click="save">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</script>
+
+<script>
+    (function (vue) {
+        vue.component('address-form', {
+            template: '#address-form',
+            props: ['pr','qr'],
+            data: function () {
+                return {
+                    date: null,
+                    localeRU: {
+                        uiv: {
+                            datePicker: {
+                                clear: 'Очистить',
+                                today: 'Сегодня',
+                                month: 'Месяц',
+                                month1: 'Январь',
+                                month2: 'Февраль',
+                                month3: 'Март',
+                                month4: 'Апрель',
+                                month5: 'Май',
+                                month6: 'Июнь',
+                                month7: 'Июль',
+                                month8: 'Август',
+                                month9: 'Сентябрь',
+                                month10: 'Октябрь',
+                                month11: 'Ноябрь',
+                                month12: 'Декабрь',
+                                year: 'Год',
+                                week1: 'Пн',
+                                week2: 'Вт',
+                                week3: 'Ср',
+                                week4: 'Чт',
+                                week5: 'Пт',
+                                week6: 'Сб',
+                                week7: 'Вс'
+                            },
+                            timePicker: {
+                                am: 'дня',
+                                pm: 'вечера'
+                            },
+                            modal: {
+                                cancel: 'Отмена',
+                                ok: 'OK'
+                            }
+                        }
+                    },
+                    dateMin: new Date(),
+                    time: new Date(),
+                    timeMinStep: 10,
+                    deliveryTerms: 0,
+                    deliveryTermsOptions: [],
+                    paymentTerms: 0,
+                    paymentTermsOptions: [],
+                    payWithinDays: 0,
+                    country: '',
+                    city: '',
+                    street: '',
+                    house: '',
+                    building: '',
+                    structure: '',
+                    officeOrApartment: ''
+                };
+            },
+            computed: {
+                qry: function() {
+                    if (this.pr) {
+                        return '?prId=' + this.pr;
+                    }
+                    if (this.pr) {
+                        return '?qrId=' + this.qr;
+                    }
+                    return '';
+                },
+                timeStr: function() {
+                    return moment(this.time).format('HH:mm');
+                }
+            },
+            methods: {
+                dateParse: function(v) {
+                    var date = moment(v, 'DD.MM.YYYY').toDate();
+                    return date.getTime();
+                },
+                load: function() {
+                    var $this = this; 
+                    this.$http.get('@Url.Action("Load","Delivery")' + this.qry).then(response => {
+                        var data = response.body;
+                        if (data) {
+                            var deliverAt = new Date(data.deliverAt);
+                            this.date = moment(deliverAt).format('DD.MM.YYYY');
+                            deliverAt.setMinutes(0);
+                            this.time = new Date(deliverAt);
+                            this.deliveryTermsOptions = data.deliveryTermsOptions;
+                            this.paymentTermsOptions = data.paymentTermsOptions;
+                            this.deliveryTerms = data.deliveryTerms;
+                            this.paymentTerms = data.paymentTerms;
+                            this.payWithinDays = data.payWithinDays;
+                            this.country = data.country;
+                            this.city = data.city;
+                            this.street = data.street;
+                            this.house = data.house;
+                            this.building = data.building;
+                            this.structure = data.structure;
+                            this.officeOrApartment = data.officeOrApartment;
+                        } else {
+                            alert('error');
+                        }
+                    }, response => {
+                        alert('error');
+                    });
+                },
+                save: function() {
+                    var data = {
+                        deliverAt: moment(this.date + ' ' + this.timeStr, 'DD.MM.YYYY HH:mm').format(moment.HTML5_FMT.DATETIME_LOCAL_MS),
+                        deliveryTerms: this.deliveryTerms,
+                        paymentTerms: this.paymentTerms,
+                        payWithinDays: this.payWithinDays,
+                        country: this.country,
+                        city: this.city,
+                        street: this.street,
+                        house: this.house,
+                        building: this.building,
+                        structure: this.structure,
+                        officeOrApartment: this.officeOrApartment
+                    };
+                    this.$http.post('@Url.Action("Save", "Delivery")' + this.qry, data).then(response => {
+                        var resData = response.body;
+                    }, response => {
+                        alert('error');
+                    });
+                }
+            },
+            created: function() {
+                console.info('Address', 'pr', this.pr, 'qr', this.qr);
+                this.load();
+            }
+        });
+    })(Vue)
+
+</script>
