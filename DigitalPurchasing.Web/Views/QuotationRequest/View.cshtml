@@ -9,6 +9,39 @@
 
 <div id="app">
     <div class="row">
+        <div class="col-md-6 form-inline">
+            <div class="form-group">
+                <label>Номенклатура предприятия:&nbsp;</label>
+                <select v-model="selectedCompany" class="form-control">
+                    <option v-bind:value="keys[0]">{{keys[0]}}</option>
+                    <option v-bind:value="keys[1]">{{keys[1]}}</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <td>Код</td>
+                        <td>Название</td>
+                        <td>Кол-во</td>
+                        <td>ЕИ</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="item in selectedItems">
+                        <td>{{item.code}}</td>
+                        <td>{{item.name}}</td>
+                        <td>{{item.qty}}</td>
+                        <td>{{item.uom}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row">
         <div class="col-md-6">
             <address-form v-bind:qr="qrId"></address-form>
         </div>
@@ -24,12 +57,38 @@
                 el: '#app',
                 data: function() {
                     return {
-                        qrId: '@Model.Id'
+                        qrId: '@Model.Id',
+                        items: [],
+                        selectedCompany: ''
                     };
                 },
-                created: function () {},
-                computed: {},
-                methods: {}
+                created: function() {
+                    this.load();
+                },
+                computed: {
+                    keys: function() {
+                        return Object.keys(this.items);
+                    },
+                    //companyItems: function() {
+                    //    return this.items[this.keys[0]];
+                    //},
+                    //customerItems: function() {
+                    //    return this.items[this.keys[1]];
+                    //},
+                    selectedItems: function() {
+                        return this.items[this.selectedCompany];
+                    }
+                },
+                methods: {
+                    load: function() {
+                        this.$http.get('@Url.Action("ViewNomenclatureData")?qrId=' + this.qrId).then(function(res) {
+                            this.items = res.data.items;
+                            this.selectedCompany = this.keys[0];
+                        }, function(res) {
+
+                        });
+                    }
+                }
             });
         })();
     </script>

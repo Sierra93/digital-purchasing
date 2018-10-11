@@ -51,5 +51,11 @@ namespace DigitalPurchasing.Web.Controllers
             var model = _quotationRequestService.GetById(id);
             return View(model);
         }
+
+        public IActionResult ViewNomenclatureData([FromQuery]Guid qrId)
+        {
+            var model = _quotationRequestService.GetViewData(qrId);
+            return Ok(model);
+        }
     }
 }

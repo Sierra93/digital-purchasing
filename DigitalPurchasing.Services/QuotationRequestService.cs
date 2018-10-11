@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using System.Linq;
@@ -90,6 +92,26 @@ namespace DigitalPurchasing.Services
 
             var result = quotationRequest.Adapt<QuotationRequestDetails>();
             
+            return result;
+        }
+
+        public QuotationRequestViewData GetViewData(Guid qrId)
+        {
+            var qr = _db.QuotationRequests.Find(qrId);
+            var prId = qr.PurchaseRequestId;
+            var pr = _db.PurchaseRequests.Find(prId);
+
+            var data = _purchaseRequestService.MatchItemsData(prId);
+            var companyName = pr.CompanyName;
+            var customerName = pr.CustomerName;
+            var result = new QuotationRequestViewData(companyName, customerName);
+
+            foreach (var dataItem in data.Items)
+            {
+                result.AddCompanyItem(dataItem.NomenclatureName, dataItem.NomenclatureCode, dataItem.NomenclatureUom, dataItem.RawQty.ToString(CultureInfo.InvariantCulture));
+                result.AddCustomerItem(dataItem.RawName, dataItem.RawCode, dataItem.RawUom, dataItem.RawQty.ToString(CultureInfo.InvariantCulture));
+            }
+
             return result;
         }
     }
