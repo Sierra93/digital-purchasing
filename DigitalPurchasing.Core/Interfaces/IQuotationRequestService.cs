@@ -64,5 +64,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public void AddCustomerItem(string name, string code, string uom, string qty)
             => AddItem(_customer, new NomenclatureItem { Code = code, Name = name, Uom = uom, Qty = qty });
+
+        public IEnumerable<NomenclatureItem> GetCompanyItems() => Items[_company];
     }
 }

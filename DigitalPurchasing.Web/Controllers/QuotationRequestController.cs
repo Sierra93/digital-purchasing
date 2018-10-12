@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core.Interfaces;
+using DigitalPurchasing.ExcelReader;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels.QuotationRequest;
 using Mapster;
@@ -56,6 +57,18 @@ namespace DigitalPurchasing.Web.Controllers
         {
             var model = _quotationRequestService.GetViewData(qrId);
             return Ok(model);
+        }
+
+        public IActionResult Download([FromQuery]Guid qrId)
+        {
+            var qr = _quotationRequestService.GetById(qrId);
+            var data = _quotationRequestService.GetViewData(qrId);
+            var items = data.GetCompanyItems().Adapt<IEnumerable<ExcelQr.DataItem>>();
+            var excel = new ExcelQr();
+
+            var bytes = excel.Build(items);
+            var filename = $"qr_{qr.PublicId}_{qr.CreatedOn:yyyy_MM_dd}_.xlsx";
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
         }
     }
 }
