@@ -1,9 +1,15 @@
 @model object
 
+@{
+    ViewBag.Title = "Категории закупок";
+}
+
+<h2 class="with-button">@ViewBag.Title</h2>
+<div class="btn-group">
+    <a asp-action="Create" class="btn btn-default">Создать</a>
+</div>
+
 <div id="app">
-
-    <a asp-action="Create" class="btn btn-default">Create</a>
-
     <vuetable ref="vuetable"
               api-url="@Url.Action("Data")"
               :fields="fields"

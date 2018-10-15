@@ -4,16 +4,22 @@
     ViewData["Title"] = "Наименования материалов";
 }
 
-<div id="app">
-
+<h2 class="with-button">@ViewBag.Title</h2>
+<div class="btn-group">
     <a asp-action="Create" class="btn btn-default">Создать</a>
-    <a asp-action="Template" class="btn btn-link">Скачать шаблон</a>
-
-    <form method="post" enctype="multipart/form-data" asp-action="UploadTemplate" asp-controller="Nomenclature">
-        <label class="btn btn-default btn-file">
-            Загрузить заполненный шаблон <input type="file" style="display: none;" name="file">
+    <a asp-action="Template" class="btn btn-default">Скачать шаблон</a>
+    <form method="post" enctype="multipart/form-data" asp-action="UploadTemplate" asp-controller="Nomenclature" class="btn btn-default btn-file">
+        <label>
+            @*class=""*@
+            Загрузить заполненный шаблон
+            <input type="file" style="display: none;" name="file">
         </label>
     </form>
+</div>
+
+<div id="app">
+
+
 
     <vuetable ref="vuetable"
               api-url="@Url.Action("Data")"

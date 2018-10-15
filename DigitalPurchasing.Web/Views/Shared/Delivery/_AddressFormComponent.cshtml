@@ -40,12 +40,6 @@
             </template>
         </dropdown>
         <div class="form-group">
-            <label for="...">Инкотермс (условия доставки)</label>
-            <select v-model="deliveryTerms" class="form-control">
-                <option v-for="option in deliveryTermsOptions" v-bind:value="option.value">{{ option.text }}</option>
-            </select>
-        </div>
-        <div class="form-group">
             <label for="...">Условия оплаты</label>
             <select v-model="paymentTerms" class="form-control">
                 <option v-for="option in paymentTermsOptions" v-bind:value="option.value">{{ option.text }}</option>
@@ -54,6 +48,12 @@
         <div class="form-group" v-if="paymentTerms == 20">
             <label for="datetime">Отсрочка платежа, дней</label>
             <input type="number" class="form-control" placeholder="30" v-model="payWithinDays">
+        </div>
+        <div class="form-group">
+            <label for="...">Инкотермс (условия доставки)</label>
+            <select v-model="deliveryTerms" class="form-control">
+                <option v-for="option in deliveryTermsOptions" v-bind:value="option.value">{{ option.text }}</option>
+            </select>
         </div>
         <div class="form-group">
             <label for="datetime">Адрес доставки</label>

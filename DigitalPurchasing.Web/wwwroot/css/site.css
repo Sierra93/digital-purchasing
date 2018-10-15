@@ -40,35 +40,35 @@ body {
   white-space: nowrap;
 }
 
-  .table .btn-group .btn {
-    display: inline-block;
-    float: none;
-  }
+.table .btn-group .btn {
+  display: inline-block;
+  float: none;
+}
 
-    .table .btn-group .btn + .btn {
-      margin-left: -5px;
-    }
+.table .btn-group .btn + .btn {
+  margin-left: -5px;
+}
 
 .btn-file {
   position: relative;
   overflow: hidden;
 }
 
-  .btn-file input[type=file] {
-    position: absolute;
-    top: 0;
-    right: 0;
-    min-width: 100%;
-    min-height: 100%;
-    font-size: 100px;
-    text-align: right;
-    filter: alpha(opacity=0);
-    opacity: 0;
-    outline: none;
-    background: white;
-    cursor: inherit;
-    display: block;
-  }
+.btn-file input[type=file] {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 100%;
+  min-height: 100%;
+  font-size: 100px;
+  text-align: right;
+  filter: alpha(opacity=0);
+  opacity: 0;
+  outline: none;
+  background: white;
+  cursor: inherit;
+  display: block;
+}
 
 table .border-left {
   border-left: 1px solid #ddd
@@ -84,4 +84,19 @@ table tr td {
 
 .modal-body .table {
   margin-bottom: 0 !important;
+}
+
+h2.with-button, h2.with-button + .btn-group {
+  display: inline-block;
+}
+
+h2.with-button + .btn-group {
+  position: relative;
+  top: -4px;
+  left: 4px;
+}
+
+h2.with-button + .btn-group .btn-file label {
+  font-weight: normal;
+  margin-bottom: 0;
 }
