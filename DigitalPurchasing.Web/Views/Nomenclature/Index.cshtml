@@ -51,7 +51,7 @@
     <modal v-model="modalDelete" title="Удаление">
         <p>Вы уверены что хотите удалить "<b>{{modalData.name}}</b>"?<br />Это действие нельзя отменить.</p>
         <div slot="footer">
-            <button v-on:click="deleteNomenclature" class="btn btn-danger">Удалить</button>
+            <button v-on:click="deleteOk" class="btn btn-danger">Удалить</button>
             <button v-on:click="deleteCancel" class="btn btn-default">Отмена</button>
         </div>
     </modal>
@@ -249,7 +249,7 @@
                         this.modalData.id = rowData.id;
                         this.modalDelete = true;
                     },
-                    deleteNomenclature: function(id) {
+                    deleteOk: function(id) {
                         var $this = this;
                         this.$http.post('@Url.Action("Delete")', { id: $this.modalData.id }).then(function(res) {
                             $this.$refs.vuetable.refresh();

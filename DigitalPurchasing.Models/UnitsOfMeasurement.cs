@@ -20,5 +20,6 @@ namespace DigitalPurchasing.Models
         public ICollection<UomConversionRate> ToConversionRates { get; set; }
 
         public ICollection<PurchaseRequestItem> PurchasingRequestItems { get; set; }
+        public bool IsDeleted { get; set; }
     }
 }

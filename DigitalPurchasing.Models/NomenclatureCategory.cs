@@ -13,5 +13,6 @@ namespace DigitalPurchasing.Models
         public ICollection<NomenclatureCategory> Children { get; set; }
 
         public ICollection<Nomenclature> Nomenclatures { get; set; }
+        public bool IsDeleted { get; set; }
     }
 }

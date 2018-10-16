@@ -1,10 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace DigitalPurchasing.Web.ViewModels
+namespace DigitalPurchasing.Web.ViewModels.Uom
 {
     public class UomCreateVm
     {
-        [Required]
+        [Required, Display(Name = "Название")]
         public string Name { get; set; }
     }
 }

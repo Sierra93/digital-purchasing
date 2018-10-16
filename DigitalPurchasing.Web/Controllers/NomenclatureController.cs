@@ -8,7 +8,6 @@ using DigitalPurchasing.ExcelReader;
 using DigitalPurchasing.Services;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
-using DigitalPurchasing.Web.ViewModels.Nomenclature;
 using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -121,7 +120,7 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         [HttpPost]
-        public IActionResult Delete([FromBody]NomenclatureDeleteVm vm)
+        public IActionResult Delete([FromBody]DeleteVm vm)
         {
             _nomenclatureService.Delete(vm.Id);
             return Ok();

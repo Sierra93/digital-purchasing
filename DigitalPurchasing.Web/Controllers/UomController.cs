@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Services;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
+using DigitalPurchasing.Web.ViewModels.NomenclatureCategory;
 using DigitalPurchasing.Web.ViewModels.Uom;
+using Mapster;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalPurchasing.Web.Controllers
@@ -23,17 +26,43 @@ namespace DigitalPurchasing.Web.Controllers
             var nextUrl = Url.Action("Data", "Uom", request.NextPageRequest(), Request.Scheme);
             var prevUrl = Url.Action("Data", "Uom", request.PrevPageRequest(), Request.Scheme);
 
-            return Json(new VueTableResponse<UomResult, VueTableRequest>(result.Data, request, result.Total, nextUrl, prevUrl));
+            var data = result.Data.Adapt<List<UomIndexDataItemEdit>>();
+            foreach (var dataItem in data)
+            {
+                dataItem.EditUrl = Url.Action("Edit", new { id = dataItem.Id });
+            }
+
+            return Json(new VueTableResponse<UomIndexDataItemEdit, VueTableRequest>(data, request, result.Total, nextUrl, prevUrl));
         }
 
         public IActionResult Create() => View(new UomCreateVm());
 
         [HttpPost]
-        public IActionResult Create(CreateNomenclatureCategoryVm vm)
+        public IActionResult Create(UomCreateVm vm)
         {
             if (ModelState.IsValid)
             {
                 _uomService.CreateOrUpdate(vm.Name);
+                return RedirectToAction("Index");
+            }
+
+            return View(vm);
+        }
+
+        public IActionResult Edit(Guid id)
+        {
+            var uom = _uomService.GetById(id);
+            if (uom == null) return NotFound();
+            var vm = uom.Adapt<UomEditVm>();
+            return View(vm);
+        }
+
+        [HttpPost]
+        public IActionResult Edit(UomEditVm vm)
+        {
+            if (ModelState.IsValid)
+            {
+                _uomService.Update(vm.Id, vm.Name);
                 return RedirectToAction("Index");
             }
 
@@ -52,5 +81,12 @@ namespace DigitalPurchasing.Web.Controllers
 
         [HttpPost]
         public IActionResult Factor([FromBody]UomFactorVm m) => Json(_uomService.GetConversionRate(m.FromId, m.NomenclatureId));
+
+        [HttpPost]
+        public IActionResult Delete([FromBody]DeleteVm vm)
+        {
+            _uomService.Delete(vm.Id);
+            return Ok();
+        }
     }
 }

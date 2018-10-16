@@ -1,8 +1,12 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Services;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
+using DigitalPurchasing.Web.ViewModels.NomenclatureCategory;
+using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -28,12 +32,18 @@ namespace DigitalPurchasing.Web.Controllers
             var nextUrl = Url.Action("Data", "NomenclatureCategory", request.NextPageRequest(), Request.Scheme);
             var prevUrl = Url.Action("Data", "NomenclatureCategory", request.PrevPageRequest(), Request.Scheme);
 
-            return Json(new VueTableResponse<NomenclatureCategoryResult, VueTableRequest>(result.Data, request, result.Total, nextUrl, prevUrl));
+            var data = result.Data.Adapt<List<NomenclatureCategoryIndexDataItemEdit>>();
+            foreach (var dataItem in data)
+            {
+                dataItem.EditUrl = Url.Action("Edit", new { id = dataItem.Id });
+            }
+
+            return Json(new VueTableResponse<NomenclatureCategoryIndexDataItemEdit, VueTableRequest>(data, request, result.Total, nextUrl, prevUrl));
         }
 
         public IActionResult Create()
         {
-            var vm = new CreateNomenclatureCategoryVm
+            var vm = new NomenclatureCategoryCreateVm
             {
                 Categories = _dictionaryService.GetCategories()
             };
@@ -42,7 +52,7 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(CreateNomenclatureCategoryVm vm)
+        public IActionResult Create(NomenclatureCategoryCreateVm vm)
         {
             if (ModelState.IsValid)
             {
@@ -53,6 +63,37 @@ namespace DigitalPurchasing.Web.Controllers
             vm.Categories = _dictionaryService.GetCategories();
 
             return View(vm);
+        }
+
+        public IActionResult Edit(Guid id)
+        {
+            var category = _nomenclatureCategoryService.GetById(id);
+            if (category == null) return NotFound();
+
+            var vm = category.Adapt<NomenclatureCategoryEditVm>();
+            vm.Categories = _dictionaryService.GetCategories();
+            vm.Categories.Insert(0, new SelectListItem("", ""));
+            return View(vm);
+        }
+
+        [HttpPost]
+        public IActionResult Edit(NomenclatureCategoryEditVm vm)
+        {
+            if (ModelState.IsValid)
+            {
+                _nomenclatureCategoryService.Update(vm.Id, vm.Name, vm.ParentId);
+                return RedirectToAction("Index");
+            }
+
+            vm.Categories = _dictionaryService.GetCategories();
+            return View(vm);
+        }
+
+        [HttpPost]
+        public IActionResult Delete([FromBody]DeleteVm vm)
+        {
+            _nomenclatureCategoryService.Delete(vm.Id);
+            return Ok();
         }
     }
 }

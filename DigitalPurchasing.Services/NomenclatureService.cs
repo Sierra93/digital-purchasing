@@ -167,7 +167,7 @@ namespace DigitalPurchasing.Services
 
         public void Delete(Guid id)
         {
-            var entity = _db.Nomenclatures.FirstOrDefault(q => q.Id == id && !q.IsDeleted);
+            var entity = _db.Nomenclatures.Find(id);
             if (entity == null) return;
             entity.IsDeleted = true;
             _db.SaveChanges();

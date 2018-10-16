@@ -17,18 +17,18 @@ namespace DigitalPurchasing.Services
 
         public UomService(ApplicationDbContext db) => _db = db;
 
-        public UomDataResponse GetData(int page, int perPage, string sortField, bool sortAsc)
+        public UomIndexData GetData(int page, int perPage, string sortField, bool sortAsc)
         {
             if (string.IsNullOrEmpty(sortField))
             {
                 sortField = "Name";
             }
 
-            var qry =  _db.UnitsOfMeasurements.AsNoTracking();
+            var qry =  _db.UnitsOfMeasurements.Where(q => !q.IsDeleted).AsNoTracking();
             var total = qry.Count();
             var orderedResults = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}");
-            var result = orderedResults.Skip((page-1)*perPage).Take(perPage).ProjectToType<UomResult>().ToList();
-            return new UomDataResponse
+            var result = orderedResults.Skip((page-1)*perPage).Take(perPage).ProjectToType<UomIndexDataItem>().ToList();
+            return new UomIndexData
             {
                 Total = total,
                 Data = result
@@ -51,7 +51,7 @@ namespace DigitalPurchasing.Services
             return entity.Adapt<UomResult>();
         }
 
-        public IEnumerable<UomResult> GetAll() => _db.UnitsOfMeasurements.ProjectToType<UomResult>().ToList();
+        public IEnumerable<UomResult> GetAll() => _db.UnitsOfMeasurements.Where(q => !q.IsDeleted).ProjectToType<UomResult>().ToList();
 
         public UomConversionRateResponse GetConversionRate(Guid fromUomId, Guid nomenclatureId)
         {
@@ -92,7 +92,7 @@ namespace DigitalPurchasing.Services
         {
             var autocompleteItems = _db.UnitsOfMeasurements
                 .AsNoTracking()
-                .Where(q => q.Name.Contains(s))
+                .Where(q => q.Name.Contains(s) && !q.IsDeleted)
                 .ProjectToType<UomAutocompleteResponse.AutocompleteItem>()
                 .ToList();
 
@@ -131,6 +131,38 @@ namespace DigitalPurchasing.Services
                 rate.Factor = factorC;
             }
             _db.SaveChanges();
+        }
+
+        public void Delete(Guid id)
+        {
+            var entity = _db.UnitsOfMeasurements.Find(id);
+            if (entity == null || entity.OwnerId == null) return;
+            entity.IsDeleted = true;
+            _db.SaveChanges();
+        }
+
+        public UomVm GetById(Guid id) => _db.UnitsOfMeasurements.Find(id)?.Adapt<UomVm>();
+
+        public UomVm Update(Guid id, string name)
+        {
+            var entity = _db.UnitsOfMeasurements.Find(id);
+            if (entity.OwnerId == null)
+            {
+                return null;
+            }
+
+            entity.Name = name.Trim();
+            _db.SaveChanges();
+            return entity.Adapt<UomVm>();
+        }
+    }
+
+    public class UnitsOfMeasurementMappings : IRegister
+    {
+        public void Register(TypeAdapterConfig config)
+        {
+            config.NewConfig<UnitsOfMeasurement, UomResult>().Map(d => d.IsSystem, s => !s.OwnerId.HasValue);
+            config.NewConfig<UnitsOfMeasurement, UomIndexDataItem>().Map(d => d.IsSystem, s => !s.OwnerId.HasValue);
         }
     }
 }

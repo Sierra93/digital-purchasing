@@ -5,13 +5,16 @@ namespace DigitalPurchasing.Core.Interfaces
 {
     public interface INomenclatureCategoryService
     {
-        NomenclatureCategoryDataResult GetData(int page, int perPage, string sortField, bool sortAsc);
-        NomenclatureCategoryResult CreateOrUpdate(string name, Guid? parentId);
-        IEnumerable<NomenclatureCategoryResult> GetAll();
+        NomenclatureCategoryIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
+        NomenclatureCategoryVm CreateOrUpdate(string name, Guid? parentId);
+        IEnumerable<NomenclatureCategoryVm> GetAll();
+        NomenclatureCategoryVm GetById(Guid id);
         string FullCategoryName(Guid categoryId);
+        void Delete(Guid id);
+        NomenclatureCategoryVm Update(Guid id, string name, Guid? parentId);
     }
 
-    public class NomenclatureCategoryResult
+    public class NomenclatureCategoryVm
     {
         public Guid Id { get; set; }
 
@@ -24,7 +27,11 @@ namespace DigitalPurchasing.Core.Interfaces
         public string FullName { get; set; }
     }
 
-    public class NomenclatureCategoryDataResult : BaseDataResponse<NomenclatureCategoryResult>
+    public class NomenclatureCategoryIndexDataItem : NomenclatureCategoryVm
+    {
+    }
+
+    public class NomenclatureCategoryIndexData : BaseDataResponse<NomenclatureCategoryIndexDataItem>
     {
     }
 }

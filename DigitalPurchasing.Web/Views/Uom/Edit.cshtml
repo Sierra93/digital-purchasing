@@ -1,7 +1,7 @@
-@model DigitalPurchasing.Web.ViewModels.Uom.UomCreateVm
+@model DigitalPurchasing.Web.ViewModels.Uom.UomEditVm
 
 @{
-    ViewData["Title"] = "Создание ЕИ";
+    ViewData["Title"] = $"Редактирование ЕИ \"{Model.Name}\"";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -18,7 +18,7 @@
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <input type="submit" class="btn btn-primary" value="Создать" />
+                <input type="submit" class="btn btn-primary" value="Сохранить" />
                 <a asp-action="Index" class="btn btn-default">Отмена</a>
             </div>
         </form>
