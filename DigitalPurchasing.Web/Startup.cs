@@ -22,7 +22,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.ExcelReader;
-using DigitalPurchasing.Mappings;
 
 namespace DigitalPurchasing.Web
 {
@@ -90,7 +89,7 @@ namespace DigitalPurchasing.Web
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ApplicationDbContext dbContext)
         {
-            TypeAdapterConfig.GlobalSettings.Scan(typeof(EmptyMappings).Assembly/*DigitalPurchasing.Mappings*/, typeof(DeliveryMappings).Assembly /*DigitalPurchasing.Services*/);
+            TypeAdapterConfig.GlobalSettings.Scan(typeof(DeliveryMappings).Assembly /*DigitalPurchasing.Services*/);
 
             if (env.IsDevelopment())
             {
