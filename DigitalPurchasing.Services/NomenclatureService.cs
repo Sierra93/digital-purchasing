@@ -23,7 +23,7 @@ namespace DigitalPurchasing.Services
             _categoryService = categoryService;
         }
 
-        public NomenclatureDataResult GetData(int page, int perPage, string sortField, bool sortAsc)
+        public NomenclatureIndexData GetData(int page, int perPage, string sortField, bool sortAsc)
         {
             if (string.IsNullOrEmpty(sortField))
             {
@@ -33,21 +33,21 @@ namespace DigitalPurchasing.Services
             var qry = _db.Nomenclatures.Where(q => !q.IsDeleted);
             var total = qry.Count();
             var orderedResults = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}");
-            var result = orderedResults.Skip((page-1)*perPage).Take(perPage).ProjectToType<NomenclatureDataResultItem>().ToList();
+            var result = orderedResults.Skip((page-1)*perPage).Take(perPage).ProjectToType<NomenclatureIndexDataItem>().ToList();
 
             foreach (var nomenclatureResult in result)
             {
                 nomenclatureResult.CategoryFullName = _categoryService.FullCategoryName(nomenclatureResult.CategoryId);
             }
 
-            return new NomenclatureDataResult
+            return new NomenclatureIndexData
             {
                 Total = total,
                 Data = result
             };
         }
 
-        public NomenclatureDetailsDataResult GetDetailsData(Guid nomId, int page, int perPage, string sortField, bool sortAsc)
+        public NomenclatureDetailsData GetDetailsData(Guid nomId, int page, int perPage, string sortField, bool sortAsc)
         {
             if (string.IsNullOrEmpty(sortField))
             {
@@ -57,9 +57,9 @@ namespace DigitalPurchasing.Services
             var qry = _db.NomenclatureAlternatives.Where(q => q.NomenclatureId == nomId);
             var total = qry.Count();
             var orderedResults = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}");
-            var result = orderedResults.Skip((page-1)*perPage).Take(perPage).ProjectToType<NomenclatureDetails>().ToList();
+            var result = orderedResults.Skip((page-1)*perPage).Take(perPage).ProjectToType<NomenclatureDetailsDataItem>().ToList();
 
-            return new NomenclatureDetailsDataResult
+            return new NomenclatureDetailsData
             {
                 Total = total,
                 Data = result
@@ -118,32 +118,37 @@ namespace DigitalPurchasing.Services
             return true;
         }
 
-        public NomenclatureAutocompleteResult Autocomplete(string q, bool alts = false, string customer = null)
+        public NomenclatureAutocompleteResult Autocomplete(AutocompleteOptions options)
         {
             var result =  new NomenclatureAutocompleteResult
             {
                 Items = new List<NomenclatureAutocompleteResult.AutocompleteResultItem>()
             };
 
+            var q = options.Query.Trim();
+
             if (string.IsNullOrEmpty(q)) return result;
 
-            q = q.Trim();
+            var strComparison = StringComparison.InvariantCultureIgnoreCase;
 
             var resultQry = _db.Nomenclatures
                 .AsNoTracking()
                 .Include(w => w.BatchUom)
                 .Where(w => !w.IsDeleted &&
-                    (w.Name.Contains(q, StringComparison.InvariantCultureIgnoreCase)
-                        || w.NameEng.Contains(q, StringComparison.InvariantCultureIgnoreCase)
-                        || w.Code.Contains(q, StringComparison.InvariantCultureIgnoreCase)));
+                        (w.Name.Contains(q, strComparison) ||
+                         w.NameEng.Contains(q, strComparison) ||
+                         w.Code.Contains(q, strComparison)));
 
             var mainResults = resultQry.ToList();
             
-            if (alts)
+            if (options.SearchInAlts)
             {
                 var altNomIds = _db.NomenclatureAlternatives
-                    .Where(w => w.Name.Contains(q, StringComparison.InvariantCultureIgnoreCase))
-                    .Select(w => w.NomenclatureId).ToList();
+                    .Where(w => w.Name.Contains(q, strComparison) &&
+                                w.ClientName.Equals(options.ClientName, strComparison))
+                    .Select(w => w.NomenclatureId)
+                    .Distinct()
+                    .ToList();
 
                 if (altNomIds.Any())
                 {
@@ -176,31 +181,49 @@ namespace DigitalPurchasing.Services
         public void AddAlternative(Guid nomenclatureId, Guid prItemId)
         {
             var pr =_db.PurchaseRequestItems.Include(q => q.PurchaseRequest).First(q => q.Id == prItemId);
-            AddAlternative(nomenclatureId, pr.RawName, pr.PurchaseRequest.CustomerName, pr.RawUom, pr.RawCode);
+            AddAlternative(
+                nomenclatureId,
+                pr.PurchaseRequest.CustomerName,
+                ClientType.Customer,
+                pr.RawName,
+                pr.RawCode,
+                pr.RawUomMatchId);
         }
 
-        private void AddAlternative(Guid nomenclatureId, string name, string customerName, string uom, string code)
+        private void AddAlternative(Guid nomenclatureId, string clientName, ClientType clientType, string name, string code, Guid? uom)
         {
+            clientName = clientName.Trim();
             name = name.Trim();
+            code = code.Trim();
 
-            var entity = _db.Nomenclatures.Find(nomenclatureId);
-            if (entity == null) return;
+            var altName = _db.NomenclatureAlternatives
+                .FirstOrDefault(q => q.NomenclatureId == nomenclatureId &&
+                                     q.ClientName.Equals(clientName, StringComparison.InvariantCultureIgnoreCase) &&
+                                     q.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
 
-            if (!name.Equals(entity.Name, StringComparison.InvariantCultureIgnoreCase) && !name.Equals(entity.NameEng, StringComparison.InvariantCultureIgnoreCase))
+            if (altName != null)
             {
-                if (!_db.NomenclatureAlternatives.Any(q => q.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase)))
+                if (string.IsNullOrEmpty(altName.Code))
+                    altName.Code = code;
+                if (!altName.BatchUomId.HasValue)
                 {
-                    _db.NomenclatureAlternatives.Add(new NomenclatureAlternative
-                    {
-                        NomenclatureId = nomenclatureId,
-                        Name = name,
-                        CustomerName = customerName,
-                        Code = code,
-                        Uom = uom
-                    });
-                    _db.SaveChanges();
+                    altName.BatchUomId = uom;
                 }
             }
+            else
+            {
+                _db.NomenclatureAlternatives.Add(new NomenclatureAlternative
+                {
+                    Name = name,
+                    Code = code,
+                    BatchUomId = uom,
+                    ClientName = clientName,
+                    ClientType = clientType,
+                    NomenclatureId = nomenclatureId
+                });
+            }
+
+            _db.SaveChanges();
         }
     }
 }

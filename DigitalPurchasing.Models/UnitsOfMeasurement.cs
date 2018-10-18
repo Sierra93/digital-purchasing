@@ -16,6 +16,11 @@ namespace DigitalPurchasing.Models
         public ICollection<Nomenclature> ResourceNomenclatures { get; set; }
         public ICollection<Nomenclature> ResourceBatchNomenclatures { get; set; }
 
+        public ICollection<NomenclatureAlternative> BatchNomenclatureAlternatives { get; set; }
+        public ICollection<NomenclatureAlternative> MassNomenclatureAlternatives { get; set; }
+        public ICollection<NomenclatureAlternative> ResourceNomenclatureAlternatives { get; set; }
+        public ICollection<NomenclatureAlternative> ResourceBatchNomenclatureAlternatives { get; set; }
+
         public ICollection<UomConversionRate> FromConversionRates { get; set; }
         public ICollection<UomConversionRate> ToConversionRates { get; set; }
 

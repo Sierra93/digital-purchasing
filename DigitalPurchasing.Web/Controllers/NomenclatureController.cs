@@ -57,11 +57,11 @@ namespace DigitalPurchasing.Web.Controllers
             var nextUrl = Url.Action("DataDetails", "Nomenclature", request.NextPageRequest(), Request.Scheme);
             var prevUrl = Url.Action("DataDetails", "Nomenclature", request.PrevPageRequest(), Request.Scheme);
 
-            return Json(new VueTableResponse<NomenclatureDetails, VueTableRequestWithId>(result.Data, request, result.Total, nextUrl, prevUrl));
+            return Json(new VueTableResponse<NomenclatureDetailsDataItem, VueTableRequestWithId>(result.Data, request, result.Total, nextUrl, prevUrl));
         }
 
         [HttpGet]
-        public IActionResult Autocomplete([FromQuery] string q) => Json(_nomenclatureService.Autocomplete(q));
+        public IActionResult Autocomplete([FromQuery] string q) => Json(_nomenclatureService.Autocomplete(new AutocompleteOptions { Query = q }));
 
         [HttpGet]
         public IActionResult AutocompleteSingle([FromQuery] Guid id) => Json(_nomenclatureService.AutocompleteSingle(id));

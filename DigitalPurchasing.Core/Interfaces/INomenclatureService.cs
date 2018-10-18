@@ -5,31 +5,47 @@ namespace DigitalPurchasing.Core.Interfaces
 {
     public interface INomenclatureService
     {
-        NomenclatureDataResult GetData(int page, int perPage, string sortField, bool sortAsc);
-        NomenclatureDetailsDataResult GetDetailsData(Guid nomId, int page, int perPage, string sortField, bool sortAsc);
+        NomenclatureIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
+        NomenclatureDetailsData GetDetailsData(Guid nomId, int page, int perPage, string sortField, bool sortAsc);
         NomenclatureResult CreateOrUpdate(NomenclatureResult model);
         NomenclatureResult GetById(Guid id);
         bool Update(NomenclatureResult model);
-        NomenclatureAutocompleteResult Autocomplete(string q, bool alts = false, string customer = null);
+        NomenclatureAutocompleteResult Autocomplete(AutocompleteOptions options);
         BaseResult<NomenclatureAutocompleteResult.AutocompleteResultItem> AutocompleteSingle(Guid id);
         void Delete(Guid id);
         void AddAlternative(Guid nomenclatureId, Guid prItemId);
     }
 
-    public class NomenclatureDetails
+    public class NomenclatureDetailsDataItem
     {
         public Guid Id { get; set; }
-        public string CustomerName { get; set; }
+
+        public int ClientType { get; set; }
+        public string ClientName { get; set; }
+
         public string Code { get; set; }
         public string Name { get; set; }
-        public string Uom { get; set; }
+
+        public Guid BatchUomId { get; set; }
+        public string BatchUomName { get; set; }
+
+        public Guid MassUomId { get; set; }
+        public string MassUomName { get; set; }
+        public decimal MassUomValue { get; set; }
+       
+        public Guid ResourceUomId { get; set; }
+        public string ResourceUomName { get; set; }
+        public decimal ResourceUomValue { get; set; }
+
+        public Guid ResourceBatchUomId { get; set; }
+        public string ResourceBatchUomName { get; set; }
     }
 
-    public class NomenclatureDetailsDataResult : BaseDataResponse<NomenclatureDetails>
+    public class NomenclatureDetailsData : BaseDataResponse<NomenclatureDetailsDataItem>
     {
     }
 
-    public class NomenclatureDataResultItem
+    public class NomenclatureIndexDataItem
     {
         public Guid Id { get; set; }
         public string Code { get; set; }
@@ -83,8 +99,15 @@ namespace DigitalPurchasing.Core.Interfaces
         public string CategoryFullName { get; set; }
     }
 
-    public class NomenclatureDataResult : BaseDataResponse<NomenclatureDataResultItem>
+    public class NomenclatureIndexData : BaseDataResponse<NomenclatureIndexDataItem>
     {
+    }
+
+    public class AutocompleteOptions
+    {
+        public string Query { get; set; }
+        public string ClientName { get; set; }
+        public bool SearchInAlts { get; set; } = false;
     }
 
     public class NomenclatureAutocompleteResult

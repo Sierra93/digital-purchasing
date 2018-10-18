@@ -205,7 +205,7 @@ namespace DigitalPurchasing.Services
                 }
                 else
                 {
-                    var nomRes = _nomenclatureService.Autocomplete(prItem.RawName, true, pr.CustomerName);
+                    var nomRes = _nomenclatureService.Autocomplete(new AutocompleteOptions{ Query = prItem.RawName, ClientName = pr.CustomerName, SearchInAlts = true });
                     if (nomRes.Items != null && nomRes.Items.Count() == 1)
                     {
                         //var nomMatch = nomRes.Items.FirstOrDefault(q => q.Name.Equals(rawItem.RawName, StringComparison.InvariantCultureIgnoreCase));

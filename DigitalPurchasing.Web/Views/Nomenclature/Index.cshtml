@@ -10,7 +10,6 @@
     <a asp-action="Template" class="btn btn-default">Скачать шаблон</a>
     <form method="post" enctype="multipart/form-data" asp-action="UploadTemplate" asp-controller="Nomenclature" class="btn btn-default btn-file">
         <label>
-            @*class=""*@
             Загрузить заполненный шаблон
             <input type="file" style="display: none;" name="file">
         </label>
@@ -106,9 +105,15 @@
                         css: cssTable,
                         fields: [
                             {
-                                title: 'Клиент',
-                                name: 'customerName',
-                                sortField: 'CustomerName'
+                                title: 'Тип',
+                                name: 'clientType',
+                                sortField: 'ClientType',
+                                formatter: this.formatClientType
+                            },
+                            {
+                                title: 'Название организации',
+                                name: 'clientName',
+                                sortField: 'ClientName'
                             },
                             {
                                 title: 'Код',
@@ -122,8 +127,39 @@
                             },
                             {
                                 title: 'ЕИ',
-                                name: 'uom',
-                                sortField: 'Uom'
+                                name: 'batchUomName',
+                                sortField: 'BatchUom.Name'
+                            },
+                            {
+                                title: 'ЕИ массы',
+                                name: 'massUomName',
+                                sortField: 'MassUom.Name'
+                            },
+                            {
+                                title: 'Масса 1 ЕИ, ЕИ массы',
+                                name: 'massUomValue',
+                                sortField: 'MassUomValue'
+                            },
+                            {
+                                title: 'Название ресурса',
+                                name: 'resourceUomName',
+                                sortField: 'ResourceUom.Name'
+                            },
+                            {
+                                title: 'Ресурс, 1 ЕИ ресурса',
+                                name: 'resourceUomValue',
+                                sortField: 'ResourceUomValue'
+                            },
+                            {
+                                title: 'ЕИ ресурса',
+                                name: 'resourceBatchUomName',
+                                sortField: 'ResourceBatchUom.Name'
+                            },
+                            {
+                                name: 'slot-actions',
+                                title: 'Действия',
+                                titleClass: 'text-center',
+                                dataClass: 'text-center'
                             }
                         ],
                         sortOrder: [
@@ -135,6 +171,9 @@
                     };
                 },
                 methods: {
+                    formatClientType: function(value) {
+                        return value === 0 ? 'Клиент' : 'Поставщик';
+                    },
                     onDetailsChangePage: function (page) {
                         this.$refs.vuetableDetails.changePage(page);
                     },
