@@ -1,5 +1,11 @@
 [
   {
+    "outputFileName": "wwwroot/bundles/custom.min.css",
+    "inputFiles": [
+      "wwwroot/css/custom.css"
+    ]
+  },
+  {
     "outputFileName": "wwwroot/bundles/vendor.min.js",
     "inputFiles": [
       "wwwroot/lib/vue/vue.min.js",
