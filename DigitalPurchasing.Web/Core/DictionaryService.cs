@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using DigitalPurchasing.Core.Interfaces;
-using DigitalPurchasing.Services;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DigitalPurchasing.Web.Core

@@ -7,13 +7,15 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         NomenclatureIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
         NomenclatureDetailsData GetDetailsData(Guid nomId, int page, int perPage, string sortField, bool sortAsc);
-        NomenclatureResult CreateOrUpdate(NomenclatureResult model);
-        NomenclatureResult GetById(Guid id);
-        bool Update(NomenclatureResult model);
+        NomenclatureVm CreateOrUpdate(NomenclatureVm model);
+        NomenclatureVm GetById(Guid id);
+        bool Update(NomenclatureVm model);
         NomenclatureAutocompleteResult Autocomplete(AutocompleteOptions options);
         BaseResult<NomenclatureAutocompleteResult.AutocompleteResultItem> AutocompleteSingle(Guid id);
         void Delete(Guid id);
         void AddAlternative(Guid nomenclatureId, Guid prItemId);
+        NomenclatureAlternativeVm GetAlternativeById(Guid id);
+        void UpdateAlternative(NomenclatureAlternativeVm model);
     }
 
     public class NomenclatureDetailsDataItem
@@ -72,7 +74,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public string CategoryFullName { get; set; }
     }
 
-    public class NomenclatureResult
+    public class NomenclatureVm
     {
         public Guid Id { get; set; }
         public string Code { get; set; }
@@ -97,6 +99,33 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid CategoryId { get; set; }
         public string CategoryName { get; set; }
         public string CategoryFullName { get; set; }
+    }
+
+    public class NomenclatureAlternativeVm
+    {
+        public Guid Id { get; set; }
+
+        public ClientType ClientType { get; set; }
+        public string ClientName { get; set; }
+
+        public string Code { get; set; }
+        public string Name { get; set; }
+
+        public Guid? BatchUomId { get; set; }
+        public UomVm BatchUom { get; set; }
+
+        public Guid? MassUomId { get; set; }
+        public UomVm MassUom { get; set; }
+
+        public decimal MassUomValue { get; set; }
+       
+        public Guid? ResourceUomId { get; set; }
+        public UomVm ResourceUom { get; set; }
+
+        public decimal ResourceUomValue { get; set; }
+
+        public Guid? ResourceBatchUomId { get; set; }
+        public UomVm ResourceBatchUom { get; set; }
     }
 
     public class NomenclatureIndexData : BaseDataResponse<NomenclatureIndexDataItem>

@@ -65,6 +65,12 @@
                   pagination-path=""
                   :css="css"
                   @@vuetable:pagination-data="onDetailsPaginationData">
+            <div slot="slot-actions" slot-scope="props">
+                <div class="btn-group" role="group" aria-label="...">
+                    <a class="btn btn-default" :href="props.rowData.editUrl"><i class="far fa-edit"></i></a>
+                    <button type="button" class="btn btn-default" @@click="deleteRow(props.rowData, props.rowIndex)"><i class="far fa-trash-alt"></i></button>
+                </div>
+            </div>
         </vuetable>
         <div>
             <vuetable-pagination-info ref="detailsPaginationInfo"
@@ -76,6 +82,13 @@
                                  @@vuetable-pagination:change-page="onDetailsChangePage">
             </vuetable-pagination>
         </div>
+        <modal v-model="modalDelete" title="Удаление">
+            <p>Вы уверены что хотите удалить "<b>{{modalData.name}}</b>"?<br />Это действие нельзя отменить.</p>
+            <div slot="footer">
+                <button v-on:click="deleteOk" class="btn btn-danger">Удалить</button>
+                <button v-on:click="deleteCancel" class="btn btn-default">Отмена</button>
+            </div>
+        </modal>
     </div>
 </template>
 
@@ -167,7 +180,12 @@
                                 field: 'name',
                                 direction: 'asc'
                             }
-                        ]
+                        ],
+                        modalDelete: false,
+                        modalData: {
+                            name: '',
+                            id: null
+                        }
                     };
                 },
                 methods: {
@@ -181,6 +199,23 @@
                         this.$refs.detailsPagination.setPaginationData(paginationData);
                         this.$refs.detailsPaginationInfo.setPaginationData(paginationData);
                     },
+                    deleteRow: function (rowData, rowIndex) {
+                        this.modalData.name = rowData.name;
+                        this.modalData.id = rowData.id;
+                        this.modalDelete = true;
+                    },
+                    deleteOk: function(id) {
+                        var $this = this;
+                        this.$http.post('@Url.Action("Delete")', { id: $this.modalData.id }).then(function(res) {
+                            $this.$refs.vuetableDetails.refresh();
+                            $this.modalDelete = false;
+                        }, function(res) {
+                            alert('Ошибка удаления');
+                        });
+                    },
+                    deleteCancel: function() {
+                        this.modalDelete = false;
+                    }
                 },
                 computed: {
                     getDetailsUrl: function () {

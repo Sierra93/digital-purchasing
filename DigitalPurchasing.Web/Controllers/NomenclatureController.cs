@@ -8,6 +8,7 @@ using DigitalPurchasing.ExcelReader;
 using DigitalPurchasing.Services;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
+using DigitalPurchasing.Web.ViewModels.Nomenclature;
 using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -42,12 +43,12 @@ namespace DigitalPurchasing.Web.Controllers
             var result = _nomenclatureService.GetData(request.Page, request.PerPage, request.SortField, request.SortAsc);
             var nextUrl = Url.Action("Data", "Nomenclature", request.NextPageRequest(), Request.Scheme);
             var prevUrl = Url.Action("Data", "Nomenclature", request.PrevPageRequest(), Request.Scheme);
-            var data = result.Data.Adapt<List<NomenclatureDataVm>>();
+            var data = result.Data.Adapt<List<NomenclatureIndexDataItemEdit>>();
             foreach (var d in data)
             {
                 d.EditUrl = Url.Action("Edit", new { id = d.Id });
             }
-            return Json(new VueTableResponse<NomenclatureDataVm, VueTableRequest>(data, request, result.Total, nextUrl, prevUrl));
+            return Json(new VueTableResponse<NomenclatureIndexDataItemEdit, VueTableRequest>(data, request, result.Total, nextUrl, prevUrl));
         }
 
         [HttpGet, Route("/nomenclature/datadetails/{id}")]
@@ -56,8 +57,12 @@ namespace DigitalPurchasing.Web.Controllers
             var result = _nomenclatureService.GetDetailsData(request.Id, request.Page, request.PerPage, request.SortField, request.SortAsc);
             var nextUrl = Url.Action("DataDetails", "Nomenclature", request.NextPageRequest(), Request.Scheme);
             var prevUrl = Url.Action("DataDetails", "Nomenclature", request.PrevPageRequest(), Request.Scheme);
-
-            return Json(new VueTableResponse<NomenclatureDetailsDataItem, VueTableRequestWithId>(result.Data, request, result.Total, nextUrl, prevUrl));
+            var data = result.Data.Adapt<List<NomenclatureDetailsDataItemEdit>>();
+            foreach (var d in data)
+            {
+                d.EditUrl = Url.Action("DetailsEdit", new { id = d.Id });
+            }
+            return Json(new VueTableResponse<NomenclatureDetailsDataItemEdit, VueTableRequestWithId>(data, request, result.Total, nextUrl, prevUrl));
         }
 
         [HttpGet]
@@ -79,7 +84,7 @@ namespace DigitalPurchasing.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                _nomenclatureService.CreateOrUpdate(vm.Adapt<NomenclatureResult>());
+                _nomenclatureService.CreateOrUpdate(vm.Adapt<NomenclatureVm>());
                 return RedirectToAction(nameof(Index));
             }
 
@@ -109,7 +114,7 @@ namespace DigitalPurchasing.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                _nomenclatureService.Update(vm.Adapt<NomenclatureResult>());
+                _nomenclatureService.Update(vm.Adapt<NomenclatureVm>());
                 return RedirectToAction(nameof(Index));
             }
 
@@ -117,6 +122,29 @@ namespace DigitalPurchasing.Web.Controllers
             vm.Categories = _dictionaryService.GetCategories();
 
             return View(nameof(Create), vm);
+        }
+
+        public IActionResult DetailsEdit(Guid id)
+        {
+            if (id == Guid.Empty) return NotFound();
+            var alt = _nomenclatureService.GetAlternativeById(id);
+            if (alt == null) return NotFound();
+            var vm = alt.Adapt<NomenclatureAlternativeEditVm>();
+            vm.BatchUoms = vm.ResourceBatchUoms = vm.MassUoms = vm.ResourceUoms = _dictionaryService.GetUoms().AddEmpty();
+            return View(vm);
+        }
+
+        [HttpPost]
+        public IActionResult DetailsEdit(NomenclatureAlternativeEditVm vm)
+        {
+            if (ModelState.IsValid)
+            {
+                _nomenclatureService.UpdateAlternative(vm.Adapt<NomenclatureAlternativeVm>());
+                return RedirectToAction(nameof(Index));
+            }
+
+            vm.BatchUoms = vm.ResourceBatchUoms = vm.MassUoms = vm.ResourceUoms = _dictionaryService.GetUoms().AddEmpty();
+            return View(vm);
         }
 
         [HttpPost]
@@ -190,7 +218,7 @@ namespace DigitalPurchasing.Web.Controllers
             foreach (var data in datas)
             {
                 var dataCategory = data.Category.Split('>', StringSplitOptions.RemoveEmptyEntries).Last();
-                _nomenclatureService.CreateOrUpdate(new NomenclatureResult
+                _nomenclatureService.CreateOrUpdate(new NomenclatureVm
                 {
                     Name = data.Name,
                     NameEng =  data.NameEng,

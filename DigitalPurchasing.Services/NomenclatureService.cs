@@ -66,7 +66,7 @@ namespace DigitalPurchasing.Services
             };
         }
 
-        public NomenclatureResult CreateOrUpdate(NomenclatureResult vm)
+        public NomenclatureVm CreateOrUpdate(NomenclatureVm vm)
         {
             var oldEntity = _db.Nomenclatures.FirstOrDefault(q => q.Name.Equals(vm.Name, StringComparison.InvariantCultureIgnoreCase));
             if (oldEntity != null)
@@ -79,28 +79,30 @@ namespace DigitalPurchasing.Services
                 oldEntity.ResourceUomValue = vm.ResourceUomValue;
                 oldEntity.MassUomValue = vm.MassUomValue;
                 _db.SaveChanges();
-                return oldEntity.Adapt<NomenclatureResult>();
+                return oldEntity.Adapt<NomenclatureVm>();
             }
 
             var entity = vm.Adapt<Nomenclature>();
             var entry = _db.Nomenclatures.Add(entity);
             _db.SaveChanges();
-            var result = entry.Entity.Adapt<NomenclatureResult>();
+            var result = entry.Entity.Adapt<NomenclatureVm>();
             return result;
         }
 
-        public NomenclatureResult GetById(Guid id)
+        public NomenclatureVm GetById(Guid id)
         {
             var entity = _db.Nomenclatures.Find(id);
-            var result = entity.Adapt<NomenclatureResult>();
+            var result = entity.Adapt<NomenclatureVm>();
             return result;
         }
 
-        public bool Update(NomenclatureResult model)
+        public bool Update(NomenclatureVm model)
         {
             var entity = _db.Nomenclatures.Find(model.Id);
             if (entity == null) return false;
 
+            entity.CategoryId = model.CategoryId;
+            entity.Code = model.Code;
             entity.Name = model.Name;
             entity.NameEng = model.NameEng;
 
@@ -188,6 +190,34 @@ namespace DigitalPurchasing.Services
                 pr.RawName,
                 pr.RawCode,
                 pr.RawUomMatchId);
+        }
+
+        public NomenclatureAlternativeVm GetAlternativeById(Guid id)
+        {
+            var entity = _db.NomenclatureAlternatives.Find(id);
+            var result = entity.Adapt<NomenclatureAlternativeVm>();
+            return result;
+        }
+
+        public void UpdateAlternative(NomenclatureAlternativeVm model)
+        {
+            var entity = _db.NomenclatureAlternatives.Find(model.Id);
+
+            entity.ClientName = model.ClientName;
+            entity.ClientType = model.ClientType;
+            entity.Name = model.Name;
+            entity.Code = model.Code;
+
+            entity.ResourceUomId = model.ResourceUomId;
+            entity.ResourceUomValue = model.ResourceUomValue;
+
+            entity.BatchUomId = model.BatchUomId;
+            entity.ResourceBatchUomId = model.ResourceBatchUomId;
+
+            entity.MassUomId = model.MassUomId;
+            entity.MassUomValue = model.MassUomValue;
+            
+            _db.SaveChanges();
         }
 
         private void AddAlternative(Guid nomenclatureId, string clientName, ClientType clientType, string name, string code, Guid? uom)
