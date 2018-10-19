@@ -24,6 +24,8 @@
     </vuetable>
     <div>
         <vuetable-pagination-info ref="paginationInfo"
+                                  info-template="Показано с {from} по {to} из {total}"
+                                  no-data-template="Нет данных"
                                   info-class="pull-left"
                                   :css="css.pagination">
         </vuetable-pagination-info>

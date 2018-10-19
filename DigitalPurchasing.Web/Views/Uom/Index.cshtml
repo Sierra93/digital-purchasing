@@ -14,6 +14,7 @@
               :fields="fields"
               :sort-order="sortOrder"
               pagination-path=""
+              no-data-template="Нет данных"
               :css="css"
               @@vuetable:pagination-data="onPaginationData">
         <div slot="slot-actions" slot-scope="props">
@@ -25,6 +26,8 @@
     </vuetable>
     <div>
         <vuetable-pagination-info ref="paginationInfo"
+                                  info-template="Показано с {from} по {to} из {total}"
+                                  no-data-template="Нет данных"
                                   info-class="pull-left"
                                   :css="css.pagination">
         </vuetable-pagination-info>
