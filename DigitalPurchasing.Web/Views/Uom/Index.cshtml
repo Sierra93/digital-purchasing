@@ -4,10 +4,10 @@
     ViewBag.Title = "Единицы измерения";
 }
 
-<h2>@ViewBag.Title
-    <a asp-action="Create" class="btn btn-default">Добавить</a>
-</h2>
-
+<h2 class="with-button">@ViewBag.Title</h2>
+<div class="btn-group">
+    <a asp-action="Create" class="btn btn-default">Создать</a>
+</div>
 <div id="app">
     <vuetable ref="vuetable"
               api-url="@Url.Action("Data")"
