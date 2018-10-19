@@ -15,8 +15,10 @@
               :sort-order="sortOrder"
               pagination-path=""
               no-data-template="Нет данных"
+              detail-row-component="row-details"
               :css="css"
-              @@vuetable:pagination-data="onPaginationData">
+              @@vuetable:pagination-data="onPaginationData"
+              @@vuetable:cell-clicked="onCellClicked">
         <div slot="slot-actions" slot-scope="props">
             <div class="btn-group" role="group" aria-label="..." v-if="!props.rowData.isSystem">
                 <a class="btn btn-default" :href="props.rowData.editUrl"><i class="far fa-edit"></i></a>
@@ -45,10 +47,128 @@
     </modal>
 </div>
 
+<template id="row-details">
+    <div>
+        <vuetable ref="vuetableDetails"
+                  :api-url="getDetailsUrl"
+                  :fields="fields"
+                  :sort-order="sortOrder"
+                  pagination-path=""
+                  :css="css"
+                  @@vuetable:pagination-data="onDetailsPaginationData"
+                  no-data-template="Нет данных">
+            <div slot="slot-actions" slot-scope="props">
+                <div class="btn-group" role="group" aria-label="...">
+                    
+                    <button type="button" class="btn btn-default" @@click="deleteRow(props.rowData, props.rowIndex)"><i class="far fa-trash-alt"></i></button>
+                </div>
+            </div>
+        </vuetable>
+        <div>
+            <vuetable-pagination-info ref="detailsPaginationInfo"
+                                      info-template="Показано с {from} по {to} из {total}"
+                                      no-data-template="Нет данных"
+                                      info-class="pull-left"
+                                      :css="css.pagination">
+            </vuetable-pagination-info>
+            <vuetable-pagination ref="detailsPagination"
+                                 :css="css.pagination"
+                                 @@vuetable-pagination:change-page="onDetailsChangePage">
+            </vuetable-pagination>
+        </div>
+        <modal v-model="modalDelete" title="Удаление">
+            <p>Вы уверены что хотите удалить "<b>{{modalData.name}}</b>"?<br />Это действие нельзя отменить.</p>
+            <div slot="footer">
+                <button v-on:click="deleteOk" class="btn btn-danger">Удалить</button>
+                <button v-on:click="deleteCancel" class="btn btn-default">Отмена</button>
+            </div>
+        </modal>
+    </div>
+</template>
+
 @section Scripts {
     <script>
         (function () {
             Vue.use(Vuetable);
+
+            Vue.component('row-details', {
+                props: {
+                    rowData: {
+                        type: Object,
+                        required: true
+                    },
+                    rowIndex: {
+                        type: Number
+                    }
+                },
+                template: '#row-details',
+                data: function() {
+                    return {
+                        css: cssTable,
+                        fields: [
+                            {
+                                title: 'ЕИ',
+                                name: 'uom',
+                                sortField: 'Uom'
+                            },
+                            {
+                                name: 'factor',
+                                title: 'Коэффицент'
+                            },
+                            {
+                                title: 'Номенклатура',
+                                name: 'nomenclature',
+                                sortField: 'Nomenclature'
+                            },
+                            {
+                                name: 'slot-actions',
+                                title: 'Действия',
+                                titleClass: 'text-center',
+                                dataClass: 'text-center'
+                            }
+                        ],
+                        sortOrder: [{ field: 'Uom', direction: 'asc'}],
+                        modalDelete: false,
+                        modalData: {
+                            name: '',
+                            id: null
+                        }
+                    };
+                },
+                methods: {
+                    onDetailsChangePage: function (page) {
+                        this.$refs.vuetableDetails.changePage(page);
+                    },
+                    onDetailsPaginationData: function (paginationData) {
+                        this.$refs.detailsPagination.setPaginationData(paginationData);
+                        this.$refs.detailsPaginationInfo.setPaginationData(paginationData);
+                    },
+                    deleteRow: function (rowData, rowIndex) {
+                        this.modalData.name = rowData.name;
+                        this.modalData.id = rowData.id;
+                        this.modalDelete = true;
+                    },
+                    deleteOk: function(id) {
+                        var $this = this;
+                        this.$http.post('@Url.Action("Delete")', { id: $this.modalData.id }).then(function(res) {
+                            $this.$refs.vuetableDetails.refresh();
+                            $this.modalDelete = false;
+                        }, function(res) {
+                            alert('Ошибка удаления');
+                        });
+                    },
+                    deleteCancel: function() {
+                        this.modalDelete = false;
+                    }
+                },
+                computed: {
+                    getDetailsUrl: function () {
+                        console.info('rowData', this.rowData);
+                        var id = this.rowData.id;
+                        return '@Url.Action("FactorData")/'+id;
+                    }
+                },
+            });
 
             window.app = new Vue({
                 el: '#app',
@@ -77,6 +197,9 @@
                     };
                 },
                 methods: {
+                    onCellClicked: function (dataItem, field, event) {
+                        this.$refs.vuetable.toggleDetailRow(dataItem.data.id);
+                    },
                     onPaginationData: function(paginationData) {
                         this.$refs.pagination.setPaginationData(paginationData);
                         this.$refs.paginationInfo.setPaginationData(paginationData);

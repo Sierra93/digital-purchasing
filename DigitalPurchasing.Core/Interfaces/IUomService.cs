@@ -6,6 +6,7 @@ namespace DigitalPurchasing.Core.Interfaces
     public interface IUomService
     {
         UomIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
+        UomFactorData GetFactorData(Guid uomId, int page, int perPage, string sortField, bool sortAsc);
         UomResult CreateOrUpdate(string name);
         IEnumerable<UomResult> GetAll();
         UomConversionRateResponse GetConversionRate(Guid fromUomId, Guid nomenclatureId);
@@ -23,17 +24,29 @@ namespace DigitalPurchasing.Core.Interfaces
         public string Name { get; set; }
     }
 
-    public class UomIndexDataItem
-    {
-        public Guid Id { get; set; }
-        public string Name { get; set; }
-    }
-
     public class UomVm
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
         public Guid OwnerId { get; set; }
+    }
+
+    public class UomFactorDataItem
+    {
+        public Guid Id { get; set; }
+        public string Uom { get; set; }
+        public decimal Factor { get; set; }
+        public string Nomenclature { get; set; }
+    }
+
+    public class UomFactorData : BaseDataResponse<UomFactorDataItem>
+    {
+    }
+
+    public class UomIndexDataItem
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
     }
 
     public class UomIndexData : BaseDataResponse<UomIndexDataItem>

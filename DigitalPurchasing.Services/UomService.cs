@@ -35,6 +35,31 @@ namespace DigitalPurchasing.Services
             };
         }
 
+        public UomFactorData GetFactorData(Guid uomId, int page, int perPage, string sortField, bool sortAsc)
+        {
+            var qry = _db.UomConversionRates
+                .Include(q => q.Nomenclature)
+                .Include(q => q.ToUom)
+                .Include(q => q.FromUom)
+                .Where(q => q.ToUomId == uomId || q.FromUomId == uomId);
+
+            var total = qry.Count();
+            var orderedResults = qry.OrderBy(q => q.Id);
+            var entities = orderedResults.Skip((page-1)*perPage).Take(perPage).ToList();
+            var result = entities.Select(q => new UomFactorDataItem
+            {
+                Id = q.Id,
+                Factor = q.FromUomId == uomId ? q.Factor : 1m / q.Factor,
+                Nomenclature = q.Nomenclature?.Name,
+                Uom = q.FromUomId == uomId ? q.ToUom.Name : q.FromUom.Name
+            }).ToList();
+            return new UomFactorData
+            {
+                Total = total,
+                Data = result
+            };
+        }
+
         public UomResult CreateOrUpdate(string name)
         {
             var entity =

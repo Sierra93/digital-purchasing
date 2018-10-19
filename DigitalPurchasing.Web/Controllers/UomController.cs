@@ -35,6 +35,15 @@ namespace DigitalPurchasing.Web.Controllers
             return Json(new VueTableResponse<UomIndexDataItemEdit, VueTableRequest>(data, request, result.Total, nextUrl, prevUrl));
         }
 
+        [HttpGet, Route("/uom/factordata/{id}")]
+        public IActionResult FactorData(VueTableRequestWithId request)
+        {
+            var result = _uomService.GetFactorData(request.Id, request.Page, request.PerPage, request.SortField, request.SortAsc);
+            var nextUrl = Url.Action("Data", "Uom", request.NextPageRequest(), Request.Scheme);
+            var prevUrl = Url.Action("Data", "Uom", request.PrevPageRequest(), Request.Scheme);
+            return Json(new VueTableResponse<UomFactorDataItem, VueTableRequestWithId>(result.Data, request, result.Total, nextUrl, prevUrl));
+        }
+
         public IActionResult Create() => View(new UomCreateVm());
 
         [HttpPost]
