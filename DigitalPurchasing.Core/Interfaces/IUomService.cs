@@ -21,21 +21,19 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
-        public bool IsSystem { get; set; }
     }
 
     public class UomIndexDataItem
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
-        public bool IsSystem { get; set; }
     }
 
     public class UomVm
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
-        public Guid? OwnerId { get; set; }
+        public Guid OwnerId { get; set; }
     }
 
     public class UomIndexData : BaseDataResponse<UomIndexDataItem>

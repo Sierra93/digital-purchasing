@@ -136,7 +136,7 @@ namespace DigitalPurchasing.Services
         public void Delete(Guid id)
         {
             var entity = _db.UnitsOfMeasurements.Find(id);
-            if (entity == null || entity.OwnerId == null) return;
+            if (entity == null) return;
             entity.IsDeleted = true;
             _db.SaveChanges();
         }
@@ -146,23 +146,9 @@ namespace DigitalPurchasing.Services
         public UomVm Update(Guid id, string name)
         {
             var entity = _db.UnitsOfMeasurements.Find(id);
-            if (entity.OwnerId == null)
-            {
-                return null;
-            }
-
             entity.Name = name.Trim();
             _db.SaveChanges();
             return entity.Adapt<UomVm>();
-        }
-    }
-
-    public class UnitsOfMeasurementMappings : IRegister
-    {
-        public void Register(TypeAdapterConfig config)
-        {
-            config.NewConfig<UnitsOfMeasurement, UomResult>().Map(d => d.IsSystem, s => !s.OwnerId.HasValue);
-            config.NewConfig<UnitsOfMeasurement, UomIndexDataItem>().Map(d => d.IsSystem, s => !s.OwnerId.HasValue);
         }
     }
 }

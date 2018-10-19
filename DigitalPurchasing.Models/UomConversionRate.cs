@@ -4,9 +4,9 @@ using DigitalPurchasing.Core.Interfaces;
 
 namespace DigitalPurchasing.Models
 {
-    public class UomConversionRate : BaseModel, IMayHaveOwner
+    public class UomConversionRate : BaseModel, IHaveOwner
     {
-        public Guid? OwnerId { get; set; } // null = common/system
+        public Guid OwnerId { get; set; }
         public Company Owner { get; set; }
 
         // 1 From UoM = {factor} To UoM

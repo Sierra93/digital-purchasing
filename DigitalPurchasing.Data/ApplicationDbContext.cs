@@ -70,7 +70,7 @@ namespace DigitalPurchasing.Data
             builder.Entity<Delivery>().HasMany(q => q.PurchaseRequests).WithOne(q => q.Delivery).HasForeignKey(q => q.DeliveryId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<Delivery>().HasMany(q => q.QuotationRequests).WithOne(q => q.Delivery).HasForeignKey(q => q.DeliveryId).OnDelete(DeleteBehavior.Restrict);
 
-            // default filters to show company or common data
+            // default filters to show company data
             builder.Entity<PurchaseRequest>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<QuotationRequest>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<Delivery>().HasQueryFilter(o => o.OwnerId == CompanyId);
@@ -80,28 +80,8 @@ namespace DigitalPurchasing.Data
             builder.Entity<NomenclatureAlternative>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<NomenclatureCategory>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<ColumnName>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<UnitsOfMeasurement>().HasQueryFilter(o => o.OwnerId == CompanyId || o.OwnerId == null);
-            builder.Entity<UomConversionRate>().HasQueryFilter(o => o.OwnerId == CompanyId || o.OwnerId == null);
-
-            var createdOn = new DateTime(2018, 09, 27, 0, 0, 0, DateTimeKind.Utc);
-
-            builder.Entity<UnitsOfMeasurement>().HasData(
-                new UnitsOfMeasurement { Id = new Guid("0a45a476e69f4ebbbb540ae92c88e64b"), OwnerId = null, Name = "шт", CreatedOn = createdOn },
-                new UnitsOfMeasurement { Id = new Guid("5d8949a33c3d44c0b22ee9ec1881faf0"), OwnerId = null, Name = "тыс шт", CreatedOn = createdOn },
-                new UnitsOfMeasurement { Id = new Guid("e6fe6c76ef6841ddbe4a07f46f274334"), OwnerId = null, Name = "кг", CreatedOn = createdOn }
-            );
-
-            builder.Entity<UomConversionRate>().HasData(
-                new UomConversionRate
-                {
-                    Id = new Guid("f57c690afbb147e29ab01472a514d88f"),
-                    OwnerId = null,
-                    FromUomId = new Guid("5d8949a33c3d44c0b22ee9ec1881faf0"),
-                    Factor = 1000,
-                    ToUomId = new Guid("0a45a476e69f4ebbbb540ae92c88e64b"),
-                    CreatedOn = createdOn
-                }
-            );
+            builder.Entity<UnitsOfMeasurement>().HasQueryFilter(o => o.OwnerId == CompanyId);
+            builder.Entity<UomConversionRate>().HasQueryFilter(o => o.OwnerId == CompanyId);
         }
 
         public override int SaveChanges()
@@ -111,11 +91,6 @@ namespace DigitalPurchasing.Data
             var addedEntities = ChangeTracker.Entries().Where(c => c.State == EntityState.Added).Select(q => q.Entity).ToList();
 
             foreach (var entity in addedEntities.OfType<IHaveOwner>())
-            {
-                entity.OwnerId = companyId;
-            }
-
-            foreach (var entity in addedEntities.OfType<IMayHaveOwner>())
             {
                 entity.OwnerId = companyId;
             }

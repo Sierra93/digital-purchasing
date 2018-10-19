@@ -4,11 +4,11 @@ using DigitalPurchasing.Core.Interfaces;
 
 namespace DigitalPurchasing.Models
 {
-    public class UnitsOfMeasurement : BaseModel, IMayHaveOwner
+    public class UnitsOfMeasurement : BaseModel, IHaveOwner
     {
         public string Name { get; set; }
 
-        public Guid? OwnerId { get; set; } // null = common/system
+        public Guid OwnerId { get; set; }
         public Company Owner { get; set; }
 
         public ICollection<Nomenclature> BatchNomenclatures { get; set; }
