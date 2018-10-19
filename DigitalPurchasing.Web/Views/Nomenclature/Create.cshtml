@@ -1,12 +1,16 @@
 @model NomenclatureCreateVm
 
 @{
-    ViewData["Title"] = "Create";
-    Layout = "~/Views/Shared/_Layout.cshtml";
     var isEdit = Model.Id != Guid.Empty;
+    ViewData["Title"] = $"{(isEdit ? "Редактирование" : "Создание")} номенклатуры";
+    if (isEdit)
+    {
+        ViewData["Title"] += $" \"{Model.Name}\"";
+    }
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>@(isEdit?"Edit":"Create") nomenclature</h2>
+<h2>@ViewData["Title"]</h2>
 <hr />
 <div class="row">
     <div class="col-md-4">
@@ -63,14 +67,11 @@
                 <select asp-for="CategoryId" class="form-control" asp-items="Model.Categories"></select>
             </div>
             <div class="form-group">
-                <input type="submit" value="@(isEdit?"Save":"Create")" class="btn btn-default" />
+                <input type="submit" class="btn btn-primary" value="@($"{(isEdit?"Сохранить":"Создать")}")" />
+                <a asp-action="Index" class="btn btn-default">Отмена</a>
             </div>
         </form>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>
 
 @section Scripts {

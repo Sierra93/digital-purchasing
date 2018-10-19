@@ -17,15 +17,13 @@
 </div>
 
 <div id="app">
-
-
-
     <vuetable ref="vuetable"
               api-url="@Url.Action("Data")"
               :fields="fields"
               :sort-order="sortOrder"
               pagination-path=""
               detail-row-component="row-details"
+              no-data-template="Нет данных"
               :css="css"
               @@vuetable:pagination-data="onPaginationData"
               @@vuetable:cell-clicked="onCellClicked">
@@ -64,7 +62,8 @@
                   :sort-order="sortOrder"
                   pagination-path=""
                   :css="css"
-                  @@vuetable:pagination-data="onDetailsPaginationData">
+                  @@vuetable:pagination-data="onDetailsPaginationData"
+                  no-data-template="Нет данных">
             <div slot="slot-actions" slot-scope="props">
                 <div class="btn-group" role="group" aria-label="...">
                     <a class="btn btn-default" :href="props.rowData.editUrl"><i class="far fa-edit"></i></a>
