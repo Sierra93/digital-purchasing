@@ -2,7 +2,7 @@
   {
     "outputFileName": "wwwroot/bundles/custom.min.css",
     "inputFiles": [
-      "wwwroot/css/custom.css"
+      "wwwroot/css/site.css"
     ]
   },
   {
