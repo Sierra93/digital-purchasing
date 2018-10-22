@@ -12,10 +12,11 @@ namespace DigitalPurchasing.Core.Interfaces
         UomConversionRateResponse GetConversionRate(Guid fromUomId, Guid nomenclatureId);
         UomAutocompleteResponse Autocomplete(string s);
         BaseResult<UomAutocompleteResponse.AutocompleteItem> AutocompleteSingle(Guid id);
-        void SaveConversionRate(Guid fromUomId, Guid toUomId, Guid nomenclatureId, decimal factorC, decimal factorN);
+        void SaveConversionRate(Guid fromUomId, Guid toUomId, Guid? nomenclatureId, decimal factorC, decimal factorN);
         void Delete(Guid id);
         UomVm GetById(Guid id);
         UomVm Update(Guid id, string name);
+        void DeleteConversionRate(Guid id);
     }
 
     public class UomResult
@@ -37,6 +38,9 @@ namespace DigitalPurchasing.Core.Interfaces
         public string Uom { get; set; }
         public decimal Factor { get; set; }
         public string Nomenclature { get; set; }
+        public Guid FromId { get; set; }
+        public Guid ToId { get; set; }
+        public Guid? NomenclatureId { get; set; }
     }
 
     public class UomFactorData : BaseDataResponse<UomFactorDataItem>

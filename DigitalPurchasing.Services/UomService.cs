@@ -46,13 +46,18 @@ namespace DigitalPurchasing.Services
             var total = qry.Count();
             var orderedResults = qry.OrderBy(q => q.Id);
             var entities = orderedResults.Skip((page-1)*perPage).Take(perPage).ToList();
+
             var result = entities.Select(q => new UomFactorDataItem
             {
                 Id = q.Id,
                 Factor = q.FromUomId == uomId ? q.Factor : 1m / q.Factor,
                 Nomenclature = q.Nomenclature?.Name,
-                Uom = q.FromUomId == uomId ? q.ToUom.Name : q.FromUom.Name
+                Uom = q.FromUomId == uomId ? q.ToUom.Name : q.FromUom.Name,
+                FromId = q.FromUomId == uomId ? q.FromUomId : q.ToUomId,
+                ToId = q.FromUomId == uomId ? q.ToUomId : q.FromUomId,
+                NomenclatureId = q.NomenclatureId
             }).ToList();
+
             return new UomFactorData
             {
                 Total = total,
@@ -131,7 +136,7 @@ namespace DigitalPurchasing.Services
             return new BaseResult<UomAutocompleteResponse.AutocompleteItem>(data);
         }
 
-        public void SaveConversionRate(Guid fromUomId, Guid toUomId, Guid nomenclatureId, decimal factorC, decimal factorN)
+        public void SaveConversionRate(Guid fromUomId, Guid toUomId, Guid? nomenclatureId, decimal factorC, decimal factorN)
         {
             var rateQry = _db.UomConversionRates.Where(q =>
                 (q.FromUomId == fromUomId && q.ToUomId == toUomId) || (q.FromUomId == toUomId && q.ToUomId == fromUomId));
@@ -142,7 +147,7 @@ namespace DigitalPurchasing.Services
                 var newRate = new UomConversionRate { FromUomId = fromUomId, ToUomId = toUomId };
                 if (factorC > 0)
                 {
-                    newRate.Factor = factorC;
+                    newRate.Factor = rate.FromUomId == fromUomId ? factorC : 1m/factorC;
                 }
                 else
                 {
@@ -153,7 +158,8 @@ namespace DigitalPurchasing.Services
             }
             else
             {
-                rate.Factor = factorC;
+                var factor = nomenclatureId.HasValue && nomenclatureId.Value != Guid.Empty ? factorN : factorC;
+                rate.Factor = rate.FromUomId == fromUomId ? factor : 1m/factor;
             }
             _db.SaveChanges();
         }
@@ -174,6 +180,12 @@ namespace DigitalPurchasing.Services
             entity.Name = name.Trim();
             _db.SaveChanges();
             return entity.Adapt<UomVm>();
+        }
+
+        public void DeleteConversionRate(Guid id)
+        {
+            _db.Remove(_db.UomConversionRates.Find(id));
+            _db.SaveChanges();
         }
     }
 }

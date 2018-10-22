@@ -89,7 +89,21 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult AutocompleteSingle([FromQuery] Guid id) => Json(_uomService.AutocompleteSingle(id));
 
         [HttpPost]
-        public IActionResult Factor([FromBody]UomFactorVm m) => Json(_uomService.GetConversionRate(m.FromId, m.NomenclatureId));
+        public IActionResult Factor([FromBody]UomFactorVm vm) => Json(_uomService.GetConversionRate(vm.FromId, vm.NomenclatureId));
+
+        [HttpPost]
+        public IActionResult SaveFactor([FromBody]UomSaveFactorVm vm)
+        {
+            _uomService.SaveConversionRate(vm.FromUomId, vm.ToUomId, vm.NomenclatureId ?? Guid.Empty, vm.FactorC, vm.FactorN);
+            return Ok();
+        }
+
+        [HttpPost]
+        public IActionResult DeleteFactor([FromBody] UomDeleteFactorVm vm)
+        {
+            _uomService.DeleteConversionRate(vm.Id);
+            return Ok();
+        }
 
         [HttpPost]
         public IActionResult Delete([FromBody]DeleteVm vm)

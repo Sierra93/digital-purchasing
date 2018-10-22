@@ -57,9 +57,11 @@
                   :css="css"
                   @@vuetable:pagination-data="onDetailsPaginationData"
                   no-data-template="Нет данных">
+            <div slot="slot-factor" slot-scope="props">
+                <input type="number" v-model.number="props.rowData.factor" v-on:change="factorChange($event, props.rowData)" class="form-control" />
+            </div>
             <div slot="slot-actions" slot-scope="props">
                 <div class="btn-group" role="group" aria-label="...">
-                    
                     <button type="button" class="btn btn-default" @@click="deleteRow(props.rowData, props.rowIndex)"><i class="far fa-trash-alt"></i></button>
                 </div>
             </div>
@@ -77,7 +79,7 @@
             </vuetable-pagination>
         </div>
         <modal v-model="modalDelete" title="Удаление">
-            <p>Вы уверены что хотите удалить "<b>{{modalData.name}}</b>"?<br />Это действие нельзя отменить.</p>
+            <p>Вы уверены что хотите удалить?<br />Это действие нельзя отменить.</p>
             <div slot="footer">
                 <button v-on:click="deleteOk" class="btn btn-danger">Удалить</button>
                 <button v-on:click="deleteCancel" class="btn btn-default">Отмена</button>
@@ -112,7 +114,8 @@
                                 sortField: 'Uom'
                             },
                             {
-                                name: 'factor',
+                                name: 'slot-factor',
+                                //name: 'factor',
                                 title: 'Коэффицент'
                             },
                             {
@@ -150,7 +153,7 @@
                     },
                     deleteOk: function(id) {
                         var $this = this;
-                        this.$http.post('@Url.Action("Delete")', { id: $this.modalData.id }).then(function(res) {
+                        this.$http.post('@Url.Action("DeleteFactor")', { id: $this.modalData.id }).then(function(res) {
                             $this.$refs.vuetableDetails.refresh();
                             $this.modalDelete = false;
                         }, function(res) {
@@ -159,11 +162,21 @@
                     },
                     deleteCancel: function() {
                         this.modalDelete = false;
+                    },
+                    factorChange: function (event, data) {
+                        var postData =  {
+                            fromId: data.fromId,
+                            toId: data.toId,
+                            factorN: data.nomenclatureId ? data.factor : 0,
+                            factorC: !data.nomenclatureId ? data.factor : 0,
+                            nomenclatureId: data.nomenclatureId
+                        }
+                        this.$http.post('@Url.Action("SaveFactor")', postData).then(function(res) {});
+                        console.info(postData);
                     }
                 },
                 computed: {
                     getDetailsUrl: function () {
-                        console.info('rowData', this.rowData);
                         var id = this.rowData.id;
                         return '@Url.Action("FactorData")/'+id;
                     }
