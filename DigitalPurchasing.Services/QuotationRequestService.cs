@@ -108,7 +108,9 @@ namespace DigitalPurchasing.Services
 
             foreach (var dataItem in data.Items)
             {
-                result.AddCompanyItem(dataItem.NomenclatureName, dataItem.NomenclatureCode, dataItem.NomenclatureUom, dataItem.RawQty.ToString(CultureInfo.InvariantCulture));
+                var factor = dataItem.CommonFactor > 0 ? dataItem.CommonFactor : dataItem.NomenclatureFactor;
+                var companyQty = dataItem.RawQty * factor;
+                result.AddCompanyItem(dataItem.NomenclatureName, dataItem.NomenclatureCode, dataItem.NomenclatureUom, companyQty.ToString(CultureInfo.InvariantCulture));
                 result.AddCustomerItem(dataItem.RawName, dataItem.RawCode, dataItem.RawUom, dataItem.RawQty.ToString(CultureInfo.InvariantCulture));
             }
 
