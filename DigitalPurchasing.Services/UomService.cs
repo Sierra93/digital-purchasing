@@ -86,6 +86,11 @@ namespace DigitalPurchasing.Services
         public UomConversionRateResponse GetConversionRate(Guid fromUomId, Guid nomenclatureId)
         {
             var toUomId = _db.Nomenclatures.First(q => q.Id == nomenclatureId).BatchUomId;
+            if (fromUomId == toUomId)
+            {
+                return new UomConversionRateResponse { CommonFactor = 1, NomenclatureFactor = 0 };
+            }
+
             var conversionRates = _db.UomConversionRates.AsNoTracking()
                 .Where(q =>
                     ( q.FromUomId == fromUomId && q.ToUomId == toUomId ) ||
@@ -138,6 +143,8 @@ namespace DigitalPurchasing.Services
 
         public void SaveConversionRate(Guid fromUomId, Guid toUomId, Guid? nomenclatureId, decimal factorC, decimal factorN)
         {
+            if (fromUomId == toUomId) return; // don't store in database, fator = 1
+
             var rateQry = _db.UomConversionRates.Where(q =>
                 (q.FromUomId == fromUomId && q.ToUomId == toUomId) || (q.FromUomId == toUomId && q.ToUomId == fromUomId));
 
@@ -145,14 +152,14 @@ namespace DigitalPurchasing.Services
             if (rate == null)
             {
                 var newRate = new UomConversionRate { FromUomId = fromUomId, ToUomId = toUomId };
-                if (factorC > 0)
-                {
-                    newRate.Factor = rate.FromUomId == fromUomId ? factorC : 1m/factorC;
-                }
-                else
+                if (nomenclatureId.HasValue && nomenclatureId.Value != Guid.Empty)
                 {
                     newRate.Factor = factorN;
                     newRate.NomenclatureId = nomenclatureId;
+                }
+                else
+                {
+                    newRate.Factor = factorC;
                 }
                 _db.UomConversionRates.Add(newRate);
             }

@@ -236,7 +236,7 @@
                         return this.getRowIndex0(item) + 1;
                     },
                     isMatched: function(item) {
-                        return item.nomenclatureId && item.rawUomMatchId;
+                        return item.nomenclatureId && item.rawUomMatchId && (item.nomenclatureFactor > 0 || item.commonFactor > 0);
                     },
                     openMatch: function (item) {
                         this.currentItem = item;

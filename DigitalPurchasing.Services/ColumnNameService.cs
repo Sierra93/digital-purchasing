@@ -32,7 +32,7 @@ namespace DigitalPurchasing.Services
         public void SaveName(TableColumnType type, string name)
         {
             if (string.IsNullOrEmpty(name)) return;
-            
+            name = name.Trim();
             var defaultName = DefaultName(type);
             var entity = _db.ColumnNames.AsQueryable().FirstOrDefault(q => q.Type == type);
             if (entity == null)
