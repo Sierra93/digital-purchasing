@@ -37,7 +37,7 @@
                     <tr v-for="item in selectedItems">
                         <td>{{item.code}}</td>
                         <td>{{item.name}}</td>
-                        <td>{{item.qty}}</td>
+                        <td>{{item.qty | decimal}}</td>
                         <td>{{item.uom}}</td>
                     </tr>
                 </tbody>
@@ -80,6 +80,11 @@
                     //},
                     selectedItems: function() {
                         return this.items[this.selectedCompany];
+                    }
+                },
+                filters: {
+                    decimal: function (value) {
+                        return parseFloat(value).toFixed(4);
                     }
                 },
                 methods: {
