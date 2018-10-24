@@ -25,6 +25,7 @@ namespace DigitalPurchasing.Data
         public DbSet<PurchaseRequest> PurchaseRequests { get; set; }
         public DbSet<PurchaseRequestItem> PurchaseRequestItems { get; set; }
         public DbSet<QuotationRequest> QuotationRequests { get; set; }
+        public DbSet<CompetitionList> CompetitionLists { get; set; }
         public DbSet<PRCounter> PRCounters { get; set; }
         public DbSet<QRCounter> QRCounters { get; set; }
         public DbSet<ColumnName> ColumnNames { get; set; }
@@ -74,6 +75,7 @@ namespace DigitalPurchasing.Data
             // default filters to show company data
             builder.Entity<PurchaseRequest>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<QuotationRequest>().HasQueryFilter(o => o.OwnerId == CompanyId);
+            builder.Entity<CompetitionList>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<Delivery>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<PRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<QRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);

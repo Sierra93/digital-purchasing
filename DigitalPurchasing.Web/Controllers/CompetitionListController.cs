@@ -1,8 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using DigitalPurchasing.Core.Interfaces;
+using DigitalPurchasing.Web.Core;
+using DigitalPurchasing.Web.ViewModels.CompetitionList;
+using Mapster;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalPurchasing.Web.Controllers
@@ -13,10 +14,22 @@ namespace DigitalPurchasing.Web.Controllers
 
         public CompetitionListController(ICompetitionListService competitionListService) => _competitionListService = competitionListService;
 
-        public IActionResult Index()
+        public IActionResult Index() => View();
+
+        [HttpGet]
+        public IActionResult IndexData(VueTableRequest request)
         {
-            var vm = 1;
-            return View();
+            var nextUrl = Url.Action("IndexData", "CompetitionList", request.NextPageRequest(), Request.Scheme);
+            var prevUrl = Url.Action("IndexData", "CompetitionList", request.PrevPageRequest(), Request.Scheme);
+
+            var result = _competitionListService.GetData(request.Page, request.PerPage, request.SortField, request.SortAsc);
+
+            var data = result.Data
+                .Adapt<List<CompetitionListIndexDataItemVm>>()
+                .Select(q => { q.EditUrl = Url.Action(nameof(View), new { id = q.Id }); return q; })
+                .ToList();
+
+            return Json(new VueTableResponse<CompetitionListIndexDataItemVm, VueTableRequest>(data, request, result.Total, nextUrl, prevUrl));
         }
     }
 }
