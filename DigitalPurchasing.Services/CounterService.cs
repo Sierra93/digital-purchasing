@@ -3,6 +3,7 @@ using System.Linq;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
+using DigitalPurchasing.Models.Counters;
 using Microsoft.EntityFrameworkCore;
 
 namespace DigitalPurchasing.Services
@@ -71,5 +72,7 @@ namespace DigitalPurchasing.Services
         public int GetQRNextId() => GetNextId<QRCounter>();
 
         public int GetPRNextId() => GetNextId<PRCounter>();
+
+        public int GetCLNextId() => GetNextId<CLCounter>();
     }
 }

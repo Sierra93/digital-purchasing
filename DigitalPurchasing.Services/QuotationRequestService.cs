@@ -18,7 +18,8 @@ namespace DigitalPurchasing.Services
         private readonly IPurchaseRequestService _purchaseRequestService;
         private readonly IDeliveryService _deliveryService;
 
-        public QuotationRequestService(ApplicationDbContext db,
+        public QuotationRequestService(
+            ApplicationDbContext db,
             ICounterService counterService,
             IPurchaseRequestService purchaseRequestService,
             IDeliveryService deliveryService)

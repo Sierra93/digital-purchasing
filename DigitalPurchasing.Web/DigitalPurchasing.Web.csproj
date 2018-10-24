@@ -25,6 +25,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Update="Views\CompetitionList\Index.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
     <Content Update="Views\NomenclatureCategory\Edit.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>

@@ -3,6 +3,7 @@ using System.Linq;
 using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Models;
+using DigitalPurchasing.Models.Counters;
 using DigitalPurchasing.Models.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;

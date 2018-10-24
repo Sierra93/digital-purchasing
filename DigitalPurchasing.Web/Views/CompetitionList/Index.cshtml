@@ -1,19 +1,12 @@
 @model object
 @{
-    ViewData["Title"] = "Заявки на закупку от клиентов";
+    ViewData["Title"] = "Конкурентные листы";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<partial name="_AlertDanger" for="@TempData["Message"]" />
+<partial name="_AlertDanger" for="@TempData["Message"]"/>
 
-<h2 class="with-button">Заявки на закупку от клиентов</h2>
-<div class="btn-group">
-    <form method="post" enctype="multipart/form-data" asp-action="Upload" asp-controller="PurchaseRequest" style="display: inline-block">
-        <label class="btn btn-default btn-file">
-            Загрузить заявку <input type="file" style="display: none;" name="file">
-        </label>
-    </form>
-</div>
+<h2 class="with-button">@ViewData["Title"]</h2>
 
 <div id="app">
     <vuetable ref="vuetable"
@@ -70,7 +63,7 @@
                                 sortField: 'CustomerName'
                             },
                             {
-                                title: 'Дата заявки',
+                                title: 'Дата создания',
                                 name: 'createdOn',
                                 sortField: 'CreatedOn',
                                 formatter: this.formatDate

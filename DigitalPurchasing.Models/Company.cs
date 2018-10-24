@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DigitalPurchasing.Models.Counters;
 using DigitalPurchasing.Models.Identity;
 
 namespace DigitalPurchasing.Models

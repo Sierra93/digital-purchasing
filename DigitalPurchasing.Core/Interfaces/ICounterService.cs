@@ -4,5 +4,6 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         int GetQRNextId();
         int GetPRNextId();
+        int GetCLNextId();
     }
 }

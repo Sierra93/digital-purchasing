@@ -1,14 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace DigitalPurchasing.Models
+namespace DigitalPurchasing.Models.Counters
 {
     public abstract class Counter : BaseModelWithOwner
     {
         [ConcurrencyCheck]
         public int CurrentId { get; set; }
-    }
-
-    public class QRCounter : Counter
-    {
     }
 }
