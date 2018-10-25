@@ -42,7 +42,9 @@ namespace DigitalPurchasing.Web.Controllers
 
         public IActionResult Edit(Guid id)
         {
-            return NotFound();
+            var vm = _competitionListService.GetById(id);
+            if (vm == null) return NotFound();
+            return View(vm);
         }
     }
 }

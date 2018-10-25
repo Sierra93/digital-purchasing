@@ -65,5 +65,11 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
             return entry.Entity.Id;
         }
+
+        public CompetitionListVm GetById(Guid id)
+        {
+            var entity = _db.CompetitionLists.Find(id);
+            return entity?.Adapt<CompetitionListVm>();
+        }
     }
 }

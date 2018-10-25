@@ -8,7 +8,7 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         QuotationRequestIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
         Guid GetQuotationRequestId(Guid purchaseRequestId);
-        QuotationRequestDetails GetById(Guid id);
+        QuotationRequestVm GetById(Guid id);
         QuotationRequestViewData GetViewData(Guid qrId);
     }
 
@@ -19,7 +19,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public DateTime CreatedOn { get; set; }
     }
 
-    public class QuotationRequestDetails
+    public class QuotationRequestVm
     {
         public Guid Id { get; set; }
         public int PublicId { get; set; }

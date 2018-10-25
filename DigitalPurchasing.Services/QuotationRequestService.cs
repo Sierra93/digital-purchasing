@@ -86,12 +86,12 @@ namespace DigitalPurchasing.Services
             return Guid.Empty;;
         }
 
-        public QuotationRequestDetails GetById(Guid id)
+        public QuotationRequestVm GetById(Guid id)
         {
             var quotationRequest = _db.QuotationRequests.Find(id);
             if (quotationRequest == null) return null;
 
-            var result = quotationRequest.Adapt<QuotationRequestDetails>();
+            var result = quotationRequest.Adapt<QuotationRequestVm>();
             
             return result;
         }

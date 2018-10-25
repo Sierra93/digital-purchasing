@@ -6,6 +6,7 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         CompetitionListIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
         Guid GetId(Guid qrId);
+        CompetitionListVm GetById(Guid id);
     }
 
     public class CompetitionListIndexDataItem
@@ -17,6 +18,12 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class CompetitionListIndexData : BaseDataResponse<CompetitionListIndexDataItem>
     {
+    }
 
+    public class CompetitionListVm
+    {
+        public Guid Id { get; set; }
+        public int PublicId { get; set; }
+        public DateTime CreatedOn { get; set; }
     }
 }

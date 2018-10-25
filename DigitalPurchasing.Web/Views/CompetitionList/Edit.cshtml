@@ -1,0 +1,8 @@
+@model DigitalPurchasing.Core.Interfaces.CompetitionListVm
+
+@{
+    ViewBag.Title = $"Конкурентный лист № {Model.PublicId} от {Model.CreatedOn:dd.MM.yyyy HH:mm}";
+    Layout = "_Layout";
+}
+
+<h2>@ViewBag.Title</h2>
