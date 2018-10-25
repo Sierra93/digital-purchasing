@@ -40,9 +40,9 @@ namespace DigitalPurchasing.Web.Controllers
             return Json(new VueTableResponse<QuotationRequestIndexDataItemVm, VueTableRequest>(data, request, result.Total, nextUrl, prevUrl));
         }
 
-        public IActionResult CreateOrView([FromQuery]Guid purchaseRequestId)
+        public IActionResult Create([FromQuery]Guid prId)
         {
-            var id = _quotationRequestService.GetQuotationRequestId(purchaseRequestId);
+            var id = _quotationRequestService.GetQuotationRequestId(prId);
             if (id == Guid.Empty) return NotFound();
             return RedirectToAction(nameof(View), new { id });
         }

@@ -54,7 +54,7 @@
     </table>
     <div class="row">
         <div class="container">
-            <a class="btn btn-primary" v-show="isQuotationRequestAvailable" asp-controller="QuotationRequest" asp-action="CreateOrView" asp-route-purchaseRequestId="@Model.Id">Запросить предложение</a>
+            <a class="btn btn-primary" v-show="isQuotationRequestAvailable" asp-controller="QuotationRequest" asp-action="Create" asp-route-prId="@Model.Id">Запросить предложение</a>
         </div>
     </div>
     <modal v-model="matchModal" v-if="currentItem" title="Сопоставьте номенклатуру заявки с номенклатурой Вашего предприятия" size="lg">

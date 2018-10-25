@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20181025110454_CompetitionList_QuotationRequest")]
+    partial class CompetitionList_QuotationRequest
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -74,25 +76,6 @@ namespace DigitalPurchasing.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("CompetitionLists");
-                });
-
-            modelBuilder.Entity("DigitalPurchasing.Models.Counters.CLCounter", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<DateTime>("CreatedOn");
-
-                    b.Property<int>("CurrentId")
-                        .IsConcurrencyToken();
-
-                    b.Property<Guid>("OwnerId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OwnerId");
-
-                    b.ToTable("CLCounters");
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.Counters.PRCounter", b =>
@@ -647,14 +630,6 @@ namespace DigitalPurchasing.Data.Migrations
                         .WithOne()
                         .HasForeignKey("DigitalPurchasing.Models.CompetitionList", "QuotationRequestId")
                         .OnDelete(DeleteBehavior.Restrict);
-                });
-
-            modelBuilder.Entity("DigitalPurchasing.Models.Counters.CLCounter", b =>
-                {
-                    b.HasOne("DigitalPurchasing.Models.Company", "Owner")
-                        .WithMany()
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.Counters.PRCounter", b =>

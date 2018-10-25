@@ -18,8 +18,9 @@
                 </select>
             </div>
         </div>
-        <div class="col-md-6 ">
+        <div class="col-md-6">
             <a asp-action="Download" asp-route-qrId="@Model.Id" class="btn btn-primary">Скачать в формате excel</a>
+            <a asp-controller="CompetitionList" asp-action="Create" asp-route-qrId="@Model.Id" class="btn btn-primary">Создать КЛ</a>
         </div>
     </div>
     <div class="row">

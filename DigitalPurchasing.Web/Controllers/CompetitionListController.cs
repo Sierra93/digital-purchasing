@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using DigitalPurchasing.Core.Interfaces;
@@ -26,10 +27,22 @@ namespace DigitalPurchasing.Web.Controllers
 
             var data = result.Data
                 .Adapt<List<CompetitionListIndexDataItemVm>>()
-                .Select(q => { q.EditUrl = Url.Action(nameof(View), new { id = q.Id }); return q; })
+                .Select(q => { q.EditUrl = Url.Action(nameof(Edit), new { id = q.Id }); return q; })
                 .ToList();
 
             return Json(new VueTableResponse<CompetitionListIndexDataItemVm, VueTableRequest>(data, request, result.Total, nextUrl, prevUrl));
+        }
+
+        public IActionResult Create([FromQuery]Guid qrId)
+        {
+            var id = _competitionListService.GetId(qrId);
+            if (id == Guid.Empty) return NotFound();
+            return RedirectToAction(nameof(Edit), new { id });
+        }
+
+        public IActionResult Edit(Guid id)
+        {
+            return NotFound();
         }
     }
 }

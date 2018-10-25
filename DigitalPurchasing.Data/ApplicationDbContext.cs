@@ -28,6 +28,7 @@ namespace DigitalPurchasing.Data
         public DbSet<CompetitionList> CompetitionLists { get; set; }
         public DbSet<PRCounter> PRCounters { get; set; }
         public DbSet<QRCounter> QRCounters { get; set; }
+        public DbSet<CLCounter> CLCounters { get; set; }
         public DbSet<ColumnName> ColumnNames { get; set; }
         public DbSet<Delivery> Deliveries { get; set; }
 
@@ -65,6 +66,7 @@ namespace DigitalPurchasing.Data
             builder.Entity<PurchaseRequestItem>().HasOne(q => q.RawUomMatch).WithMany(q => q.PurchasingRequestItems).HasForeignKey(q => q.RawUomMatchId).OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<QuotationRequest>().HasOne(q => q.PurchaseRequest).WithOne().HasForeignKey<QuotationRequest>(q => q.PurchaseRequestId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<CompetitionList>().HasOne(q => q.QuotationRequest).WithOne().HasForeignKey<CompetitionList>(q => q.QuotationRequestId).OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<UomConversionRate>().HasOne(q => q.FromUom).WithMany(q => q.FromConversionRates).HasForeignKey(q => q.FromUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<UomConversionRate>().HasOne(q => q.ToUom).WithMany(q => q.ToConversionRates).HasForeignKey(q => q.ToUomId).OnDelete(DeleteBehavior.Restrict);

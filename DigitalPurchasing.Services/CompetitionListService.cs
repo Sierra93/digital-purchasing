@@ -1,7 +1,9 @@
+using System;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
+using DigitalPurchasing.Models;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 
@@ -39,6 +41,29 @@ namespace DigitalPurchasing.Services
                 Data = result,
                 Total = total
             };
+        }
+
+        public Guid GetId(Guid qrId)
+        {
+            var quotationRequest = _db.CompetitionLists.FirstOrDefault(q => q.QuotationRequestId == qrId);
+            if (quotationRequest != null)
+            {
+                return quotationRequest.Id;
+            }
+
+            return Create(qrId);
+        }
+
+        private Guid Create(Guid qrId)
+        {
+            var entity = new CompetitionList
+            {
+                PublicId = _counterService.GetCLNextId(),
+                QuotationRequestId = qrId
+            };
+            var entry = _db.CompetitionLists.Add(entity);
+            _db.SaveChanges();
+            return entry.Entity.Id;
         }
     }
 }

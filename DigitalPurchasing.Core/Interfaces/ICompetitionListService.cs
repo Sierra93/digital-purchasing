@@ -5,6 +5,7 @@ namespace DigitalPurchasing.Core.Interfaces
     public interface ICompetitionListService
     {
         CompetitionListIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
+        Guid GetId(Guid qrId);
     }
 
     public class CompetitionListIndexDataItem
