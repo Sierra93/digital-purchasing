@@ -15,9 +15,8 @@ namespace DigitalPurchasing.Models
 
         public ICollection<PurchaseRequestItem> Items { get; set; } = new List<PurchaseRequestItem>();
 
-        public string RawData { get; set; }
-
-        public RawColumns RawColumns { get; set; }
+        public Guid? UploadedDocumentId { get; set; }
+        public UploadedDocument UploadedDocument { get; set; }
 
         public Delivery Delivery { get; set; }
         public Guid? DeliveryId { get; set; }

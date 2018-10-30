@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels.CompetitionList;
 using Mapster;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalPurchasing.Web.Controllers
@@ -12,8 +15,13 @@ namespace DigitalPurchasing.Web.Controllers
     public class CompetitionListController : BaseController
     {
         private readonly ICompetitionListService _competitionListService;
+        private readonly ISupplierOfferService _supplierOfferService;
 
-        public CompetitionListController(ICompetitionListService competitionListService) => _competitionListService = competitionListService;
+        public CompetitionListController(ICompetitionListService competitionListService, ISupplierOfferService supplierOfferService)
+        {
+            _competitionListService = competitionListService;
+            _supplierOfferService = supplierOfferService;
+        }
 
         public IActionResult Index() => View();
 
@@ -45,6 +53,31 @@ namespace DigitalPurchasing.Web.Controllers
             var vm = _competitionListService.GetById(id);
             if (vm == null) return NotFound();
             return View(vm);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Upload([FromRoute]Guid id, IFormFile file)
+        {
+            if (file == null)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            var fileName = file.FileName;
+            var fileExt = Path.GetExtension(fileName);
+            var filePath = Path.GetTempFileName()+fileExt;
+
+            using (var output = System.IO.File.Create(filePath))
+                await file.CopyToAsync(output);
+
+            var response = _supplierOfferService.CreateFromFile(id, filePath);
+            if (!response.IsSuccess)
+            {
+                TempData["Message"] = response.Message;
+                return RedirectToAction(nameof(Index));
+            }
+
+            return RedirectToAction(nameof(Edit), "SupplierOffer", new { id = response.Id });
         }
     }
 }

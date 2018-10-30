@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace DigitalPurchasing.Models
 {
@@ -8,5 +9,7 @@ namespace DigitalPurchasing.Models
 
         public QuotationRequest QuotationRequest { get; set; }
         public Guid QuotationRequestId { get; set; }
+
+        public ICollection<SupplierOffer> SupplierOffers { get; set; }
     }
 }

@@ -37,6 +37,9 @@
     <Content Update="Views\Shared\Delivery\_AddressFormComponent.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
+    <Content Update="Views\SupplierOffer\EditMatchColumns.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
     <Content Update="Views\Uom\Edit.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>

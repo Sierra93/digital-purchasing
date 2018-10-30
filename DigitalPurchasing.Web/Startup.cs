@@ -85,6 +85,7 @@ namespace DigitalPurchasing.Web
             services.AddScoped<ICounterService, CounterService>();
             services.AddScoped<IColumnNameService, ColumnNameService>();
             services.AddScoped<IDeliveryService, DeliveryService>();
+            services.AddScoped<ISupplierOfferService, SupplierOfferService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

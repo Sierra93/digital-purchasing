@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20181029113345_SupplierOffer_PurchaseRequest_UploadedDocument")]
+    partial class SupplierOffer_PurchaseRequest_UploadedDocument
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -570,19 +572,11 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<Guid>("OwnerId");
 
-                    b.Property<int>("Status");
-
-                    b.Property<Guid?>("UploadedDocumentId");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CompetitionListId");
 
                     b.HasIndex("OwnerId");
-
-                    b.HasIndex("UploadedDocumentId")
-                        .IsUnique()
-                        .HasFilter("[UploadedDocumentId] IS NOT NULL");
 
                     b.ToTable("SupplierOffers");
                 });
@@ -928,11 +922,6 @@ namespace DigitalPurchasing.Data.Migrations
                     b.HasOne("DigitalPurchasing.Models.Company", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("DigitalPurchasing.Models.UploadedDocument", "UploadedDocument")
-                        .WithOne()
-                        .HasForeignKey("DigitalPurchasing.Models.SupplierOffer", "UploadedDocumentId")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 

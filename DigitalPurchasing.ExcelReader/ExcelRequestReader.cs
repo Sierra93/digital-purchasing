@@ -90,7 +90,18 @@ namespace DigitalPurchasing.ExcelReader
                     });
                 }
 
-                var foundHeaderAddresses = new List<string> { nameAddr.Address, codeAddr?.Address, uomAddr?.Address, qtyAddr?.Address };
+                var priceAddr = SearchHeader(false, _columnNameService.GetNames(TableColumnType.Price));
+                if (priceAddr != null)
+                {
+                    result.Columns.Add(new ExcelTableColumn
+                    {
+                        Type = TableColumnType.Price,
+                        Header = GetHeaderValue(priceAddr),
+                        Values = GetValuesForHeader(priceAddr)
+                    });
+                }
+
+                var foundHeaderAddresses = new List<string> { nameAddr.Address, codeAddr?.Address, uomAddr?.Address, qtyAddr?.Address, priceAddr?.Address };
 
                 // can't recognize table structure
                 if (foundHeaderAddresses.Count == 0)
@@ -98,7 +109,7 @@ namespace DigitalPurchasing.ExcelReader
                     return null;
                 }
 
-                var headerRows = new List<int?> { nameAddr.Row, codeAddr?.Row, uomAddr?.Row, qtyAddr?.Row };
+                var headerRows = new List<int?> { nameAddr.Row, codeAddr?.Row, uomAddr?.Row, qtyAddr?.Row, priceAddr?.Row };
 
                 var uniqueHeaderRows = headerRows.Where(q => q.HasValue).Select(q => q.Value).Distinct().ToList();
                 if (uniqueHeaderRows.Count > 1)

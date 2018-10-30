@@ -44,7 +44,11 @@ namespace DigitalPurchasing.Services
 
             var entry = _db.PurchaseRequests.Add(new PurchaseRequest
             {
-                RawData = JsonConvert.SerializeObject(result.Table),
+                UploadedDocument = new UploadedDocument
+                {
+                    Data = JsonConvert.SerializeObject(result.Table),
+                    Headers = new UploadedDocumentHeaders()
+                },
                 Status = PurchaseRequestStatus.MatchColumns,
                 PublicId = _counterService.GetPRNextId()
             });
@@ -56,29 +60,29 @@ namespace DigitalPurchasing.Services
 
         public PurchaseRequestDetailsResponse GetById(Guid id)
         {
-            var entity = _db.PurchaseRequests.Find(id);
+            var entity = _db.PurchaseRequests.Include(q => q.UploadedDocument).First(q => q.Id == id);
 
             var result = entity.Adapt<PurchaseRequestDetailsResponse>();
             result.ExcelTable =
-                entity.RawData != null ? JsonConvert.DeserializeObject<ExcelTable>(entity.RawData) : null;
+                entity.UploadedDocument.Data != null ? JsonConvert.DeserializeObject<ExcelTable>(entity.UploadedDocument.Data) : null;
 
             return result;
         }
 
         public PurchaseRequestColumnsResponse GetColumnsById(Guid id)
         {
-            var entity = _db.PurchaseRequests.Include(q => q.RawColumns).First(q => q.Id == id);
-            var excelTable = JsonConvert.DeserializeObject<ExcelTable>(entity.RawData);
+            var entity = _db.PurchaseRequests.Include(q => q.UploadedDocument).ThenInclude(q => q.Headers).First(q => q.Id == id);
+            var excelTable = JsonConvert.DeserializeObject<ExcelTable>(entity.UploadedDocument.Data);
 
             // load from raw columns first
             var result = new PurchaseRequestColumnsResponse
             {
-                Code = entity.RawColumns != null ? entity.RawColumns.Code : excelTable.Columns.FirstOrDefault(q => q.Type == TableColumnType.Code)?.Header ?? "",
-                Name = entity.RawColumns != null ? entity.RawColumns.Name : excelTable.Columns.FirstOrDefault(q => q.Type == TableColumnType.Name)?.Header ?? "",
-                Qty = entity.RawColumns != null ? entity.RawColumns.Qty : excelTable.Columns.FirstOrDefault(q => q.Type == TableColumnType.Qty)?.Header ?? "",
-                Uom = entity.RawColumns != null ? entity.RawColumns.Uom : excelTable.Columns.FirstOrDefault(q => q.Type == TableColumnType.Uom)?.Header ?? "",
+                Code = entity.UploadedDocument?.Headers?.Code ?? (excelTable.Columns.FirstOrDefault(q => q.Type == TableColumnType.Code)?.Header ?? ""),
+                Name = entity.UploadedDocument?.Headers?.Name ?? (excelTable.Columns.FirstOrDefault(q => q.Type == TableColumnType.Name)?.Header ?? ""),
+                Qty = entity.UploadedDocument?.Headers?.Qty ?? (excelTable.Columns.FirstOrDefault(q => q.Type == TableColumnType.Qty)?.Header ?? ""),
+                Uom = entity.UploadedDocument?.Headers?.Uom ?? (excelTable.Columns.FirstOrDefault(q => q.Type == TableColumnType.Uom)?.Header ?? ""),
                 Columns = excelTable.Columns.Select(q => q.Header).ToList(),
-                IsSaved = entity.RawColumns != null 
+                IsSaved = entity.UploadedDocument != null 
             };
 
             return result;
@@ -86,13 +90,13 @@ namespace DigitalPurchasing.Services
 
         public void SaveColumns(Guid id, PurchaseRequestColumns purchasingRequestColumns)
         {
-            var entity = _db.PurchaseRequests.Include(q => q.RawColumns).First(q => q.Id == id);
-            if (entity.RawColumns == null)
+            var entity = _db.PurchaseRequests.Include(q => q.UploadedDocument).ThenInclude(q => q.Headers).First(q => q.Id == id);
+            if (entity.UploadedDocument == null)
             {
-                entity.RawColumns = new RawColumns();
+                entity.UploadedDocument = new UploadedDocument();
             }
 
-            entity.RawColumns = purchasingRequestColumns.Adapt(entity.RawColumns);
+            entity.UploadedDocument.Headers = purchasingRequestColumns.Adapt(entity.UploadedDocument.Headers);
             _db.SaveChanges();
 
             if (!string.IsNullOrEmpty(purchasingRequestColumns.Name)) _columnNameService.SaveName(TableColumnType.Name, purchasingRequestColumns.Name);
@@ -106,8 +110,8 @@ namespace DigitalPurchasing.Services
             _db.RemoveRange(_db.PurchaseRequestItems.Where(q => q.PurchaseRequestId == id));
             _db.SaveChanges();
 
-            var entity = _db.PurchaseRequests.Include(q => q.RawColumns).First(q => q.Id == id);
-            var table = JsonConvert.DeserializeObject<ExcelTable>(entity.RawData);
+            var entity = _db.PurchaseRequests.Include(q => q.UploadedDocument).ThenInclude(q => q.Headers).First(q => q.Id == id);
+            var table = JsonConvert.DeserializeObject<ExcelTable>(entity.UploadedDocument.Data);
             var rawItems = new List<PurchaseRequestItem>();
             for (var i = 0; i < table.Columns.First(q => q.Type == TableColumnType.Name).Values.Count; i++)
             {
@@ -115,10 +119,10 @@ namespace DigitalPurchasing.Services
                 {
                     PurchaseRequestId = id,
                     Position = i + 1,
-                    RawCode = string.IsNullOrEmpty(entity.RawColumns.Code) ? "" : table.GetValue(entity.RawColumns.Code, i),
-                    RawName = string.IsNullOrEmpty(entity.RawColumns.Name) ? "" : table.GetValue(entity.RawColumns.Name, i),
-                    RawQty = string.IsNullOrEmpty(entity.RawColumns.Qty) ? 0 : table.GetDecimalValue(entity.RawColumns.Qty, i),
-                    RawUom = string.IsNullOrEmpty(entity.RawColumns.Uom) ? "" : table.GetValue(entity.RawColumns.Uom, i)
+                    RawCode = string.IsNullOrEmpty(entity.UploadedDocument.Headers.Code) ? "" : table.GetValue(entity.UploadedDocument.Headers.Code, i),
+                    RawName = string.IsNullOrEmpty(entity.UploadedDocument.Headers.Name) ? "" : table.GetValue(entity.UploadedDocument.Headers.Name, i),
+                    RawQty = string.IsNullOrEmpty(entity.UploadedDocument.Headers.Qty) ? 0 : table.GetDecimalValue(entity.UploadedDocument.Headers.Qty, i),
+                    RawUom = string.IsNullOrEmpty(entity.UploadedDocument.Headers.Uom) ? "" : table.GetValue(entity.UploadedDocument.Headers.Uom, i)
                 };
 
                 rawItems.Add(rawItem);

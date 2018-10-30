@@ -5,4 +5,11 @@
     Layout = "_Layout";
 }
 
-<h2>@ViewBag.Title</h2>
+<h2 class="with-button">@ViewBag.Title</h2>
+<div class="btn-group">
+    <form method="post" enctype="multipart/form-data" asp-action="Upload" asp-controller="CompetitionList" asp-route-id="@Model.Id" style="display: inline-block">
+        <label class="btn btn-default btn-file">
+            Загрузить предложение <input type="file" style="display: none;" name="file">
+        </label>
+    </form>
+</div>

@@ -1,0 +1,144 @@
+@using DigitalPurchasing.Core.Interfaces
+@model DigitalPurchasing.Core.Interfaces.SupplierOfferVm
+
+@{
+    ViewBag.Title = "Title";//$"Заявка № {Model.PublicId} от {Model.CreatedOn:dd.MM.yyyy HH:mm}";
+    Layout = "_Layout";
+}
+
+<h2>@ViewBag.Title</h2>
+
+<h3>Сопоставление названия колонок из предложения поставщика с названиями колонок системы</h3>
+<div id="app">
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Колонки в Системе</th>
+            <th>Код</th>
+            <th>Наименование</th>
+            <th>ЕИ</th>
+            <th>Количество</th>
+            <th>Цена за 1 ЕИ</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>Колонки в Заявке</td>
+            <td>
+                <select class="form-control" v-model="columnCode">
+                    <option v-for="option in columns" v-bind:value="option.value">{{option.text}}</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control" v-model="columnName">
+                    <option v-for="option in columns" v-bind:value="option.value">{{option.text}}</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control" v-model="columnUom">
+                    <option v-for="option in columns" v-bind:value="option.value">{{option.text}}</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control" v-model="columnQty">
+                    <option v-for="option in columns" v-bind:value="option.value">{{option.text}}</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control" v-model="columnPrice">
+                    <option v-for="option in columns" v-bind:value="option.value">{{option.text}}</option>
+                </select>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <button v-on:click="saveColumns" class="btn btn-primary">Сохранить соответствие столбцов</button>&nbsp;
+    <label v-if="isSaved">Сохранено!</label>
+</div>
+
+@if (Model.UploadedDocument.Data != null && Model.Status == SupplierOfferStatus.MatchColumns)
+{
+    <h3>Предложение в формате Поставщика</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                @foreach (var column in Model.ExcelTable.Columns)
+                {
+                <th>@column.Header</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                var rowsCount = Model.ExcelTable.Columns.Find(q => q.Type == TableColumnType.Name).Values.Count;
+            }
+            @for (int i = 0; i < rowsCount; i++)
+            {
+                <tr>
+                    @foreach (var column in Model.ExcelTable.Columns)
+                    {
+                        <td>@column.Values[i]</td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@section Scripts
+{
+    <script>
+        (function() {
+            var app = new Vue({
+                el: '#app',
+                data: function() {
+                    return {
+                        columnCode: null,
+                        columnName: null,
+                        columnUom: null,
+                        columnQty: null,
+                        columnPrice: null,
+                        columns: [],
+                        isSaved: false
+                    };
+                },
+                created: function () {
+                    var vm = this;
+                    this.$http.get('@Url.Action("ColumnsData", new { id = Model.Id })').then(function(res) {
+                        var data = res.body;
+                        data.columns.forEach(function(el) {
+                            vm.columns.push({ text: el, value: el });
+                        });
+                        vm.columnCode = data.code;
+                        vm.columnName = data.name;
+                        vm.columnUom = data.uom;
+                        vm.columnQty = data.qty;
+                        vm.columnPrice = data.price;
+                        vm.isSaved = data.isSaved;
+                    }, function(res) {
+                        alert('error');
+                    });
+                },
+                methods: {
+                    saveColumns: function() {
+                        var vm = this;
+                        var data = {
+                            soId: '@Model.Id',
+                            code: this.columnCode,
+                            name: this.columnName,
+                            uom: this.columnUom,
+                            qty: this.columnQty
+                        };
+                        this.$http.post('@Url.Action("SaveColumns")', data).then(function (res) {
+                            vm.isSaved = true;
+                            window.location.reload(true); 
+                        }, function (res) {
+
+                        });
+                        console.log('saveColumns', data);
+                    }
+                }
+            });
+        })();
+    </script>
+}

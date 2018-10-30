@@ -20,13 +20,6 @@ namespace DigitalPurchasing.Core.Interfaces
         void SaveCustomerName(Guid prId, string customerName);
     }
 
-    public enum PurchaseRequestStatus
-    {
-        MatchColumns = -10,
-        ManualInput = 0,
-        MatchItems = 10
-    }
-
     public class CreateFromFileResponse
     {
         public bool IsSuccess { get; set; }
