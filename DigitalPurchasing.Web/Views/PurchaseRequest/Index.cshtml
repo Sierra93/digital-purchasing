@@ -48,10 +48,6 @@
 @section Scripts {
     <script>
         (function () {
-            $(document).on('change', ':file', function () {
-                $(this).parents('form').submit();
-            });
-
             Vue.use(Vuetable);
             window.app = new Vue({
                 el: '#app',

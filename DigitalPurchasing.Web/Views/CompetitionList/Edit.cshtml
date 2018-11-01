@@ -13,3 +13,12 @@
         </label>
     </form>
 </div>
+
+<ul>
+    @foreach (var so in Model.SupplierOffers)
+    {
+        <li>
+            <a asp-action="Edit" asp-controller="SupplierOffer" asp-route-id="@so.Id">@so.Id</a>
+        </li>
+    }
+</ul>

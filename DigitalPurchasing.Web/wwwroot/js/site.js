@@ -19,3 +19,7 @@ var cssTable = {
     }
   }
 };
+
+$(document).on('change', ':file', function () {
+  $(this).parents('form').submit();
+});

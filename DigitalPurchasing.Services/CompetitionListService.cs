@@ -68,7 +68,7 @@ namespace DigitalPurchasing.Services
 
         public CompetitionListVm GetById(Guid id)
         {
-            var entity = _db.CompetitionLists.Find(id);
+            var entity = _db.CompetitionLists.Include(q => q.SupplierOffers).FirstOrDefault(q => q.Id == id);
             return entity?.Adapt<CompetitionListVm>();
         }
     }

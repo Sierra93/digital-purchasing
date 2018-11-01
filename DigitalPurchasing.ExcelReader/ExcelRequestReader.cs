@@ -25,7 +25,9 @@ namespace DigitalPurchasing.ExcelReader
             var ext = Path.GetExtension(filePath).ToLower();
             if (ext == ".xls")
             {
-                //todo: convert
+                // todo: convert file
+                //filePath = Path.GetTempFileName()+".xlsx";
+                return ExcelTableResponse.Error(CantOpenFile);
             }
 
             using (var package = new ExcelPackage(new FileInfo(filePath)))
@@ -178,8 +180,9 @@ namespace DigitalPurchasing.ExcelReader
             if (address == null) return null;
 
             var strAddress = address.Address;
-            var start = $"{strAddress[0]}{address.Row + 1}";
-            var end = strAddress[0].ToString();
+            var col = strAddress.Replace(address.Row.ToString(), "");
+            var start = $"{col}{address.Row + 1}";
+            var end = col;
 
             var values = _ws.Cells[$"{start}:{end}"].Select(q => q.GetValue<string>()).ToList();
 

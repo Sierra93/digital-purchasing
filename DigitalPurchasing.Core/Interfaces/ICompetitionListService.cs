@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace DigitalPurchasing.Core.Interfaces
 {
@@ -22,8 +23,15 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class CompetitionListVm
     {
+        public class SupplierOffer
+        {
+            public Guid Id { get; set; }
+        }
+
         public Guid Id { get; set; }
         public int PublicId { get; set; }
         public DateTime CreatedOn { get; set; }
+
+        public IEnumerable<SupplierOffer> SupplierOffers { get; set; }
     }
 }
