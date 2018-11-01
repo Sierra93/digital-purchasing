@@ -6,7 +6,10 @@
     Layout = "_Layout";
 }
 
-<h2>@ViewBag.Title</h2>
+<h2 class="with-button">@ViewBag.Title</h2>
+<div class="btn-group">
+    <a class="btn btn-default" asp-action="Edit" asp-controller="CompetitionList" asp-route-id="@Model.CompetitionList.Id">Назад к конкурентному листу</a>
+</div>
 
 <h3>Сопоставление названия колонок из предложения поставщика с названиями колонок системы</h3>
 <div id="app">
