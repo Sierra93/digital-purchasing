@@ -104,7 +104,7 @@
                 },
                 created: function () {
                     var vm = this;
-                    this.$http.get('@Url.Action("ColumnsData", new { id = Model.Id })').then(function(res) {
+                    vm.$http.get('@Url.Action("ColumnsData", new { id = Model.Id })').then(function(res) {
                         var data = res.body;
                         data.columns.forEach(function(el) {
                             vm.columns.push({ text: el, value: el });
@@ -124,12 +124,13 @@
                         var vm = this;
                         var data = {
                             soId: '@Model.Id',
-                            code: this.columnCode,
-                            name: this.columnName,
-                            uom: this.columnUom,
-                            qty: this.columnQty
+                            code: vm.columnCode,
+                            name: vm.columnName,
+                            uom: vm.columnUom,
+                            price: vm.columnPrice,
+                            qty: vm.columnQty
                         };
-                        this.$http.post('@Url.Action("SaveColumns")', data).then(function (res) {
+                        vm.$http.post('@Url.Action("SaveColumns")', data).then(function (res) {
                             vm.isSaved = true;
                             window.location.reload(true); 
                         }, function (res) {

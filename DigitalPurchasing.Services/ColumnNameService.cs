@@ -17,6 +17,7 @@ namespace DigitalPurchasing.Services
         private const string ColumnName = "Наименование";
         private const string ColumnQty = "Количество";
         private const string ColumnUom = "ЕИ";
+        private const string ColumnPrice = "Цена";
 
         private readonly ApplicationDbContext _db;
 
@@ -75,6 +76,7 @@ namespace DigitalPurchasing.Services
                 case TableColumnType.Name: return ColumnName;
                 case TableColumnType.Qty: return ColumnQty;
                 case TableColumnType.Uom: return ColumnUom;
+                case TableColumnType.Price: return ColumnPrice;
                 default:
                     return "";
             }
@@ -88,6 +90,7 @@ namespace DigitalPurchasing.Services
                 case ColumnName: return TableColumnType.Name;
                 case ColumnQty: return TableColumnType.Qty;
                 case ColumnUom: return TableColumnType.Uom;
+                case ColumnPrice: return TableColumnType.Price;
                 default: return TableColumnType.Unknown;
             }
         }
