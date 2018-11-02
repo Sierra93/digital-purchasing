@@ -26,6 +26,8 @@ namespace DigitalPurchasing.Core.Interfaces
         public class SupplierOffer
         {
             public Guid Id { get; set; }
+            public int PublicId { get; set; }
+            public DateTime CreatedOn { get; set; }
         }
 
         public Guid Id { get; set; }

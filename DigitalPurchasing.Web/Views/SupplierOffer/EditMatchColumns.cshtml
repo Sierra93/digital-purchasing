@@ -2,7 +2,7 @@
 @model DigitalPurchasing.Core.Interfaces.SupplierOfferVm
 
 @{
-    ViewBag.Title = "Предложения поставщика";//$"Заявка № {Model.PublicId} от {Model.CreatedOn:dd.MM.yyyy HH:mm}";
+    ViewBag.Title = $"Коммерческое предложение № {Model.PublicId} от {Model.CreatedOn:dd.MM.yyyy HH:mm}";
     Layout = "_Layout";
 }
 
@@ -11,7 +11,7 @@
     <a class="btn btn-default" asp-action="Edit" asp-controller="CompetitionList" asp-route-id="@Model.CompetitionList.Id">Назад к конкурентному листу</a>
 </div>
 
-<h3>Сопоставление названия колонок из предложения поставщика с названиями колонок системы</h3>
+<h3>Сопоставление названия колонок из коммерческого предложения поставщика с названиями колонок системы</h3>
 <div id="app">
     <table class="table table-striped">
         <thead>

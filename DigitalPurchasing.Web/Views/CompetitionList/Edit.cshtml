@@ -15,10 +15,11 @@
 </div>
 
 <ul>
-    @foreach (var so in Model.SupplierOffers)
+    @foreach (var so in Model.SupplierOffers.OrderBy(q => q.CreatedOn))
     {
+        var soTitle = $"КП № {so.PublicId} от {so.CreatedOn:dd.MM.yyyy HH:mm}";
         <li>
-            <a asp-action="Edit" asp-controller="SupplierOffer" asp-route-id="@so.Id">@so.Id</a>
+            <a asp-action="Edit" asp-controller="SupplierOffer" asp-route-id="@so.Id">@soTitle</a>
         </li>
     }
 </ul>

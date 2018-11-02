@@ -17,15 +17,18 @@ namespace DigitalPurchasing.Services
         private readonly ApplicationDbContext _db;
         private readonly IExcelRequestReader _excelRequestReader;
         private readonly IColumnNameService _columnNameService;
+        private readonly ICounterService _counterService;
 
         public SupplierOfferService(
             ApplicationDbContext db,
             IExcelRequestReader excelRequestReader,
-            IColumnNameService columnNameService)
+            IColumnNameService columnNameService,
+            ICounterService counterService)
         {
             _db = db;
             _excelRequestReader = excelRequestReader;
             _columnNameService = columnNameService;
+            _counterService = counterService;
         }
 
         public CreateFromFileResponse CreateFromFile(Guid competitionListId, string filePath)
@@ -41,7 +44,8 @@ namespace DigitalPurchasing.Services
                     Data = JsonConvert.SerializeObject(result.Table),
                     Headers = new UploadedDocumentHeaders()
                 },
-                Status = SupplierOfferStatus.MatchColumns
+                Status = SupplierOfferStatus.MatchColumns,
+                PublicId = _counterService.GetSONextId()
             });
 
             _db.SaveChanges();

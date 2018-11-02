@@ -5,6 +5,8 @@ namespace DigitalPurchasing.Models
 {
     public class SupplierOffer : BaseModelWithOwner
     {
+        public int PublicId { get; set; }
+
         public Guid CompetitionListId { get; set; }
         public CompetitionList CompetitionList { get; set; }
 

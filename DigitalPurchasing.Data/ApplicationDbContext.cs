@@ -27,9 +27,16 @@ namespace DigitalPurchasing.Data
         public DbSet<QuotationRequest> QuotationRequests { get; set; }
         public DbSet<CompetitionList> CompetitionLists { get; set; }
         public DbSet<SupplierOffer> SupplierOffers { get; set; }
+
+        #region Counters
+
         public DbSet<PRCounter> PRCounters { get; set; }
         public DbSet<QRCounter> QRCounters { get; set; }
         public DbSet<CLCounter> CLCounters { get; set; }
+        public DbSet<SOCounter> SOCounters { get; set; }
+
+        #endregion
+
         public DbSet<ColumnName> ColumnNames { get; set; }
         public DbSet<Delivery> Deliveries { get; set; }
         public DbSet<UploadedDocument> UploadedDocuments { get; set; }
@@ -94,8 +101,6 @@ namespace DigitalPurchasing.Data
             builder.Entity<CompetitionList>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<SupplierOffer>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<Delivery>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<PRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<QRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<Nomenclature>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<NomenclatureAlternative>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<NomenclatureCategory>().HasQueryFilter(o => o.OwnerId == CompanyId);
@@ -103,6 +108,10 @@ namespace DigitalPurchasing.Data
             builder.Entity<UnitsOfMeasurement>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<UomConversionRate>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<UploadedDocument>().HasQueryFilter(o => o.OwnerId == CompanyId);
+            builder.Entity<PRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
+            builder.Entity<QRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
+            builder.Entity<CLCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
+            builder.Entity<SOCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
         }
 
         public override int SaveChanges()

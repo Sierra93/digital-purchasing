@@ -74,5 +74,7 @@ namespace DigitalPurchasing.Services
         public int GetPRNextId() => GetNextId<PRCounter>();
 
         public int GetCLNextId() => GetNextId<CLCounter>();
+
+        public int GetSONextId() => GetNextId<SOCounter>();
     }
 }

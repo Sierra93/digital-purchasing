@@ -31,6 +31,9 @@ namespace DigitalPurchasing.Core.Interfaces
     public class SupplierOfferVm
     {
         public Guid Id { get; set; }
+        public int PublicId { get; set; }
+        public DateTime CreatedOn { get; set; }
+
         public CompetitionListVm CompetitionList { get; set; }
         public UploadedDocumentVm UploadedDocument { get; set; }
         public SupplierOfferStatus Status { get; set; }
