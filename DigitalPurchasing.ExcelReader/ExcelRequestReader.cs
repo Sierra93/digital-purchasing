@@ -121,13 +121,13 @@ namespace DigitalPurchasing.ExcelReader
                 else
                 {
                     var otherHeaders = _ws.Cells[uniqueHeaderRows[0], _ws.Dimension.Start.Column, uniqueHeaderRows[0], _ws.Dimension.End.Column]
-                        .Where(q => !string.IsNullOrEmpty(q.GetValue<string>()) && !foundHeaderAddresses.Contains(q.Address))
+                        .Where(q => !string.IsNullOrEmpty(q.Text) && !foundHeaderAddresses.Contains(q.Address))
                         .Select(q => q.Start)
                         .ToList();
 
                     foreach (var otherHeader in otherHeaders)
                     {
-                        var headerName = _ws.Cells[otherHeader.Address].GetValue<string>();
+                        var headerName = _ws.Cells[otherHeader.Address].Text;
                         var headerValues = GetValuesForHeader(otherHeader);
                         result.Columns.Add(new ExcelTableColumn
                         {
@@ -158,14 +158,14 @@ namespace DigitalPurchasing.ExcelReader
 
             var addresses = _ws
                 .Cells[_allCells]
-                .Where(q => !string.IsNullOrEmpty(q.GetValue<string>()) && columnNames.Contains(q.GetValue<string>(), StringComparer.InvariantCultureIgnoreCase))
+                .Where(q => !string.IsNullOrEmpty(q.Text) && columnNames.Contains(q.Text, StringComparer.InvariantCultureIgnoreCase))
                 .Select(q => q.Start)
                 .ToList();
 
             if (partialMatch && addresses.Count == 0)
             {
                 addresses = _ws.Cells[_allCells]
-                    .Where(q => !string.IsNullOrEmpty(q.GetValue<string>()) && columnNames.Any(w => q.GetValue<string>().Contains(w, StringComparison.InvariantCultureIgnoreCase)))
+                    .Where(q => !string.IsNullOrEmpty(q.Text) && columnNames.Any(w => q.Text.Contains(w, StringComparison.InvariantCultureIgnoreCase)))
                     .Select(q => q.Start)
                     .ToList();
             }
@@ -173,9 +173,9 @@ namespace DigitalPurchasing.ExcelReader
             return addresses.Count == 1 ? addresses[0] : null;
         }
 
-        private string GetHeaderValue(ExcelCellAddress address) => _ws.Cells[address.Address].GetValue<string>();
+        private string GetHeaderValue(ExcelCellAddress address) => _ws.Cells[address.Address].Text;
 
-        private List<string> GetValuesForHeader(ExcelCellAddress address, bool trimLastEmpty = false)
+        private List<string> GetValuesForHeader(ExcelCellAddress address, bool trimEmpty = false)
         {
             if (address == null) return null;
 
@@ -184,14 +184,13 @@ namespace DigitalPurchasing.ExcelReader
             var start = $"{col}{address.Row + 1}";
             var end = col;
 
-            var values = _ws.Cells[$"{start}:{end}"].Select(q => q.GetValue<string>()).ToList();
+            var values = _ws.Cells[$"{start}:{end}"].Select(q => q.Text).ToList();
 
-            if (trimLastEmpty)
+            if (trimEmpty && values.Any())
             {
-                while (values.Any() && string.IsNullOrEmpty(values.Last()))
-                {
-                    values.RemoveAt(values.Count - 1);
-                }
+                var firstEmptyIdx = values.FindIndex(string.IsNullOrEmpty);
+                var count = values.Count - firstEmptyIdx;
+                values.RemoveRange(firstEmptyIdx, count);
             }
 
             return values;
