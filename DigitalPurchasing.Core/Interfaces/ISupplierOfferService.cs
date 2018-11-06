@@ -17,7 +17,8 @@ namespace DigitalPurchasing.Core.Interfaces
         void GenerateRawItems(Guid id);
 
         SOMatchItemsVm MatchItemsData(Guid id);
-        
+        void SaveMatch(Guid itemId, Guid nomenclatureId, Guid uomId, decimal factorC, decimal factorN);
+
     }
 
     public class UploadedDocumentVm

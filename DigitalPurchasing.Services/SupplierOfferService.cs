@@ -169,5 +169,15 @@ namespace DigitalPurchasing.Services
 
             return res;
         }
+
+        public void SaveMatch(Guid itemId, Guid nomenclatureId, Guid uomId, decimal factorC, decimal factorN)
+        {
+            var entity = _db.SupplierOfferItems.Find(itemId);
+            entity.NomenclatureId = nomenclatureId;
+            entity.RawUomId = uomId;
+            entity.CommonFactor = factorC;
+            entity.NomenclatureFactor = factorN;
+            _db.SaveChanges();
+        }
     }
 }

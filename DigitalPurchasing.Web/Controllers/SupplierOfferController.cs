@@ -13,9 +13,28 @@ namespace DigitalPurchasing.Web.Controllers
             public string Name { get; set; }
         }
 
-        private readonly ISupplierOfferService _supplierOfferService;
+        public class SaveMatchItemVm
+        {
+            public Guid ItemId { get; set; }
+            public Guid NomenclatureId { get; set; }
+            public Guid UomId { get; set; }
+            public decimal FactorN { get; set; }
+            public decimal FactorC { get; set; }
+        }
 
-        public SupplierOfferController(ISupplierOfferService supplierOfferService) => _supplierOfferService = supplierOfferService;
+        private readonly ISupplierOfferService _supplierOfferService;
+        private readonly INomenclatureService _nomenclatureService;
+        private readonly IUomService _uomService;
+
+        public SupplierOfferController(
+            ISupplierOfferService supplierOfferService,
+            INomenclatureService nomenclatureService,
+            IUomService uomService)
+        {
+            _supplierOfferService = supplierOfferService;
+            _nomenclatureService = nomenclatureService;
+            _uomService = uomService;
+        }
 
         public IActionResult Edit(Guid id)
         {
@@ -69,15 +88,15 @@ namespace DigitalPurchasing.Web.Controllers
             return Json(response);
         }
 
-        //[HttpPost]
-        //public IActionResult SaveMatchItem([FromBody] SaveMatchItemVm model)
-        //{
-        //    var nomenclature = _nomenclatureService.AutocompleteSingle(model.NomenclatureId);
-        //    _uomService.SaveConversionRate(model.UomId, nomenclature.Data.BatchUomId, nomenclature.Data.Id, model.FactorC, model.FactorN);
-        //    _purchasingRequestService.SaveMatch(model.ItemId, model.NomenclatureId, model.UomId, model.FactorC, model.FactorN);
-        //    _nomenclatureService.AddAlternative(model.NomenclatureId, model.ItemId);
-        //    return Ok();
-        //}
+        [HttpPost]
+        public IActionResult SaveMatchItem([FromBody] SaveMatchItemVm model)
+        {
+            var nomenclature = _nomenclatureService.AutocompleteSingle(model.NomenclatureId);
+            _uomService.SaveConversionRate(model.UomId, nomenclature.Data.BatchUomId, nomenclature.Data.Id, model.FactorC, model.FactorN);
+            _supplierOfferService.SaveMatch(model.ItemId, model.NomenclatureId, model.UomId, model.FactorC, model.FactorN);
+            _nomenclatureService.AddAlternative(model.NomenclatureId, model.ItemId);
+            return Ok();
+        }
 
         #endregion
     }

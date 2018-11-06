@@ -52,12 +52,7 @@
             </tr>
         </tbody>
     </table>
-    <div class="row">
-        <div class="container">
-            <a class="btn btn-primary" v-show="isQuotationRequestAvailable" asp-controller="QuotationRequest" asp-action="Create" asp-route-prId="@Model.Id">Запросить предложение</a>
-        </div>
-    </div>
-    <modal v-model="matchModal" v-if="currentItem" title="Сопоставьте номенклатуру заявки с номенклатурой Вашего предприятия" size="lg">
+    <modal v-model="matchModal" v-if="currentItem" title="Сопоставьте номенклатуру предложения с номенклатурой Вашего предприятия" size="lg">
         <table class="table table-striped">
             <tbody>
                 <tr>
@@ -221,12 +216,7 @@
                     },
                     nomenclatureClass: function () { return getInputClass(this.nomenclatureHasError); },
                     uomClass: function () { return getInputClass(this.uomHasError); },
-                    factorErrorClass: function () { return getInputClass(this.factorHasError); },
-                    isQuotationRequestAvailable: function() {
-                        var $this = this;
-                        if (this.items.length === 0) return false;
-                        return _.every(this.items, function (i) { return $this.isMatched(i); });
-                    }
+                    factorErrorClass: function () { return getInputClass(this.factorHasError); }
                 },
                 methods: {
                     getRowIndex0: function (item) {
