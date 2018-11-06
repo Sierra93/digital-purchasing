@@ -6,8 +6,8 @@
 
   <ItemGroup>
     <PackageReference Include="Mapster" Version="3.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.1" />
-    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.8.13" />
+    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.5" />
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.9" />
   </ItemGroup>
 
   <ItemGroup>

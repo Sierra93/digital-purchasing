@@ -5,11 +5,19 @@ namespace DigitalPurchasing.Core.Interfaces
 {
     public interface ISupplierOfferService
     {
+        void UpdateStatus(Guid id, SupplierOfferStatus status);
+        void UpdateSupplierName(Guid id, string name);
+
         CreateFromFileResponse CreateFromFile(Guid competitionListId, string filePath);
         SupplierOfferVm GetById(Guid id);
 
         SupplierOfferColumnsDataVm GetColumnsData(Guid id);
         void SaveColumns(Guid supplierOfferId, SupplierOfferColumnsVm columns);
+
+        void GenerateRawItems(Guid id);
+
+        SOMatchItemsVm MatchItemsData(Guid id);
+        
     }
 
     public class UploadedDocumentVm
@@ -38,6 +46,9 @@ namespace DigitalPurchasing.Core.Interfaces
         public UploadedDocumentVm UploadedDocument { get; set; }
         public SupplierOfferStatus Status { get; set; }
         public ExcelTable ExcelTable { get; set; }
+
+        public string SupplierName { get; set; }
+        public string CompanyName { get; set; }
     }
 
     public class SupplierOfferColumnsVm
@@ -51,6 +62,23 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class SupplierOfferColumnsDataVm : SupplierOfferColumnsVm
     {
+        public string SupplierName { get; set; }
         public List<string> Columns { get; set; }
+    }
+
+    public class SOMatchItemsVm
+    {
+        public string SupplierName { get; set; }
+
+        public class Item
+        {
+            public string RawCode { get; set; }
+            public string RawName { get; set; }
+            public string RawUom { get; set; }
+            public decimal RawQty { get; set; }
+            public decimal RawPrice { get; set; }
+        }
+
+        public List<Item> Items = new List<Item>();
     }
 }

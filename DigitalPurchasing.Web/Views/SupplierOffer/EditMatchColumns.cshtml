@@ -6,13 +6,19 @@
     Layout = "_Layout";
 }
 
-<h2 class="with-button">@ViewBag.Title</h2>
-<div class="btn-group">
-    <a class="btn btn-default" asp-action="Edit" asp-controller="CompetitionList" asp-route-id="@Model.CompetitionList.Id">Назад к конкурентному листу</a>
-</div>
+<partial name="_Header" model="@((string)ViewBag.Title, Model.CompetitionList.Id)" />
 
 <h3>Сопоставление названия колонок из коммерческого предложения поставщика с названиями колонок системы</h3>
 <div id="app">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group" v-bind:class="supplierNameClass">
+                <label>Поставщик</label>
+                <input type="text" class="form-control" placeholder="" v-model="supplierName" v-on:input="updateSupplierName">
+                <span class="help-block" v-show="supplierNameHasError">Укажите имя поставщика</span>
+            </div>
+        </div>
+    </div>
     <table class="table table-striped">
         <thead>
         <tr>
@@ -55,7 +61,7 @@
         </tr>
         </tbody>
     </table>
-    <button v-on:click="saveColumns" class="btn btn-primary">Сохранить соответствие столбцов</button>&nbsp;
+    <button v-on:click="saveColumns" class="btn btn-primary" v-bind:disabled="isSaveDisabled">Сохранить соответствие столбцов</button>&nbsp;
     <label v-if="isSaved">Сохранено!</label>
 </div>
 
@@ -92,10 +98,18 @@
 {
     <script>
         (function() {
+            function getInputClass(hasError) {
+                return {
+                    'has-error': hasError,
+                    'has-success': !hasError
+                };
+            };
             var app = new Vue({
                 el: '#app',
                 data: function() {
                     return {
+                        id: '@Model.Id',
+                        supplierName: '',
                         columnCode: null,
                         columnName: null,
                         columnUom: null,
@@ -112,6 +126,7 @@
                         data.columns.forEach(function(el) {
                             vm.columns.push({ text: el, value: el });
                         });
+                        vm.supplierName = data.supplierName;
                         vm.columnCode = data.code;
                         vm.columnName = data.name;
                         vm.columnUom = data.uom;
@@ -122,11 +137,25 @@
                         alert('error');
                     });
                 },
+                computed: {
+                    supplierNameHasError: function() {
+                        if (!this.supplierName) {
+                            return true;
+                        }
+                        return false;
+                    },
+                    supplierNameClass: function() {
+                        return getInputClass(this.supplierNameHasError);
+                    },
+                    isSaveDisabled: function() {
+                        return this.supplierNameHasError;
+                    }
+                },
                 methods: {
                     saveColumns: function() {
                         var vm = this;
                         var data = {
-                            soId: '@Model.Id',
+                            soId: vm.id,
                             code: vm.columnCode,
                             name: vm.columnName,
                             uom: vm.columnUom,
@@ -139,8 +168,14 @@
                         }, function (res) {
 
                         });
-                        console.log('saveColumns', data);
-                    }
+                    },
+                    updateSupplierName: _.debounce(function (e) {
+                        var data = { name: this.supplierName, id: this.id };
+                        this.$http.post('@Url.Action("UpdateSupplierName", "SupplierOffer")', data).then(function(res) {
+                        }, function(res) {
+                            alert('error');
+                        });
+                    }, 300)
                 }
             });
         })();

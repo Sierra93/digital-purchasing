@@ -1,0 +1,6 @@
+@model (string Title, Guid CompetitionListId)
+
+<h2 class="with-button">@Model.Title</h2>
+<div class="btn-group">
+    <a class="btn btn-default" asp-action="Edit" asp-controller="CompetitionList" asp-route-id="@Model.CompetitionListId">Назад к конкурентному листу</a>
+</div>

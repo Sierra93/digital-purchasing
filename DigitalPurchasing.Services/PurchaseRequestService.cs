@@ -8,7 +8,6 @@ using DigitalPurchasing.Models;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using MatchItemsResponse = DigitalPurchasing.Core.Interfaces.MatchItemsResponse;
 
 namespace DigitalPurchasing.Services
 {
@@ -255,7 +254,7 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
         }
 
-        public MatchItemsResponse MatchItemsData(Guid id)
+        public PRMatchItemsResponse MatchItemsData(Guid id)
         {
             var pr = _db.PurchaseRequests.Find(id);
             if (pr == null)
@@ -269,7 +268,7 @@ namespace DigitalPurchasing.Services
                 .Where(q => q.PurchaseRequestId == id)
                 .OrderBy(q => q.Position).ToList();
 
-            var res = new MatchItemsResponse { Items = entities.Adapt<List<MatchItemsResponse.Item>>(), CustomerName = pr.CustomerName };
+            var res = new PRMatchItemsResponse { Items = entities.Adapt<List<PRMatchItemsResponse.Item>>(), CustomerName = pr.CustomerName };
 
             return res;
         }
@@ -320,7 +319,7 @@ namespace DigitalPurchasing.Services
     public class PurchaseRequestItemMappings : IRegister
     {
         public void Register(TypeAdapterConfig config) =>
-            config.NewConfig<PurchaseRequestItem, MatchItemsResponse.Item>()
+            config.NewConfig<PurchaseRequestItem, PRMatchItemsResponse.Item>()
                 .Map(d => d.NomenclatureUom, s => s.NomenclatureId.HasValue ? s.Nomenclature.BatchUom.Name : null)
                 .Map(q => q.RawUom, q => q.RawUomMatchId.HasValue ? q.RawUomMatch.Name : q.RawUom);
     }

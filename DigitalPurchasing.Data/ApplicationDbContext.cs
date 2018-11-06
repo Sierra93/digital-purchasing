@@ -17,6 +17,7 @@ namespace DigitalPurchasing.Data
         private Guid CompanyId => _tenantService.Get().CompanyId;
 
         public DbSet<Company> Companies { get; set; }
+        public DbSet<Currency> Currencies { get; set; }
         public DbSet<Nomenclature> Nomenclatures { get; set; }
         public DbSet<NomenclatureAlternative> NomenclatureAlternatives { get; set; }
         public DbSet<NomenclatureCategory> NomenclatureCategories { get; set; }
@@ -27,6 +28,7 @@ namespace DigitalPurchasing.Data
         public DbSet<QuotationRequest> QuotationRequests { get; set; }
         public DbSet<CompetitionList> CompetitionLists { get; set; }
         public DbSet<SupplierOffer> SupplierOffers { get; set; }
+        public DbSet<SupplierOfferItem> SupplierOfferItems { get; set; }
 
         #region Counters
 
@@ -94,6 +96,28 @@ namespace DigitalPurchasing.Data
 
             builder.Entity<Delivery>().HasMany(q => q.PurchaseRequests).WithOne(q => q.Delivery).HasForeignKey(q => q.DeliveryId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<Delivery>().HasMany(q => q.QuotationRequests).WithOne(q => q.Delivery).HasForeignKey(q => q.DeliveryId).OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Currency>(e =>
+            {
+                e.HasData(new Currency
+                {
+                    Id = new Guid("77fd8325b90c42ae9e03a2f92ea6688e"),
+                    Name = "RUB",
+                    CreatedOn = new DateTime(2018, 11, 5)
+                });
+                e.HasData(new Currency
+                {
+                    Id = new Guid("bb4ebd3eba244c8688c940306a171349"),
+                    Name = "USD",
+                    CreatedOn = new DateTime(2018, 11, 5)
+                });
+                e.HasData(new Currency
+                {
+                    Id = new Guid("00a0127ef9dc4b1ab4db13c014e827ec"),
+                    Name = "EUR",
+                    CreatedOn = new DateTime(2018, 11, 5)
+                });
+            });
 
             // default filters to show company data
             builder.Entity<PurchaseRequest>().HasQueryFilter(o => o.OwnerId == CompanyId);

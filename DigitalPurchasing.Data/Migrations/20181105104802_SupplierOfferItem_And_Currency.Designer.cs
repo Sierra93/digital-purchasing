@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20181105104802_SupplierOfferItem_And_Currency")]
+    partial class SupplierOfferItem_And_Currency
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -607,23 +609,17 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<DateTime>("CreatedOn");
 
-                    b.Property<Guid>("CurrencyId");
-
                     b.Property<Guid>("OwnerId");
 
                     b.Property<int>("PublicId");
 
                     b.Property<int>("Status");
 
-                    b.Property<string>("SupplierName");
-
                     b.Property<Guid?>("UploadedDocumentId");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CompetitionListId");
-
-                    b.HasIndex("CurrencyId");
 
                     b.HasIndex("OwnerId");
 
@@ -640,6 +636,8 @@ namespace DigitalPurchasing.Data.Migrations
                         .ValueGeneratedOnAdd();
 
                     b.Property<DateTime>("CreatedOn");
+
+                    b.Property<Guid>("CurrencyId");
 
                     b.Property<int>("Position");
 
@@ -658,6 +656,8 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<Guid>("SupplierOfferId");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CurrencyId");
 
                     b.HasIndex("SupplierOfferId");
 
@@ -1010,11 +1010,6 @@ namespace DigitalPurchasing.Data.Migrations
                         .HasForeignKey("CompetitionListId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("DigitalPurchasing.Models.Currency", "Currency")
-                        .WithMany()
-                        .HasForeignKey("CurrencyId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.HasOne("DigitalPurchasing.Models.Company", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerId")
@@ -1028,6 +1023,11 @@ namespace DigitalPurchasing.Data.Migrations
 
             modelBuilder.Entity("DigitalPurchasing.Models.SupplierOfferItem", b =>
                 {
+                    b.HasOne("DigitalPurchasing.Models.Currency", "Currency")
+                        .WithMany()
+                        .HasForeignKey("CurrencyId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("DigitalPurchasing.Models.SupplierOffer", "SupplierOffer")
                         .WithMany()
                         .HasForeignKey("SupplierOfferId")

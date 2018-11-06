@@ -14,7 +14,7 @@ namespace DigitalPurchasing.Core.Interfaces
         RawItemResponse GetRawItems(Guid id);
         void SaveRawItems(Guid id, IEnumerable<RawItemResponse.RawItem> items);
         void UpdateStatus(Guid id, PurchaseRequestStatus status);
-        MatchItemsResponse MatchItemsData(Guid id);
+        PRMatchItemsResponse MatchItemsData(Guid id);
         void SaveMatch(Guid id, Guid nomenclatureId, Guid uomId, decimal factorC, decimal factorN);
         void SaveCompanyName(Guid prId, string companyName);
         void SaveCustomerName(Guid prId, string customerName);
@@ -85,7 +85,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public bool IsSaved { get; set; }
     }
 
-    public class MatchItemsResponse
+    public class PRMatchItemsResponse
     {
         public class Item
         {
