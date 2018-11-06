@@ -74,7 +74,7 @@ namespace DigitalPurchasing.Core.Interfaces
         {
             public string RawCode { get; set; }
             public string RawName { get; set; }
-            public string RawUom { get; set; }
+            public string RawUomStr { get; set; }
             public decimal RawQty { get; set; }
             public decimal RawPrice { get; set; }
         }

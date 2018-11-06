@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20181106122756_SupplierOfferItem_PropsForMatchingUp")]
+    partial class SupplierOfferItem_PropsForMatchingUp
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -661,9 +663,9 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<decimal>("RawQty")
                         .HasColumnType("decimal(18, 4)");
 
-                    b.Property<Guid?>("RawUomId");
+                    b.Property<string>("RawUom");
 
-                    b.Property<string>("RawUomStr");
+                    b.Property<Guid?>("RawUomMatchId");
 
                     b.Property<Guid>("SupplierOfferId");
 
@@ -671,7 +673,7 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.HasIndex("NomenclatureId");
 
-                    b.HasIndex("RawUomId");
+                    b.HasIndex("RawUomMatchId");
 
                     b.HasIndex("SupplierOfferId");
 
@@ -1046,9 +1048,9 @@ namespace DigitalPurchasing.Data.Migrations
                         .WithMany()
                         .HasForeignKey("NomenclatureId");
 
-                    b.HasOne("DigitalPurchasing.Models.UnitsOfMeasurement", "RawUom")
+                    b.HasOne("DigitalPurchasing.Models.UnitsOfMeasurement", "RawUomMatch")
                         .WithMany()
-                        .HasForeignKey("RawUomId");
+                        .HasForeignKey("RawUomMatchId");
 
                     b.HasOne("DigitalPurchasing.Models.SupplierOffer", "SupplierOffer")
                         .WithMany()

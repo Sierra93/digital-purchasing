@@ -141,7 +141,7 @@ namespace DigitalPurchasing.Services
                     RawName = string.IsNullOrEmpty(entity.UploadedDocument.Headers.Name) ? "" : table.GetValue(entity.UploadedDocument.Headers.Name, i),
                     RawQty = string.IsNullOrEmpty(entity.UploadedDocument.Headers.Qty) ? 0 : table.GetDecimalValue(entity.UploadedDocument.Headers.Qty, i),
                     RawPrice = string.IsNullOrEmpty(entity.UploadedDocument.Headers.Price) ? 0 : table.GetDecimalValue(entity.UploadedDocument.Headers.Price, i),
-                    RawUom = string.IsNullOrEmpty(entity.UploadedDocument.Headers.Uom) ? "" : table.GetValue(entity.UploadedDocument.Headers.Uom, i)
+                    RawUomStr = string.IsNullOrEmpty(entity.UploadedDocument.Headers.Uom) ? "" : table.GetValue(entity.UploadedDocument.Headers.Uom, i)
                 };
 
                 rawItems.Add(rawItem);

@@ -41,7 +41,7 @@
                 <td class="text-center">{{getRowIndex(item)}}</td>
                 <td>{{item.rawCode}}</td>
                 <td>{{item.rawName}}</td>
-                <td>{{item.rawUom}}</td>
+                <td>{{item.rawUomStr}}</td>
                 <td v-if="isMatched(item)" class="border-left">{{item.nomenclatureCode}}</td>
                 <td v-if="isMatched(item)">{{item.nomenclatureName}}</td>
                 <td v-if="isMatched(item)">{{item.nomenclatureUom}}</td>
@@ -236,7 +236,7 @@
                         return this.getRowIndex0(item) + 1;
                     },
                     isMatched: function(item) {
-                        return item.nomenclatureId && item.rawUomMatchId && (item.nomenclatureFactor > 0 || item.commonFactor > 0);
+                        return item.nomenclatureId && item.rawUomId && (item.nomenclatureFactor > 0 || item.commonFactor > 0);
                     },
                     openMatch: function (item) {
                         this.currentItem = item;
@@ -254,8 +254,8 @@
                             //this.nomenclatureAutocomplete = '';
                             this.selectedNomenclature = null;
                         }
-                        if (this.currentItem.rawUomMatchId) {
-                            this.loadUom(this.currentItem.rawUomMatchId);
+                        if (this.currentItem.rawUomId) {
+                            this.loadUom(this.currentItem.rawUomId);
                         } else {
                             //this.uomAutocomplete = this.currentItem.rawUom;
                             this.selectedUom = null;
@@ -288,7 +288,7 @@
                             $this.items[index].nomenclatureName = $this.selectedNomenclature.name;
                             $this.items[index].nomenclatureCode = $this.selectedNomenclature.code;
                             $this.items[index].nomenclatureUom = $this.selectedNomenclature.batchUomName;
-                            $this.items[index].rawUomMatchId = $this.selectedUom.id;
+                            $this.items[index].rawUomId = $this.selectedUom.id;
                         }, function(res) {
                             alert('error');
                         });
