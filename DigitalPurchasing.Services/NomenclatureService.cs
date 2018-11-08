@@ -180,7 +180,7 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
         }
 
-        public void AddAlternative(Guid nomenclatureId, Guid prItemId)
+        public void AddAlternativeCustomer(Guid nomenclatureId, Guid prItemId)
         {
             var pr =_db.PurchaseRequestItems.Include(q => q.PurchaseRequest).First(q => q.Id == prItemId);
             AddAlternative(
@@ -190,6 +190,18 @@ namespace DigitalPurchasing.Services
                 pr.RawName,
                 pr.RawCode,
                 pr.RawUomMatchId);
+        }
+
+        public void AddAlternativeSupplier(Guid nomenclatureId, Guid soItemId)
+        {
+            var pr =_db.SupplierOfferItems.Include(q => q.SupplierOffer).First(q => q.Id == soItemId);
+            AddAlternative(
+                nomenclatureId,
+                pr.SupplierOffer.SupplierName,
+                ClientType.Supplier,
+                pr.RawName,
+                pr.RawCode,
+                pr.RawUomId);
         }
 
         public NomenclatureAlternativeVm GetAlternativeById(Guid id)

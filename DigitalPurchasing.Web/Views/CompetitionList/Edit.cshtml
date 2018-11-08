@@ -13,13 +13,96 @@
         </label>
     </form>
 </div>
-
-<ul>
-    @foreach (var so in Model.SupplierOffers.OrderBy(q => q.CreatedOn))
-    {
-        var soTitle = $"КП № {so.PublicId} от {so.CreatedOn:dd.MM.yyyy HH:mm}";
-        <li>
-            <a asp-action="Edit" asp-controller="SupplierOffer" asp-route-id="@so.Id">@soTitle</a>
-        </li>
-    }
-</ul>
+<div class="long-table-wrap">
+    <div class="long-table">
+        <div class="long-table-item">
+            <div>
+                <p>
+                    <span>Клиент: @Model.PurchaseRequest.CustomerName</span>&nbsp;
+                </p>
+            </div>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <td>№</td>
+                    <td>Код</td>
+                    <td>Наименование</td>
+                    <td>ЕИ</td>
+                    <td>Кол-во для заказа, ЕИ</td>
+                </tr>
+                </thead>
+                <tfoot>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>@Model.PurchaseRequest.Items.Sum(q => q.RawQty)</td>
+                </tr>
+                </tfoot>
+                <tbody>
+                    @foreach (var item in Model.PurchaseRequest.Items)
+                    {
+                        <tr>
+                            <td>@item.Position</td>
+                            <td>@item.RawCode</td>
+                            <td>@item.RawName</td>
+                            <td>@item.RawUom</td>
+                            <td>@item.RawQty</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @foreach (var so in Model.SupplierOffers)
+        {
+            var soTitle = $"КП № {so.PublicId} от {so.CreatedOn:dd.MM.yyyy HH:mm}";
+            <div class="long-table-item">
+                <div>
+                    <p>
+                        <span>Поставщик: @so.SupplierName</span>&nbsp;
+                        <a asp-action="Edit" asp-controller="SupplierOffer" asp-route-id="@so.Id">@soTitle</a>
+                    </p>
+                </div>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <td>Код</td>
+                            <td>Наименование</td>
+                            <td>ЕИ</td>
+                            <td>Кол-во, ЕИ</td>
+                            <td>Цена за ЕИ</td>
+                            <td>Валюта</td>
+                            <td>Стоимость, валюта</td>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td>@so.Items.Sum(q => q.RawQty)</td>
+                            <td></td>
+                            <td></td>
+                            <td>@so.Items.Sum(q => q.TotalPrice).ToString("##.00")</td>
+                        </tr>
+                    </tfoot>
+                    <tbody>
+                        @foreach (var item in so.Items)
+                        {
+                            <tr>
+                                <td>@item.RawCode</td>
+                                <td>@item.RawName</td>
+                                <td>@item.RawUom</td>
+                                <td>@item.RawQty</td>
+                                <td>@item.RawPrice</td>
+                                <td>@so.Currency.Name</td>
+                                <td>@item.TotalPrice.ToString("##.00")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

@@ -23,17 +23,51 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class CompetitionListVm
     {
-        public class SupplierOffer
+        public class PurchaseRequestVm
         {
             public Guid Id { get; set; }
             public int PublicId { get; set; }
             public DateTime CreatedOn { get; set; }
+            public string CustomerName { get; set; }
+            public List<PurchaseRequestItemVm> Items { get; set; }
+        }
+
+        public class PurchaseRequestItemVm
+        {
+            public Guid Id { get; set; }
+            public int Position { get; set; }
+            public string RawCode { get; set; }
+            public string RawName { get; set; }
+            public string RawUom { get; set; }
+            public decimal RawQty { get; set; }
+        }
+
+        public class SupplierOfferVm
+        {
+            public Guid Id { get; set; }
+            public int PublicId { get; set; }
+            public DateTime CreatedOn { get; set; }
+            public string SupplierName { get; set; }
+            public List<SupplierOfferItemVm> Items { get; set; }
+            public CurrencyVm Currency { get; set; }
+        }
+
+        public class SupplierOfferItemVm
+        {
+            public Guid Id { get; set; }
+            public string RawCode { get; set; }
+            public string RawName { get; set; }
+            public string RawUom { get; set; }
+            public decimal RawQty { get; set; }
+            public decimal RawPrice { get; set; }
+            public decimal TotalPrice => RawQty * RawPrice;
         }
 
         public Guid Id { get; set; }
         public int PublicId { get; set; }
         public DateTime CreatedOn { get; set; }
 
-        public IEnumerable<SupplierOffer> SupplierOffers { get; set; }
+        public PurchaseRequestVm PurchaseRequest { get; set; }
+        public IEnumerable<SupplierOfferVm> SupplierOffers { get; set; }
     }
 }

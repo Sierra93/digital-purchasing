@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using DigitalPurchasing.Core.Interfaces;
@@ -68,8 +69,28 @@ namespace DigitalPurchasing.Services
 
         public CompetitionListVm GetById(Guid id)
         {
-            var entity = _db.CompetitionLists.Include(q => q.SupplierOffers).FirstOrDefault(q => q.Id == id);
-            return entity?.Adapt<CompetitionListVm>();
+            var competitionList = _db.CompetitionLists
+                .Include(q => q.SupplierOffers)
+                .FirstOrDefault(q => q.Id == id);
+            
+            var vm = competitionList?.Adapt<CompetitionListVm>();
+
+            if (vm != null)
+            {
+                var quotationRequest = _db.QuotationRequests.Find(competitionList.QuotationRequestId);
+                var purchaseRequest = _db.PurchaseRequests.Include(q => q.Items).First(q => q.Id == quotationRequest.PurchaseRequestId);
+                vm.PurchaseRequest = purchaseRequest.Adapt<CompetitionListVm.PurchaseRequestVm>();
+
+                var supplierOffers = _db.SupplierOffers.AsNoTracking().Include(q => q.Currency).Where(q => q.CompetitionListId == id).ToList();
+                foreach (var supplierOffer in supplierOffers)
+                {
+                    supplierOffer.Items = _db.SupplierOfferItems.Include(q => q.RawUom).Where(q => q.SupplierOfferId == supplierOffer.Id).ToList();
+                }
+                // mappings for items - SupplierOfferItemMappings
+                vm.SupplierOffers = supplierOffers.Adapt<IEnumerable<CompetitionListVm.SupplierOfferVm>>();
+            }
+
+            return vm;
         }
     }
 }

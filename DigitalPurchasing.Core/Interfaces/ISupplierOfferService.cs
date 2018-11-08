@@ -73,11 +73,22 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public class Item
         {
+            public Guid Id { get; set; }
             public string RawCode { get; set; }
             public string RawName { get; set; }
             public string RawUomStr { get; set; }
             public decimal RawQty { get; set; }
             public decimal RawPrice { get; set; }
+
+            public Guid? RawUomId { get; set; }
+
+            public Guid? NomenclatureId { get; set; }
+            public string NomenclatureName { get; set; }
+            public string NomenclatureCode { get; set; }
+            public string NomenclatureUom { get; set; }
+
+            public decimal NomenclatureFactor { get; set; }
+            public decimal CommonFactor { get; set; }
         }
 
         public List<Item> Items = new List<Item>();

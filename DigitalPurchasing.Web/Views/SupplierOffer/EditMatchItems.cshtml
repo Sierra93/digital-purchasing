@@ -272,6 +272,7 @@
                             factorC: $this.factor === 'c' ? $this.currentItem.commonFactor : 0,
                             factorN: $this.factor === 'n' ? $this.currentItem.nomenclatureFactor : 0
                         };
+                        console.info('saveMatch', data);
                         this.$http.post('@Url.Action("SaveMatchItem")', data).then(function(res) {
                             var index = $this.getRowIndex0($this.currentItem);
                             $this.items[index].nomenclatureId = $this.selectedNomenclature.id;

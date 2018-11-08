@@ -31,7 +31,7 @@ namespace DigitalPurchasing.Web.Controllers
             var nomenclature = _nomenclatureService.AutocompleteSingle(model.NomenclatureId);
             _uomService.SaveConversionRate(model.UomId, nomenclature.Data.BatchUomId, nomenclature.Data.Id, model.FactorC, model.FactorN);
             _purchasingRequestService.SaveMatch(model.ItemId, model.NomenclatureId, model.UomId, model.FactorC, model.FactorN);
-            _nomenclatureService.AddAlternative(model.NomenclatureId, model.ItemId);
+            _nomenclatureService.AddAlternativeCustomer(model.NomenclatureId, model.ItemId);
             return Ok();
         }
     }

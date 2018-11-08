@@ -100,3 +100,17 @@ h2.with-button + .btn-group .btn-file label {
   font-weight: normal;
   margin-bottom: 0;
 }
+
+/* Scrollable table in CL */
+.long-table-wrap {
+  width: 100%;
+}
+.long-table {
+  width: 100%;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  white-space: nowrap;
+}
+.long-table-item {
+  display:inline-block;
+}

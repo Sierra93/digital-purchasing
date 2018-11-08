@@ -160,11 +160,12 @@ namespace DigitalPurchasing.Services
             }
 
             var entities = _db.SupplierOfferItems
-                //.Include(q => q.Nomenclature).ThenInclude(q => q.BatchUom)
-                //.Include(q => q.RawUomMatch)
+                .Include(q => q.Nomenclature).ThenInclude(q => q.BatchUom)
+                .Include(q => q.RawUom)
                 .Where(q => q.SupplierOfferId == soId)
                 .OrderBy(q => q.Position).ToList();
 
+            // Mappings - SupplierOfferItemMappings
             var res = new SOMatchItemsVm { Items = entities.Adapt<List<SOMatchItemsVm.Item>>(), SupplierName = supplierOffer.SupplierName };
 
             return res;
@@ -178,6 +179,19 @@ namespace DigitalPurchasing.Services
             entity.CommonFactor = factorC;
             entity.NomenclatureFactor = factorN;
             _db.SaveChanges();
+        }
+    }
+
+    public class SupplierOfferItemMappings : IRegister
+    {
+        public void Register(TypeAdapterConfig config)
+        {
+            config.NewConfig<SupplierOfferItem, SOMatchItemsVm.Item>()
+                .Map(d => d.NomenclatureUom, s => s.NomenclatureId.HasValue ? s.Nomenclature.BatchUom.Name : null)
+                .Map(q => q.RawUomStr, q => q.RawUomId.HasValue ? q.RawUom.Name : q.RawUomStr);
+
+            config.NewConfig<SupplierOfferItem, CompetitionListVm.SupplierOfferItemVm>()
+                .Map(q => q.RawUom, q => q.RawUomId.HasValue ? q.RawUom.Name : q.RawUomStr);
         }
     }
 }

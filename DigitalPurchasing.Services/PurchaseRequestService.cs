@@ -242,7 +242,7 @@ namespace DigitalPurchasing.Services
             {
                 if (prItem.NomenclatureId != null && prItem.RawUomMatchId != null && ( prItem.CommonFactor > 0 || prItem.NomenclatureFactor > 0 ))
                 {
-                    _nomenclatureService.AddAlternative(prItem.NomenclatureId.Value, prItem.Id);
+                    _nomenclatureService.AddAlternativeCustomer(prItem.NomenclatureId.Value, prItem.Id);
                 }
             }
         }
@@ -268,6 +268,7 @@ namespace DigitalPurchasing.Services
                 .Where(q => q.PurchaseRequestId == id)
                 .OrderBy(q => q.Position).ToList();
 
+            // mappings - PurchaseRequestItemMappings
             var res = new PRMatchItemsResponse { Items = entities.Adapt<List<PRMatchItemsResponse.Item>>(), CustomerName = pr.CustomerName };
 
             return res;
