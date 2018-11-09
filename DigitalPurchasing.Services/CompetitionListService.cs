@@ -79,15 +79,28 @@ namespace DigitalPurchasing.Services
             {
                 var quotationRequest = _db.QuotationRequests.Find(competitionList.QuotationRequestId);
                 var purchaseRequest = _db.PurchaseRequests.Include(q => q.Items).First(q => q.Id == quotationRequest.PurchaseRequestId);
+
+                var nomIds = purchaseRequest.Items.Where(q => q.NomenclatureId.HasValue).Select(q => q.NomenclatureId.Value).ToList();
+
                 vm.PurchaseRequest = purchaseRequest.Adapt<CompetitionListVm.PurchaseRequestVm>();
+                vm.PurchaseRequest.Items = vm.PurchaseRequest.Items.OrderBy(q => q.NomenclatureId).ToList();
 
                 var supplierOffers = _db.SupplierOffers.AsNoTracking().Include(q => q.Currency).Where(q => q.CompetitionListId == id).ToList();
                 foreach (var supplierOffer in supplierOffers)
                 {
-                    supplierOffer.Items = _db.SupplierOfferItems.Include(q => q.RawUom).Where(q => q.SupplierOfferId == supplierOffer.Id).ToList();
+                    supplierOffer.Items = _db.SupplierOfferItems.Include(q => q.RawUom)
+                        .Where(q => q.NomenclatureId.HasValue && nomIds.Contains(q.NomenclatureId.Value) &&
+                                    q.RawUomId.HasValue &&
+                                    q.SupplierOfferId == supplierOffer.Id)
+                        .ToList();
                 }
                 // mappings for items - SupplierOfferItemMappings
-                vm.SupplierOffers = supplierOffers.Adapt<IEnumerable<CompetitionListVm.SupplierOfferVm>>();
+                vm.SupplierOffers = supplierOffers.Adapt<IEnumerable<CompetitionListVm.SupplierOfferVm>>().OrderBy(q => q.CreatedOn).ToList();
+
+                foreach (var supplierOffer in vm.SupplierOffers)
+                {
+                    supplierOffer.Items = supplierOffer.Items.OrderBy(q => q.NomenclatureId).ToList();
+                }
             }
 
             return vm;

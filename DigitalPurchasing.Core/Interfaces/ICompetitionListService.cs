@@ -35,6 +35,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public class PurchaseRequestItemVm
         {
             public Guid Id { get; set; }
+            public Guid NomenclatureId { get; set; }
             public int Position { get; set; }
             public string RawCode { get; set; }
             public string RawName { get; set; }
@@ -55,6 +56,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public class SupplierOfferItemVm
         {
             public Guid Id { get; set; }
+            public Guid NomenclatureId { get; set; }
             public string RawCode { get; set; }
             public string RawName { get; set; }
             public string RawUom { get; set; }

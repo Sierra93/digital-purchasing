@@ -111,6 +111,12 @@ h2.with-button + .btn-group .btn-file label {
   overflow-y: hidden;
   white-space: nowrap;
 }
+.long-table thead td {
+  font-weight: bold;
+}
+.long-table tfoot td {
+  font-weight: bold;
+}
 .long-table-item {
   display:inline-block;
 }

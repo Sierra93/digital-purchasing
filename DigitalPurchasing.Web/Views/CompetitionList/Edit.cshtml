@@ -18,7 +18,8 @@
         <div class="long-table-item">
             <div>
                 <p>
-                    <span>Клиент: @Model.PurchaseRequest.CustomerName</span>&nbsp;
+                    <b>Клиент: @Model.PurchaseRequest.CustomerName</b>&nbsp;
+                    <a asp-action="Edit" asp-controller="PurchaseRequest" asp-route-id="@Model.PurchaseRequest.Id">@($"Заявка № {Model.PurchaseRequest.PublicId} от {Model.PurchaseRequest.CreatedOn:dd.MM.yyyy HH:mm}")</a>
                 </p>
             </div>
             <table class="table table-striped">
@@ -37,7 +38,7 @@
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td>@Model.PurchaseRequest.Items.Sum(q => q.RawQty)</td>
+                    <td>@Model.PurchaseRequest.Items.Sum(q => q.RawQty).ToString("0.####")</td>
                 </tr>
                 </tfoot>
                 <tbody>
@@ -48,7 +49,7 @@
                             <td>@item.RawCode</td>
                             <td>@item.RawName</td>
                             <td>@item.RawUom</td>
-                            <td>@item.RawQty</td>
+                            <td>@item.RawQty.ToString("0.####")</td>
                         </tr>
                     }
                 </tbody>
@@ -60,7 +61,7 @@
             <div class="long-table-item">
                 <div>
                     <p>
-                        <span>Поставщик: @so.SupplierName</span>&nbsp;
+                        <b>Поставщик: @so.SupplierName</b>&nbsp;
                         <a asp-action="Edit" asp-controller="SupplierOffer" asp-route-id="@so.Id">@soTitle</a>
                     </p>
                 </div>
@@ -81,10 +82,10 @@
                             <td></td>
                             <td></td>
                             <td></td>
-                            <td>@so.Items.Sum(q => q.RawQty)</td>
+                            <td>@so.Items.Sum(q => q.RawQty).ToString("0.####")</td>
                             <td></td>
                             <td></td>
-                            <td>@so.Items.Sum(q => q.TotalPrice).ToString("##.00")</td>
+                            <td>@so.Items.Sum(q => q.TotalPrice).ToString("#.00")</td>
                         </tr>
                     </tfoot>
                     <tbody>
@@ -94,10 +95,10 @@
                                 <td>@item.RawCode</td>
                                 <td>@item.RawName</td>
                                 <td>@item.RawUom</td>
-                                <td>@item.RawQty</td>
-                                <td>@item.RawPrice</td>
+                                <td>@item.RawQty.ToString("0.####")</td>
+                                <td>@item.RawPrice.ToString("#.00")</td>
                                 <td>@so.Currency.Name</td>
-                                <td>@item.TotalPrice.ToString("##.00")</td>
+                                <td>@item.TotalPrice.ToString("#.00")</td>
                             </tr>
                         }
                     </tbody>
