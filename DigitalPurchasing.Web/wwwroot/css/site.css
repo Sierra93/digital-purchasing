@@ -120,3 +120,6 @@ h2.with-button + .btn-group .btn-file label {
 .long-table-item {
   display:inline-block;
 }
+.long-table .with-left-border {
+  border-left: 1px solid #ddd
+}

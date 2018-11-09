@@ -1,3 +1,4 @@
+@using DigitalPurchasing.Core
 @model DigitalPurchasing.Core.Interfaces.CompetitionListVm
 
 @{
@@ -38,7 +39,7 @@
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td>@Model.PurchaseRequest.Items.Sum(q => q.RawQty).ToString("0.####")</td>
+                    <td>@Model.PurchaseRequest.Items.Sum(q => q.RawQty).ToString(Consts.Format.Qty)</td>
                 </tr>
                 </tfoot>
                 <tbody>
@@ -49,7 +50,7 @@
                             <td>@item.RawCode</td>
                             <td>@item.RawName</td>
                             <td>@item.RawUom</td>
-                            <td>@item.RawQty.ToString("0.####")</td>
+                            <td>@item.RawQty.ToString(Consts.Format.Qty)</td>
                         </tr>
                     }
                 </tbody>
@@ -65,7 +66,7 @@
                         <a asp-action="Edit" asp-controller="SupplierOffer" asp-route-id="@so.Id">@soTitle</a>
                     </p>
                 </div>
-                <table class="table table-striped">
+                <table class="table table-striped with-left-border">
                     <thead>
                         <tr>
                             <td>Код</td>
@@ -82,10 +83,10 @@
                             <td></td>
                             <td></td>
                             <td></td>
-                            <td>@so.Items.Sum(q => q.RawQty).ToString("0.####")</td>
+                            <td>@so.Items.Sum(q => q.RawQty).ToString(Consts.Format.Qty)</td>
                             <td></td>
                             <td></td>
-                            <td>@so.Items.Sum(q => q.TotalPrice).ToString("#.00")</td>
+                            <td>@so.Items.Sum(q => q.TotalPrice).ToString(Consts.Format.Money)</td>
                         </tr>
                     </tfoot>
                     <tbody>
@@ -95,10 +96,10 @@
                                 <td>@item.RawCode</td>
                                 <td>@item.RawName</td>
                                 <td>@item.RawUom</td>
-                                <td>@item.RawQty.ToString("0.####")</td>
-                                <td>@item.RawPrice.ToString("#.00")</td>
+                                <td>@item.RawQty.ToString(Consts.Format.Qty)</td>
+                                <td>@item.RawPrice.ToString(Consts.Format.Money)</td>
                                 <td>@so.Currency.Name</td>
-                                <td>@item.TotalPrice.ToString("#.00")</td>
+                                <td>@item.TotalPrice.ToString(Consts.Format.Money)</td>
                             </tr>
                         }
                     </tbody>

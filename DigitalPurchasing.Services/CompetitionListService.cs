@@ -84,6 +84,11 @@ namespace DigitalPurchasing.Services
 
                 vm.PurchaseRequest = purchaseRequest.Adapt<CompetitionListVm.PurchaseRequestVm>();
                 vm.PurchaseRequest.Items = vm.PurchaseRequest.Items.OrderBy(q => q.NomenclatureId).ToList();
+                var idx = 0;
+                foreach (var requestItem in vm.PurchaseRequest.Items)
+                {
+                    requestItem.Position = ++idx;
+                }
 
                 var supplierOffers = _db.SupplierOffers.AsNoTracking().Include(q => q.Currency).Where(q => q.CompetitionListId == id).ToList();
                 foreach (var supplierOffer in supplierOffers)
