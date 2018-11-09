@@ -105,6 +105,18 @@ namespace DigitalPurchasing.Services
                 foreach (var supplierOffer in vm.SupplierOffers)
                 {
                     supplierOffer.Items = supplierOffer.Items.OrderBy(q => q.NomenclatureId).ToList();
+
+                    if (supplierOffer.Items.Count < vm.PurchaseRequest.Items.Count)
+                    {
+                        for (var i = 0; i < vm.PurchaseRequest.Items.Count; i++)
+                        {
+                            if (supplierOffer.Items.Count < i + 1 || vm.PurchaseRequest.Items[i].NomenclatureId !=
+                                supplierOffer.Items[i].NomenclatureId)
+                            {
+                                supplierOffer.Items.Insert(i, null);
+                            }
+                        }
+                    }
                 }
             }
 

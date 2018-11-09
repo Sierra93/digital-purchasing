@@ -62,35 +62,37 @@
             <div class="long-table-item">
                 <div>
                     <p>
-                        <b>Поставщик: @so.SupplierName</b>&nbsp;
+                        <b>Поставщик: @(so.SupplierName ?? "Не указан")</b>&nbsp;
                         <a asp-action="Edit" asp-controller="SupplierOffer" asp-route-id="@so.Id">@soTitle</a>
                     </p>
                 </div>
                 <table class="table table-striped with-left-border">
                     <thead>
-                        <tr>
-                            <td>Код</td>
-                            <td>Наименование</td>
-                            <td>ЕИ</td>
-                            <td>Кол-во, ЕИ</td>
-                            <td>Цена за ЕИ</td>
-                            <td>Валюта</td>
-                            <td>Стоимость, валюта</td>
-                        </tr>
+                    <tr>
+                        <td>Код</td>
+                        <td>Наименование</td>
+                        <td>ЕИ</td>
+                        <td>Кол-во, ЕИ</td>
+                        <td>Цена за ЕИ</td>
+                        <td>Валюта</td>
+                        <td>Стоимость, валюта</td>
+                    </tr>
                     </thead>
                     <tfoot>
-                        <tr>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td>@so.Items.Sum(q => q.RawQty).ToString(Consts.Format.Qty)</td>
-                            <td></td>
-                            <td></td>
-                            <td>@so.Items.Sum(q => q.TotalPrice).ToString(Consts.Format.Money)</td>
-                        </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>@so.Items.Where(q => q != null).Sum(q => q.RawQty).ToString(Consts.Format.Qty)</td>
+                        <td></td>
+                        <td></td>
+                        <td>@so.Items.Where(q => q != null).Sum(q => q.TotalPrice).ToString(Consts.Format.Money)</td>
+                    </tr>
                     </tfoot>
                     <tbody>
-                        @foreach (var item in so.Items)
+                    @foreach (var item in so.Items)
+                    {
+                        if (item != null)
                         {
                             <tr>
                                 <td>@item.RawCode</td>
@@ -102,6 +104,13 @@
                                 <td>@item.TotalPrice.ToString(Consts.Format.Money)</td>
                             </tr>
                         }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" style="text-align: center;">Не сопоставлено</td>
+                            </tr>
+                        }
+                    }
                     </tbody>
                 </table>
             </div>
