@@ -13,11 +13,12 @@
         <div class="col-md-4">
             <div class="form-group" v-bind:class="customerNameClass">
                 <label for="customer">Клиент</label>
-                <input type="text" class="form-control" placeholder="" v-model="customerName" v-on:input="updateCustomerName">
+                <input type="text" class="form-control" placeholder="" v-model="customerName" v-on:input="updateCustomerName" id="customerName">
+                <typeahead v-model="customerAutocomplete" target="#customerName" async-src="@Url.Action("Autocomplete", "Customer")?q=" async-key="items" item-key="name"></typeahead>
                 <span class="help-block" v-show="customerNameHasError">Укажите имя клиента</span>
             </div>
         </div>
-        <div class="col-md-4">
+        @*<div class="col-md-4">
             <div class="form-group">
                 <label for="name">ФИО заявителя</label>
                 <input type="text" class="form-control" id="name" placeholder="">
@@ -28,7 +29,7 @@
                 <label for="consignee">Грузополучатель</label>
                 <input type="text" class="form-control" id="consignee" placeholder="">
             </div>
-        </div>
+        </div>*@
     </div>
     <table class="table table-striped">
         <thead>
@@ -83,6 +84,7 @@
                     return {
                         prId: '@Model.Id',
                         customerName: '',
+                        customerAutocomplete: null,
                         // { code: '123-321', name: 'Болт 123-321 XYZ', uom: 'шт.', qty: 100 }
                         rows: []
                     };
@@ -96,6 +98,20 @@
                     }, response => {
                         alert('error');
                     });
+                },
+                watch: {
+                    customerAutocomplete: function(val) {
+                        if (val) {
+                            if (val.name) {
+                                this.customerName = val.name;
+                            } else {
+                                this.customerName = this.customerAutocomplete;
+                            }
+                        } else {
+                            this.customerName = '';
+                        }
+                        this.updateCustomerName();
+                    }
                 },
                 computed: {
                     customerNameHasError: function() {

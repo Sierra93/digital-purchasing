@@ -133,9 +133,13 @@ namespace DigitalPurchasing.Core.Interfaces
     {
     }
 
-    public class AutocompleteOptions
+    public class AutocompleteBaseOptions
     {
         public string Query { get; set; }
+    }
+
+    public class AutocompleteOptions : AutocompleteBaseOptions
+    {
         public string ClientName { get; set; }
         public bool SearchInAlts { get; set; } = false;
     }

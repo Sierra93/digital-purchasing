@@ -14,7 +14,8 @@
         <div class="col-md-4">
             <div class="form-group" v-bind:class="supplierNameClass">
                 <label>Поставщик</label>
-                <input type="text" class="form-control" placeholder="" v-model="supplierName" v-on:input="updateSupplierName">
+                <input type="text" class="form-control" placeholder="" v-model="supplierName" v-on:input="updateSupplierName" id="supplierName" />
+                <typeahead v-model="supplierAutocomplete" target="#supplierName" async-src="@Url.Action("Autocomplete", "Supplier")?q=" async-key="items" item-key="name"></typeahead>
                 <span class="help-block" v-show="supplierNameHasError">Укажите имя поставщика</span>
             </div>
         </div>
@@ -116,7 +117,8 @@
                         columnQty: null,
                         columnPrice: null,
                         columns: [],
-                        isSaved: false
+                        isSaved: false,
+                        supplierAutocomplete: null
                     };
                 },
                 created: function () {
@@ -136,6 +138,21 @@
                     }, function(res) {
                         alert('error');
                     });
+                },
+                watch: {
+                    supplierAutocomplete: function(val) {
+                        if (val) {
+                            if (val.name) {
+                                this.supplierName = val.name;
+                            } else {
+                                this.supplierName = this.supplierAutocomplete;
+                            }
+
+                        } else {
+                            this.supplierName = '';
+                        }
+                        this.updateSupplierName();
+                    }
                 },
                 computed: {
                     supplierNameHasError: function() {
