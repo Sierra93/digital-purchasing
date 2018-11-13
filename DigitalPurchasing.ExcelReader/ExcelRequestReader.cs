@@ -16,6 +16,8 @@ namespace DigitalPurchasing.ExcelReader
         private ExcelWorksheet _ws;
         private string _allCells;
 
+        private int _headerDiff = 0;
+
         public ExcelRequestReader(IColumnNameService columnNameService) => _columnNameService = columnNameService;
 
         public ExcelTableResponse ToTable(string filePath)
@@ -43,11 +45,13 @@ namespace DigitalPurchasing.ExcelReader
 
                 _allCells = _ws.Dimension.Address;
 
+                _headerDiff = 0;
+
                 var nameCount = -1;
                 var nameAddr = SearchHeader(false, _columnNameService.GetNames(TableColumnType.Name)) ?? SearchHeader(true, "Наименование", "Name");
                 if (nameAddr != null)
                 {
-                    var values = GetValuesForHeader(nameAddr, true);
+                    var values = GetValuesForHeader(nameAddr, true, true);
                     result.Columns.Add(new ExcelTableColumn
                     {
                         Type = TableColumnType.Name,
@@ -56,7 +60,7 @@ namespace DigitalPurchasing.ExcelReader
                     });
                     nameCount = values.Count;
                 }
-
+                
                 if (nameAddr == null) return ExcelTableResponse.Error(CantFindColumnWithName);
 
                 var codeAddr = SearchHeader(false, _columnNameService.GetNames(TableColumnType.Code));
@@ -175,7 +179,7 @@ namespace DigitalPurchasing.ExcelReader
 
         private string GetHeaderValue(ExcelCellAddress address) => _ws.Cells[address.Address].Text;
 
-        private List<string> GetValuesForHeader(ExcelCellAddress address, bool trimEmpty = false)
+        private List<string> GetValuesForHeader(ExcelCellAddress address, bool trimEmpty = false, bool calcDiff = false)
         {
             if (address == null) return null;
 
@@ -186,11 +190,34 @@ namespace DigitalPurchasing.ExcelReader
 
             var values = _ws.Cells[$"{start}:{end}"].Select(q => q.Text).ToList();
 
+            if (calcDiff)
+            {
+                // trim first empty
+                while (values.FindIndex(string.IsNullOrEmpty) == 0)
+                {
+                    _headerDiff += 1;
+                    values.RemoveAt(0);
+                }
+            }
+            else
+            {
+                for (var i = 1; i <= _headerDiff; i++)
+                {
+                    values.RemoveAt(0);
+                }
+            }
+
+
+
+            // trim last empty
             if (trimEmpty && values.Any())
             {
-                var firstEmptyIdx = values.FindIndex(string.IsNullOrEmpty);
-                var count = values.Count - firstEmptyIdx;
-                values.RemoveRange(firstEmptyIdx, count);
+                var emptyIdx = values.FindIndex(string.IsNullOrEmpty);
+                if (emptyIdx >= 0)
+                {
+                    var count = values.Count - emptyIdx;
+                    values.RemoveRange(emptyIdx, count);
+                }
             }
 
             return values;
