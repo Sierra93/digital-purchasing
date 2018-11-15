@@ -7,24 +7,30 @@ using OfficeOpenXml;
 
 namespace DigitalPurchasing.ExcelReader
 {
+    internal class TempColumnData
+    {
+        public TableColumnType Type { get; set; }
+        public ExcelCellAddress HeaderAddr { get; set; }
+
+        public TempColumnData(TableColumnType type, ExcelCellAddress headerAddr)
+        {
+            Type = type;
+            HeaderAddr = headerAddr;
+        }
+    }
+
     public class ExcelRequestReader : IExcelRequestReader
     {
         private const string CantFindColumnWithName = "Не удается найти таблицу в файле. Пожалуйста добавьте название колонки 'Наименование' в разделе 'Соответсвия названий колонок'";
         private const string CantOpenFile = "Не удается открыть файл";
 
         private readonly IColumnNameService _columnNameService;
-        private ExcelWorksheet _ws;
-        private string _allCells;
-
-        private int _headerDiff = 0;
 
         public ExcelRequestReader(IColumnNameService columnNameService) => _columnNameService = columnNameService;
 
-        public ExcelTableResponse ToTable(string filePath)
+        public ExcelTableResponse ToTable(string path)
         {
-            var result = new ExcelTable();
-
-            var ext = Path.GetExtension(filePath).ToLower();
+            var ext = Path.GetExtension(path).ToLower();
             if (ext == ".xls")
             {
                 // todo: convert file
@@ -32,185 +38,162 @@ namespace DigitalPurchasing.ExcelReader
                 return ExcelTableResponse.Error(CantOpenFile);
             }
 
-            using (var package = new ExcelPackage(new FileInfo(filePath)))
+            var result = new ExcelTable();
+            
+            using (var package = new ExcelPackage(new FileInfo(path)))
             {
+                ExcelWorksheet ws;
                 try
                 {
-                    _ws = GetDefaultWorksheet(package);
+                    ws = GetDefaultWorksheet(package);
                 }
                 catch (Exception)
                 {
                     return ExcelTableResponse.Error(CantOpenFile);
                 }
 
-                _allCells = _ws.Dimension.Address;
+                var tempColumnDatas = new List<TempColumnData>();
 
-                _headerDiff = 0;
+                var defaultNameAddr = SearchHeaderAddresses(ws, true, "Наименование", "Name");
+                var nameAddr = SearchHeaderAddresses(ws, false, _columnNameService.GetNames(TableColumnType.Name));
 
-                var nameCount = -1;
-                var nameAddr = SearchHeader(false, _columnNameService.GetNames(TableColumnType.Name)) ?? SearchHeader(true, "Наименование", "Name");
-                if (nameAddr != null)
-                {
-                    var values = GetValuesForHeader(nameAddr, true, true);
-                    result.Columns.Add(new ExcelTableColumn
-                    {
-                        Type = TableColumnType.Name,
-                        Header = GetHeaderValue(nameAddr),
-                        Values = values
-                    });
-                    nameCount = values.Count;
-                }
+                if (defaultNameAddr.Count == 0 && nameAddr.Count == 0) return ExcelTableResponse.Error(CantFindColumnWithName);
+
+                var codeAddr = SearchHeaderAddresses(ws, false, _columnNameService.GetNames(TableColumnType.Code));
+                var uomAddr = SearchHeaderAddresses(ws, false, _columnNameService.GetNames(TableColumnType.Uom));
+                var qtyAddr = SearchHeaderAddresses(ws, false, _columnNameService.GetNames(TableColumnType.Qty));
+                var priceAddr = SearchHeaderAddresses(ws, false, _columnNameService.GetNames(TableColumnType.Price));
+
+                tempColumnDatas.AddRange(defaultNameAddr.Select(q => new TempColumnData(TableColumnType.Name, q)));
+                tempColumnDatas.AddRange(nameAddr.Select(q => new TempColumnData(TableColumnType.Name, q)));
+                tempColumnDatas.AddRange(codeAddr.Select(q => new TempColumnData(TableColumnType.Code, q)));
+                tempColumnDatas.AddRange(uomAddr.Select(q => new TempColumnData(TableColumnType.Uom, q)));
+                tempColumnDatas.AddRange(qtyAddr.Select(q => new TempColumnData(TableColumnType.Qty, q)));
+                tempColumnDatas.AddRange(priceAddr.Select(q => new TempColumnData(TableColumnType.Price, q)));
+
+                var allKnownAddr = defaultNameAddr.Union(nameAddr).Union(codeAddr).Union(uomAddr).Union(qtyAddr).Union(priceAddr).ToList();
+
+                var addrRows = allKnownAddr.Select(q => q.Row).Distinct().ToList();
                 
-                if (nameAddr == null) return ExcelTableResponse.Error(CantFindColumnWithName);
-
-                var codeAddr = SearchHeader(false, _columnNameService.GetNames(TableColumnType.Code));
-                if (codeAddr != null)
+                var headerRow = 0;
+                if (addrRows.Count > 1)
                 {
-                    result.Columns.Add(new ExcelTableColumn
-                    {
-                        Type = TableColumnType.Code,
-                        Header = GetHeaderValue(codeAddr),
-                        Values = GetValuesForHeader(codeAddr)
-                    });
-                }
-
-                var uomAddr = SearchHeader(false, _columnNameService.GetNames(TableColumnType.Uom));
-                if (uomAddr != null)
-                {
-                    result.Columns.Add(new ExcelTableColumn
-                    {
-                        Type = TableColumnType.Uom,
-                        Header = GetHeaderValue(uomAddr),
-                        Values = GetValuesForHeader(uomAddr)
-                    });
-                }
-
-                var qtyAddr = SearchHeader(false, _columnNameService.GetNames(TableColumnType.Qty));
-                if (qtyAddr != null)
-                {
-                    result.Columns.Add(new ExcelTableColumn
-                    {
-                        Type = TableColumnType.Qty,
-                        Header = GetHeaderValue(qtyAddr),
-                        Values = GetValuesForHeader(qtyAddr)
-                    });
-                }
-
-                var priceAddr = SearchHeader(false, _columnNameService.GetNames(TableColumnType.Price));
-                if (priceAddr != null)
-                {
-                    result.Columns.Add(new ExcelTableColumn
-                    {
-                        Type = TableColumnType.Price,
-                        Header = GetHeaderValue(priceAddr),
-                        Values = GetValuesForHeader(priceAddr)
-                    });
-                }
-
-                var foundHeaderAddresses = new List<string> { nameAddr.Address, codeAddr?.Address, uomAddr?.Address, qtyAddr?.Address, priceAddr?.Address };
-
-                // can't recognize table structure
-                if (foundHeaderAddresses.Count == 0)
-                {
-                    return null;
-                }
-
-                var headerRows = new List<int?> { nameAddr.Row, codeAddr?.Row, uomAddr?.Row, qtyAddr?.Row, priceAddr?.Row };
-
-                var uniqueHeaderRows = headerRows.Where(q => q.HasValue).Select(q => q.Value).Distinct().ToList();
-                if (uniqueHeaderRows.Count > 1)
-                {
-                    // todo: check count of each row and select max?
+                    headerRow = addrRows
+                        .GroupBy(q => q)
+                        .Select(g => (Key: g.Key, Count: g.Count()))
+                        .OrderByDescending(q => q.Count)
+                        .First()
+                        .Key;
                 }
                 else
                 {
-                    var otherHeaders = _ws.Cells[uniqueHeaderRows[0], _ws.Dimension.Start.Column, uniqueHeaderRows[0], _ws.Dimension.End.Column]
-                        .Where(q => !string.IsNullOrEmpty(q.Text) && !foundHeaderAddresses.Contains(q.Address))
-                        .Select(q => q.Start)
-                        .ToList();
-
-                    foreach (var otherHeader in otherHeaders)
-                    {
-                        var headerName = _ws.Cells[otherHeader.Address].Text;
-                        var headerValues = GetValuesForHeader(otherHeader);
-                        result.Columns.Add(new ExcelTableColumn
-                        {
-                            Type = TableColumnType.Unknown,
-                            Header = headerName,
-                            Values = headerValues
-                        });
-                    }
+                    headerRow = addrRows[0];
                 }
 
-                if (nameCount != -1)
+                var otherHeaderAddr = SearchOtherHeaderAddresses(ws, headerRow, allKnownAddr);
+                var allAddr = allKnownAddr.Union(otherHeaderAddr).ToList();
+
+                var valueAddr = SearchValueAddresses(ws, defaultNameAddr.Union(nameAddr).First());
+                var valueRow = valueAddr[0].Row;
+
+                var allColumns = allAddr.Union(valueAddr).Select(q => q.Column).Distinct().OrderBy(q => q).ToList();
+
+                foreach (var column in allColumns)
                 {
-                    foreach (var column in result.Columns)
+                    var addr = new ExcelCellAddress(headerRow, column);
+                    if (tempColumnDatas.All(q => q.HeaderAddr.Address != addr.Address))
                     {
-                        column.Values = column.Values.Take(nameCount).ToList();
+                        tempColumnDatas.Add(new TempColumnData(TableColumnType.Unknown, addr));
                     }
                 }
 
-                return ExcelTableResponse.Success(result);
+                foreach (var tempColumnData in tempColumnDatas)
+                {
+                    var header = ws.Cells[tempColumnData.HeaderAddr.Address].Text;
+                    var values = SearchValues(ws, tempColumnData.HeaderAddr, valueRow, tempColumnData.Type == TableColumnType.Name);
+                    AddColumn(result.Columns, tempColumnData.Type, header, values);
+                }
+
+                var nameValuesCount = result.Columns.First(q => q.Type == TableColumnType.Name).Values.Count;
+                foreach (var column in result.Columns)
+                {
+                    if (column.Values.Count > nameValuesCount)
+                    {
+                        column.Values = column.Values.Take(nameValuesCount).ToList();
+                    }
+                }
+
             }
+
+            return ExcelTableResponse.Success(result);
         }
 
-        private ExcelWorksheet GetDefaultWorksheet(ExcelPackage package) => _ws = package.Workbook.Worksheets.First();
+        private ExcelWorksheet GetDefaultWorksheet(ExcelPackage package) => package.Workbook.Worksheets.First();
 
-        private ExcelCellAddress SearchHeader(bool partialMatch = false, params string[] columnNames)
+        private List<ExcelCellAddress> SearchHeaderAddresses(ExcelWorksheet ws, bool partialMatch = false, params string[] columnNames)
         {
-            if (!columnNames.Any()) return null;
+            if (!columnNames.Any()) return new List<ExcelCellAddress>();
 
-            var addresses = _ws
-                .Cells[_allCells]
+            var addresses = ws
+                .Cells[ws.Dimension.Address]
                 .Where(q => !string.IsNullOrEmpty(q.Text) && columnNames.Contains(q.Text, StringComparer.InvariantCultureIgnoreCase))
                 .Select(q => q.Start)
                 .ToList();
 
             if (partialMatch && addresses.Count == 0)
             {
-                addresses = _ws.Cells[_allCells]
+                addresses = ws.Cells[ws.Dimension.Address]
                     .Where(q => !string.IsNullOrEmpty(q.Text) && columnNames.Any(w => q.Text.Contains(w, StringComparison.InvariantCultureIgnoreCase)))
                     .Select(q => q.Start)
                     .ToList();
             }
 
-            return addresses.Count == 1 ? addresses[0] : null;
+            return addresses;
         }
 
-        private string GetHeaderValue(ExcelCellAddress address) => _ws.Cells[address.Address].Text;
-
-        private List<string> GetValuesForHeader(ExcelCellAddress address, bool trimEmpty = false, bool calcDiff = false)
+        private List<ExcelCellAddress> SearchOtherHeaderAddresses(ExcelWorksheet ws, int row, IEnumerable<ExcelCellAddress> headerAddresses)
         {
-            if (address == null) return null;
+            var strHeaderAddresses = headerAddresses.Select(q => q.Address).ToList();
+            var addresses = ws.Cells[row, ws.Dimension.Start.Column, row, ws.Dimension.End.Column]
+                .Where(q => !string.IsNullOrEmpty(q.Text) && !strHeaderAddresses.Contains(q.Address))
+                .Select(q => q.Start)
+                .ToList();
+            return addresses;
+        }
 
-            var strAddress = address.Address;
-            var col = strAddress.Replace(address.Row.ToString(), "");
-            var start = $"{col}{address.Row + 1}";
-            var end = col;
+        private List<ExcelCellAddress> SearchValueAddresses(ExcelWorksheet ws, ExcelCellAddress headerAddr)
+        {
+            var firstValueAddr = ws.Cells[headerAddr.Row+1, headerAddr.Column, ws.Dimension.End.Row, headerAddr.Column]
+                .First(q => !string.IsNullOrEmpty(q.Text))
+                .Start;
 
-            var values = _ws.Cells[$"{start}:{end}"].Select(q => q.Text).ToList();
+            return SearchOtherHeaderAddresses(ws, firstValueAddr.Row, new List<ExcelCellAddress>());
+        }
 
-            if (calcDiff)
+        private void AddColumn(List<ExcelTableColumn> columns, TableColumnType type, string header, List<string> values)
+        {
+            if (values.All(string.IsNullOrEmpty)) return; // skip empty columns
+
+            if (string.IsNullOrEmpty(header))
             {
-                // trim first empty
-                while (values.FindIndex(string.IsNullOrEmpty) == 0)
-                {
-                    _headerDiff += 1;
-                    values.RemoveAt(0);
-                }
+                header = "Без названия";
             }
-            else
+
+            var count = columns.Count(q => q.Header.Equals(header, StringComparison.InvariantCultureIgnoreCase));
+            if (count > 0)
             {
-                for (var i = 1; i <= _headerDiff; i++)
-                {
-                    values.RemoveAt(0);
-                }
+                header += $" ({count})";
             }
+            columns.Add(new ExcelTableColumn { Type = type, Header = header, Values = values });
+        }
 
+        public List<string> SearchValues(ExcelWorksheet ws, ExcelCellAddress headerAddr, int valueRow, bool trimLastEmpty = false)
+        {
+            var values = ws.Cells[valueRow, headerAddr.Column, ws.Dimension.End.Row, headerAddr.Column]
+                .Select(q => q.Text)
+                .ToList();
 
-
-            // trim last empty
-            if (trimEmpty && values.Any())
+            if (trimLastEmpty && values.Any())
             {
                 var emptyIdx = values.FindIndex(string.IsNullOrEmpty);
                 if (emptyIdx >= 0)
