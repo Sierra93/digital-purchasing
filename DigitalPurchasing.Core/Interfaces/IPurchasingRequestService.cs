@@ -18,6 +18,7 @@ namespace DigitalPurchasing.Core.Interfaces
         void SaveMatch(Guid id, Guid nomenclatureId, Guid uomId, decimal factorC, decimal factorN);
         void SaveCompanyName(Guid prId, string companyName);
         void SaveCustomerName(Guid prId, string customerName);
+        DeleteResultVm Delete(Guid id);
     }
 
     public class CreateFromFileResponse

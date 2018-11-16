@@ -21,6 +21,7 @@ namespace DigitalPurchasing.Services
         private readonly ICounterService _counterService;
         private readonly ICurrencyService _currencyService;
         private readonly ITenantService _tenantService;
+        private readonly IUploadedDocumentService _uploadedDocumentService;
 
         public SupplierOfferService(
             ApplicationDbContext db,
@@ -28,7 +29,8 @@ namespace DigitalPurchasing.Services
             IColumnNameService columnNameService,
             ICounterService counterService,
             ICurrencyService currencyService,
-            ITenantService tenantService)
+            ITenantService tenantService,
+            IUploadedDocumentService uploadedDocumentService)
         {
             _db = db;
             _excelRequestReader = excelRequestReader;
@@ -36,6 +38,7 @@ namespace DigitalPurchasing.Services
             _counterService = counterService;
             _currencyService = currencyService;
             _tenantService = tenantService;
+            _uploadedDocumentService = uploadedDocumentService;
         }
 
         public void UpdateStatus(Guid id, SupplierOfferStatus status)
@@ -179,6 +182,23 @@ namespace DigitalPurchasing.Services
             entity.CommonFactor = factorC;
             entity.NomenclatureFactor = factorN;
             _db.SaveChanges();
+        }
+
+        public DeleteResultVm Delete(Guid id)
+        {
+            var so = _db.SupplierOffers.Find(id);
+            if (so == null) return DeleteResultVm.Success();
+            
+            if (so.UploadedDocumentId.HasValue)
+            {
+                _uploadedDocumentService.Delete(so.UploadedDocumentId.Value);
+            }
+
+            _db.SupplierOfferItems.RemoveRange(_db.SupplierOfferItems.Where(q => q.SupplierOfferId == id));
+            _db.SupplierOffers.Remove(so);
+            _db.SaveChanges();
+
+            return DeleteResultVm.Success();
         }
     }
 

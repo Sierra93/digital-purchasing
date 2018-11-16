@@ -8,6 +8,7 @@ namespace DigitalPurchasing.Core.Interfaces
         DeliveryVm GetByPrId(Guid prId);
         DeliveryVm GetByQrId(Guid prId);
         void CreateOrUpdate(DeliveryVm req, Guid? prId, Guid? qrId);
+        DeleteResultVm Delete(Guid id);
     }
 
     public class DeliveryVm

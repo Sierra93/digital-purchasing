@@ -8,6 +8,7 @@ namespace DigitalPurchasing.Core.Interfaces
         CompetitionListIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
         Guid GetId(Guid qrId);
         CompetitionListVm GetById(Guid id);
+        DeleteResultVm Delete(Guid id);
     }
 
     public class CompetitionListIndexDataItem

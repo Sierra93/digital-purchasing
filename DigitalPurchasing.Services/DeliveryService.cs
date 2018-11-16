@@ -75,6 +75,29 @@ namespace DigitalPurchasing.Services
             }
             _db.SaveChanges();
         }
+
+        public DeleteResultVm Delete(Guid id)
+        {
+            var delivery = _db.Deliveries.Find(id);
+            if (delivery != null)
+            {
+                var pr = _db.PurchaseRequests.FirstOrDefault(q => q.DeliveryId == id);
+                if (pr != null)
+                {
+                    pr.DeliveryId = null;
+                }
+
+                var qr = _db.QuotationRequests.FirstOrDefault(q => q.DeliveryId == id);
+                if (qr != null)
+                {
+                    qr.DeliveryId = null;
+                }
+
+                _db.Deliveries.Remove(delivery);
+                _db.SaveChanges();
+            }
+            return DeleteResultVm.Success();
+        }
     }
 
     public class DeliveryMappings : IRegister

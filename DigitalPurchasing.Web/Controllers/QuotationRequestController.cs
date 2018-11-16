@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.ExcelReader;
 using DigitalPurchasing.Web.Core;
+using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.QuotationRequest;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
@@ -69,6 +70,13 @@ namespace DigitalPurchasing.Web.Controllers
             var bytes = excel.Build(items);
             var filename = $"qr_{qr.PublicId}_{qr.CreatedOn:yyyy_MM_dd}_.xlsx";
             return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
+        }
+
+        [HttpPost]
+        public IActionResult Delete([FromBody]DeleteVm vm)
+        {
+            var result = _quotationRequestService.Delete(vm.Id);
+            return Ok(result);
         }
     }
 }

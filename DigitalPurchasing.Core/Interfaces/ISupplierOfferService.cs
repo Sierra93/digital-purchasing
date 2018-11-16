@@ -19,6 +19,7 @@ namespace DigitalPurchasing.Core.Interfaces
         SOMatchItemsVm MatchItemsData(Guid id);
         void SaveMatch(Guid itemId, Guid nomenclatureId, Guid uomId, decimal factorC, decimal factorN);
 
+        DeleteResultVm Delete(Guid id);
     }
 
     public class UploadedDocumentVm

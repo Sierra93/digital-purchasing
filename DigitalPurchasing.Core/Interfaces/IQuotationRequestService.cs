@@ -10,6 +10,7 @@ namespace DigitalPurchasing.Core.Interfaces
         Guid GetQuotationRequestId(Guid purchaseRequestId);
         QuotationRequestVm GetById(Guid id);
         QuotationRequestViewData GetViewData(Guid qrId);
+        DeleteResultVm Delete(Guid id);
     }
 
     public class QuotationRequestIndexDataItem

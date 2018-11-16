@@ -88,6 +88,7 @@ namespace DigitalPurchasing.Web
             services.AddScoped<ISupplierOfferService, SupplierOfferService>();
             services.AddScoped<ICurrencyService, CurrencyService>();
             services.AddScoped<ICustomerService, CustomerService>();
+            services.AddScoped<IUploadedDocumentService, UploadedDocumentService>();
             services.AddScoped<ISupplierService, SupplierService>();
         }
 

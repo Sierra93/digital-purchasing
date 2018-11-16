@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
@@ -14,11 +15,16 @@ namespace DigitalPurchasing.Services
     {
         private readonly ApplicationDbContext _db;
         private readonly ICounterService _counterService;
+        private readonly ISupplierOfferService _supplierOfferService;
 
-        public CompetitionListService(ApplicationDbContext db, ICounterService counterService)
+        public CompetitionListService(
+            ApplicationDbContext db,
+            ICounterService counterService,
+            ISupplierOfferService supplierOfferService)
         {
             _db = db;
             _counterService = counterService;
+            _supplierOfferService = supplierOfferService;
         }
 
         public CompetitionListIndexData GetData(int page, int perPage, string sortField, bool sortAsc)
@@ -121,6 +127,35 @@ namespace DigitalPurchasing.Services
             }
 
             return vm;
+        }
+
+        public DeleteResultVm Delete(Guid id)
+        {
+            var cl = _db.CompetitionLists.Find(id);
+            if (cl == null) return DeleteResultVm.Success();
+
+            using (var transaction = _db.Database.BeginTransaction())
+            {
+                try
+                {
+                    var soIds = _db.SupplierOffers.Where(q => q.CompetitionListId == id).Select(q => q.Id).ToList();
+                    foreach (var soId in soIds)
+                    {
+                        _supplierOfferService.Delete(soId);
+                    }
+
+                    _db.CompetitionLists.Remove(cl);
+                    _db.SaveChanges();
+                    transaction.Commit();
+                    return new DeleteResultVm(true, null);
+                }
+                catch (Exception e)
+                {
+                    //todo: log e
+                    transaction.Rollback();
+                    return DeleteResultVm.Failure("Внутренняя ошибка. Обратитесь в службу поддержки");
+                }
+            }
         }
     }
 }

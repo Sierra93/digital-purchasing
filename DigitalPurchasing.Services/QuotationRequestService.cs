@@ -5,6 +5,7 @@ using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using DigitalPurchasing.Core;
 using DigitalPurchasing.Models;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
@@ -116,6 +117,39 @@ namespace DigitalPurchasing.Services
             }
 
             return result;
+        }
+
+        public DeleteResultVm Delete(Guid id)
+        {
+            var cl = _db.CompetitionLists.FirstOrDefault(q => q.QuotationRequestId == id);
+            if (cl != null)
+            {
+                return DeleteResultVm.Failure($"Нельзя удалить заявку, сперва удалите конкурентный лист №{cl.PublicId}");
+            }
+
+            var qr = _db.QuotationRequests.Find(id);
+            if (qr == null) return DeleteResultVm.Success();
+
+            using (var transaction = _db.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (qr.DeliveryId.HasValue)
+                    {
+                        _deliveryService.Delete(qr.DeliveryId.Value);
+                    }
+                    _db.QuotationRequests.Remove(qr);
+                    _db.SaveChanges();
+                    transaction.Commit();
+                    return DeleteResultVm.Success();
+                }
+                catch (Exception e)
+                {
+                    //todo: log e
+                    transaction.Rollback();
+                    return DeleteResultVm.Failure("Внутренняя ошибка. Обратитесь в службу поддержки");
+                }
+            }
         }
     }
 }

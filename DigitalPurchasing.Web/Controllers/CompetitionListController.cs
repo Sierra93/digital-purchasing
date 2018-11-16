@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Web.Core;
+using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.CompetitionList;
 using Mapster;
 using Microsoft.AspNetCore.Http;
@@ -78,6 +79,13 @@ namespace DigitalPurchasing.Web.Controllers
             }
 
             return RedirectToAction(nameof(Edit), "SupplierOffer", new { id = response.Id });
+        }
+
+        [HttpPost]
+        public IActionResult Delete([FromBody]DeleteVm vm)
+        {
+            var result = _competitionListService.Delete(vm.Id);
+            return Ok(result);
         }
     }
 }

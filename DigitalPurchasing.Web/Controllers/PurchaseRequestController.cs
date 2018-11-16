@@ -84,5 +84,12 @@ namespace DigitalPurchasing.Web.Controllers
 
             return RedirectToAction(nameof(Edit), new { id = response.Id });
         }
+
+        [HttpPost]
+        public IActionResult Delete([FromBody]DeleteVm vm)
+        {
+            var result = _purchasingRequestService.Delete(vm.Id);
+            return Ok(result);
+        }
     }
 }

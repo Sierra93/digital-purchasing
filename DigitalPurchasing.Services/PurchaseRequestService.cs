@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using DigitalPurchasing.Core;
 using DigitalPurchasing.Models;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +20,8 @@ namespace DigitalPurchasing.Services
         private readonly IColumnNameService _columnNameService;
         private readonly IUomService _uomService;
         private readonly INomenclatureService _nomenclatureService;
+        private readonly IDeliveryService _deliveryService;
+        private readonly IUploadedDocumentService _uploadedDocumentService;
 
         public PurchaseRequestService(
             ApplicationDbContext db,
@@ -26,7 +29,9 @@ namespace DigitalPurchasing.Services
             ICounterService counterService,
             IColumnNameService columnNameService,
             IUomService uomService,
-            INomenclatureService nomenclatureService)
+            INomenclatureService nomenclatureService,
+            IDeliveryService deliveryService,
+            IUploadedDocumentService uploadedDocumentService)
         {
             _db = db;
             _excelRequestReader = excelFileReader;
@@ -34,6 +39,8 @@ namespace DigitalPurchasing.Services
             _columnNameService = columnNameService;
             _uomService = uomService;
             _nomenclatureService = nomenclatureService;
+            _deliveryService = deliveryService;
+            _uploadedDocumentService = uploadedDocumentService;
         }
 
         public CreateFromFileResponse CreateFromFile(string filePath)
@@ -296,6 +303,45 @@ namespace DigitalPurchasing.Services
             var entity = _db.PurchaseRequests.Find(prId);
           entity.CustomerName = customerName;
             _db.SaveChanges();
+        }
+
+        public DeleteResultVm Delete(Guid id)
+        {
+            var qr = _db.QuotationRequests.First(q => q.PurchaseRequestId == id);
+            if (qr != null)
+            {
+                return DeleteResultVm.Failure($"Нельзя удалить заявку, удалите сперва запрос предложения №{qr.PublicId}");
+            }
+
+            var pr = _db.PurchaseRequests.Find(id);
+            if (pr == null) return DeleteResultVm.Success();
+
+            using (var transaction = _db.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (pr.UploadedDocumentId.HasValue)
+                    {
+                        _uploadedDocumentService.Delete(pr.UploadedDocumentId.Value);
+                    }
+                    if (pr.DeliveryId.HasValue)
+                    {
+                        _deliveryService.Delete(pr.DeliveryId.Value);
+                    }
+                    _db.PurchaseRequestItems.RemoveRange(_db.PurchaseRequestItems.Where(q => q.PurchaseRequestId == id));
+                    _db.PurchaseRequests.Remove(pr);
+                    _db.SaveChanges();
+                    transaction.Commit();
+                    
+                    return new DeleteResultVm(true, null);
+                }
+                catch (Exception e)
+                {
+                    //todo: log e
+                    transaction.Rollback();
+                    return DeleteResultVm.Failure("Внутренняя ошибка. Обратитесь в службу поддержки");
+                }
+            }
         }
 
         public PurchaseRequestIndexData GetData(int page, int perPage, string sortField, bool sortAsc)
