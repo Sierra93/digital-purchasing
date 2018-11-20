@@ -21,7 +21,9 @@ namespace DigitalPurchasing.Services
         private readonly ICounterService _counterService;
         private readonly ICurrencyService _currencyService;
         private readonly ITenantService _tenantService;
+        private readonly INomenclatureService _nomenclatureService;
         private readonly IUploadedDocumentService _uploadedDocumentService;
+        private readonly IUomService _uomService;
 
         public SupplierOfferService(
             ApplicationDbContext db,
@@ -30,7 +32,9 @@ namespace DigitalPurchasing.Services
             ICounterService counterService,
             ICurrencyService currencyService,
             ITenantService tenantService,
-            IUploadedDocumentService uploadedDocumentService)
+            INomenclatureService nomenclatureService,
+            IUploadedDocumentService uploadedDocumentService,
+            IUomService uomService)
         {
             _db = db;
             _excelRequestReader = excelRequestReader;
@@ -38,7 +42,9 @@ namespace DigitalPurchasing.Services
             _counterService = counterService;
             _currencyService = currencyService;
             _tenantService = tenantService;
+            _nomenclatureService = nomenclatureService;
             _uploadedDocumentService = uploadedDocumentService;
+            _uomService = uomService;
         }
 
         public void UpdateStatus(Guid id, SupplierOfferStatus status)
@@ -151,6 +157,103 @@ namespace DigitalPurchasing.Services
             }
 
             _db.SupplierOfferItems.AddRange(rawItems);
+            _db.SaveChanges();
+
+            AutocompleteDataSOItems(id);
+        }
+
+        private void AutocompleteDataSOItems(Guid soId)
+        {
+            var soItems = _db.SupplierOfferItems.Where(q => q.SupplierOfferId == soId).ToList();
+
+            string supplierName = null;
+            if (soItems.Any())
+            {
+                _db.Entry(soItems.First()).Reference(q => q.SupplierOffer).Load();
+                supplierName = soItems.First().SupplierOffer.SupplierName;
+            }
+
+            var uoms = new Dictionary<string, Guid>();
+            var noms = new Dictionary<string, Guid>();
+
+            foreach (var soItem in soItems)
+            {
+                #region Try to search in old PR items
+
+                if (string.IsNullOrEmpty(soItem.RawCode))
+                {
+                    var otherRecords = _db.SupplierOfferItems
+                        .Include(q => q.SupplierOffer)
+                        .Where(q =>
+                            q.RawName == soItem.RawName &&
+                            q.SupplierOffer.SupplierName == supplierName &&
+                            q.SupplierOfferId != soId &&
+                            !string.IsNullOrEmpty(q.RawUomStr))
+                        .ToList();
+
+                    if (otherRecords.Any())
+                    {
+                        var rawUom = otherRecords.FirstOrDefault(q => !string.IsNullOrEmpty(q.RawUomStr))?.RawUomStr;
+                        if (!string.IsNullOrEmpty(rawUom))
+                        {
+                            soItem.RawUomStr = rawUom;
+                        }
+                    }
+                }
+
+                #endregion
+
+                #region Try to find UoM in db
+                
+                if (uoms.ContainsKey(soItem.RawUomStr))
+                {
+                    soItem.RawUomId = uoms[soItem.RawUomStr];
+                }
+                else
+                {
+                    var res = _uomService.Autocomplete(soItem.RawUomStr);
+                    if (res.Items != null && res.Items.Any())
+                    {
+                        var match = res.Items.First();
+                        if (match != null)
+                        {
+                            uoms.TryAdd(match.Name, match.Id);
+                            soItem.RawUomId = match.Id;
+                        }
+                    }
+                }
+
+                #endregion
+                #region Try to find in nomeclature
+                
+                if (noms.ContainsKey(soItem.RawName))
+                {
+                    soItem.NomenclatureId = noms[soItem.RawName];
+                }
+                else
+                {
+                    var nomRes = _nomenclatureService.Autocomplete(new AutocompleteOptions{ Query = soItem.RawName, ClientName = supplierName, SearchInAlts = true });
+                    if (nomRes.Items != null && nomRes.Items.Count == 1)
+                    {
+                        noms.TryAdd(nomRes.Items[0].Name, nomRes.Items[0].Id);
+                        soItem.NomenclatureId = nomRes.Items[0].Id;
+                    }
+                }
+
+                #endregion
+
+                #region Calc UoMs factor
+
+                if (soItem.NomenclatureId != null && soItem.RawUomId != null)
+                {
+                    var rate = _uomService.GetConversionRate(soItem.RawUomId.Value, soItem.NomenclatureId.Value);
+                    soItem.CommonFactor = rate.CommonFactor;
+                    soItem.NomenclatureFactor = rate.NomenclatureFactor;
+                }
+
+                #endregion
+            }
+
             _db.SaveChanges();
         }
 
