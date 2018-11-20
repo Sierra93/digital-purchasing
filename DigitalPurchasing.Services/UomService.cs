@@ -155,29 +155,31 @@ namespace DigitalPurchasing.Services
 
         public void SaveConversionRate(Guid fromUomId, Guid toUomId, Guid? nomenclatureId, decimal factorC, decimal factorN)
         {
-            if (fromUomId == toUomId) return; // don't store in database, fator = 1
+            if (fromUomId == toUomId) return; // don't store in database, factor = 1
 
             var rateQry = _db.UomConversionRates.Where(q =>
                 (q.FromUomId == fromUomId && q.ToUomId == toUomId) || (q.FromUomId == toUomId && q.ToUomId == fromUomId));
 
-            var rate = factorC > 0 ? rateQry.FirstOrDefault() : rateQry.FirstOrDefault(q => q.NomenclatureId == nomenclatureId);
+            var isCommon = factorC > 0;
+
+            var rate = isCommon ? rateQry.FirstOrDefault() : rateQry.FirstOrDefault(q => q.NomenclatureId == nomenclatureId);
             if (rate == null)
             {
                 var newRate = new UomConversionRate { FromUomId = fromUomId, ToUomId = toUomId };
-                if (nomenclatureId.HasValue && nomenclatureId.Value != Guid.Empty)
+                if (isCommon)
                 {
-                    newRate.Factor = factorN;
-                    newRate.NomenclatureId = nomenclatureId;
+                    newRate.Factor = factorC;
                 }
                 else
                 {
-                    newRate.Factor = factorC;
+                    newRate.Factor = factorN;
+                    newRate.NomenclatureId = nomenclatureId;
                 }
                 _db.UomConversionRates.Add(newRate);
             }
             else
             {
-                var factor = nomenclatureId.HasValue && nomenclatureId.Value != Guid.Empty ? factorN : factorC;
+                var factor = isCommon ? factorC : factorN;
                 rate.Factor = rate.FromUomId == fromUomId ? factor : 1m/factor;
             }
             _db.SaveChanges();
