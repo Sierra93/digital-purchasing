@@ -1,5 +1,6 @@
 using DigitalPurchasing.ExcelReader;
 using System;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using Xunit;
 
@@ -8,12 +9,18 @@ namespace DigitalPurchasing.Tests
     public class UnitTest1
     {
         [Fact]
-        public void Test1()
+        public void ExcelRequestReaderTest()
         {
             var c1 = new ExcelRequestReader(new TestColumnNameService());
             var result = c1.ToTable(@"c:\ru1.xlsx");
             Assert.True(result != null);
         }
+
+        [Theory]
+        [InlineData("azая01","a.z-а - я 0 1")]
+        [InlineData(null, null)]
+        [InlineData("abc","A BC")]
+        public void CleanUpTest(string expected, string actual) => Assert.Equal(expected, actual.CustomNormalize());
     }
 
     public class TestColumnNameService : IColumnNameService

@@ -39,7 +39,9 @@
                 <th>Наименование</th>
                 <th style="width: 10%">Количество</th>
                 <th style="width: 10%">ЕИ</th>
-                <th style="width: 10%"></th>
+                <th style="width: 10%">
+                    <button type="button" class="btn btn-default" v-on:click="addRow(r)"><i class="far fa-plus-square"></i></button>
+                </th>
             </tr>
         </thead>
         <tbody>
@@ -52,7 +54,7 @@
                 <td><input type="number" class="form-control" v-model="r.rawQty" /></td>
                 <td><input type="text" class="form-control" v-model="r.rawUom" /></td>
                 <td>
-                    <button type="button" class="btn btn-default" v-on:click="removeRow(r)" v-if="getRowIndex(r)>1"><i class="far fa-minus-square"></i></button>
+                    <button type="button" class="btn btn-default" v-on:click="removeRow(r)"><i class="far fa-minus-square"></i></button>
                     <button type="button" class="btn btn-default" v-on:click="addRow(r)"><i class="far fa-plus-square"></i></button>
                 </td>
             </tr>

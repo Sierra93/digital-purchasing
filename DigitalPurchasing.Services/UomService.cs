@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using DigitalPurchasing.Core;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
@@ -67,13 +69,16 @@ namespace DigitalPurchasing.Services
 
         public UomResult CreateOrUpdate(string name)
         {
+            if (string.IsNullOrEmpty(name)) return null;
+
             var entity =
                 _db.UnitsOfMeasurements.FirstOrDefault(q =>
                     q.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
 
             if (entity == null)
             {
-                var entry = _db.UnitsOfMeasurements.Add(new UnitsOfMeasurement {Name = name});
+                var normalizedName = name.CustomNormalize();
+                var entry = _db.UnitsOfMeasurements.Add(new UnitsOfMeasurement { Name = name, NormalizedName = normalizedName });
                 _db.SaveChanges();
                 entity = entry.Entity;
             }
@@ -125,13 +130,20 @@ namespace DigitalPurchasing.Services
 
         public UomAutocompleteResponse Autocomplete(string s)
         {
+            if (string.IsNullOrEmpty(s)) return new UomAutocompleteResponse();
+
+            var normalizedName = s.CustomNormalize();
+
             var autocompleteItems = _db.UnitsOfMeasurements
                 .AsNoTracking()
-                .Where(q => q.Name.Contains(s) && !q.IsDeleted)
-                .ProjectToType<UomAutocompleteResponse.AutocompleteItem>()
+                .Where(q => (q.Name == s || q.NormalizedName == normalizedName || q.Name.Contains(s)) && !q.IsDeleted)
+                .Select(q => new { q.Id, q.Name, q.NormalizedName, IsFullMatch = q.Name == s || q.NormalizedName == s})
+                .OrderByDescending(q => q.IsFullMatch)
                 .ToList();
 
-            return new UomAutocompleteResponse { Items = autocompleteItems };
+            var items = autocompleteItems.Adapt<List<UomAutocompleteResponse.AutocompleteItem>>();
+
+            return new UomAutocompleteResponse { Items = items };
         }
 
         public BaseResult<UomAutocompleteResponse.AutocompleteItem> AutocompleteSingle(Guid id)
@@ -185,6 +197,7 @@ namespace DigitalPurchasing.Services
         {
             var entity = _db.UnitsOfMeasurements.Find(id);
             entity.Name = name.Trim();
+            entity.NormalizedName = name.CustomNormalize();
             _db.SaveChanges();
             return entity.Adapt<UomVm>();
         }

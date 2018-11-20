@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace DigitalPurchasing.Core.Interfaces
 {
@@ -65,6 +66,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class UomAutocompleteResponse
     {
+        [DebuggerDisplay("{Id} = {Name}")]
         public class AutocompleteItem
         {
             public Guid Id { get; set; }

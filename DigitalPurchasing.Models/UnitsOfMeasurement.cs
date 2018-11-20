@@ -11,6 +11,8 @@ namespace DigitalPurchasing.Models
         public Guid OwnerId { get; set; }
         public Company Owner { get; set; }
 
+        public string NormalizedName { get; set; }
+
         public ICollection<Nomenclature> BatchNomenclatures { get; set; }
         public ICollection<Nomenclature> MassNomenclatures { get; set; }
         public ICollection<Nomenclature> ResourceNomenclatures { get; set; }

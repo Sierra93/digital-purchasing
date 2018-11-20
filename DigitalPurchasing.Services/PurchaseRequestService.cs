@@ -165,29 +165,68 @@ namespace DigitalPurchasing.Services
             var prItems = items.Adapt<List<PurchaseRequestItem>>().ToList();
             var index = 0;
 
-            var uoms = new Dictionary<string, Guid>();
-            var noms = new Dictionary<string, Guid>();
             foreach (var prItem in prItems)
             {
                 prItem.PurchaseRequestId = id;
                 prItem.Position = ++index;
+            }
+            _db.PurchaseRequestItems.AddRange(prItems);
+            _db.SaveChanges();
 
-                #region Try to fill RawUoM
+            AutocompleteDataPRItems(id);
 
-                var anotherRecord = _db.PurchaseRequestItems
-                    .Include(q => q.PurchaseRequest)
-                    .FirstOrDefault(q => q.RawName == prItem.RawName && q.PurchaseRequest.CustomerName == pr.CustomerName && !string.IsNullOrEmpty(q.RawUom));
-
-                if (anotherRecord != null)
+            foreach (var prItem in prItems)
+            {
+                if (prItem.NomenclatureId != null && prItem.RawUomMatchId != null && ( prItem.CommonFactor > 0 || prItem.NomenclatureFactor > 0 ))
                 {
-                    prItem.RawUom = anotherRecord.RawUom;
+                    _nomenclatureService.AddAlternativeCustomer(prItem.NomenclatureId.Value, prItem.Id);
+                }
+            }
+        }
+
+        private void AutocompleteDataPRItems(Guid prId)
+        {
+            var prItems = _db.PurchaseRequestItems.Where(q => q.PurchaseRequestId == prId).ToList();
+
+            string customerName = null;
+            if (prItems.Any())
+            {
+                _db.Entry(prItems.First()).Reference(q => q.PurchaseRequest).Load();
+                customerName = prItems.First().PurchaseRequest.CustomerName;
+            }
+
+            var uoms = new Dictionary<string, Guid>();
+            var noms = new Dictionary<string, Guid>();
+
+            foreach (var prItem in prItems)
+            {
+                #region Try to search in old PR items
+
+                if (string.IsNullOrEmpty(prItem.RawCode))
+                {
+                    var otherRecords = _db.PurchaseRequestItems
+                        .Include(q => q.PurchaseRequest)
+                        .Where(q =>
+                            q.RawName == prItem.RawName &&
+                            q.PurchaseRequest.CustomerName == customerName &&
+                            q.PurchaseRequestId != prId &&
+                            !string.IsNullOrEmpty(q.RawUom))
+                        .ToList();
+
+                    if (otherRecords.Any())
+                    {
+                        var rawUom = otherRecords.FirstOrDefault(q => !string.IsNullOrEmpty(q.RawUom))?.RawUom;
+                        if (!string.IsNullOrEmpty(rawUom))
+                        {
+                            prItem.RawUom = rawUom;
+                        }
+                    }
                 }
 
                 #endregion
 
                 #region Try to find UoM in db
-
-                if (string.IsNullOrEmpty(prItem.RawUom)) continue;
+                
                 if (uoms.ContainsKey(prItem.RawUom))
                 {
                     prItem.RawUomMatchId = uoms[prItem.RawUom];
@@ -197,10 +236,10 @@ namespace DigitalPurchasing.Services
                     var res = _uomService.Autocomplete(prItem.RawUom);
                     if (res.Items != null && res.Items.Any())
                     {
-                        var match = res.Items.FirstOrDefault(q => q.Name.Equals(prItem.RawUom, StringComparison.InvariantCultureIgnoreCase));
+                        var match = res.Items.First();
                         if (match != null)
                         {
-                            uoms.Add(match.Name, match.Id);
+                            uoms.TryAdd(match.Name, match.Id);
                             prItem.RawUomMatchId = match.Id;
                         }
                     }
@@ -211,20 +250,14 @@ namespace DigitalPurchasing.Services
                 
                 if (noms.ContainsKey(prItem.RawName))
                 {
-                    prItem.RawUomMatchId = noms[prItem.RawName];
+                    prItem.NomenclatureId = noms[prItem.RawName];
                 }
                 else
                 {
-                    var nomRes = _nomenclatureService.Autocomplete(new AutocompleteOptions{ Query = prItem.RawName, ClientName = pr.CustomerName, SearchInAlts = true });
-                    if (nomRes.Items != null && nomRes.Items.Count() == 1)
+                    var nomRes = _nomenclatureService.Autocomplete(new AutocompleteOptions{ Query = prItem.RawName, ClientName = customerName, SearchInAlts = true });
+                    if (nomRes.Items != null && nomRes.Items.Count == 1)
                     {
-                        //var nomMatch = nomRes.Items.FirstOrDefault(q => q.Name.Equals(rawItem.RawName, StringComparison.InvariantCultureIgnoreCase));
-                        //if (nomMatch != null)
-                        //{
-                        //    noms.Add(nomMatch.Name, nomMatch.Id);
-                        //    rawItem.NomenclatureId = nomMatch.Id;
-                        //}
-                        noms.Add(nomRes.Items[0].Name, nomRes.Items[0].Id);
+                        noms.TryAdd(nomRes.Items[0].Name, nomRes.Items[0].Id);
                         prItem.NomenclatureId = nomRes.Items[0].Id;
                     }
                 }
@@ -242,16 +275,8 @@ namespace DigitalPurchasing.Services
 
                 #endregion
             }
-            _db.PurchaseRequestItems.AddRange(prItems);
-            _db.SaveChanges();
 
-            foreach (var prItem in prItems)
-            {
-                if (prItem.NomenclatureId != null && prItem.RawUomMatchId != null && ( prItem.CommonFactor > 0 || prItem.NomenclatureFactor > 0 ))
-                {
-                    _nomenclatureService.AddAlternativeCustomer(prItem.NomenclatureId.Value, prItem.Id);
-                }
-            }
+            _db.SaveChanges();
         }
 
         public void UpdateStatus(Guid id, PurchaseRequestStatus status)
