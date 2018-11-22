@@ -87,5 +87,25 @@ namespace DigitalPurchasing.Web.Controllers
             var result = _competitionListService.Delete(vm.Id);
             return Ok(result);
         }
+
+        [HttpGet]
+        public IActionResult LoadSOTerms([FromQuery]Guid? soId)
+        {
+            if (soId.HasValue)
+            {
+                return Ok(_supplierOfferService.GetTerms(soId.Value));
+            }
+
+            return NotFound();
+        }
+
+        [HttpPost]
+        public IActionResult SaveSOTerms([FromBody]SoTermsVm req, [FromQuery]Guid? soId)
+        {
+            if (!soId.HasValue) return NotFound();
+
+            _supplierOfferService.SaveTerms(req, soId.Value);
+            return Ok();
+        }
     }
 }

@@ -20,7 +20,38 @@ namespace DigitalPurchasing.Core.Interfaces
         void SaveMatch(Guid itemId, Guid nomenclatureId, Guid uomId, decimal factorC, decimal factorN);
 
         DeleteResultVm Delete(Guid id);
+
+        SoTermsVm GetTerms(Guid soId);
+        void SaveTerms(SoTermsVm req, Guid soId);
     }
+
+    public class SoTermsVm
+    {
+        public class Option
+        {
+            public string Text { get; set; }
+            public int Value { get; set; }
+            public int Order { get; set; }
+        }
+
+        public DateTime ConfirmationDate { get; set; }
+        public DateTime DeliveryDate { get; set; }
+
+        public int PriceFixedForDays { get; set; }
+        public int ReservedForDays { get; set; }
+        public int DeliveryAfterConfirmationDays { get; set; }
+
+        public DeliveryTerms DeliveryTerms { get; set; }
+
+        public PaymentTerms PaymentTerms { get; set; }
+
+        public int PayWithinDays { get; set; }
+
+        public IEnumerable<Option> DeliveryTermsOptions { get; set; }
+
+        public IEnumerable<Option> PaymentTermsOptions { get; set; }
+    }
+
 
     public class UploadedDocumentVm
     {

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
@@ -303,6 +304,43 @@ namespace DigitalPurchasing.Services
 
             return DeleteResultVm.Success();
         }
+
+        public SoTermsVm GetTerms(Guid soId)
+        {
+            var so = _db.SupplierOffers.Find(soId);
+            if (so == null) throw new ApplicationException("SO not found");
+
+            var result = DefaultResult();
+            result = so.Adapt(result);
+
+            return result;
+        }
+
+        public void SaveTerms(SoTermsVm req, Guid soId)
+        {
+            var so = _db.SupplierOffers.Find(soId);
+            if (so == null) throw new ApplicationException("SO not found");
+            so = req.Adapt(so);
+            _db.SaveChanges();
+        }
+
+        private SoTermsVm DefaultResult() => new SoTermsVm {
+            DeliveryTermsOptions = GetDeliveryTermsOptions(),
+            PaymentTermsOptions = GetPaymentTermsOptions(),
+            ConfirmationDate = DateTime.UtcNow,
+            DeliveryDate = DateTime.UtcNow
+        };
+
+        private IEnumerable<SoTermsVm.Option> GetPaymentTermsOptions()
+            => Enum.GetValues(typeof(PaymentTerms)).OfType<PaymentTerms>().Select(value => new SoTermsVm.Option
+            {
+                Text = value.GetDescription(),
+                Value = (int)value,
+                Order = value.GetOrder()
+            }).OrderBy(q => q.Order);
+
+        private IEnumerable<SoTermsVm.Option> GetDeliveryTermsOptions()
+            => Enum.GetValues(typeof(DeliveryTerms)).OfType<DeliveryTerms>().Select(value => new SoTermsVm.Option { Text = value.GetDescription(), Value = (int)value });
     }
 
     public class SupplierOfferItemMappings : IRegister

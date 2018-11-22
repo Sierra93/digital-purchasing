@@ -14,7 +14,7 @@
         </label>
     </form>
 </div>
-<div class="long-table-wrap">
+<div class="long-table-wrap" id="app">
     <div class="long-table">
         <div class="long-table-item">
             <div>
@@ -41,18 +41,23 @@
                     <td></td>
                     <td>@Model.PurchaseRequest.Items.Sum(q => q.RawQty).ToString(Consts.Format.Qty)</td>
                 </tr>
+                <tr>
+                    <td colspan="5">
+                        <p>&nbsp;</p>
+                    </td>
+                </tr>
                 </tfoot>
                 <tbody>
-                    @foreach (var item in Model.PurchaseRequest.Items)
-                    {
-                        <tr>
-                            <td>@item.Position</td>
-                            <td>@item.RawCode</td>
-                            <td>@item.RawName</td>
-                            <td>@item.RawUom</td>
-                            <td>@item.RawQty.ToString(Consts.Format.Qty)</td>
-                        </tr>
-                    }
+                @foreach (var item in Model.PurchaseRequest.Items)
+                {
+                    <tr>
+                        <td>@item.Position</td>
+                        <td>@item.RawCode</td>
+                        <td>@item.RawName</td>
+                        <td>@item.RawUom</td>
+                        <td>@item.RawQty.ToString(Consts.Format.Qty)</td>
+                    </tr>
+                }
                 </tbody>
             </table>
         </div>
@@ -88,6 +93,11 @@
                         <td></td>
                         <td>@so.Items.Where(q => q != null).Sum(q => q.TotalPrice).ToString(Consts.Format.Money)</td>
                     </tr>
+                    <tr>
+                        <td colspan="7">
+                            <so-terms :so="'@so.Id'"></so-terms>
+                        </td>
+                    </tr>
                     </tfoot>
                     <tbody>
                     @foreach (var item in so.Items)
@@ -117,3 +127,15 @@
         }
     </div>
 </div>
+
+@section Scripts
+{
+    <partial name="~/Views/CompetitionList/_EditSOTermsComponent.cshtml"/>
+    <script>
+        (function() {
+            var vue = new Vue({
+                el: '#app'
+            });
+        })();
+    </script>
+}

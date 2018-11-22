@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Interfaces;
 
 namespace DigitalPurchasing.Models
@@ -21,5 +22,22 @@ namespace DigitalPurchasing.Models
 
         public Guid CurrencyId { get; set; }
         public Currency Currency { get; set; }
+
+        #region Terms
+
+        public DateTime ConfirmationDate { get; set; }
+        public DateTime DeliveryDate { get; set; }
+
+        public int PriceFixedForDays { get; set; }
+        public int ReservedForDays { get; set; }
+        public int DeliveryAfterConfirmationDays { get; set; }
+
+        public DeliveryTerms DeliveryTerms { get; set; }
+
+        public PaymentTerms PaymentTerms { get; set; }
+
+        public int PayWithinDays { get; set; }
+
+        #endregion
     }
 }

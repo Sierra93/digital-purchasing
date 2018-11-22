@@ -1,0 +1,164 @@
+<script type="text/x-template" id="so-terms">
+    <div>
+        <div class="form-group">
+            <label for="datetime">Срок резерва товара на складе, дней</label>
+            <input type="number" class="form-control" placeholder="0" v-model.number="reservedForDays">
+        </div>
+        <div class="form-group">
+            <label for="datetime">Срок действия цен, дней</label>
+            <input type="number" class="form-control" placeholder="0" v-model.number="priceFixedForDays">
+        </div>
+        <dropdown class="form-group">
+            <label>План. дата подтверждения заказа</label>
+            <div class="input-group">
+                <input class="form-control" type="text" v-model="confirmationDate" readonly="readonly">
+                <div class="input-group-btn">
+                    <btn class="dropdown-toggle"><i class="far fa-calendar-alt"></i></btn>
+                </div>
+            </div>
+            <template slot="dropdown">
+                <li>
+                    <date-picker v-model="confirmationDate"
+                                 format="dd.MM.yyyy"
+                                 icon-control-left="fas fa-angle-left"
+                                 icon-control-right="fas fa-angle-right"
+                                 :week-starts-with="1"
+                                 :limit-from="minDate"
+                                 :date-parser="dateParse"
+                                 :locale="locale" />
+                </li>
+            </template>
+        </dropdown>
+        <div class="form-group">
+            <label for="datetime">Срок поставки с даты подтвержд. заказа, дней</label>
+            <input type="number" class="form-control" placeholder="0" v-model.number="deliveryAfterConfirmationDays">
+        </div>
+        <dropdown class="form-group">
+            <label>Срок поставки товара</label>
+            <div class="input-group">
+                <input class="form-control" type="text" v-model="deliveryDate" readonly="readonly">
+                <div class="input-group-btn">
+                    <btn class="dropdown-toggle"><i class="far fa-calendar-alt"></i></btn>
+                </div>
+            </div>
+            <template slot="dropdown">
+                <li>
+                    <date-picker v-model="deliveryDate"
+                                 format="dd.MM.yyyy"
+                                 icon-control-left="fas fa-angle-left"
+                                 icon-control-right="fas fa-angle-right"
+                                 :week-starts-with="1"
+                                 :limit-from="minDate"
+                                 :date-parser="dateParse"
+                                 :locale="locale" />
+                </li>
+            </template>
+        </dropdown>
+        <div class="form-group">
+            <label for="...">Условия оплаты</label>
+            <select v-model="paymentTerms" class="form-control">
+                <option v-for="option in paymentTermsOptions" v-bind:value="option.value">{{ option.text }}</option>
+            </select>
+        </div>
+        <div class="form-group" v-if="paymentTerms == 20">
+            <label for="datetime">Отсрочка платежа, дней</label>
+            <input type="number" class="form-control" placeholder="30" v-model.number="payWithinDays">
+        </div>
+        <div class="form-group">
+            <label for="...">Инкотермс (условия доставки)</label>
+            <select v-model="deliveryTerms" class="form-control">
+                <option v-for="option in deliveryTermsOptions" v-bind:value="option.value">{{ option.text }}</option>
+            </select>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <button class="btn btn-primary" v-on:click="save">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</script>
+
+<script>
+    (function (vue) {
+        vue.component('so-terms', {
+            template: '#so-terms',
+            props: ['so'],
+            data: function () {
+                return {
+                    dateFormat: 'DD.MM.YYYY',
+                    datetimeFormat: 'DD.MM.YYYY HH:mm',
+                    locale: uivLocales.ru,
+                    minDate: new Date(),
+                    deliveryDate: null,
+                    confirmationDate: null,
+                    deliveryTerms: 0,
+                    deliveryTermsOptions: [],
+                    paymentTerms: 0,
+                    paymentTermsOptions: [],
+                    payWithinDays: 0,
+                    priceFixedForDays: 0,
+                    reservedForDays: 0,
+                    deliveryAfterConfirmationDays: 0
+                };
+            },
+            computed: {
+                qry: function() {
+                    if (this.so) {
+                        return '?soId=' + this.so;
+                    }
+                    return '';
+                }
+            },
+            methods: {
+                dateParse: function(v) {
+                    var date = moment(v, 'DD.MM.YYYY').toDate();
+                    return date.getTime();
+                },
+                load: function() {
+                    var $this = this;
+                    this.$http.get('@Url.Action("LoadSOTerms", "CompetitionList")' + this.qry).then(response => {
+                        var data = response.body;
+                        if (data) {
+                            this.deliveryDate = moment(new Date(data.deliveryDate)).format('DD.MM.YYYY');
+                            this.confirmationDate = moment(new Date(data.confirmationDate)).format('DD.MM.YYYY');
+                            this.deliveryTermsOptions = data.deliveryTermsOptions;
+                            this.paymentTermsOptions = data.paymentTermsOptions;
+                            this.deliveryTerms = data.deliveryTerms;
+                            this.paymentTerms = data.paymentTerms;
+                            this.payWithinDays = data.payWithinDays;
+                            this.priceFixedForDays = data.priceFixedForDays;
+                            this.reservedForDays = data.reservedForDays;
+                            this.deliveryAfterConfirmationDays = data.deliveryAfterConfirmationDays;
+                        } else {
+                            alert('error');
+                        }
+                    }, response => {
+                        alert('error');
+                    });
+                },
+                save: function() {
+                    var data = {
+                        deliveryDate: moment(this.deliveryDate + ' 00:00', this.datetimeFormat).format(moment.HTML5_FMT.DATETIME_LOCAL_MS),
+                        confirmationDate: moment(this.confirmationDate + ' 00:00', this.datetimeFormat).format(moment.HTML5_FMT.DATETIME_LOCAL_MS),
+                        deliveryTerms: this.deliveryTerms,
+                        paymentTerms: this.paymentTerms,
+                        payWithinDays: this.payWithinDays,
+                        priceFixedForDays: this.priceFixedForDays,
+                        reservedForDays: this.reservedForDays,
+                        deliveryAfterConfirmationDays: this.deliveryAfterConfirmationDays
+                    };
+                    this.$http.post('@Url.Action("SaveSOTerms", "CompetitionList")' + this.qry, data).then(response => {
+                        var resData = response.body;
+                    }, response => {
+                        alert('error');
+                    });
+                }
+            },
+            created: function() {
+                console.info('Address', 'pr', this.pr, 'qr', this.qr);
+                this.load();
+            }
+        });
+    })(Vue)
+
+</script>
