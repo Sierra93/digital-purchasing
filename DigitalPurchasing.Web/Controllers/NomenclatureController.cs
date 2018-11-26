@@ -197,8 +197,7 @@ namespace DigitalPurchasing.Web.Controllers
                 }
             }
 
-            var dbCategories = new Dictionary<string, Guid>();
-
+            var dbCategories = new Dictionary<Guid, string>();
             var allCategories = datas.Select(q => q.Category);
             foreach (var dataCategory in allCategories)
             {
@@ -208,9 +207,9 @@ namespace DigitalPurchasing.Web.Controllers
                 {
                     var result = _nomenclatureCategoryService.CreateOrUpdate(category, parentId);
                     parentId = result.Id;
-                    if (!dbCategories.ContainsValue(result.Id))
+                    if (!dbCategories.ContainsKey(result.Id))
                     {
-                        dbCategories.Add(result.Name, result.Id);
+                        dbCategories.Add(result.Id, result.Name);
                     }
                 }
             }
@@ -227,7 +226,7 @@ namespace DigitalPurchasing.Web.Controllers
                     MassUomId = dbUoms.First(q => q.Key.Equals(data.UomMass, StringComparison.InvariantCultureIgnoreCase)).Value,
                     ResourceUomId = dbUoms.First(q => q.Key.Equals(data.ResourceUom, StringComparison.InvariantCultureIgnoreCase)).Value,
                     ResourceBatchUomId = dbUoms.First(q => q.Key.Equals(data.ResourceBatchUom, StringComparison.InvariantCultureIgnoreCase)).Value,
-                    CategoryId = dbCategories.First(q => q.Key.Equals(dataCategory, StringComparison.InvariantCultureIgnoreCase)).Value,
+                    CategoryId = dbCategories.First(q => q.Value.Equals(dataCategory, StringComparison.InvariantCultureIgnoreCase)).Key,
                     MassUomValue = data.UomMassValue,
                     ResourceUomValue = data.ResourceUomValue
                 });
