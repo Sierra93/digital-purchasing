@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DigitalPurchasing.Analysis2\DigitalPurchasing.Analysis2.csproj" />
     <ProjectReference Include="..\DigitalPurchasing.ExcelReader\DigitalPurchasing.ExcelReader.csproj" />
   </ItemGroup>
 
