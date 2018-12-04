@@ -60,6 +60,10 @@ var uivLocales = {
   }
 };
 
+function isNumber(n) {
+  return !isNaN(+n) && isFinite(n);
+}
+
 $(document).on('change', ':file', function () {
   $(this).parents('form').submit();
 });

@@ -8,6 +8,6 @@ namespace DigitalPurchasing.Analysis2
     {
         public Guid InternalId { get; set; } = Guid.NewGuid();
         public Guid Id { get; set; }
-        public int Quantity { get; set; }
+        public decimal Quantity { get; set; }
     }
 }

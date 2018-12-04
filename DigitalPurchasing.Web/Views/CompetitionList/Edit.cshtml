@@ -8,11 +8,12 @@
 
 <h2 class="with-button">@ViewBag.Title</h2>
 <div class="btn-group">
-    <form method="post" enctype="multipart/form-data" asp-action="Upload" asp-controller="CompetitionList" asp-route-id="@Model.Id" style="display: inline-block">
+    <form class="form-button" method="post" enctype="multipart/form-data" asp-action="Upload" asp-controller="CompetitionList" asp-route-id="@Model.Id">
         <label class="btn btn-default btn-file">
             Загрузить предложение <input type="file" style="display: none;" name="file">
         </label>
     </form>
+    <a class="btn btn-default" href="@Url.Action("Index", "Analysis", new { clId = Model.Id })">Анализ КЛ</a>
 </div>
 <div class="long-table-wrap" id="app">
     <div class="long-table">

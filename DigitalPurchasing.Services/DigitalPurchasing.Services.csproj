@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DigitalPurchasing.Analysis2\DigitalPurchasing.Analysis2.csproj" />
     <ProjectReference Include="..\DigitalPurchasing.Data\DigitalPurchasing.Data.csproj" />
     <ProjectReference Include="..\DigitalPurchasing.Models\DigitalPurchasing.Models.csproj" />
   </ItemGroup>

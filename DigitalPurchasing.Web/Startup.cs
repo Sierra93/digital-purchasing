@@ -90,6 +90,7 @@ namespace DigitalPurchasing.Web
             services.AddScoped<ICustomerService, CustomerService>();
             services.AddScoped<IUploadedDocumentService, UploadedDocumentService>();
             services.AddScoped<ISupplierService, SupplierService>();
+            services.AddScoped<IAnalysisService, AnalysisService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
