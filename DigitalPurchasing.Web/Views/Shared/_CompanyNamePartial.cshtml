@@ -1,0 +1,16 @@
+@using DigitalPurchasing.Core
+@using DigitalPurchasing.Models.Identity
+@using Microsoft.AspNetCore.Identity
+
+@inject SignInManager<User> SignInManager
+
+@if (SignInManager.IsSignedIn(User))
+{
+    var companyName = User.FindFirst(CustomClaimTypes.CompanyName).Value;
+    if (string.IsNullOrEmpty(companyName))
+    {
+        <div class="alert alert-warning alert-dismissible" role="alert" style="margin-top: 15px;">
+            Пожалуйста укажите название вашей организации в <a asp-area="Identity" asp-page="/Account/Manage/Index">профиле</a>
+        </div>
+    }
+}
