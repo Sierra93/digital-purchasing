@@ -52,6 +52,8 @@ namespace DigitalPurchasing.Core.Interfaces
             public string SupplierName { get; set; }
             public List<SupplierOfferItemVm> Items { get; set; }
             public CurrencyVm Currency { get; set; }
+            public DeliveryTerms DeliveryTerms { get; set; }
+            public PaymentTerms PaymentTerms { get; set; }
         }
 
         public class SupplierOfferItemVm

@@ -4,8 +4,10 @@ using System.Linq;
 using System.Text;
 using DigitalPurchasing.Analysis2;
 using DigitalPurchasing.Analysis2.Enums;
+using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace DigitalPurchasing.Services
 {
@@ -22,12 +24,18 @@ namespace DigitalPurchasing.Services
 
         public AnalysisDataVm GetData(Guid clId)
         {
-            var data = new AnalysisDataVm();
-
             var cl = _competitionListService.GetById(clId);
+            var qrDelivery = _db.QuotationRequests
+                .Include(q => q.Delivery)
+                .First(q => q.PurchaseRequestId == cl.PurchaseRequest.Id)
+                .Delivery;
+
+            var data = new AnalysisDataVm
+            {
+                CustomerDeliveryDate = qrDelivery.DeliverAt == DateTime.MinValue ? (DateTime?)null : qrDelivery.DeliverAt
+            };
 
             var order = 0;
-
             var core = new AnalysisCore
             {
                 Customer = new Customer
@@ -41,15 +49,22 @@ namespace DigitalPurchasing.Services
                 },
                 Suppliers = cl.SupplierOffers.Select(q =>
                 {
+                    var so = _db.SupplierOffers.Find(q.Id);
                     data.Suppliers.Add(new AnalysisDataVm.Supplier
                     {
                         Id  = q.Id,
                         Name = q.SupplierName,
-                        Order = order++
+                        Order = order++,
+                        DeliveryTerms = q.DeliveryTerms,
+                        PayWithinDays = so.PayWithinDays,
+                        PaymentTerms = q.PaymentTerms,
+                        DeliveryDate = so.DeliveryDate == DateTime.MinValue ? (DateTime?)null : so.DeliveryDate
                     });
                     return new Supplier
                     {
                         Id = q.Id,
+                        DeliveryTerms = q.DeliveryTerms,
+                        PaymentTerms = q.PaymentTerms,
                         Items = q.Items.Select(w => new SupplierItem
                         {
                             Id = w.NomenclatureId,
@@ -59,9 +74,7 @@ namespace DigitalPurchasing.Services
                     };
                 }).ToList()
             };
-
-           
-
+            
             var option1 = new AnalysisOptions();
             option1.SetSupplierCount(SupplierCountType.Equal, 1);
 
@@ -108,8 +121,6 @@ namespace DigitalPurchasing.Services
 
                 data.Variants.Add(variant);
             }
-
-
 
             return data;
         }

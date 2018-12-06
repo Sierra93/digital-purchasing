@@ -102,7 +102,7 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpPost]
         public IActionResult SaveSOTerms([FromBody]SoTermsVm req, [FromQuery]Guid? soId)
         {
-            if (!soId.HasValue) return NotFound();
+            if (req == null || !soId.HasValue) return NotFound();
 
             _supplierOfferService.SaveTerms(req, soId.Value);
             return Ok();

@@ -321,6 +321,10 @@ namespace DigitalPurchasing.Services
             var so = _db.SupplierOffers.Find(soId);
             if (so == null) throw new ApplicationException("SO not found");
             so = req.Adapt(so);
+            if (so.PaymentTerms != PaymentTerms.Postponement)
+            {
+                so.PayWithinDays = 0;
+            }
             _db.SaveChanges();
         }
 

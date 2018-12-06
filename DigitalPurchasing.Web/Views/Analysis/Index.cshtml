@@ -12,29 +12,67 @@
     <h3>Стоимость закупки в разбивке по поставщикам</h3>
     <table class="table table-striped">
         <thead>
-        <tr>
-            <th>Варианты</th>
-            <th v-for="supplier in orderedSuppliers">{{supplier.name}}</th>
-            <th>ИТОГО</th>
-            <th>Кол-во<br/>поставщиков</th>
-        </tr>
+            <tr>
+                <th>Варианты</th>
+                <th v-for="supplier in orderedSuppliers">{{supplier.name}}</th>
+                <th>ИТОГО</th>
+                <th>Кол-во<br/>поставщиков</th>
+            </tr>
         </thead>
+        <tfoot>
+            <tr>
+                <th></th>
+                <td v-for="supplier in orderedSuppliers"></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th>Отсрочка, дней</th>
+                <td v-for="supplier in orderedSuppliers">{{supplier.payWithinDays}}</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th>Условия доставки</th>
+                <td v-for="supplier in orderedSuppliers">{{supplier.deliveryTermsStr}}</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th>Срок поставки не позже, чем в запросе?</th>
+                <td v-for="supplier in orderedSuppliers">{{isDeliveryDataLessOrEqual(supplier.deliveryDate, customerDeliveryDate) | formatBool}}</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th>Срок поставки в КП</th>
+                <td v-for="supplier in orderedSuppliers">{{supplier.deliveryDate | formatDate}}</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th>Срок поставки в запросе</th>
+                <td v-for="supplier in orderedSuppliers">{{customerDeliveryDate | formatDate}}</td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tfoot>
         <tbody>
-        <tr v-for="(variant, index) in variants">
-            <td>
-                <p>Вариант {{(index+1)}}</p>
-                <p class="help-block">Доля в итого, %</p>
-            </td>
-            <td v-if="isSuccess(variant)" v-for="result in getOrderedVariantResults(variant.results)">
-                <p>{{result.total | dontShowZero}}</p>
-                <p class="help-block">{{supplierTotalPerc(result.total, suppliersTotal(variant.results)) | percentage}}</p>
-            </td>
-            <td v-if="isSuccess(variant)">{{suppliersTotal(variant.results)}}</td>
-            <td v-if="isSuccess(variant)">{{suppliersCount(variant.results)}}</td>
-            <td v-if="!isSuccess(variant)" :colspan="variant.results.length+2">
-                <p class="text-center">Предложенные условия не соответствуют параметрам выбора</p>
-            </td>
-        </tr>
+            <tr v-for="(variant, index) in variants">
+                <td>
+                    <p>Вариант {{(index+1)}}</p>
+                    <p class="help-block">Доля в итого, %</p>
+                </td>
+                <td v-if="isSuccess(variant)" v-for="result in getOrderedVariantResults(variant.results)">
+                    <p>{{result.total | dontShowZero}}</p>
+                    <p class="help-block">{{supplierTotalPerc(result.total, suppliersTotal(variant.results)) | percentage}}</p>
+                </td>
+                <td v-if="isSuccess(variant)">{{suppliersTotal(variant.results)}}</td>
+                <td v-if="isSuccess(variant)">{{suppliersCount(variant.results)}}</td>
+                <td v-if="!isSuccess(variant)" :colspan="variant.results.length+2">
+                    <p class="text-center">Предложенные условия не соответствуют параметрам выбора</p>
+                </td>
+            </tr>
         </tbody>
     </table>
 </div>
@@ -47,8 +85,10 @@
                 el: '#app',
                 data: function() {
                     return {
+                        dateFormat: 'DD.MM.YYYY',
                         suppliers: [],
-                        variants: []
+                        variants: [],
+                        customerDeliveryDate: null
                     };
                 },
                 computed: {
@@ -62,6 +102,7 @@
                         var data = response.body;
                         vm.suppliers = data.suppliers;
                         vm.variants = data.variants;
+                        vm.customerDeliveryDate = data.customerDeliveryDate;
                     }, function(response) {
                         alert('Ошибка загрузки');
                     });
@@ -76,6 +117,16 @@
                     dontShowZero: function (value) {
                         if (!isNumber(value)) return value;
                         return value === 0 ? '' : value;
+                    },
+                    formatDate: function (value) {
+                        if (value) {
+                            return moment(String(value)).format('DD.MM.YYYY');
+                        }
+                        return value;
+                    },
+                    formatBool: function(value) {
+                        if (value === '') return '';
+                        return value ? 'Да' : 'Нет';
                     }
                 },
                 methods: {
@@ -97,6 +148,12 @@
                     },
                     isSuccess: function(variant) {
                         return this.suppliersTotal(variant.results) > 0;
+                    },
+                    isDeliveryDataLessOrEqual: function(deliveryDate, requestDate) {
+                        if (deliveryDate && requestDate) {
+                            return deliveryDate <= requestDate;
+                        }
+                        return '';
                     }
                 }
             });

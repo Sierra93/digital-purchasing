@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DigitalPurchasing.Core.Extensions;
 
 namespace DigitalPurchasing.Core.Interfaces
 {
@@ -34,15 +35,14 @@ namespace DigitalPurchasing.Core.Interfaces
             public int Order { get; set; }
         }
 
-        public DateTime ConfirmationDate { get; set; }
-        public DateTime DeliveryDate { get; set; }
+        public DateTime? ConfirmationDate { get; set; }
+        public DateTime? DeliveryDate { get; set; }
 
         public int PriceFixedForDays { get; set; }
         public int ReservedForDays { get; set; }
         public int DeliveryAfterConfirmationDays { get; set; }
 
         public DeliveryTerms DeliveryTerms { get; set; }
-
         public PaymentTerms PaymentTerms { get; set; }
 
         public int PayWithinDays { get; set; }

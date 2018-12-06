@@ -147,6 +147,12 @@
                         reservedForDays: this.reservedForDays,
                         deliveryAfterConfirmationDays: this.deliveryAfterConfirmationDays
                     };
+                    if (data.deliveryDate === 'Invalid date') {
+                        data.deliveryDate = null;
+                    }
+                    if (data.confirmationDate === 'Invalid date') {
+                        data.confirmationDate = null;
+                    }
                     this.$http.post('@Url.Action("SaveSOTerms", "CompetitionList")' + this.qry, data).then(response => {
                         var resData = response.body;
                     }, response => {
