@@ -88,8 +88,8 @@ namespace DigitalPurchasing.Services
             option3.SuppliersCountOptions.Count = 3;
 
             var option4 = new AnalysisOptions();
-            option1.SuppliersCountOptions.Type = SupplierCountType.Equal;
-            option1.SuppliersCountOptions.Count = 10;
+            option4.SuppliersCountOptions.Type = SupplierCountType.Equal;
+            option4.SuppliersCountOptions.Count = 10;
 
             var options = new List<AnalysisOptions>
             {
