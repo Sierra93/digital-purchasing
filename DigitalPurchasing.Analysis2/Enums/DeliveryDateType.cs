@@ -1,8 +1,9 @@
 namespace DigitalPurchasing.Analysis2.Enums
 {
-    public enum DeliveryDateType
+    public enum DeliveryDateTerms
     {
-        Min,
-        LessThanInRequest 
+        Any = 0,
+        Min = 1,
+        LessThanInRequest = 2
     }
 }

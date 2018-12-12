@@ -76,16 +76,20 @@ namespace DigitalPurchasing.Services
             };
             
             var option1 = new AnalysisOptions();
-            option1.SetSupplierCount(SupplierCountType.Equal, 1);
+            option1.SuppliersCountOptions.Type = SupplierCountType.Equal;
+            option1.SuppliersCountOptions.Count = 1;
 
             var option2 = new AnalysisOptions();
-            option2.SetSupplierCount(SupplierCountType.Equal, 2);
+            option2.SuppliersCountOptions.Type = SupplierCountType.Equal;
+            option2.SuppliersCountOptions.Count = 2;
 
             var option3 = new AnalysisOptions();
-            option3.SetSupplierCount(SupplierCountType.Equal, 3);
+            option3.SuppliersCountOptions.Type = SupplierCountType.Equal;
+            option3.SuppliersCountOptions.Count = 3;
 
             var option4 = new AnalysisOptions();
-            option4.SetSupplierCount(SupplierCountType.Equal, 10);
+            option1.SuppliersCountOptions.Type = SupplierCountType.Equal;
+            option1.SuppliersCountOptions.Count = 10;
 
             var options = new List<AnalysisOptions>
             {

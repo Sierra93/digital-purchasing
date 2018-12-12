@@ -30,6 +30,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public class Variant
         {
+            public Guid Id { get; set; } = Guid.NewGuid();
             public List<Result> Results { get; set; } = new List<Result>();
         }
 

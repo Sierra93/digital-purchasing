@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using DigitalPurchasing.Core;
 using DigitalPurchasing.Analysis2;
 using DigitalPurchasing.Analysis2.Enums;
@@ -95,8 +94,14 @@ namespace DigitalPurchasing.Tests
                 Suppliers = testData.Suppliers,
             };
 
-            var options = new AnalysisOptions();
-            options.SetSupplierCount(SupplierCountType.Equal, suppliersCount);
+            var options = new AnalysisOptions
+            {
+                SuppliersCountOptions =
+                {
+                    Count = suppliersCount,
+                    Type = SupplierCountType.Equal
+                }
+            };
 
             var result = core.Run(options);
 
@@ -118,8 +123,14 @@ namespace DigitalPurchasing.Tests
                 Suppliers = testData.Suppliers,
             };
 
-            var options = new AnalysisOptions();
-            options.SetSupplierCount(SupplierCountType.LessOrEqual, suppliersCount);
+            var options = new AnalysisOptions
+            {
+                SuppliersCountOptions =
+                {
+                    Count = suppliersCount,
+                    Type = SupplierCountType.LessOrEqual
+                }
+            };
 
             var result = core.Run(options);
 
@@ -128,9 +139,9 @@ namespace DigitalPurchasing.Tests
         }
 
         [Theory]
-        [InlineData(DeliveryDateType.Min)]
-        [InlineData(DeliveryDateType.LessThanInRequest)]
-        public void DeliveryDateType_Variants(DeliveryDateType deliveryDate)
+        [InlineData(DeliveryDateTerms.Min)]
+        [InlineData(DeliveryDateTerms.LessThanInRequest)]
+        public void DeliveryDateType_Variants(DeliveryDateTerms deliveryDate)
         {
             var testData = GetTestData();
 
@@ -140,13 +151,18 @@ namespace DigitalPurchasing.Tests
                 Suppliers = testData.Suppliers,
             };
 
-            var options = new AnalysisOptions();
-            options.SetDeliveryDate(deliveryDate);
+            var options = new AnalysisOptions
+            {
+                DeliveryDateTermsOptions =
+                {
+                    DeliveryDateTerms = deliveryDate
+                }
+            };
 
             var result = core.Run(options);
 
             Assert.Equal(3, result.Data.Count);
-            if (deliveryDate == DeliveryDateType.LessThanInRequest)
+            if (deliveryDate == DeliveryDateTerms.LessThanInRequest)
             {
                 var validSuppliers = testData.Suppliers.Where(q => q.Date <= testData.Customer.Date).Select(q => q.Id).ToList();
                 Assert.All(result.Data.Select(q => q.Supplier.Id), q =>
@@ -154,7 +170,7 @@ namespace DigitalPurchasing.Tests
                     Assert.Contains(q, validSuppliers);
                 });
             }
-            else if (deliveryDate == DeliveryDateType.Min)
+            else if (deliveryDate == DeliveryDateTerms.Min)
             {
                 var minDate = testData.Suppliers.Min(q => q.Date);
                 Assert.True(result.Data.Select(q => q.Supplier).All(q => q.Date == minDate));
@@ -166,8 +182,13 @@ namespace DigitalPurchasing.Tests
         {
             var core = CreateAnalysisCoreWTestData();
 
-            var options = new AnalysisOptions();
-            options.SetTotalValue(0);
+            var options = new AnalysisOptions
+            {
+                TotalValueOptions =
+                {
+                    Value = 0
+                }
+            };
 
             var result = core.Run(options);
 
@@ -179,8 +200,13 @@ namespace DigitalPurchasing.Tests
         {
             var core = CreateAnalysisCoreWTestData();
 
-            var options = new AnalysisOptions();
-            options.SetTotalValue(3000);
+            var options = new AnalysisOptions
+            {
+                TotalValueOptions =
+                {
+                    Value = 3000
+                }
+            };
 
             var result = core.Run(options);
 
@@ -194,8 +220,13 @@ namespace DigitalPurchasing.Tests
         {
             var analysisCore = CreateAnalysisCoreWTestData();
 
-            var options = new AnalysisOptions();
-            options.SetPaymentTerms(PaymentTerms.Prepay);
+            var options = new AnalysisOptions
+            {
+                PaymentTermsOptions =
+                {
+                    PaymentTerms = PaymentTerms.Prepay
+                }
+            };
 
             var result = analysisCore.Run(options);
 
@@ -210,8 +241,13 @@ namespace DigitalPurchasing.Tests
         {
             var core = CreateAnalysisCoreWTestData();
 
-            var options = new AnalysisOptions();
-            options.SetDeliveryTerms(deliveryTerms);
+            var options = new AnalysisOptions
+            {
+                DeliveryTermsOptions =
+                {
+                    DeliveryTerms = deliveryTerms
+                }
+            };
 
             var result = core.Run(options);
 
@@ -225,8 +261,13 @@ namespace DigitalPurchasing.Tests
         {
             var core = CreateAnalysisCoreWTestData();
 
-            var options = new AnalysisOptions();
-            options.SetDeliveryTerms(DeliveryTerms.NoRequirements);
+            var options = new AnalysisOptions
+            {
+                DeliveryTermsOptions =
+                {
+                    DeliveryTerms = DeliveryTerms.NoRequirements
+                }
+            };
 
             var result = core.Run(options);
 

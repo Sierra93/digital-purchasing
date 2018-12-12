@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DigitalPurchasing.Analysis2.Enums;
+using DigitalPurchasing.Analysis2.Filters;
 
 namespace DigitalPurchasing.Analysis2
 {
@@ -15,28 +15,18 @@ namespace DigitalPurchasing.Analysis2
             var suppliers = Suppliers;
             var customerItemIds = Customer.Items.Select(q => q.Id);
 
-            if (options.DeliveryDate.HasValue)
+            var suppliersFilters = new List<ISuppliersFilter>
             {
-                switch (options.DeliveryDate.Value)
-                {
-                    case DeliveryDateType.Min:
-                        var minDate = Suppliers.Where(q => q.Date.HasValue).Select(q => q.Date.Value).Min();
-                        suppliers = suppliers.Where(q => q.Date.HasValue && q.Date == minDate).ToList();
-                        break;
-                    case DeliveryDateType.LessThanInRequest:
-                        suppliers = suppliers.Where(q => q.Date.HasValue && q.Date <= Customer.Date).ToList();
-                        break;
-                }
-            }
+                new SupplierDeliveryTermsFilter(options.DeliveryTermsOptions),
+                new SupplierPaymentTermsFilter(options.PaymentTermsOptions),
+                new SupplierDeliveryDateTermsFilter(options.DeliveryDateTermsOptions)
+            };
 
-            if (options.DeliveryTerms.HasValue && options.DeliveryTerms.Value > 0)
-            {
-                suppliers = suppliers.Where(q => q.DeliveryTerms == options.DeliveryTerms.Value).ToList();
-            }
+            var context = new AnalysisContext { Customer = Customer };
 
-            if (options.PaymentTerms.HasValue && options.PaymentTerms.Value > 0)
+            foreach (var filter in suppliersFilters)
             {
-                suppliers = suppliers.Where(q => q.PaymentTerms == options.PaymentTerms.Value).ToList();
+                suppliers = filter.Filter(suppliers, context);
             }
 
             var datas = new List<AnalysisData>();
@@ -55,29 +45,15 @@ namespace DigitalPurchasing.Analysis2
 
             var allVariants = itemPairs.CartesianProduct();
 
-
-            if (options.SupplierCount != null)
+            var variantsFilters = new List<IVariantsFilter>
             {
-                switch (options.SupplierCount.Type)
-                {
-                    case SupplierCountType.Equal:
-                        allVariants = allVariants.Where(q =>
-                            q.Select(w => w.Supplier).Distinct().Count() == options.SupplierCount.Count)
-                             .ToList();
-                        break;
-                    case SupplierCountType.LessOrEqual:
-                        allVariants = allVariants.Where(q =>
-                            q.Select(w => w.Supplier).Distinct().Count() <= options.SupplierCount.Count)
-                             .ToList();
-                        break;
-                }
-            }
+                new VariantsSuppliersCountFilter(options.SuppliersCountOptions),
+                new VariantsTotalValueFilter(options.TotalValueOptions)
+            };
 
-            if (options.TotalValue.HasValue)
+            foreach (var variantsFilter in variantsFilters)
             {
-                allVariants = allVariants
-                    .Where(q => q.Sum(w => w.Item.TotalPrice) <= options.TotalValue.Value)
-                    .ToList();
+                allVariants = variantsFilter.Filter(allVariants, context);
             }
 
             if (!allVariants.Any()) return new AnalysisResult(new List<AnalysisData>());

@@ -16,7 +16,7 @@
                 <th>Варианты</th>
                 <th v-for="supplier in orderedSuppliers">{{supplier.name}}</th>
                 <th>ИТОГО</th>
-                <th>Кол-во<br/>поставщиков</th>
+                <th>Кол-во<br />поставщиков</th>
             </tr>
         </thead>
         <tfoot>
@@ -56,6 +56,18 @@
                 <td></td>
                 <td></td>
             </tr>
+            <tr>
+                <th></th>
+                <td v-for="supplier in orderedSuppliers"></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th></th>
+                <td v-for="supplier in orderedSuppliers"></td>
+                <td></td>
+                <td></td>
+            </tr>
         </tfoot>
         <tbody>
             <tr v-for="(variant, index) in variants">
@@ -75,12 +87,35 @@
             </tr>
         </tbody>
     </table>
+    <div class="long-table-wrap">
+        <div class="long-table">
+            <analysis-variant
+                v-for="(variant, index) in variants"
+                :variant="variant"
+                :key="variant.id"
+                :index="index">
+            </analysis-variant>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
+    <script type="text/x-template" id="analysis-variant">
+        <div class="long-table-item" style="width: 300px;">
+            <p class="text-center">Вариант {{(index+1)}}</p>
+        </div>
+    </script>
     <script>
-
         (function() {
+            Vue.component('analysis-variant', {
+                template: '#analysis-variant',
+                props: ['variant','index'],
+                data: function() {
+                    return {
+                    }
+                }
+            });
+
             var app = new Vue({
                 el: '#app',
                 data: function() {
@@ -92,33 +127,34 @@
                     };
                 },
                 computed: {
-                    orderedSuppliers: function () {
+                    orderedSuppliers: function() {
                         return _.orderBy(this.suppliers, 'order');
                     }
                 },
                 created: function() {
                     var vm = this;
-                    this.$http.get('@Url.Action("Data", "Analysis", new { clId = Model.ClId })').then(function(response) {
-                        var data = response.body;
-                        vm.suppliers = data.suppliers;
-                        vm.variants = data.variants;
-                        vm.customerDeliveryDate = data.customerDeliveryDate;
-                    }, function(response) {
-                        alert('Ошибка загрузки');
-                    });
+                    this.$http.get('@Url.Action("Data", "Analysis", new {clId = Model.ClId})').then(function(response) {
+                            var data = response.body;
+                            vm.suppliers = data.suppliers;
+                            vm.variants = data.variants;
+                            vm.customerDeliveryDate = data.customerDeliveryDate;
+                        },
+                        function(response) {
+                            alert('Ошибка загрузки');
+                        });
                 },
                 filters: {
-                    percentage: function (value) {
+                    percentage: function(value) {
                         if (!isNumber(value)) return value;
                         if (value === 0) return '';
                         value = value.toFixed(2);
                         return value + '%';
                     },
-                    dontShowZero: function (value) {
+                    dontShowZero: function(value) {
                         if (!isNumber(value)) return value;
                         return value === 0 ? '' : value;
                     },
-                    formatDate: function (value) {
+                    formatDate: function(value) {
                         if (value) {
                             return moment(String(value)).format('DD.MM.YYYY');
                         }
@@ -133,14 +169,14 @@
                     getSupplierOrder: function(id) {
                         return _.find(this.suppliers, ['id', id]);
                     },
-                    getOrderedVariantResults: function (results) {
+                    getOrderedVariantResults: function(results) {
                         return _.orderBy(results, 'order');
                     },
-                    suppliersTotal: function (results) {
+                    suppliersTotal: function(results) {
                         return _.sumBy(results, 'total');
                     },
                     suppliersCount: function(results) {
-                        return _.filter(results, function (r) { return r.total > 0; }).length;
+                        return _.filter(results, function(r) { return r.total > 0; }).length;
                     },
                     supplierTotalPerc: function(result, total) {
                         if (result === 0 || total === 0) return 0;
@@ -158,5 +194,6 @@
                 }
             });
         })();
+
     </script>
 }

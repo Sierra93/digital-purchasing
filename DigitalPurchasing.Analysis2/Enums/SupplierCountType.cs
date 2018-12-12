@@ -2,7 +2,8 @@ namespace DigitalPurchasing.Analysis2.Enums
 {
     public enum SupplierCountType
     {
-        Equal,
-        LessOrEqual
+        Any = 0,
+        Equal = 1,
+        LessOrEqual = 2
     }
 }
