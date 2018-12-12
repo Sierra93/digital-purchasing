@@ -65,7 +65,7 @@ namespace DigitalPurchasing.Services
                         Id = q.Id,
                         DeliveryTerms = q.DeliveryTerms,
                         PaymentTerms = q.PaymentTerms,
-                        Items = q.Items.Select(w => new SupplierItem
+                        Items = q.Items.Where(w => w != null).Select(w => new SupplierItem
                         {
                             Id = w.NomenclatureId,
                             Price = w.RawPrice,
