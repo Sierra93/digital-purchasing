@@ -10,6 +10,11 @@ namespace DigitalPurchasing.Web.Controllers
 {
     public class AnalysisController : Controller
     {
+        public class DeleteVariantVm
+        {
+            public Guid Id { get; set; }
+        }
+
         private readonly IAnalysisService _analysisService;
 
         public AnalysisController(IAnalysisService analysisService) => _analysisService = analysisService;
@@ -36,10 +41,10 @@ namespace DigitalPurchasing.Web.Controllers
             return Ok();
         }
 
-        [HttpOptions]
-        public IActionResult DeleteVariant([FromBody]Guid id)
+        [HttpPost]
+        public IActionResult DeleteVariant([FromBody]DeleteVariantVm vm)
         {
-            _analysisService.DeleteVariant(id);
+            _analysisService.DeleteVariant(vm.Id);
             return Ok();
         }
     }

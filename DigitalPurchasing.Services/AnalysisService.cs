@@ -183,7 +183,11 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
         }
 
-        public void DeleteVariant(Guid id) => _db.Remove(_db.AnalysisVariants.Find(id));
+        public void DeleteVariant(Guid id)
+        {
+            _db.Remove(_db.AnalysisVariants.Find(id));
+            _db.SaveChanges();
+        }
 
         private AnalysisOptions ToOption(AnalysisVariant av)
         {
