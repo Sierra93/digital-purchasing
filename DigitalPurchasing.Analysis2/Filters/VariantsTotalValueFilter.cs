@@ -9,7 +9,7 @@ namespace DigitalPurchasing.Analysis2.Filters
 
         public override List<List<AnalysisData>> Filter(List<List<AnalysisData>> allVariants, IAnalysisContext context)
         {
-            if (Options?.Value == null) return allVariants;
+            if (Options == null || Options.Value <= 0) return allVariants;
 
             return allVariants
                 .Where(q => q.Sum(w => w.Item.TotalPrice) <= Options.Value)

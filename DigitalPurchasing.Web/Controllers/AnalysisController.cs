@@ -23,5 +23,24 @@ namespace DigitalPurchasing.Web.Controllers
 
         [Route("competitionlist/{clId}/analysisdata")]
         public IActionResult Data(Guid clId) => Json(_analysisService.GetData(clId));
+
+        public IActionResult VariantData(Guid vId) => Json(_analysisService.GetVariantData(vId));
+
+        [HttpPost, Route("competitionlist/{clId}/analysis/add")]
+        public IActionResult AddVariant(Guid clId) => Json(_analysisService.AddVariant(clId));
+
+        [HttpPost]
+        public IActionResult SaveVariant([FromBody]AnalysisSaveVariant vm)
+        {
+            _analysisService.SaveVariant(vm);
+            return Ok();
+        }
+
+        [HttpOptions]
+        public IActionResult DeleteVariant([FromBody]Guid id)
+        {
+            _analysisService.DeleteVariant(id);
+            return Ok();
+        }
     }
 }

@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20181216131000_AnalysisVariant_FixCompetitionListId")]
+    partial class AnalysisVariant_FixCompetitionListId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -47,7 +49,8 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.HasIndex("CompetitionListId");
 
-                    b.HasIndex("OwnerId");
+                    b.HasIndex("OwnerId")
+                        .IsUnique();
 
                     b.ToTable("AnalysisVariants");
                 });
@@ -830,8 +833,8 @@ namespace DigitalPurchasing.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("DigitalPurchasing.Models.Company", "Owner")
-                        .WithMany()
-                        .HasForeignKey("OwnerId")
+                        .WithOne()
+                        .HasForeignKey("DigitalPurchasing.Models.AnalysisVariant", "OwnerId")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 

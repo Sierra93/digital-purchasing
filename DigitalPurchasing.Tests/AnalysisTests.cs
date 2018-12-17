@@ -192,7 +192,7 @@ namespace DigitalPurchasing.Tests
 
             var result = core.Run(options);
 
-            Assert.False(result.IsSuccess);
+            Assert.True(result.IsSuccess);
         }
 
         [Fact]

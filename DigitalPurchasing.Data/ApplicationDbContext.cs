@@ -31,7 +31,6 @@ namespace DigitalPurchasing.Data
         public DbSet<SupplierOfferItem> SupplierOfferItems { get; set; }
 
         #region
-        public DbSet<Analysis> Analyses { get; set; }
         public DbSet<AnalysisVariant> AnalysisVariants { get; set; }
         #endregion
 
@@ -102,11 +101,10 @@ namespace DigitalPurchasing.Data
             builder.Entity<Delivery>().HasMany(q => q.PurchaseRequests).WithOne(q => q.Delivery).HasForeignKey(q => q.DeliveryId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<Delivery>().HasMany(q => q.QuotationRequests).WithOne(q => q.Delivery).HasForeignKey(q => q.DeliveryId).OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<Analysis>(e =>
+            builder.Entity<AnalysisVariant>(e =>
             {
-                e.HasMany(q => q.Variants).WithOne(q => q.Analysis).HasForeignKey(q => q.AnalysisId).OnDelete(DeleteBehavior.Cascade);
-                e.HasOne(q => q.CompetitionList).WithOne().HasForeignKey<Analysis>(q => q.CompetitionListId).OnDelete(DeleteBehavior.Cascade);
-                e.HasOne(q => q.Owner).WithOne().HasForeignKey<Analysis>(q => q.OwnerId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(q => q.CompetitionList).WithMany().HasForeignKey(q => q.CompetitionListId).OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(q => q.Owner).WithMany().HasForeignKey(q => q.OwnerId).OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<Currency>(e =>
@@ -144,7 +142,7 @@ namespace DigitalPurchasing.Data
             builder.Entity<UnitsOfMeasurement>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<UomConversionRate>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<UploadedDocument>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<Analysis>().HasQueryFilter(o => o.OwnerId == CompanyId);
+            builder.Entity<AnalysisVariant>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<PRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<QRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<CLCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);

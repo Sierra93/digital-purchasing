@@ -16,6 +16,9 @@
     <Compile Remove="Migrations\20181029111439_SupplierOffer_PurchaseRequest_UploadedDocument.cs" />
     <Compile Remove="Migrations\20181105115844_Test.cs" />
     <Compile Remove="Migrations\20181203093714_Analysis.cs" />
+    <Compile Remove="Migrations\20181214171054_AnalysisVariant_Rework.cs" />
+    <Compile Remove="Migrations\20181214171247_AnalysisVariant_Rework.cs" />
+    <Compile Remove="Migrations\20181214171450_AnalysisVariant_Rework.cs" />
   </ItemGroup>
 
   <ItemGroup>

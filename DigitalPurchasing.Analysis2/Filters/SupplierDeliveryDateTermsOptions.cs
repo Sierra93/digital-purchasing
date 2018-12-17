@@ -4,6 +4,6 @@ namespace DigitalPurchasing.Analysis2.Filters
 {
     public class SupplierDeliveryDateTermsOptions
     {
-        public DeliveryDateTerms? DeliveryDateTerms { get; set; }
+        public DeliveryDateTerms DeliveryDateTerms { get; set; }
     }
 }
