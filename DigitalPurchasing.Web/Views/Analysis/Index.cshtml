@@ -98,7 +98,11 @@
 @section Scripts {
     <script type="text/x-template" id="analysis-variant">
         <div class="long-table-item" style="width: 300px;">
-            <p class="text-center">Вариант {{(index+1)}} <button type="button" class="btn btn-default btn-xs" v-on:click="deleteVariant">Удалить</button></p>
+            <p class="text-center">Вариант {{(index+1)}}
+                <button type="button" class="btn btn-default btn-xs" v-on:click="deleteVariant" title="Удалить">
+                    <i class="far fa-trash-alt"></i>
+                </button>
+            </p>
             <div>
                 <div class="form-group">
                     <label for="datetime">Стоимость</label>
