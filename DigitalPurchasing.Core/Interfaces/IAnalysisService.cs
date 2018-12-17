@@ -99,6 +99,7 @@ namespace DigitalPurchasing.Core.Interfaces
             public Guid Id { get; set; } = Guid.NewGuid();
             public List<Result> Results { get; set; } = new List<Result>();
             public AnalysisVariantOptions Options { get; set; } = new AnalysisVariantOptions();
+            public DateTime CreatedOn { get; set; }
         }
 
         public class Result

@@ -34,18 +34,19 @@ namespace DigitalPurchasing.Services
 
             foreach (var option in options)
             {
-                AddVariantToData(data, core.Run(option), option.Id);
+                AddVariantToData(data, option, core.Run(option));
             }
 
             return data;
         }
 
-        private void AddVariantToData(AnalysisDataVm data, AnalysisResult result, Guid vId)
+        private void AddVariantToData(AnalysisDataVm data, AnalysisOptions option, AnalysisResult result)
         {
             var totalBySupplier = result.GetTotalBySupplier();
             var variant = new AnalysisDataVm.Variant
             {
-                Id = vId,
+                Id = option.Id,
+                CreatedOn = option.CreatedOn,
                 Results = totalBySupplier.Select(q => new AnalysisDataVm.Result
                 {
                     SupplierId = q.Key,
@@ -171,7 +172,7 @@ namespace DigitalPurchasing.Services
 
             var option = ToOption(entry.Entity);
 
-            AddVariantToData(data, core.Run(option), option.Id);
+            AddVariantToData(data, option, core.Run(option));
 
             return data;
         }
@@ -194,6 +195,7 @@ namespace DigitalPurchasing.Services
             var op = new AnalysisOptions
             {
                 Id = av.Id,
+                CreatedOn = av.CreatedOn,
                 DeliveryTermsOptions = { DeliveryTerms = av.DeliveryTerms },
                 DeliveryDateTermsOptions = { DeliveryDateTerms = av.DeliveryDateTerms },
                 PaymentTermsOptions = { PaymentTerms = av.PaymentTerms },

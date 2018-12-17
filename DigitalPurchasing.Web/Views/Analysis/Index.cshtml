@@ -56,21 +56,9 @@
                 <td></td>
                 <td></td>
             </tr>
-            <tr>
-                <th></th>
-                <td v-for="supplier in orderedSuppliers"></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <th></th>
-                <td v-for="supplier in orderedSuppliers"></td>
-                <td></td>
-                <td></td>
-            </tr>
         </tfoot>
         <tbody>
-            <tr v-for="(variant, index) in variants">
+            <tr v-for="(variant, index) in orderedVariants" v-if="orderedVariants.length>0">
                 <td>
                     <p>Вариант {{(index+1)}}</p>
                     <p class="help-block">Доля в итого, %</p>
@@ -85,15 +73,18 @@
                     <p class="text-center">Предложенные условия не соответствуют параметрам выбора</p>
                 </td>
             </tr>
+            <tr v-if="orderedVariants.length === 0" class="text-center">
+                <td colspan="5"><button type="button" class="btn btn-primary" v-on:click="variantAdded">Добавить вариант</button></td>
+            </tr>
         </tbody>
     </table>
-    <div>
-        <button type="button" class="btn btn-default" v-on:click="variantAdded">Добавить вариант</button>
+    <div style="margin-bottom: 20px;" v-if="orderedVariants.length>0">
+        <button type="button" class="btn btn-primary" v-on:click="variantAdded">Добавить вариант</button>
     </div>
-    <div class="long-table-wrap">
+    <div class="long-table-wrap" v-if="orderedVariants.length>0">
         <div class="long-table">
             <analysis-variant
-                v-for="(variant, index) in variants"
+                v-for="(variant, index) in orderedVariants"
                 v-on:changed="variantChanged(variant.id)"
                 v-on:deleted="variantDeleted(variant.id)"
                 :key="variant.id"
@@ -226,6 +217,11 @@
                 computed: {
                     orderedSuppliers: function() {
                         return _.orderBy(this.suppliers, 'order');
+                    },
+                    orderedVariants: function() {
+                        return _.orderBy(this.variants, function(url) {
+                            return new Date(url.createdOn);
+                        }, ['asc']);
                     }
                 },
                 created: function() {
