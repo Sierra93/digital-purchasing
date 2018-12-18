@@ -1,0 +1,30 @@
+@model DigitalPurchasing.Web.ViewModels.Analysis.AnalysisDetailsVm
+@{
+    ViewData["Title"] = "Анализ коммерческих предложений (конкурентный лист)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2 class="with-button">@ViewData["Title"]</h2>
+<div class="btn-group">
+    <a class="btn btn-default" href="@Url.Action("Edit", "CompetitionList", new { id = Model.ClId })">Конкурентный лист</a>
+    <a class="btn btn-default" href="@Url.Action("Index", "Analysis", new { Model.ClId })">Варианты выбора</a>
+</div>
+@*<div id="app">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th></th>
+            </tr>
+        </thead>
+        <tfoot>
+            <tr>
+                <th></th>
+            </tr>
+        </tfoot>
+        <tbody>
+            <tr>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+</div>*@

@@ -26,6 +26,13 @@ namespace DigitalPurchasing.Web.Controllers
             return View(vm);
         }
 
+        [Route("competitionlist/{clId}/analysis/details")]
+        public IActionResult Details(Guid clId)
+        {
+            var vm = new AnalysisDetailsVm {ClId = clId};
+            return View(vm);
+        }
+
         [Route("competitionlist/{clId}/analysisdata")]
         public IActionResult Data(Guid clId) => Json(_analysisService.GetData(clId));
 
