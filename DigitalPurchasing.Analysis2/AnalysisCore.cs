@@ -47,6 +47,7 @@ namespace DigitalPurchasing.Analysis2
 
             var variantsFilters = new List<IVariantsFilter>
             {
+                new VariantsItemQuantityFilter(),
                 new VariantsSuppliersCountFilter(options.SuppliersCountOptions),
                 new VariantsTotalValueFilter(options.TotalValueOptions)
             };

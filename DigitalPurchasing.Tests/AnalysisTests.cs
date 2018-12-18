@@ -275,5 +275,47 @@ namespace DigitalPurchasing.Tests
                 GetTestData().Suppliers.Count,
                 result.Data.Select(q => q.Supplier.Id).Distinct().Count());
         }
+
+        [Fact]
+        public void LowItemQuantity()
+        {
+            var itemId1 = new Guid("5e654ae674ce4e03be619ec6c5701b21");
+            var itemId2 = new Guid("d81e5c867aec40ffadbb8f71994d8443");
+            var itemId3 = new Guid("a2141f27aa194b4ea111febcf31df950");
+
+            var customer = new Customer
+            {
+                Id = new Guid("01baea5c472d4b5aace9bf7dbaf013c4"),
+                Date = DateTime.UtcNow.Date.AddDays(10),
+                Items =
+                {
+                    new CustomerItem {Id = itemId1, Quantity = 100},
+                    new CustomerItem {Id = itemId2, Quantity = 100},
+                    new CustomerItem {Id = itemId3, Quantity = 100}
+                }
+            };
+
+            var supplier1 = new Supplier
+            {
+                Id = new Guid("b9a46c13564c410f955961ba56210fd4"),
+                Date = DateTime.UtcNow.Date.AddDays(11),
+                Items =
+                {
+                    new SupplierItem {Id = itemId1, Quantity = 1, Price = 10},
+                    new SupplierItem {Id = itemId2, Quantity = 1, Price = 11},
+                    new SupplierItem {Id = itemId3, Quantity = 1, Price = 12}
+                }
+            };
+
+            var core = new AnalysisCore
+            {
+                Customer = customer,
+                Suppliers = new List<Supplier> { supplier1 }
+            };
+
+            var result = core.Run(new AnalysisOptions());
+
+            Assert.Empty(result.Data);
+        }
     }
 }
