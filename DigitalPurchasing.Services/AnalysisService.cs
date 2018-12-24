@@ -17,11 +17,16 @@ namespace DigitalPurchasing.Services
     {
         private readonly ApplicationDbContext _db;
         private readonly ICompetitionListService _competitionListService;
+        private readonly INomenclatureService _nomenclatureService;
 
-        public AnalysisService(ApplicationDbContext db, ICompetitionListService competitionListService)
+        public AnalysisService(
+            ApplicationDbContext db,
+            ICompetitionListService competitionListService,
+            INomenclatureService nomenclatureService)
         {
             _db = db;
             _competitionListService = competitionListService;
+            _nomenclatureService = nomenclatureService;
         }
 
         public AnalysisDataVm GetData(Guid clId)
@@ -188,6 +193,90 @@ namespace DigitalPurchasing.Services
         {
             _db.Remove(_db.AnalysisVariants.Find(id));
             _db.SaveChanges();
+        }
+
+        public AnalysisDetails GetDetails(Guid clId)
+        {
+            var cl = _competitionListService.GetById(clId);
+            var core = CreateAnalysisCore(cl);
+            var options = GetAnalysisOptions(clId);
+
+            var variantResults = new List<AnalysisResult>();
+            foreach (var option in options)
+            {
+                variantResults.Add(core.Run(option));
+            }
+
+            var result = new AnalysisDetails();
+
+            foreach (var customerItem in core.Customer.Items)
+            {
+                var nomenclature = _nomenclatureService.GetById(customerItem.Id);
+                var item = new AnalysisDetails.Item
+                {
+                    Id = customerItem.Id,
+                    Code = nomenclature.Code,
+                    Name = nomenclature.Name,
+                    Quantity = customerItem.Quantity,
+                    Uom = nomenclature.BatchUomName,
+                    // todo: fill with real data
+                    Currency = "RUB"
+                };
+
+                var variantIndex = 0;
+                foreach (var variantResult in variantResults.Where(q => q.IsSuccess))
+                {
+                    var supplierIds = variantResult.Data.Select(q => q.Supplier.Id).Distinct().ToList();
+
+                    var variant = new AnalysisDetails.Variant
+                    {
+                        Name = $"Вариант {++variantIndex}"
+                    };
+
+                    foreach (var variantItemData in variantResult.Data.Where(q => q.Item.Id == item.Id))
+                    {
+                        if (variant.Suppliers.Any(q => q.Key.Id == variantItemData.Supplier.Id))
+                        {
+                            var supplier = variant.Suppliers
+                                .First(q => q.Key.Id == variantItemData.Supplier.Id);
+                            supplier.Value.TotalPrice += variantItemData.Item.TotalPrice;
+                        }
+                        else
+                        {
+                            var so = _db.SupplierOffers.Find(variantItemData.Supplier.Id);
+                            var supplier = new AnalysisDetails.Supplier
+                            {
+                                Id = so.Id,
+                                Name = so.SupplierName,
+                            };
+                            var supplierData = new AnalysisDetails.SupplierData
+                            {
+                                TotalPrice = variantItemData.Item.TotalPrice
+                            };
+                            variant.Suppliers.Add(supplier, supplierData);
+                        }
+                    }
+
+                    foreach (var supplierId in supplierIds)
+                    {
+                        if (variant.Suppliers.All(q => q.Key.Id != supplierId))
+                        {
+                            var so = _db.SupplierOffers.Find(supplierId);
+                            var supplier = new AnalysisDetails.Supplier
+                            {
+                                Id = so.Id,
+                                Name = so.SupplierName,
+                            };
+                            variant.Suppliers.Add(supplier, new AnalysisDetails.SupplierData());
+                        }
+                    }
+
+                    item.Variants.Add(variant);
+                }
+                result.Items.Add(item);
+            }
+
+            return result;
         }
 
         private AnalysisOptions ToOption(AnalysisVariant av)

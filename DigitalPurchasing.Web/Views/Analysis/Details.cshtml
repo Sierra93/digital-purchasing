@@ -1,7 +1,20 @@
+@using DigitalPurchasing.Core
 @model DigitalPurchasing.Web.ViewModels.Analysis.AnalysisDetailsVm
 @{
     ViewData["Title"] = "Анализ коммерческих предложений (конкурентный лист)";
     Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@functions
+{
+
+public string FormatMoney(decimal sum)
+{
+    if (sum == 0) return "";
+
+    return sum.ToString(Consts.Format.Money);
+}
+
 }
 
 <h2 class="with-button">@ViewData["Title"]</h2>
@@ -9,22 +22,72 @@
     <a class="btn btn-default" href="@Url.Action("Edit", "CompetitionList", new { id = Model.ClId })">Конкурентный лист</a>
     <a class="btn btn-default" href="@Url.Action("Index", "Analysis", new { Model.ClId })">Варианты выбора</a>
 </div>
-@*<div id="app">
-    <table class="table table-striped">
-        <thead>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th colspan="5">Запрос коммерческого предложения</th>
+            @foreach (var variant in Model.Data.Items[0].Variants)
+            {
+                <th colspan="@(variant.Suppliers.Count>1?variant.Suppliers.Count+1:1)">@variant.Name</th>
+            }
+        </tr>
+        <tr>
+            <th>Код</th>
+            <th>Наименование</th>
+            <th>Валюта</th>
+            <th>ЕИ</th>
+            <th>Кол-во,<br />ЕИ</th>
+            @foreach (var variant in Model.Data.Items[0].Variants.OrderBy(q => q.Name))
+            {
+                foreach (var supplier in variant.Suppliers.OrderBy(q => q.Key.Name))
+                {
+                    <th>@supplier.Key.Name</th>
+                }
+                if (variant.Suppliers.Count > 1)
+                {
+                    <th>ИТОГО</th>
+                }
+            }
+        </tr>
+    </thead>
+    <tfoot>
+        <tr>
+            <th colspan="4"></th>
+            <th>@Model.Data.Items.Sum(q => q.Quantity).ToString(Consts.Format.Qty)</th>
+            @foreach (var variant in Model.Data.Items[0].Variants.OrderBy(q => q.Name))
+            {
+                foreach (var supplier in variant.Suppliers.OrderBy(q => q.Key.Name))
+                {
+                    <th>@FormatMoney(Model.Data.SumBySupplier(variant, supplier.Key))</th>
+                }
+                if (variant.Suppliers.Count > 1)
+                {
+                    <th>@FormatMoney(Model.Data.SumByVariant(variant))</th>
+                }
+            }
+        </tr>
+    </tfoot>
+    <tbody>
+        @foreach (var item in Model.Data.Items)
+        {
             <tr>
-                <th></th>
+                <td>@item.Code</td>
+                <td>@item.Name</td>
+                <td>@item.Currency</td>
+                <td>@item.Uom</td>
+                <td>@item.Quantity.ToString(Consts.Format.Qty)</td>
+                @foreach (var variant in item.Variants.OrderBy(q => q.Name))
+                {
+                    foreach (var supplier in variant.Suppliers.OrderBy(q => q.Key.Name))
+                    {
+                        <td>@FormatMoney(supplier.Value.TotalPrice)</td>
+                    }
+                    if (variant.Suppliers.Count > 1)
+                    {
+                        <th>@FormatMoney(variant.Suppliers.Sum(q => q.Value.TotalPrice))</th>
+                    }
+                }
             </tr>
-        </thead>
-        <tfoot>
-            <tr>
-                <th></th>
-            </tr>
-        </tfoot>
-        <tbody>
-            <tr>
-                <td></td>
-            </tr>
-        </tbody>
-    </table>
-</div>*@
+        }
+    </tbody>
+</table>

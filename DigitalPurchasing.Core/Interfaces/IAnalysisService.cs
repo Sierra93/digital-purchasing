@@ -14,6 +14,55 @@ namespace DigitalPurchasing.Core.Interfaces
         AnalysisDataVm AddVariant(Guid clId);
         void SaveVariant(AnalysisSaveVariant variant);
         void DeleteVariant(Guid id);
+        AnalysisDetails GetDetails(Guid clId);
+    }
+
+    public class AnalysisDetails
+    {
+        public class Item
+        {
+            public Guid Id { get; set; }
+            public string Name { get; set; }
+            public string Code { get; set; }
+            public decimal Quantity { get; set; }
+            public string Uom { get; set; }
+            public string Currency { get; set; }
+
+            public List<Variant> Variants { get; set; } = new List<Variant>();
+        }
+
+        public class Variant
+        {
+            public string Name { get; set; }
+
+            public Dictionary<Supplier, SupplierData> Suppliers { get; set; } = new Dictionary<Supplier, SupplierData>();
+        }
+
+        public class Supplier
+        {
+            public Guid Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        public class SupplierData
+        {
+            public decimal TotalPrice { get; set; }
+        }
+
+        public List<Item> Items = new List<Item>();
+
+        public decimal SumBySupplier(Variant variant, Supplier supplier)
+            => Items.SelectMany(q => q.Variants)
+                .Where(q => q.Name == variant.Name)
+                .SelectMany(q => q.Suppliers)
+                .Where(q => q.Key.Id == supplier.Id)
+                .Sum(q => q.Value.TotalPrice);
+
+        public decimal SumByVariant(Variant variant)
+            => Items.SelectMany(q => q.Variants)
+                .Where(q => q.Name == variant.Name)
+                .SelectMany(q => q.Suppliers)
+                .Sum(q => q.Value.TotalPrice);
     }
 
     public class AnalysisVariantOptions
@@ -57,7 +106,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public decimal? TotalValue { get; set; }
 
         [JsonProperty("supplierCount")]
-        public string SupplierCountSelected => $"{SupplierCount}:{(int) SupplierCountType}";
+        public string SupplierCountSelected => $"{SupplierCount}:{(int)SupplierCountType}";
 
         [JsonIgnore]
         public int SupplierCount { get; set; }
@@ -89,7 +138,7 @@ namespace DigitalPurchasing.Core.Interfaces
             public int PayWithinDays { get; set; }
 
             public DateTime? DeliveryDate { get; set; }
-            
+
             public string DeliveryTermsStr => DeliveryTerms.GetDescription();
             public string PaymentTermsStr => PaymentTerms.GetDescription();
         }

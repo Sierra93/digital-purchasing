@@ -29,7 +29,8 @@ namespace DigitalPurchasing.Web.Controllers
         [Route("competitionlist/{clId}/analysis/details")]
         public IActionResult Details(Guid clId)
         {
-            var vm = new AnalysisDetailsVm {ClId = clId};
+            var data = _analysisService.GetDetails(clId);
+            var vm = new AnalysisDetailsVm { ClId = clId, Data = data };
             return View(vm);
         }
 
