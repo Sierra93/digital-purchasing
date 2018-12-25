@@ -34,6 +34,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public class Variant
         {
             public string Name { get; set; }
+            public DateTime CreatedOn { get; set; }
 
             public Dictionary<Supplier, SupplierData> Suppliers { get; set; } = new Dictionary<Supplier, SupplierData>();
         }

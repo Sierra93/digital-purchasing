@@ -201,10 +201,10 @@ namespace DigitalPurchasing.Services
             var core = CreateAnalysisCore(cl);
             var options = GetAnalysisOptions(clId);
 
-            var variantResults = new List<AnalysisResult>();
+            var variantResults = new Dictionary<AnalysisResult, AnalysisOptions>();
             foreach (var option in options)
             {
-                variantResults.Add(core.Run(option));
+                variantResults.Add(core.Run(option), option);
             }
 
             var result = new AnalysisDetails();
@@ -224,16 +224,17 @@ namespace DigitalPurchasing.Services
                 };
 
                 var variantIndex = 0;
-                foreach (var variantResult in variantResults.Where(q => q.IsSuccess))
+                foreach (var variantResult in variantResults.Where(q => q.Key.IsSuccess).OrderBy(q => q.Value.CreatedOn))
                 {
-                    var supplierIds = variantResult.Data.Select(q => q.Supplier.Id).Distinct().ToList();
+                    var supplierIds = variantResult.Key.Data.Select(q => q.Supplier.Id).Distinct().ToList();
 
                     var variant = new AnalysisDetails.Variant
                     {
-                        Name = $"Вариант {++variantIndex}"
+                        Name = $"Вариант {++variantIndex}",
+                        CreatedOn = variantResult.Value.CreatedOn
                     };
 
-                    foreach (var variantItemData in variantResult.Data.Where(q => q.Item.Id == item.Id))
+                    foreach (var variantItemData in variantResult.Key.Data.Where(q => q.Item.Id == item.Id))
                     {
                         if (variant.Suppliers.Any(q => q.Key.Id == variantItemData.Supplier.Id))
                         {

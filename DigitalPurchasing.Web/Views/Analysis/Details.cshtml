@@ -29,7 +29,7 @@ public string FormatMoney(decimal sum)
                 <thead>
                     <tr>
                         <th colspan="5">Запрос коммерческого предложения</th>
-                        @foreach (var variant in Model.Data.Items[0].Variants)
+                        @foreach (var variant in Model.Data.Items[0].Variants.OrderBy(q => q.CreatedOn))
                         {
                             <th colspan="@(variant.Suppliers.Count>1?variant.Suppliers.Count+1:1)">@variant.Name</th>
                         }
@@ -40,7 +40,7 @@ public string FormatMoney(decimal sum)
                         <th>Валюта</th>
                         <th>ЕИ</th>
                         <th>Кол-во,<br />ЕИ</th>
-                        @foreach (var variant in Model.Data.Items[0].Variants.OrderBy(q => q.Name))
+                        @foreach (var variant in Model.Data.Items[0].Variants.OrderBy(q => q.CreatedOn))
                         {
                             foreach (var supplier in variant.Suppliers.OrderBy(q => q.Key.Name))
                             {
@@ -57,7 +57,7 @@ public string FormatMoney(decimal sum)
                     <tr>
                         <th colspan="4"></th>
                         <th>@Model.Data.Items.Sum(q => q.Quantity).ToString(Consts.Format.Qty)</th>
-                        @foreach (var variant in Model.Data.Items[0].Variants.OrderBy(q => q.Name))
+                        @foreach (var variant in Model.Data.Items[0].Variants.OrderBy(q => q.CreatedOn))
                         {
                             foreach (var supplier in variant.Suppliers.OrderBy(q => q.Key.Name))
                             {
@@ -79,7 +79,7 @@ public string FormatMoney(decimal sum)
                             <td>@item.Currency</td>
                             <td>@item.Uom</td>
                             <td>@item.Quantity.ToString(Consts.Format.Qty)</td>
-                            @foreach (var variant in item.Variants.OrderBy(q => q.Name))
+                            @foreach (var variant in item.Variants.OrderBy(q => q.CreatedOn))
                             {
                                 foreach (var supplier in variant.Suppliers.OrderBy(q => q.Key.Name))
                                 {
