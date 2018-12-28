@@ -99,5 +99,15 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         #endregion
+
+        #region Details
+
+        public IActionResult Details(Guid id)
+        {
+            var vm = _supplierOfferService.GetDetailsById(id);
+            return View(vm);
+        }
+
+        #endregion
     }
 }

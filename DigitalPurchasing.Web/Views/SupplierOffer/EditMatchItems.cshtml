@@ -5,7 +5,7 @@
     Layout = "_Layout";
 }
 
-<partial name="_Header" model="@((string)ViewBag.Title, Model.CompetitionList.Id)" />
+<partial name="_Header" model="@((string)ViewBag.Title, Model.CompetitionList.Id, (Guid?)Model.Id)" />
 
 <h3>Подбор соответсвия номенклатуры в предложении поставщика номенклатуре предприятия</h3>
 

@@ -1,6 +1,10 @@
-@model (string Title, Guid CompetitionListId)
+@model (string Title, Guid CompetitionListId, Guid? SupplierOfferId)
 
 <h2 class="with-button">@Model.Title</h2>
 <div class="btn-group">
     <a class="btn btn-default" asp-action="Edit" asp-controller="CompetitionList" asp-route-id="@Model.CompetitionListId">Назад к конкурентному листу</a>
+    @if (Model.SupplierOfferId.HasValue)
+    {
+        <a class="btn btn-default" asp-action="Details" asp-controller="SupplierOffer" asp-route-id="@Model.SupplierOfferId">Подробности</a>
+    }
 </div>

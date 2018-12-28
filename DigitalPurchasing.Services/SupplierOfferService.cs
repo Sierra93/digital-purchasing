@@ -103,6 +103,56 @@ namespace DigitalPurchasing.Services
             return vm;
         }
 
+        public SupplierOfferDetailsVm GetDetailsById(Guid id)
+        {
+            var supplierOffer = _db.SupplierOffers
+                .Include(q => q.Currency)
+                .Include(q => q.CompetitionList)
+                .ThenInclude(q => q.QuotationRequest)
+                .First(q => q.Id == id);
+
+            var purchaseRequestId = supplierOffer.CompetitionList.QuotationRequest.PurchaseRequestId;
+            
+            var requestItems = _db.PurchaseRequestItems
+                .Include(q => q.Nomenclature)
+                    .ThenInclude(q => q.BatchUom)
+                .Include(q => q.Nomenclature.MassUom)
+                .Where(q => q.PurchaseRequestId == purchaseRequestId).ToList();
+            var offerItems = _db.SupplierOfferItems.Include(q => q.Nomenclature).ThenInclude(q => q.BatchUom).Where(q => q.SupplierOfferId == id).ToList();
+
+            var result = new SupplierOfferDetailsVm
+            {
+                Id = id
+            };
+
+            foreach (var requestItem in requestItems)
+            {
+                var item = new SupplierOfferDetailsVm.Item(result.Items);
+                item.Request.Code = requestItem.RawCode;
+                item.Request.Name = requestItem.RawName;
+                item.Request.Qty = requestItem.RawQty;
+                item.Request.Currency = "RUB"; //TODO
+                item.Request.Uom = requestItem.Nomenclature.BatchUom.Name;
+
+                var offerItem = offerItems.FirstOrDefault(q => q.NomenclatureId.HasValue && q.NomenclatureId == requestItem.NomenclatureId);
+                if (offerItem == null) continue;
+
+                item.Offer.Code = offerItem.RawCode;
+                item.Offer.Name = offerItem.RawName;
+                item.Offer.Qty = offerItem.RawQty;
+                item.Offer.Price = offerItem.RawPrice;
+                item.Offer.Currency = supplierOffer.Currency.Name;
+                item.Offer.Uom = offerItem.Nomenclature.BatchUom.Name;
+
+                item.Mass.MassOf1 = requestItem.Nomenclature.MassUomValue;
+                item.Mass.MassUom = requestItem.Nomenclature.MassUom.Name;
+                
+                result.Items.Add(item);
+            }
+
+            return result;
+        }
+
         public SupplierOfferColumnsDataVm GetColumnsData(Guid id)
         {
             var vm = GetById(id);

@@ -6,7 +6,7 @@
     Layout = "_Layout";
 }
 
-<partial name="_Header" model="@((string)ViewBag.Title, Model.CompetitionList.Id)" />
+<partial name="_Header" model="@((string)ViewBag.Title, Model.CompetitionList.Id, (Guid?)null)" />
 
 <h3>Сопоставление названия колонок из коммерческого предложения поставщика с названиями колонок системы</h3>
 <div id="app">

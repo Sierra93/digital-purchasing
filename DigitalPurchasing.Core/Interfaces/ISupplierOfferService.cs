@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using DigitalPurchasing.Core.Extensions;
 
 namespace DigitalPurchasing.Core.Interfaces
@@ -10,7 +11,9 @@ namespace DigitalPurchasing.Core.Interfaces
         void UpdateSupplierName(Guid id, string name);
 
         CreateFromFileResponse CreateFromFile(Guid competitionListId, string filePath);
+
         SupplierOfferVm GetById(Guid id);
+        SupplierOfferDetailsVm GetDetailsById(Guid id);
 
         SupplierOfferColumnsDataVm GetColumnsData(Guid id);
         void SaveColumns(Guid supplierOfferId, SupplierOfferColumnsVm columns);
@@ -24,6 +27,79 @@ namespace DigitalPurchasing.Core.Interfaces
 
         SoTermsVm GetTerms(Guid soId);
         void SaveTerms(SoTermsVm req, Guid soId);
+    }
+
+    public class SupplierOfferDetailsVm
+    {
+        #region Internal classes
+
+        public class BaseData
+        {
+            public string Code { get; set; }
+            public string Name { get; set; }
+            public string Currency { get; set; }
+            public string Uom { get; set; }
+            public decimal Qty { get; set; }
+        }
+
+        public class RequestData : BaseData
+        {
+        }
+
+        public class OfferData : BaseData
+        {
+            public decimal Price { get; set; }
+            public decimal TotalPrice => Qty * Price;
+        }
+
+        public class MassData
+        {
+            private readonly Item _item;
+
+            public MassData(Item item) => _item = item;
+
+            public decimal TotalPricePerc
+            {
+                get
+                {
+                    var sum = _item.Items.Sum(q => q.Offer.TotalPrice);
+                    if (sum == 0) return 0;
+                    return _item.Offer.TotalPrice / _item.Items.Sum(q => q.Offer.TotalPrice);
+                }
+            }
+
+            public decimal MassOf1 { get; set; }
+            public string MassUom { get; set; }
+
+            public decimal TotalMass => _item.Offer.Qty * MassOf1;
+
+            public decimal TotalMassPerc
+            {
+                get
+                {
+                    var sum = _item.Items.Sum(q => q.Mass.TotalMass);
+                    if (sum == 0) return 0;
+                    return TotalMass / sum;
+                }
+            }
+        }
+
+        public class Item
+        {
+            internal List<Item> Items { get; }
+
+            public Item(List<Item> items) => Items = items;
+
+            public RequestData Request { get; set; } = new RequestData();
+            public OfferData Offer { get; set; } = new OfferData();
+            public MassData Mass => new MassData(this);
+        }
+
+        #endregion
+
+        public Guid Id { get; set; }
+
+        public List<Item> Items { get; set; } = new List<Item>();
     }
 
     public class SoTermsVm
