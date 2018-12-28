@@ -19,6 +19,7 @@
                         <th colspan="5">Запрос коммерческого предложения</th>
                         <th colspan="7">Коммерческое предложение в полученном варианте</th>
                         <th colspan="5">Расчет доли товара по стоимости и массе в итого</th>
+                        <th colspan="6">Пересчет стоимости с учетом доставки и таможенной пошлины</th>
                     </tr>
                     <tr>
                         <th>Код</th>
@@ -38,8 +39,15 @@
                         <th>Доля<br />стоимости<br />позиции<br />в общей<br />стоимости</th>
                         <th>Масса 1 ЕИ<br />товара,<br />ед изм массы</th>
                         <th>ЕИ массы</th>
-                        <th>Масса количества<br />в заявке,<br />ед массы</th>
+                        <th>Масса<br />количества<br />в заявке,<br />ед массы</th>
                         <th>Доля массы<br />позиции в<br />общей массе</th>
+
+                        <th>Таможенная<br />пошлина,<br />проценты</th>
+                        <th>Минимальная<br />пошлина,<br />валюта КП<br />за ЕИ КП</th>
+                        <th>Таможенная<br />пошлина,<br />в валюте КП</th>
+                        <th>Доставка,<br />валюта КП</th>
+                        <th>Стоимость<br />количества в запросе<br />с учетом пошлины<br />и доставки,<br />валюта КП</th>
+                        <th>Цена с учетом<br />пошлины<br />и доставки,<br />валюта запроса<br />за ЕИ КП</th>
                     </tr>
                 </thead>
                 <tfoot>
@@ -56,6 +64,12 @@
                         <th colspan="2"></th>
                         <th>@Model.Items.Sum(q => q.Mass.TotalMass).ToString(Consts.Format.Money)</th>
                         <th>@Model.Items.Sum(q => q.Mass.TotalMassPerc).ToString("P1")</th>
+
+                        <th colspan="2"></th>
+                        <th>@Model.Items.Sum(q => q.ImportAndDelivery.CustomsDuty).ToString(Consts.Format.Money)</th>
+                        <th>@Model.Items.Sum(q => q.ImportAndDelivery.DeliveryCost).ToString(Consts.Format.Money)</th>
+                        <th>@Model.Items.Sum(q => q.ImportAndDelivery.FinalCost).ToString(Consts.Format.Money)</th>
+                        <th></th>
                     </tr>
                 </tfoot>
                 <tbody>
@@ -81,6 +95,13 @@
                             <td>@item.Mass.MassUom</td>
                             <td>@item.Mass.TotalMass.ToString(Consts.Format.Money)</td>
                             <td>@item.Mass.TotalMassPerc.ToString("P1")</td>
+
+                            <td>@item.ImportAndDelivery.CustomsDutyPerc.ToString("P1")</td>
+                            <td>@item.ImportAndDelivery.MinCustomsDuty.ToString(Consts.Format.Money)</td>
+                            <td>@item.ImportAndDelivery.CustomsDuty.ToString(Consts.Format.Money)</td>
+                            <td>@item.ImportAndDelivery.DeliveryCost.ToString(Consts.Format.Money)</td>
+                            <td>@item.ImportAndDelivery.FinalCost.ToString(Consts.Format.Money)</td>
+                            <td>@item.ImportAndDelivery.FinalCostCostPer1.ToString(Consts.Format.Money)</td>
                         </tr>
                     }
                 </tbody>

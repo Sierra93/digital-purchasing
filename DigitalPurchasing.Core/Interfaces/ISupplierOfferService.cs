@@ -84,6 +84,43 @@ namespace DigitalPurchasing.Core.Interfaces
             }
         }
 
+        public class ImportAndDeliveryData
+        {
+            private readonly Item _item;
+
+            public ImportAndDeliveryData(Item item) => _item = item;
+
+            public decimal CustomsDutyPerc => 0.08m;
+            public decimal MinCustomsDuty => 0;
+
+            public DeliveryTerms DeliveryTerms { get; set; }
+
+            public decimal CustomsDuty
+            {
+                get
+                {
+                    if (DeliveryTerms == DeliveryTerms.CustomerWarehouse || DeliveryTerms == DeliveryTerms.DDP)
+                        return 0;
+
+                    var duty = _item.Offer.TotalPrice * ( 1 + CustomsDutyPerc );
+                    if (duty < MinCustomsDuty)
+                    {
+                        duty = MinCustomsDuty;
+                    }
+
+                    return duty;
+                }
+            }
+
+            public decimal TotalDeliveryCost { get; set; }
+
+            public decimal DeliveryCost => TotalDeliveryCost * _item.Mass.TotalMassPerc;
+
+            public decimal FinalCost => CustomsDuty + DeliveryCost + _item.Offer.TotalPrice;
+
+            public decimal FinalCostCostPer1 => FinalCost / _item.Offer.Qty;
+        }
+
         public class Item
         {
             internal List<Item> Items { get; }
@@ -93,6 +130,7 @@ namespace DigitalPurchasing.Core.Interfaces
             public RequestData Request { get; set; } = new RequestData();
             public OfferData Offer { get; set; } = new OfferData();
             public MassData Mass => new MassData(this);
+            public ImportAndDeliveryData ImportAndDelivery => new ImportAndDeliveryData(this);
         }
 
         #endregion

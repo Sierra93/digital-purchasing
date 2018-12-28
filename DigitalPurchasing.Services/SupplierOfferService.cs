@@ -146,6 +146,8 @@ namespace DigitalPurchasing.Services
 
                 item.Mass.MassOf1 = requestItem.Nomenclature.MassUomValue;
                 item.Mass.MassUom = requestItem.Nomenclature.MassUom.Name;
+
+                item.ImportAndDelivery.DeliveryTerms = supplierOffer.DeliveryTerms;
                 
                 result.Items.Add(item);
             }
