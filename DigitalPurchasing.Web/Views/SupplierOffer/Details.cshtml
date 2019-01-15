@@ -2,7 +2,7 @@
 @model DigitalPurchasing.Core.Interfaces.SupplierOfferDetailsVm
 
 @{
-    ViewBag.Title = "Подробности";
+    ViewBag.Title = $"Подробности КП № {Model.PublicId} от {Model.CreatedOn:dd.MM.yyyy HH:mm}";
     Layout = "_Layout";
 }
 
@@ -146,7 +146,6 @@
                     }
                 </tbody>
             </table>
-
         </div>
     </div>
 </div>

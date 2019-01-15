@@ -124,7 +124,9 @@ namespace DigitalPurchasing.Services
 
             var result = new SupplierOfferDetailsVm
             {
-                Id = id
+                Id = id,
+                PublicId = supplierOffer.PublicId,
+                CreatedOn = supplierOffer.CreatedOn
             };
 
             foreach (var requestItem in requestItems)

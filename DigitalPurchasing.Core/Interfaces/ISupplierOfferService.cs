@@ -182,6 +182,8 @@ namespace DigitalPurchasing.Core.Interfaces
         #endregion
 
         public Guid Id { get; set; }
+        public int PublicId { get; set; }
+        public DateTime CreatedOn { get; set; }
 
         public List<Item> Items { get; set; } = new List<Item>();
     }
