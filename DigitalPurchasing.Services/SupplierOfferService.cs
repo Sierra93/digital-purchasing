@@ -117,6 +117,8 @@ namespace DigitalPurchasing.Services
                 .Include(q => q.Nomenclature)
                     .ThenInclude(q => q.BatchUom)
                 .Include(q => q.Nomenclature.MassUom)
+                .Include(q => q.Nomenclature.ResourceUom)
+                .Include(q => q.Nomenclature.ResourceBatchUom)
                 .Where(q => q.PurchaseRequestId == purchaseRequestId).ToList();
             var offerItems = _db.SupplierOfferItems.Include(q => q.Nomenclature).ThenInclude(q => q.BatchUom).Where(q => q.SupplierOfferId == id).ToList();
 
@@ -128,6 +130,8 @@ namespace DigitalPurchasing.Services
             foreach (var requestItem in requestItems)
             {
                 var item = new SupplierOfferDetailsVm.Item(result.Items);
+                result.Items.Add(item);
+
                 item.Request.Code = requestItem.RawCode;
                 item.Request.Name = requestItem.RawName;
                 item.Request.Qty = requestItem.RawQty;
@@ -148,8 +152,16 @@ namespace DigitalPurchasing.Services
                 item.Mass.MassUom = requestItem.Nomenclature.MassUom.Name;
 
                 item.ImportAndDelivery.DeliveryTerms = supplierOffer.DeliveryTerms;
+
+                item.Conversion.CurrencyExchangeRate = 1; //TODO
+                item.Conversion.UomRatio = 1; //TODO
+
+                item.ResourceConversion.ResourceUom = requestItem.Nomenclature.ResourceUom.Name;
+                item.ResourceConversion.ResourceBatchUom = requestItem.Nomenclature.ResourceBatchUom.Name;
+                item.ResourceConversion.RequestResource = requestItem.Nomenclature.ResourceUomValue;
+                item.ResourceConversion.OfferResource = requestItem.Nomenclature.ResourceUomValue; //TODO
                 
-                result.Items.Add(item);
+                
             }
 
             return result;

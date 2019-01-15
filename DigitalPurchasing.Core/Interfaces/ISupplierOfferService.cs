@@ -90,7 +90,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
             public ImportAndDeliveryData(Item item) => _item = item;
 
-            public decimal CustomsDutyPerc => 0.08m;
+            public decimal CustomsDutyPerc => 0;
             public decimal MinCustomsDuty => 0;
 
             public DeliveryTerms DeliveryTerms { get; set; }
@@ -99,10 +99,12 @@ namespace DigitalPurchasing.Core.Interfaces
             {
                 get
                 {
+                    if (CustomsDutyPerc == 0) return 0;
+
                     if (DeliveryTerms == DeliveryTerms.CustomerWarehouse || DeliveryTerms == DeliveryTerms.DDP)
                         return 0;
 
-                    var duty = _item.Offer.TotalPrice * ( 1 + CustomsDutyPerc );
+                    var duty = _item.Offer.TotalPrice * CustomsDutyPerc;
                     if (duty < MinCustomsDuty)
                     {
                         duty = MinCustomsDuty;
@@ -121,16 +123,60 @@ namespace DigitalPurchasing.Core.Interfaces
             public decimal FinalCostCostPer1 => FinalCost / _item.Offer.Qty;
         }
 
+        public class ConversionData
+        {
+            private readonly Item _item;
+
+            public ConversionData(Item item) => _item = item;
+
+            public decimal UomRatio { get; set; } = 1;
+
+            public decimal CurrencyExchangeRate { get; set; } = 1;
+
+            public decimal OfferQty => _item.Offer.Qty * UomRatio;
+
+            public decimal OfferPrice => _item.ImportAndDelivery.FinalCostCostPer1 * CurrencyExchangeRate / UomRatio;
+
+            public decimal OfferTotalPrice => OfferQty * OfferPrice;
+        }
+
+        public class ResourceConversionData
+        {
+            private readonly Item _item;
+
+            public ResourceConversionData(Item item) => _item = item;
+
+            public string ResourceUom { get; set; }
+            public string ResourceBatchUom { get; set; }
+
+            public decimal RequestResource { get; set; } = 1;
+            public decimal OfferResource { get; set; } = 1;
+            public decimal ResourceRatio => OfferResource / RequestResource;
+            public decimal OfferPrice => _item.Conversion.OfferPrice * ResourceRatio;
+            public decimal OfferTotalPrice => _item.Conversion.OfferTotalPrice * ResourceRatio;
+        }
+
         public class Item
         {
             internal List<Item> Items { get; }
 
-            public Item(List<Item> items) => Items = items;
+            public Item(List<Item> items)
+            {
+                Items = items;
+                Request = new RequestData();
+                Offer = new OfferData();
+                Mass = new MassData(this);
+                ResourceConversion = new ResourceConversionData(this);
+                ImportAndDelivery = new ImportAndDeliveryData(this);
+                Conversion = new ConversionData(this);
+            }
 
-            public RequestData Request { get; set; } = new RequestData();
-            public OfferData Offer { get; set; } = new OfferData();
-            public MassData Mass => new MassData(this);
-            public ImportAndDeliveryData ImportAndDelivery => new ImportAndDeliveryData(this);
+            public RequestData Request { get; set; }
+            public OfferData Offer { get; set; }
+            public MassData Mass { get; set; }
+            public ImportAndDeliveryData ImportAndDelivery { get; set; } 
+            public ConversionData Conversion { get; set; }
+            public ResourceConversionData ResourceConversion { get; set; }
         }
 
         #endregion
