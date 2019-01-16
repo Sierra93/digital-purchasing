@@ -1,7 +1,7 @@
 @page
 @model IndexModel
 @{
-    ViewData["Title"] = "Profile";
+    ViewData["Title"] = "Профиль";
 }
 
 <h4>@ViewData["Title"]</h4>
@@ -26,7 +26,7 @@
                 else
                 {
                     <input asp-for="Input.Email" class="form-control" />
-                    <button id="email-verification" type="submit" asp-page-handler="SendVerificationEmail" class="btn btn-link">Send verification email</button>
+                    <button id="email-verification" type="submit" asp-page-handler="SendVerificationEmail" class="btn btn-link">Отправить письмо для подтверждения</button>
                 }
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
@@ -40,7 +40,7 @@
                 <input asp-for="Input.CompanyName" class="form-control" />
                 <span asp-validation-for="Input.CompanyName" class="text-danger"></span>
             </div>
-            <button type="submit" class="btn btn-default">Save</button>
+            <button type="submit" class="btn btn-default">Сохранить</button>
         </form>
     </div>
 </div>

@@ -32,6 +32,7 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
             _companyService = companyService;
         }
 
+        [Display(Name = "Имя пользователя")]
         public string Username { get; set; }
 
         public bool IsEmailConfirmed { get; set; }
