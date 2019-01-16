@@ -13,6 +13,12 @@ namespace DigitalPurchasing.Web.Controllers
             public string Name { get; set; }
         }
 
+        public class UpdateDeliveryCostVm
+        {
+            public Guid Id { get; set; }
+            public decimal DeliveryCost { get; set; }
+        }
+
         public class SaveMatchItemVm
         {
             public Guid ItemId { get; set; }
@@ -57,6 +63,13 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult UpdateSupplierName([FromBody] UpdateSupplierNameVm model)
         {
             _supplierOfferService.UpdateSupplierName(model.Id, model.Name);
+            return Ok();
+        }
+
+        [HttpPost]
+        public IActionResult UpdateDeliveryCost([FromBody] UpdateDeliveryCostVm model)
+        {
+            _supplierOfferService.UpdateDeliveryCost(model.Id, model.DeliveryCost);
             return Ok();
         }
 

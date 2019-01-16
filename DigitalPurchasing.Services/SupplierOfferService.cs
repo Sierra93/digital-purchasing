@@ -61,6 +61,12 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
         }
 
+        public void UpdateDeliveryCost(Guid id, decimal deliveryCost)
+        {
+            _db.SupplierOffers.Find(id).DeliveryCost = deliveryCost;
+            _db.SaveChanges();
+        }
+
         public CreateFromFileResponse CreateFromFile(Guid competitionListId, string filePath)
         {
             var result = _excelRequestReader.ToTable(filePath);
@@ -154,6 +160,7 @@ namespace DigitalPurchasing.Services
                 item.Mass.MassUom = requestItem.Nomenclature.MassUom.Name;
 
                 item.ImportAndDelivery.DeliveryTerms = supplierOffer.DeliveryTerms;
+                item.ImportAndDelivery.TotalDeliveryCost = supplierOffer.DeliveryCost;
 
                 item.Conversion.CurrencyExchangeRate = 1; //TODO
                 item.Conversion.UomRatio = 1; //TODO

@@ -23,6 +23,8 @@ namespace DigitalPurchasing.Models
         public Guid CurrencyId { get; set; }
         public Currency Currency { get; set; }
 
+        public decimal DeliveryCost { get; set; }
+
         #region Terms
 
         public DateTime ConfirmationDate { get; set; }

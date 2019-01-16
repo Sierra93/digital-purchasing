@@ -9,6 +9,7 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         void UpdateStatus(Guid id, SupplierOfferStatus status);
         void UpdateSupplierName(Guid id, string name);
+        void UpdateDeliveryCost(Guid id, decimal deliveryCost);
 
         CreateFromFileResponse CreateFromFile(Guid competitionListId, string filePath);
 
@@ -116,7 +117,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
             public decimal TotalDeliveryCost { get; set; }
 
-            public decimal DeliveryCost => TotalDeliveryCost * _item.Mass.TotalMassPerc;
+            public decimal DeliveryCost => TotalDeliveryCost * (_item.Mass.TotalMassPerc != 0 ? _item.Mass.TotalMassPerc :  _item.Mass.TotalPricePerc);
 
             public decimal FinalCost => CustomsDuty + DeliveryCost + _item.Offer.TotalPrice;
 
@@ -244,6 +245,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public string SupplierName { get; set; }
         public string CompanyName { get; set; }
+        public decimal DeliveryCost { get; set; }
     }
 
     public class SupplierOfferColumnsVm
