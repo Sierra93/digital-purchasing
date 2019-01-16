@@ -143,6 +143,12 @@ namespace DigitalPurchasing.Services
         private List<AnalysisOptions> GetAnalysisOptions(Guid clId)
         {
             var variants = _db.AnalysisVariants.Where(q => q.CompetitionListId == clId).ToList();
+            if (!variants.Any())
+            {
+                CreateDefaultVariants(clId);
+                return GetAnalysisOptions(clId);
+            }
+
             var result = new List<AnalysisOptions>();
 
             foreach (var variant in variants)
@@ -151,6 +157,24 @@ namespace DigitalPurchasing.Services
             }
 
             return result;
+        }
+
+        private void CreateDefaultVariants(Guid clId)
+        {
+            var v1 = new AnalysisVariant { CompetitionListId = clId, CreatedOn = DateTime.UtcNow.AddMilliseconds(1) };
+            var v2 = new AnalysisVariant { CompetitionListId = clId, CreatedOn = DateTime.UtcNow.AddMilliseconds(2) };
+            var v3 = new AnalysisVariant { CompetitionListId = clId, CreatedOn = DateTime.UtcNow.AddMilliseconds(3) };
+
+            v1.DeliveryTerms = v2.DeliveryTerms = v3.DeliveryTerms = DeliveryTerms.CustomerWarehouse;
+            v1.DeliveryDateTerms = v2.DeliveryDateTerms = v3.DeliveryDateTerms = DeliveryDateTerms.LessThanInRequest;
+            v1.PaymentTerms = v2.PaymentTerms = v3.PaymentTerms = PaymentTerms.Postponement;
+            v1.SupplierCount = 1;
+            v2.SupplierCount = 2;
+            v1.SupplierCountType = SupplierCountType.Equal;
+            v2.SupplierCountType = SupplierCountType.LessOrEqual;
+
+            _db.AnalysisVariants.AddRange(v1, v2, v3);
+            _db.SaveChanges();
         }
 
         public AnalysisVariantOptions GetVariantData(Guid vId)
