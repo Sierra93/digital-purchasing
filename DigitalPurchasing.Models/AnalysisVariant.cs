@@ -8,7 +8,7 @@ namespace DigitalPurchasing.Models
     public class AnalysisVariant : BaseModelWithOwner
     {
         public CompetitionList CompetitionList { get; set; }
-        public Guid CompetitionListId { get; set; }
+        public Guid? CompetitionListId { get; set; }
 
         public PaymentTerms PaymentTerms { get; set; }
         public DeliveryDateTerms DeliveryDateTerms { get; set; }

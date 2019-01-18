@@ -10,11 +10,14 @@ namespace DigitalPurchasing.Core.Interfaces
     public interface IAnalysisService
     {
         AnalysisDataVm GetData(Guid clId);
+        AnalysisDataVm GetDefaultData();
         AnalysisVariantOptions GetVariantData(Guid vId);
         AnalysisDataVm AddVariant(Guid clId);
+        AnalysisDataVm AddDefaultVariant();
         void SaveVariant(AnalysisSaveVariant variant);
         void DeleteVariant(Guid id);
         AnalysisDetails GetDetails(Guid clId);
+        List<Guid> GetDefaultVariantsIds();
     }
 
     public class AnalysisDetails

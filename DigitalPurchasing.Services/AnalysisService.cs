@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic;
 using System.Text;
 using DigitalPurchasing.Analysis2;
 using DigitalPurchasing.Analysis2.Enums;
@@ -41,6 +42,17 @@ namespace DigitalPurchasing.Services
             {
                 AddVariantToData(data, option, core.Run(option));
             }
+
+            return data;
+        }
+
+        public AnalysisDataVm GetDefaultData()
+        {
+            var ids = GetDefaultVariantsIds();
+            var variants = _db.AnalysisVariants.Where(q => ids.Contains(q.Id)).ToList();
+
+            var data = new AnalysisDataVm();
+            data.Variants.AddRange(variants.Select(q => new AnalysisDataVm.Variant { Id  = q.Id, CreatedOn = q.CreatedOn }));
 
             return data;
         }
@@ -145,7 +157,17 @@ namespace DigitalPurchasing.Services
             var variants = _db.AnalysisVariants.Where(q => q.CompetitionListId == clId).ToList();
             if (!variants.Any())
             {
-                CreateDefaultVariants(clId);
+                var ids = GetDefaultVariantsIds();
+
+                var defaultVariants = _db.AnalysisVariants.AsNoTracking().Where(q => ids.Contains(q.Id)).ToList();
+                foreach (var variant in defaultVariants)
+                {
+                    variant.Id = Guid.NewGuid();
+                    variant.CompetitionListId = clId;
+                }
+                _db.AnalysisVariants.AddRange(defaultVariants);
+                _db.SaveChanges();
+
                 return GetAnalysisOptions(clId);
             }
 
@@ -159,11 +181,11 @@ namespace DigitalPurchasing.Services
             return result;
         }
 
-        private void CreateDefaultVariants(Guid clId)
+        private void CreateDefaultVariants()
         {
-            var v1 = new AnalysisVariant { CompetitionListId = clId, CreatedOn = DateTime.UtcNow.AddMilliseconds(1) };
-            var v2 = new AnalysisVariant { CompetitionListId = clId, CreatedOn = DateTime.UtcNow.AddMilliseconds(2) };
-            var v3 = new AnalysisVariant { CompetitionListId = clId, CreatedOn = DateTime.UtcNow.AddMilliseconds(3) };
+            var v1 = new AnalysisVariant { CompetitionListId = null, CreatedOn = DateTime.UtcNow.AddMilliseconds(1) };
+            var v2 = new AnalysisVariant { CompetitionListId = null, CreatedOn = DateTime.UtcNow.AddMilliseconds(2) };
+            var v3 = new AnalysisVariant { CompetitionListId = null, CreatedOn = DateTime.UtcNow.AddMilliseconds(3) };
 
             v1.DeliveryTerms = v2.DeliveryTerms = v3.DeliveryTerms = DeliveryTerms.CustomerWarehouse;
             v1.DeliveryDateTerms = v2.DeliveryDateTerms = v3.DeliveryDateTerms = DeliveryDateTerms.LessThanInRequest;
@@ -177,11 +199,40 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
         }
 
+        public List<Guid> GetDefaultVariantsIds()
+        {
+            var ids = _db.AnalysisVariants.Where(q => q.CompetitionListId == null).Select(q => q.Id).ToList();
+            if (!ids.Any())
+            {
+                CreateDefaultVariants();
+                return GetDefaultVariantsIds();
+            }
+
+            return ids;
+        }
+
         public AnalysisVariantOptions GetVariantData(Guid vId)
         {
             var av = _db.AnalysisVariants.Find(vId);
             var result = av.Adapt<AnalysisVariantOptions>();
             return result;
+        }
+
+        public AnalysisDataVm AddDefaultVariant()
+        {
+            var av = new AnalysisVariant
+            {
+                CompetitionListId = null
+            };
+
+            var entry = _db.AnalysisVariants.Add(av);
+            _db.SaveChanges();
+            av = entry.Entity;
+
+
+            var data = new AnalysisDataVm();
+            data.Variants.Add(new AnalysisDataVm.Variant { Id  = av.Id, CreatedOn = av.CreatedOn });
+            return data;
         }
 
         public AnalysisDataVm AddVariant(Guid clId)

@@ -6,12 +6,82 @@
 
 <h4>@ViewData["Title"]</h4>
 
-<div class="row">
-    <div class="col-md-6">
-
+<div class="row" id="app">
+    <div class="col-md-12">
+        <div style="margin-bottom: 20px;" v-if="orderedVariants.length>0">
+            <button type="button" class="btn btn-primary" v-on:click="variantAdded">Добавить вариант</button>
+        </div>
+        <div class="long-table-wrap" v-if="orderedVariants.length>0">
+            <div class="long-table">
+                <analysis-variant v-for="(variant, index) in orderedVariants"
+                                  v-on:changed="variantChanged(variant.id)"
+                                  v-on:deleted="variantDeleted(variant.id)"
+                                  :key="variant.id"
+                                  :index="index"
+                                  :id="variant.id">
+                </analysis-variant>
+            </div>
+        </div>
     </div>
 </div>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    <partial name="~/Views/Shared/Variants/_VariantComponent.cshtml" />
+
+    <script>
+        (function() {
+            var app = new Vue({
+                el: '#app',
+                data: function() {
+                    return {
+                        variants: []
+                    };
+                },
+                computed: {
+                    orderedVariants: function() {
+                        return _.orderBy(this.variants, function(v) {
+                            return new Date(v.createdOn);
+                        }, ['asc']);
+                    }
+                },
+                watch: {
+                    variants: function(val) {
+                        if (val.length === 0) {
+                            this.loadData();
+                        }
+                    }
+                },
+                created: function() {
+                    this.loadData();
+                },
+                methods: {
+                    loadData: function() {
+                        var vm = this;
+                        this.$http.get('@Url.Action("DefaultData", "Analysis")').then(function(response) {
+                            var data = response.body;
+                            vm.variants = data.variants;
+                        },
+                        function(response) {
+                            alert('Ошибка загрузки');
+                        });
+                    },
+                    variantAdded: function() {
+                        var vm = this;
+                        this.$http.post('@Url.Action("AddDefaultVariant", "Analysis")').then(function(response) {
+                            var data = response.body;
+                            vm.variants.push(data.variants[0]);
+                        }, function(response) {
+                            alert('Ошибка при создания варианта');
+                        });
+                    },
+                    variantDeleted: function(id) {
+                        this.variants = _.remove(this.variants, function(v) {
+                            return v.id !== id;
+                        });
+                    }
+                }
+            });
+        })();
+
+    </script>
 }

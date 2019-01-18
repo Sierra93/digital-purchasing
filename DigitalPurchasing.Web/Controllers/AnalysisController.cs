@@ -37,10 +37,15 @@ namespace DigitalPurchasing.Web.Controllers
         [Route("competitionlist/{clId}/analysisdata")]
         public IActionResult Data(Guid clId) => Json(_analysisService.GetData(clId));
 
+        public IActionResult DefaultData() => Json(_analysisService.GetDefaultData());
+
         public IActionResult VariantData(Guid vId) => Json(_analysisService.GetVariantData(vId));
 
         [HttpPost, Route("competitionlist/{clId}/analysis/add")]
         public IActionResult AddVariant(Guid clId) => Json(_analysisService.AddVariant(clId));
+
+        [HttpPost]
+        public IActionResult AddDefaultVariant() => Json(_analysisService.AddDefaultVariant());
 
         [HttpPost]
         public IActionResult SaveVariant([FromBody]AnalysisSaveVariant vm)

@@ -97,118 +97,9 @@
 </div>
 
 @section Scripts {
-    <script type="text/x-template" id="analysis-variant">
-        <div class="long-table-item" style="width: 300px;">
-            <p class="text-center">Вариант {{(index+1)}}
-                <button type="button" class="btn btn-default btn-xs" v-on:click="deleteVariant" title="Удалить">
-                    <i class="far fa-trash-alt"></i>
-                </button>
-            </p>
-            <div>
-                <div class="form-group">
-                    <label for="datetime">Стоимость</label>
-                    <input type="number" placeholder="0" v-model.number="totalValue" v-on:change="changed" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label>Условия оплаты</label>
-                    <select v-model="paymentTerms" v-on:change="changed" class="form-control">
-                        <option v-for="option in paymentTermsOptions" v-bind:value="option.value">{{ option.text }}</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Условия доставки</label>
-                    <select v-model="deliveryTerms" v-on:change="changed" class="form-control">
-                        <option v-for="option in deliveryTermsOptions" v-bind:value="option.value">{{ option.text }}</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Срок поставки</label>
-                    <select v-model="deliveryDateTerms" v-on:change="changed" class="form-control">
-                        <option v-for="option in deliveryDateTermsOptions" v-bind:value="option.value">{{ option.text }}</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Кол-во поставщиков</label>
-                    <select v-model="supplierCount" v-on:change="changed" class="form-control">
-                        <option v-for="option in supplierCountOptions" v-bind:value="option.value">{{ option.text }}</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </script>
+    <partial name="~/Views/Shared/Variants/_VariantComponent.cshtml" />
     <script>
         (function() {
-            Vue.component('analysis-variant', {
-                template: '#analysis-variant',
-                props: ['index', 'id'],
-                data: function() {
-                    return {
-                        deliveryTerms: 0,
-                        deliveryTermsOptions: [],
-                        deliveryDateTerms: 0,
-                        deliveryDateTermsOptions: [],
-                        paymentTerms: 0,
-                        paymentTermsOptions: [],
-                        supplierCount: 0,
-                        supplierCountOptions: [],
-                        totalValue: 0
-                    }
-                },
-                methods: {
-                    loadData: function() {
-                        this.$http.get('@Url.Action("VariantData")?vId=' + this.id).then(function (response) {
-                            var data = response.body;
-                            if (data) {
-                                this.deliveryTerms = data.deliveryTerms;
-                                this.deliveryTermsOptions = data.deliveryTermsOptions;
-                                this.deliveryDateTerms = data.deliveryDateTerms;
-                                this.deliveryDateTermsOptions = data.deliveryDateTermsOptions;
-                                this.paymentTerms = data.paymentTerms;
-                                this.paymentTermsOptions = data.paymentTermsOptions;
-                                this.supplierCount = data.supplierCount;
-                                this.supplierCountOptions = data.supplierCountOptions;
-                                this.totalValue = data.totalValue;
-                            } else {
-                                alert('error');
-                            }
-                        }, function (response) {
-                            alert('error');
-                        });
-                    },
-                    changed: function() {
-                        var vm = this;
-                        var data = {
-                            id: vm.id,
-                            deliveryTerms: vm.deliveryTerms,
-                            deliveryDateTerms: vm.deliveryDateTerms,
-                            paymentTerms: vm.paymentTerms,
-                            supplierCount: parseInt(vm.supplierCount.split(':')[0]),
-                            supplierCountType: parseInt(vm.supplierCount.split(':')[1]),
-                            totalValue: vm.totalValue
-                        };
-                        vm.$http.post('@Url.Action("SaveVariant", "Analysis")', data).then(function(response) {
-                            vm.$emit('changed', data);
-                        }, function(response) {
-                            alert('Ошибка при сохранении варианта');
-                        });
-                    },
-                    deleteVariant: function() {
-                        var vm = this;
-                        var data = {
-                            id: vm.id
-                        };
-                        vm.$http.post('@Url.Action("DeleteVariant", "Analysis")', data).then(function(response) {
-                            this.$emit('deleted');
-                        }, function(response) {
-                            alert('Ошибка при удаление варианта');
-                        });
-                    }
-                },
-                created: function() {
-                    this.loadData();
-                }
-            });
-
             var app = new Vue({
                 el: '#app',
                 data: function() {
@@ -231,6 +122,13 @@
                 },
                 created: function() {
                     this.loadData();
+                },
+                watch: {
+                    variants: function(val) {
+                        if (val.length === 0) {
+                            this.loadData();
+                        }
+                    }
                 },
                 filters: {
                     percentage: function(value) {
