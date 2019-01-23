@@ -11,6 +11,7 @@ using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using AnalysisSupplier = DigitalPurchasing.Analysis2.AnalysisSupplier;
 
 namespace DigitalPurchasing.Services
 {
@@ -134,7 +135,7 @@ namespace DigitalPurchasing.Services
                 },
                 Suppliers = cl.SupplierOffers.Select(q =>
                 {
-                    return new Supplier
+                    return new AnalysisSupplier
                     {
                         Id = q.Id,
                         DeliveryTerms = q.DeliveryTerms,

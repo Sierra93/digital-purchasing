@@ -8,7 +8,7 @@ namespace DigitalPurchasing.Analysis2
     public class AnalysisCore
     {
         public Customer Customer { get; set; }
-        public List<Supplier> Suppliers { get; set; } = new List<Supplier>();
+        public List<AnalysisSupplier> Suppliers { get; set; } = new List<AnalysisSupplier>();
 
         public AnalysisResult Run(AnalysisOptions options)
         {

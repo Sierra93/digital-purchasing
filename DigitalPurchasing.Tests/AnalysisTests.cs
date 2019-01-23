@@ -10,7 +10,7 @@ namespace DigitalPurchasing.Tests
 {
     public class AnalysisTests
     {
-        private (Customer Customer, List<Supplier> Suppliers) GetTestData()
+        private (Customer Customer, List<AnalysisSupplier> Suppliers) GetTestData()
         {
             var itemId1 = new Guid("5e654ae674ce4e03be619ec6c5701b21");
             var itemId2 = new Guid("d81e5c867aec40ffadbb8f71994d8443");
@@ -28,7 +28,7 @@ namespace DigitalPurchasing.Tests
                 }
             };
 
-            var supplier1 = new Supplier
+            var supplier1 = new AnalysisSupplier
             {
                 Id = new Guid("b9a46c13564c410f955961ba56210fd4"),
                 Date = DateTime.UtcNow.Date.AddDays(11),
@@ -42,7 +42,7 @@ namespace DigitalPurchasing.Tests
                 }
             };
 
-            var supplier2 = new Supplier
+            var supplier2 = new AnalysisSupplier
             {
                 Id = new Guid("e2fe141095f64dc0b062c0f09d136343"),
                 Date = DateTime.UtcNow.Date.AddDays(9),
@@ -54,7 +54,7 @@ namespace DigitalPurchasing.Tests
                 }
             };
 
-            var supplier3 = new Supplier
+            var supplier3 = new AnalysisSupplier
             {
                 Id = new Guid("febef0cdf07d4c5b81955b541aa31953"),
                 Date = DateTime.UtcNow.Date.AddDays(8),
@@ -66,7 +66,7 @@ namespace DigitalPurchasing.Tests
                 }
             };
 
-            return ( customer, new List<Supplier> {supplier1, supplier2, supplier3} );
+            return ( customer, new List<AnalysisSupplier> {supplier1, supplier2, supplier3} );
         }
 
         private AnalysisCore CreateAnalysisCoreWTestData()
@@ -295,7 +295,7 @@ namespace DigitalPurchasing.Tests
                 }
             };
 
-            var supplier1 = new Supplier
+            var supplier1 = new AnalysisSupplier
             {
                 Id = new Guid("b9a46c13564c410f955961ba56210fd4"),
                 Date = DateTime.UtcNow.Date.AddDays(11),
@@ -310,7 +310,7 @@ namespace DigitalPurchasing.Tests
             var core = new AnalysisCore
             {
                 Customer = customer,
-                Suppliers = new List<Supplier> { supplier1 }
+                Suppliers = new List<AnalysisSupplier> { supplier1 }
             };
 
             var result = core.Run(new AnalysisOptions());

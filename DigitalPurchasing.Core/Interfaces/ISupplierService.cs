@@ -1,19 +1,23 @@
+using System;
 using System.Collections.Generic;
 
 namespace DigitalPurchasing.Core.Interfaces
 {
     public interface ISupplierService
     {
-        ClientAutocompleteVm Autocomplete(AutocompleteBaseOptions options);
+        SupplierAutocomplete Autocomplete(AutocompleteBaseOptions options);
+        Guid CreateSupplier(string name);
+        string GetNameById(Guid id);
     }
 
-    public class ClientAutocompleteVm
+    public class SupplierAutocomplete
     {
-        public class ClientVm
+        public class Supplier
         {
             public string Name { get; set; }
+            public Guid Id { get; set; }
         }
 
-        public List<ClientVm> Items { get; set; } = new List<ClientVm>();
+        public List<Supplier> Items { get; set; } = new List<Supplier>();
     }
 }

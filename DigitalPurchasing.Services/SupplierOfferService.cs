@@ -25,6 +25,7 @@ namespace DigitalPurchasing.Services
         private readonly INomenclatureService _nomenclatureService;
         private readonly IUploadedDocumentService _uploadedDocumentService;
         private readonly IUomService _uomService;
+        private readonly ISupplierService _supplierService;
 
         public SupplierOfferService(
             ApplicationDbContext db,
@@ -35,7 +36,8 @@ namespace DigitalPurchasing.Services
             ITenantService tenantService,
             INomenclatureService nomenclatureService,
             IUploadedDocumentService uploadedDocumentService,
-            IUomService uomService)
+            IUomService uomService,
+            ISupplierService supplierService)
         {
             _db = db;
             _excelRequestReader = excelRequestReader;
@@ -46,6 +48,7 @@ namespace DigitalPurchasing.Services
             _nomenclatureService = nomenclatureService;
             _uploadedDocumentService = uploadedDocumentService;
             _uomService = uomService;
+            _supplierService = supplierService;
         }
 
         public void UpdateStatus(Guid id, SupplierOfferStatus status)
@@ -55,9 +58,15 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
         }
 
-        public void UpdateSupplierName(Guid id, string name)
+        public void UpdateSupplierName(Guid id, string name, Guid? supplierId)
         {
-            _db.SupplierOffers.Find(id).SupplierName = name;
+            if (supplierId.HasValue)
+            {
+                name = _supplierService.GetNameById(supplierId.Value);
+            }
+            var so = _db.SupplierOffers.Find(id);
+            so.SupplierName = name;
+            so.SupplierId = supplierId;
             _db.SaveChanges();
         }
 
@@ -93,6 +102,7 @@ namespace DigitalPurchasing.Services
         public SupplierOfferVm GetById(Guid id)
         {
             var entity = _db.SupplierOffers
+                .Include(q => q.Supplier)
                 .Include(q => q.UploadedDocument)
                     .ThenInclude(q => q.Headers)
                 .Include(q => q.CompetitionList)
@@ -104,6 +114,10 @@ namespace DigitalPurchasing.Services
             {
                 vm.ExcelTable =  vm.UploadedDocument?.Data != null ? JsonConvert.DeserializeObject<ExcelTable>(vm.UploadedDocument?.Data) : null;
                 vm.CompanyName = _db.PurchaseRequests.Find(entity.CompetitionList.QuotationRequest.PurchaseRequestId).CompanyName;
+                if (entity.Supplier != null)
+                {
+                    vm.SupplierName = entity.Supplier.Name;
+                }
             }
 
             return vm;
@@ -181,6 +195,7 @@ namespace DigitalPurchasing.Services
             var vm = GetById(id);
             var result = new SupplierOfferColumnsDataVm
             {
+                SupplierId = vm.SupplierId,
                 SupplierName = vm.SupplierName,
                 Code = vm.UploadedDocument?.Headers?.Code ?? (vm.ExcelTable.Columns.FirstOrDefault(q => q.Type == TableColumnType.Code)?.Header ?? ""),
                 Name = vm.UploadedDocument?.Headers?.Name ?? (vm.ExcelTable.Columns.FirstOrDefault(q => q.Type == TableColumnType.Name)?.Header ?? ""),
@@ -211,8 +226,14 @@ namespace DigitalPurchasing.Services
             _db.RemoveRange(_db.SupplierOfferItems.Where(q => q.SupplierOfferId == id));
             _db.SaveChanges();
 
-            var entity = _db.SupplierOffers.Include(q => q.UploadedDocument).ThenInclude(q => q.Headers).First(q => q.Id == id);
-            var table = JsonConvert.DeserializeObject<ExcelTable>(entity.UploadedDocument.Data);
+            var supplierOffer = _db.SupplierOffers.Include(q => q.UploadedDocument).ThenInclude(q => q.Headers).First(q => q.Id == id);
+
+            if (!supplierOffer.SupplierId.HasValue)
+            {
+                supplierOffer.SupplierId = _supplierService.CreateSupplier(supplierOffer.SupplierName);
+            }
+
+            var table = JsonConvert.DeserializeObject<ExcelTable>(supplierOffer.UploadedDocument.Data);
             var rawItems = new List<SupplierOfferItem>();
             for (var i = 0; i < table.Columns.First(q => q.Type == TableColumnType.Name).Values.Count; i++)
             {
@@ -220,11 +241,11 @@ namespace DigitalPurchasing.Services
                 {
                     SupplierOfferId = id,
                     Position = i + 1, //todo: get from #, № and etc?
-                    RawCode = string.IsNullOrEmpty(entity.UploadedDocument.Headers.Code) ? "" : table.GetValue(entity.UploadedDocument.Headers.Code, i),
-                    RawName = string.IsNullOrEmpty(entity.UploadedDocument.Headers.Name) ? "" : table.GetValue(entity.UploadedDocument.Headers.Name, i),
-                    RawQty = string.IsNullOrEmpty(entity.UploadedDocument.Headers.Qty) ? 0 : table.GetDecimalValue(entity.UploadedDocument.Headers.Qty, i),
-                    RawPrice = string.IsNullOrEmpty(entity.UploadedDocument.Headers.Price) ? 0 : table.GetDecimalValue(entity.UploadedDocument.Headers.Price, i),
-                    RawUomStr = string.IsNullOrEmpty(entity.UploadedDocument.Headers.Uom) ? "" : table.GetValue(entity.UploadedDocument.Headers.Uom, i)
+                    RawCode = string.IsNullOrEmpty(supplierOffer.UploadedDocument.Headers.Code) ? "" : table.GetValue(supplierOffer.UploadedDocument.Headers.Code, i),
+                    RawName = string.IsNullOrEmpty(supplierOffer.UploadedDocument.Headers.Name) ? "" : table.GetValue(supplierOffer.UploadedDocument.Headers.Name, i),
+                    RawQty = string.IsNullOrEmpty(supplierOffer.UploadedDocument.Headers.Qty) ? 0 : table.GetDecimalValue(supplierOffer.UploadedDocument.Headers.Qty, i),
+                    RawPrice = string.IsNullOrEmpty(supplierOffer.UploadedDocument.Headers.Price) ? 0 : table.GetDecimalValue(supplierOffer.UploadedDocument.Headers.Price, i),
+                    RawUomStr = string.IsNullOrEmpty(supplierOffer.UploadedDocument.Headers.Uom) ? "" : table.GetValue(supplierOffer.UploadedDocument.Headers.Uom, i)
                 };
 
                 rawItems.Add(rawItem);

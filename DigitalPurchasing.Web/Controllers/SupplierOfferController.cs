@@ -7,13 +7,14 @@ namespace DigitalPurchasing.Web.Controllers
 {
     public class SupplierOfferController : Controller
     {
-        public class UpdateSupplierNameVm
+        public class UpdateSupplierNameData
         {
             public Guid Id { get; set; }
+            public Guid? SupplierId { get; set; }
             public string Name { get; set; }
         }
 
-        public class UpdateDeliveryCostVm
+        public class UpdateDeliveryCostData
         {
             public Guid Id { get; set; }
             public decimal DeliveryCost { get; set; }
@@ -60,14 +61,14 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         [HttpPost]
-        public IActionResult UpdateSupplierName([FromBody] UpdateSupplierNameVm model)
+        public IActionResult UpdateSupplierName([FromBody] UpdateSupplierNameData model)
         {
-            _supplierOfferService.UpdateSupplierName(model.Id, model.Name);
+            _supplierOfferService.UpdateSupplierName(model.Id, model.Name, model.SupplierId);
             return Ok();
         }
 
         [HttpPost]
-        public IActionResult UpdateDeliveryCost([FromBody] UpdateDeliveryCostVm model)
+        public IActionResult UpdateDeliveryCost([FromBody] UpdateDeliveryCostData model)
         {
             _supplierOfferService.UpdateDeliveryCost(model.Id, model.DeliveryCost);
             return Ok();

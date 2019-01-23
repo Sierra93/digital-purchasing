@@ -27,6 +27,8 @@ namespace DigitalPurchasing.Data
         public DbSet<PurchaseRequestItem> PurchaseRequestItems { get; set; }
         public DbSet<QuotationRequest> QuotationRequests { get; set; }
         public DbSet<CompetitionList> CompetitionLists { get; set; }
+
+        public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<SupplierOffer> SupplierOffers { get; set; }
         public DbSet<SupplierOfferItem> SupplierOfferItems { get; set; }
 
@@ -83,17 +85,22 @@ namespace DigitalPurchasing.Data
                 e.HasOne(q => q.UploadedDocument).WithOne().HasForeignKey<PurchaseRequest>(q => q.UploadedDocumentId).OnDelete(DeleteBehavior.Restrict);
             });
 
-            builder.Entity<SupplierOffer>(e =>
-            {
-                e.HasOne(q => q.Owner).WithMany().HasForeignKey(q => q.OwnerId).OnDelete(DeleteBehavior.Restrict);
-                e.HasOne(q => q.UploadedDocument).WithOne().HasForeignKey<SupplierOffer>(q => q.UploadedDocumentId).OnDelete(DeleteBehavior.Restrict);
-            });
-
             builder.Entity<PurchaseRequestItem>().HasOne(q => q.Nomenclature).WithMany(q => q.PurchasingRequestItems).HasForeignKey(q => q.NomenclatureId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<PurchaseRequestItem>().HasOne(q => q.RawUomMatch).WithMany(q => q.PurchasingRequestItems).HasForeignKey(q => q.RawUomMatchId).OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<QuotationRequest>().HasOne(q => q.PurchaseRequest).WithOne().HasForeignKey<QuotationRequest>(q => q.PurchaseRequestId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<CompetitionList>().HasOne(q => q.QuotationRequest).WithOne().HasForeignKey<CompetitionList>(q => q.QuotationRequestId).OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Supplier>(e =>
+            {
+                e.HasMany(q => q.SupplierOffers).WithOne(q => q.Supplier).HasForeignKey(q => q.SupplierId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<SupplierOffer>(e =>
+            {
+                e.HasOne(q => q.Owner).WithMany().HasForeignKey(q => q.OwnerId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(q => q.UploadedDocument).WithOne().HasForeignKey<SupplierOffer>(q => q.UploadedDocumentId).OnDelete(DeleteBehavior.Restrict);
+            });
 
             builder.Entity<UomConversionRate>().HasOne(q => q.FromUom).WithMany(q => q.FromConversionRates).HasForeignKey(q => q.FromUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<UomConversionRate>().HasOne(q => q.ToUom).WithMany(q => q.ToConversionRates).HasForeignKey(q => q.ToUomId).OnDelete(DeleteBehavior.Restrict);
@@ -133,6 +140,7 @@ namespace DigitalPurchasing.Data
             builder.Entity<PurchaseRequest>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<QuotationRequest>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<CompetitionList>().HasQueryFilter(o => o.OwnerId == CompanyId);
+            builder.Entity<Supplier>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<SupplierOffer>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<Delivery>().HasQueryFilter(o => o.OwnerId == CompanyId);
             builder.Entity<Nomenclature>().HasQueryFilter(o => o.OwnerId == CompanyId);

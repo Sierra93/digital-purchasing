@@ -15,8 +15,9 @@
             <div class="form-group" v-bind:class="supplierNameClass">
                 <label>Поставщик</label>
                 <input type="text" class="form-control" placeholder="" v-model="supplierName" v-on:input="updateSupplierName" id="supplierName" />
-                <typeahead v-model="supplierAutocomplete" target="#supplierName" async-src="@Url.Action("Autocomplete", "Supplier")?q=" async-key="items" item-key="name"></typeahead>
+                <typeahead v-model="supplierAutocomplete" target="#supplierName" :async-function="supplierAutocompleteFunc" item-key="name"></typeahead>
                 <span class="help-block" v-show="supplierNameHasError">Укажите имя поставщика</span>
+                <span class="help-block" v-show="isNewSupplier">Новый поставщик</span>
             </div>
         </div>
     </div>
@@ -111,6 +112,7 @@
                     return {
                         id: '@Model.Id',
                         supplierName: '',
+                        supplierId: null,
                         columnCode: null,
                         columnName: null,
                         columnUom: null,
@@ -128,6 +130,7 @@
                         data.columns.forEach(function(el) {
                             vm.columns.push({ text: el, value: el });
                         });
+                        vm.supplierId = data.supplierId;
                         vm.supplierName = data.supplierName;
                         vm.columnCode = data.code;
                         vm.columnName = data.name;
@@ -144,8 +147,10 @@
                         if (val) {
                             if (val.name) {
                                 this.supplierName = val.name;
+                                this.supplierId = val.id;
                             } else {
                                 this.supplierName = this.supplierAutocomplete;
+                                this.supplierId = null;
                             }
 
                         } else {
@@ -166,6 +171,9 @@
                     },
                     isSaveDisabled: function() {
                         return this.supplierNameHasError;
+                    },
+                    isNewSupplier: function() {
+                        return this.supplierId === null;
                     }
                 },
                 methods: {
@@ -186,8 +194,25 @@
 
                         });
                     },
+                    supplierAutocompleteFunc (query, done) {
+                        var vm = this;
+                        vm.$http.get('@Url.Action("Autocomplete", "Supplier")?q=' + query)
+                            .then(res => {
+                                var items = res.data.items;
+                                var supplier = _.find(items, ['name', query]);
+                                //console.info(supplier);
+                                if (supplier) {
+                                    vm.supplierId = supplier.id;
+                                    //vm.updateSupplierName();
+                                }
+                                done(res.data.items);
+                            })
+                            .catch(err => {
+                                // any error handler
+                            });
+                    },
                     updateSupplierName: _.debounce(function (e) {
-                        var data = { name: this.supplierName, id: this.id };
+                        var data = { name: this.supplierName, id: this.id, supplierId: this.supplierId };
                         this.$http.post('@Url.Action("UpdateSupplierName", "SupplierOffer")', data).then(function(res) {
                         }, function(res) {
                             alert('error');

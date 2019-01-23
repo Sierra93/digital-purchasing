@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DigitalPurchasing.Core.Extensions;
 
 namespace DigitalPurchasing.Core.Interfaces
 {
     public interface ISupplierOfferService
     {
         void UpdateStatus(Guid id, SupplierOfferStatus status);
-        void UpdateSupplierName(Guid id, string name);
+        void UpdateSupplierName(Guid id, string name, Guid? supplierId);
         void UpdateDeliveryCost(Guid id, decimal deliveryCost);
 
         CreateFromFileResponse CreateFromFile(Guid competitionListId, string filePath);
@@ -244,6 +243,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public ExcelTable ExcelTable { get; set; }
 
         public string SupplierName { get; set; }
+        public Guid? SupplierId { get; set; }
         public string CompanyName { get; set; }
         public decimal DeliveryCost { get; set; }
     }
@@ -260,6 +260,7 @@ namespace DigitalPurchasing.Core.Interfaces
     public class SupplierOfferColumnsDataVm : SupplierOfferColumnsVm
     {
         public string SupplierName { get; set; }
+        public Guid? SupplierId { get; set; }
         public List<string> Columns { get; set; }
     }
 

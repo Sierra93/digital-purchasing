@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Interfaces;
 
@@ -7,6 +8,11 @@ namespace DigitalPurchasing.Models
 {
     public class SupplierOffer : BaseModelWithOwner
     {
+        public string SupplierName {get; set; }
+
+        public Guid? SupplierId { get; set; }
+        public Supplier Supplier { get; set; }
+
         public int PublicId { get; set; }
 
         public Guid CompetitionListId { get; set; }
@@ -17,12 +23,12 @@ namespace DigitalPurchasing.Models
 
         public SupplierOfferStatus Status { get; set; }
 
-        public string SupplierName { get; set; }
         public ICollection<SupplierOfferItem> Items = new List<SupplierOfferItem>();
 
         public Guid CurrencyId { get; set; }
         public Currency Currency { get; set; }
 
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal DeliveryCost { get; set; }
 
         #region Terms

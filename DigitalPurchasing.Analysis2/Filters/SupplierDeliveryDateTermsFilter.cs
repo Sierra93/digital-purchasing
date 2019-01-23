@@ -8,7 +8,7 @@ namespace DigitalPurchasing.Analysis2.Filters
     {
         public SupplierDeliveryDateTermsFilter(SupplierDeliveryDateTermsOptions options) => Options = options;
 
-        public override List<Supplier> Filter(List<Supplier> suppliers, IAnalysisContext context)
+        public override List<AnalysisSupplier> Filter(List<AnalysisSupplier> suppliers, IAnalysisContext context)
         {
             if (Options != null && Options.DeliveryDateTerms != DeliveryDateTerms.Any)
             {
