@@ -1,8 +1,10 @@
 using System;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
+using Mapster;
 
 namespace DigitalPurchasing.Services
 {
@@ -39,5 +41,24 @@ namespace DigitalPurchasing.Services
         }
 
         public string GetNameById(Guid id) => _db.Suppliers.Find(id).Name;
+
+        public SupplierIndexData GetData(int page, int perPage, string sortField, bool sortAsc)
+        {
+            if (string.IsNullOrEmpty(sortField))
+            {
+                sortField = "Name";
+            }
+            
+            var qry = _db.Suppliers.AsQueryable();//.Where(q => !q.IsDeleted);
+            var total = qry.Count();
+            var orderedResults = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}");
+            var result = orderedResults.Skip((page-1)*perPage).Take(perPage).ProjectToType<SupplierIndexDataItem>().ToList();
+
+            return new SupplierIndexData
+            {
+                Total = total,
+                Data = result
+            };
+        }
     }
 }
