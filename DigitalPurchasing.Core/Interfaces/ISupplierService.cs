@@ -9,6 +9,7 @@ namespace DigitalPurchasing.Core.Interfaces
         Guid CreateSupplier(string name);
         string GetNameById(Guid id);
         SupplierIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
+        SupplierVm GetById(Guid id);
     }
 
     public class SupplierAutocomplete
@@ -30,5 +31,11 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class SupplierIndexData : BaseDataResponse<SupplierIndexDataItem>
     {
+    }
+
+    public class SupplierVm
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
     }
 }

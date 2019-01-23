@@ -60,5 +60,7 @@ namespace DigitalPurchasing.Services
                 Data = result
             };
         }
+
+        public SupplierVm GetById(Guid id) => _db.Suppliers.Find(id)?.Adapt<SupplierVm>();
     }
 }

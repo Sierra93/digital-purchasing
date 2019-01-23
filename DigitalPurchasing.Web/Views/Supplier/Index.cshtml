@@ -28,7 +28,7 @@
         <div slot="slot-actions" slot-scope="props">
             <div class="btn-group" role="group" aria-label="...">
                 <a class="btn btn-default" :href="props.rowData.editUrl"><i class="far fa-edit"></i></a>
-                <button type="button" class="btn btn-default" @@click="deleteRow(props.rowData, props.rowIndex)"><i class="far fa-trash-alt"></i></button>
+                @*<button type="button" class="btn btn-default" @@click="deleteRow(props.rowData, props.rowIndex)"><i class="far fa-trash-alt"></i></button>*@
             </div>
         </div>
     </vuetable>
@@ -61,6 +61,12 @@
                                 title: 'Наименование',
                                 name: 'name',
                                 sortField: 'Name'
+                            },
+                            {
+                                name: 'slot-actions',
+                                title: 'Действия',
+                                titleClass: 'text-center',
+                                dataClass: 'text-center'
                             }
                         ],
                         sortOrder: [
