@@ -14,7 +14,7 @@
         <div class="col-md-4">
             <div class="form-group" v-bind:class="supplierNameClass">
                 <label>Поставщик</label>
-                <input type="text" class="form-control" placeholder="" v-model="supplierName" v-on:input="updateSupplierName" id="supplierName" />
+                <input type="text" class="form-control" placeholder="" v-model.trim="supplierName" v-on:input="updateSupplierName" id="supplierName" />
                 <typeahead v-model="supplierAutocomplete" target="#supplierName" :async-function="supplierAutocompleteFunc" item-key="name"></typeahead>
                 <span class="help-block" v-show="supplierNameHasError">Укажите имя поставщика</span>
                 <span class="help-block" v-show="isNewSupplier">Новый поставщик</span>
@@ -173,7 +173,7 @@
                         return this.supplierNameHasError;
                     },
                     isNewSupplier: function() {
-                        return this.supplierId === null;
+                        return this.supplierId === null && !this.supplierNameHasError;
                     }
                 },
                 methods: {
@@ -212,7 +212,7 @@
                             });
                     },
                     updateSupplierName: _.debounce(function (e) {
-                        var data = { name: this.supplierName, id: this.id, supplierId: this.supplierId };
+                        var data = { name: _.trim(this.supplierName), id: this.id, supplierId: this.supplierId };
                         this.$http.post('@Url.Action("UpdateSupplierName", "SupplierOffer")', data).then(function(res) {
                         }, function(res) {
                             alert('error');

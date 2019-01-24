@@ -60,10 +60,9 @@ namespace DigitalPurchasing.Services
 
         public void UpdateSupplierName(Guid id, string name, Guid? supplierId)
         {
-            if (supplierId.HasValue)
-            {
-                name = _supplierService.GetNameById(supplierId.Value);
-            }
+            name = supplierId.HasValue
+                ? _supplierService.GetNameById(supplierId.Value)
+                : string.IsNullOrEmpty(name) ? null : name.Trim();
             var so = _db.SupplierOffers.Find(id);
             so.SupplierName = name;
             so.SupplierId = supplierId;
