@@ -34,5 +34,7 @@ namespace DigitalPurchasing.Analysis2
 
             return result;
         }
+
+        public int SuppliersCount => Data?.Select(q => q.Supplier.Id).Distinct().Count() ?? 0;
     }
 }

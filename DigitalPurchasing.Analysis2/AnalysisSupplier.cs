@@ -3,7 +3,7 @@ using DigitalPurchasing.Core;
 
 namespace DigitalPurchasing.Analysis2
 {
-    public class AnalysisSupplier : Client<SupplierItem>
+    public class AnalysisSupplier : AnalysisClient<SupplierItem>
     {
         public DeliveryTerms DeliveryTerms { get; set; }
         public PaymentTerms PaymentTerms { get; set; }

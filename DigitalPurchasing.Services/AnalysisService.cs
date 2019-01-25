@@ -124,7 +124,7 @@ namespace DigitalPurchasing.Services
         {
             var core = new AnalysisCore
             {
-                Customer = new Customer
+                Customer = new AnalysisCustomer
                 {
                     Id = cl.PurchaseRequest.Id,
                     Items = cl.PurchaseRequest.Items.Select(q => new CustomerItem

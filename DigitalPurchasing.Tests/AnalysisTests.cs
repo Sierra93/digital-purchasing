@@ -10,13 +10,13 @@ namespace DigitalPurchasing.Tests
 {
     public class AnalysisTests
     {
-        private (Customer Customer, List<AnalysisSupplier> Suppliers) GetTestData()
+        private (AnalysisCustomer Customer, List<AnalysisSupplier> Suppliers) GetTestData()
         {
             var itemId1 = new Guid("5e654ae674ce4e03be619ec6c5701b21");
             var itemId2 = new Guid("d81e5c867aec40ffadbb8f71994d8443");
             var itemId3 = new Guid("a2141f27aa194b4ea111febcf31df950");
 
-            var customer = new Customer
+            var customer = new AnalysisCustomer
             {
                 Id = new Guid("01baea5c472d4b5aace9bf7dbaf013c4"),
                 Date = DateTime.UtcNow.Date.AddDays(10),
@@ -283,7 +283,7 @@ namespace DigitalPurchasing.Tests
             var itemId2 = new Guid("d81e5c867aec40ffadbb8f71994d8443");
             var itemId3 = new Guid("a2141f27aa194b4ea111febcf31df950");
 
-            var customer = new Customer
+            var customer = new AnalysisCustomer
             {
                 Id = new Guid("01baea5c472d4b5aace9bf7dbaf013c4"),
                 Date = DateTime.UtcNow.Date.AddDays(10),
@@ -316,6 +316,107 @@ namespace DigitalPurchasing.Tests
             var result = core.Run(new AnalysisOptions());
 
             Assert.Empty(result.Data);
+        }
+
+        [Fact]
+        public void MixSuppliers()
+        {
+            var itemId1 = new Guid("5e654ae674ce4e03be619ec6c5701b21");
+            var itemId2 = new Guid("b5f59198455c4646863a3589d2ec2f94");
+
+            var customer = new AnalysisCustomer
+            {
+                Id = new Guid("01baea5c472d4b5aace9bf7dbaf013c4"),
+                Date = DateTime.UtcNow.Date.AddDays(10),
+                Items =
+                {
+                    new CustomerItem { Id = itemId1, Quantity = 100},
+                    new CustomerItem { Id = itemId2, Quantity = 100}
+                }
+            };
+
+            var supplier1 = new AnalysisSupplier
+            {
+                Id = new Guid("b9a46c13564c410f955961ba56210fd4"),
+                Date = DateTime.UtcNow.Date.AddDays(11),
+                Items =
+                {
+                    new SupplierItem { Id = itemId1, Quantity = 100, Price = 10}
+                }
+            };
+
+            var supplier2 = new AnalysisSupplier
+            {
+                Id = new Guid("01edff1937fc4ef9a0c326e28c41c3d7"),
+                Date = DateTime.UtcNow.Date.AddDays(11),
+                Items =
+                {
+                    new SupplierItem { Id = itemId2, Quantity = 100, Price = 11}
+                }
+            };
+
+            var core = new AnalysisCore
+            {
+                Customer = customer,
+                Suppliers = new List<AnalysisSupplier> { supplier1, supplier2 }
+            };
+
+            var result = core.Run(new AnalysisOptions());
+
+            Assert.True(result != null);
+            Assert.True(result.IsSuccess);
+            Assert.Equal(2, result.SuppliersCount);
+        }
+
+        [Fact]
+        public void Supplier_MixQuantity()
+        {
+            var itemId1 = new Guid("5e654ae674ce4e03be619ec6c5701b21");
+
+            var customerQty = 100m;
+
+            var customer = new AnalysisCustomer
+            {
+                Id = new Guid("01baea5c472d4b5aace9bf7dbaf013c4"),
+                Date = DateTime.UtcNow.Date.AddDays(10),
+                Items =
+                {
+                    new CustomerItem { Id = itemId1, Quantity = customerQty }
+                }
+            };
+
+            var supplier1 = new AnalysisSupplier
+            {
+                Id = new Guid("b9a46c13564c410f955961ba56210fd4"),
+                Date = DateTime.UtcNow.Date.AddDays(11),
+                Items =
+                {
+                    new SupplierItem { Id = itemId1, Quantity = 50, Price = 10}
+                }
+            };
+
+            var supplier2 = new AnalysisSupplier
+            {
+                Id = new Guid("01edff1937fc4ef9a0c326e28c41c3d7"),
+                Date = DateTime.UtcNow.Date.AddDays(11),
+                Items =
+                {
+                    new SupplierItem { Id = itemId1, Quantity = 70, Price = 11}
+                }
+            };
+
+            var core = new AnalysisCore
+            {
+                Customer = customer,
+                Suppliers = new List<AnalysisSupplier> { supplier1, supplier2 }
+            };
+
+            var result = core.Run(new AnalysisOptions());
+
+            Assert.True(result != null);
+            Assert.True(result.IsSuccess);
+            Assert.Equal(core.Suppliers.Count, result.SuppliersCount);
+            Assert.Equal(customerQty, result.Data.Sum(q => q.Item.Quantity));
         }
     }
 }

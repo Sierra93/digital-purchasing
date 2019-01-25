@@ -7,7 +7,7 @@ namespace DigitalPurchasing.Analysis2
 {
     public class AnalysisCore
     {
-        public Customer Customer { get; set; }
+        public AnalysisCustomer Customer { get; set; }
         public List<AnalysisSupplier> Suppliers { get; set; } = new List<AnalysisSupplier>();
 
         public AnalysisResult Run(AnalysisOptions options)
@@ -43,7 +43,39 @@ namespace DigitalPurchasing.Analysis2
             CalculateScores(datas);
             var itemPairs = GenerateItemPairs(datas);
 
-            var allVariants = itemPairs.CartesianProduct();
+            var coreVariants = itemPairs.CartesianProduct();
+            var additionalVariants = new List<List<AnalysisData>>();
+
+            foreach (var variant in coreVariants)
+            {
+                foreach (var data in variant)
+                {
+                    var supplierItem = data.Item;
+                    var customerItem = Customer.Items.Find(q => q.Id == supplierItem.Id);
+                    var diffQty = supplierItem.Quantity - customerItem.Quantity;
+                    if (diffQty < 0)
+                    {
+                        var remainingQty = Math.Abs(diffQty);
+                        var variantsToFullFill = datas
+                            .Where(q =>
+                                q.Item.Id == supplierItem.Id &&
+                                q.Item.InternalId != supplierItem.InternalId &&
+                                q.Item.Quantity >= remainingQty).ToList();
+                        if (variantsToFullFill.Any())
+                        {
+                            foreach (var variantToFillFull in variantsToFullFill)
+                            {
+                                variantToFillFull.Item.Quantity = remainingQty;
+                                var newVariant = variant.Select(q => new AnalysisData{ Item = q.Item, Score = q.Score, Supplier = q.Supplier }).ToList();
+                                newVariant.Add(variantToFillFull);
+                                additionalVariants.Add(newVariant);
+                            }
+                        }
+                    }
+                }
+            }
+
+            var allVariants = coreVariants.Union(additionalVariants).ToList();
 
             var variantsFilters = new List<IVariantsFilter>
             {

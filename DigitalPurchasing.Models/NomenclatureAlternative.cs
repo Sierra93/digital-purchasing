@@ -4,6 +4,12 @@ using DigitalPurchasing.Core;
 
 namespace DigitalPurchasing.Models
 {
+    public class NomenclatureAlternativeLink
+    {
+        public Guid SupplierId { get; set; }
+        public Supplier Supplier { get; set; }
+    }
+
     public class NomenclatureAlternative : BaseModelWithOwner
     {
         public Guid NomenclatureId { get; set; }
