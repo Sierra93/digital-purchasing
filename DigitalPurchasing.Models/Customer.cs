@@ -4,10 +4,10 @@ using System.Text;
 
 namespace DigitalPurchasing.Models
 {
-    public class Supplier : BaseModelWithOwner
+    public class Customer : BaseModelWithOwner
     {
         public string Name { get; set; }
 
-        public ICollection<SupplierOffer> Offers { get; set; }
+        public ICollection<PurchaseRequest> Requests { get; set; }
     }
 }

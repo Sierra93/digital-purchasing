@@ -22,6 +22,7 @@ namespace DigitalPurchasing.Services
         private readonly INomenclatureService _nomenclatureService;
         private readonly IDeliveryService _deliveryService;
         private readonly IUploadedDocumentService _uploadedDocumentService;
+        private readonly ICustomerService _customerService;
 
         public PurchaseRequestService(
             ApplicationDbContext db,
@@ -31,7 +32,8 @@ namespace DigitalPurchasing.Services
             IUomService uomService,
             INomenclatureService nomenclatureService,
             IDeliveryService deliveryService,
-            IUploadedDocumentService uploadedDocumentService)
+            IUploadedDocumentService uploadedDocumentService,
+            ICustomerService customerService)
         {
             _db = db;
             _excelRequestReader = excelFileReader;
@@ -41,6 +43,7 @@ namespace DigitalPurchasing.Services
             _nomenclatureService = nomenclatureService;
             _deliveryService = deliveryService;
             _uploadedDocumentService = uploadedDocumentService;
+            _customerService = customerService;
         }
 
         public CreateFromFileResponse CreateFromFile(string filePath)
@@ -159,6 +162,11 @@ namespace DigitalPurchasing.Services
         {
             var pr = _db.PurchaseRequests.Find(id);
             if (pr == null) return;
+
+            if (!pr.CustomerId.HasValue)
+            {
+                pr.CustomerId = _customerService.CreateCustomer(pr.CustomerName);
+            }
 
             _db.PurchaseRequestItems.RemoveRange(_db.PurchaseRequestItems.Where(q => q.PurchaseRequestId == id));
             _db.SaveChanges();
@@ -323,10 +331,14 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
         }
 
-        public void SaveCustomerName(Guid prId, string customerName)
+        public void SaveCustomerName(Guid id, string name, Guid? customerId)
         {
-            var entity = _db.PurchaseRequests.Find(prId);
-          entity.CustomerName = customerName;
+            name = customerId.HasValue
+                ? _customerService.GetNameById(customerId.Value)
+                : string.IsNullOrEmpty(name) ? null : name.Trim();
+            var so = _db.PurchaseRequests.Find(id);
+            so.CustomerName = name;
+            so.CustomerId = customerId;
             _db.SaveChanges();
         }
 

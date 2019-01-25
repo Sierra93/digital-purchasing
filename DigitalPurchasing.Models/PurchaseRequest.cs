@@ -6,6 +6,9 @@ namespace DigitalPurchasing.Models
 {
     public class PurchaseRequest : BaseModelWithOwner
     {
+        public Guid? CustomerId { get; set; }
+        public Customer Customer { get; set; }
+
         public int PublicId { get; set; }
 
         public string CompanyName { get; set; }

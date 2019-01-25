@@ -17,7 +17,7 @@ namespace DigitalPurchasing.Core.Interfaces
         PRMatchItemsResponse MatchItemsData(Guid id);
         void SaveMatch(Guid id, Guid nomenclatureId, Guid uomId, decimal factorC, decimal factorN);
         void SaveCompanyName(Guid prId, string companyName);
-        void SaveCustomerName(Guid prId, string customerName);
+        void SaveCustomerName(Guid prId, string customerName, Guid? modelCustomerId);
         DeleteResultVm Delete(Guid id);
     }
 

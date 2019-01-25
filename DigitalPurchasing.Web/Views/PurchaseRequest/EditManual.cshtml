@@ -13,9 +13,10 @@
         <div class="col-md-4">
             <div class="form-group" v-bind:class="customerNameClass">
                 <label for="customer">Клиент</label>
-                <input type="text" class="form-control" placeholder="" v-model="customerName" v-on:input="updateCustomerName" id="customerName">
-                <typeahead v-model="customerAutocomplete" target="#customerName" async-src="@Url.Action("Autocomplete", "Customer")?q=" async-key="items" item-key="name"></typeahead>
+                <input type="text" class="form-control" placeholder="" v-model.trim="customerName" v-on:input="updateCustomerName" id="customerName">
+                <typeahead v-model="customerAutocomplete" target="#customerName" :async-function="customerAutocompleteFunc" item-key="name"></typeahead>
                 <span class="help-block" v-show="customerNameHasError">Укажите имя клиента</span>
+                <span class="help-block" v-show="isNewCustomer">Новый клиента</span>
             </div>
         </div>
         @*<div class="col-md-4">
@@ -86,17 +87,19 @@
                     return {
                         prId: '@Model.Id',
                         customerName: '',
+                        customerId: null,
                         customerAutocomplete: null,
                         // { code: '123-321', name: 'Болт 123-321 XYZ', uom: 'шт.', qty: 100 }
                         rows: []
                     };
                 },
                 created: function () {
-                    var $this = this;
+                    var vm = this;
                     this.$http.get('@Url.Action("RawItemsData", new { id = Model.Id })').then(response => {
                         var data = response.body;
-                        $this.rows = data.items;
-                        $this.customerName = data.customerName;
+                        vm.rows = data.items;
+                        vm.customerName = data.customerName;
+                        vm.customerId = data.customerId;
                     }, response => {
                         alert('error');
                     });
@@ -106,11 +109,14 @@
                         if (val) {
                             if (val.name) {
                                 this.customerName = val.name;
+                                this.customerId = val.id;
                             } else {
                                 this.customerName = this.customerAutocomplete;
+                                this.customerId = null;
                             }
                         } else {
                             this.customerName = '';
+                            this.customerId = null;
                         }
                         this.updateCustomerName();
                     }
@@ -127,6 +133,9 @@
                     },
                     isSaveDisabled: function() {
                         return this.customerNameHasError;
+                    },
+                    isNewCustomer: function() {
+                        return this.customerId === null && !this.customerNameHasError;
                     }
                 },
                 methods: {
@@ -160,12 +169,27 @@
                         });
                     },
                     updateCustomerName: _.debounce(function (e) {
-                        var data = { name: this.customerName, id: this.prId };
+                        var data = { name: this.customerName, id: this.prId, customerId: this.customerId  };
                         this.$http.post('@Url.Action("SaveCustomerName", "PurchaseRequest")', data).then(function(res) {
                         }, function(res) {
                             alert('error');
                         });
-                    }, 300)
+                    }, 300),
+                    customerAutocompleteFunc (query, done) {
+                        var vm = this;
+                        vm.$http.get('@Url.Action("Autocomplete", "Customer")?q=' + query)
+                            .then(res => {
+                                var items = res.data.items;
+                                var customer = _.find(items, ['name', query]);
+                                if (customer) {
+                                    vm.customerId = customer.id;
+                                }
+                                done(res.data.items);
+                            })
+                            .catch(err => {
+                                // any error handler
+                            });
+                    },
                 }
             });
         })();

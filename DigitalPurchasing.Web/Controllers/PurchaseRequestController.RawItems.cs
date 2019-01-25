@@ -28,7 +28,7 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpPost]
         public IActionResult SaveCustomerName([FromBody] SaveCustomerNameVm model)
         {
-            _purchasingRequestService.SaveCustomerName(model.Id, model.Name);
+            _purchasingRequestService.SaveCustomerName(model.Id, model.Name, model.CustomerId);
             return Ok();
         }
     }

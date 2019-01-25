@@ -9,5 +9,6 @@ namespace DigitalPurchasing.Web.ViewModels.PurchasingRequest
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
+        public Guid? CustomerId { get; set; }
     }
 }
