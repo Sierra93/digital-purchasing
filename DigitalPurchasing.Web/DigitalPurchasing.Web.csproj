@@ -10,6 +10,8 @@
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.2.1" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Web.LibraryManager.Build" Version="1.0.172" />
+    <PackageReference Include="Sentry" Version="1.1.2" />
+    <PackageReference Include="Sentry.AspNetCore" Version="1.1.2" />
   </ItemGroup>
 
   <ItemGroup>
