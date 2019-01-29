@@ -137,9 +137,11 @@ namespace DigitalPurchasing.Services
                 .AsNoTracking()
                 .Include(w => w.BatchUom)
                 .Where(w => !w.IsDeleted &&
-                        (w.Name.Contains(q, strComparison) ||
-                         w.NameEng.Contains(q, strComparison) ||
-                         w.Code.Contains(q, strComparison)));
+                        ((!string.IsNullOrEmpty(w.Name) && w.Name.Contains(q, strComparison)) ||
+                         (!string.IsNullOrEmpty(w.NameEng) && w.NameEng.Contains(q, strComparison)) ||
+                         (!string.IsNullOrEmpty(w.Code) && w.Code.Contains(q, strComparison))
+                         )
+                      );
 
             var mainResults = resultQry.ToList();
             
