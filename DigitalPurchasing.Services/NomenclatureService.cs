@@ -145,9 +145,14 @@ namespace DigitalPurchasing.Services
             
             if (options.SearchInAlts)
             {
-                var altNomIds = _db.NomenclatureAlternatives
-                    .Where(w => w.Name.Contains(q, strComparison) &&
-                                w.ClientName.Equals(options.ClientName, strComparison))
+                var altNomsQry = _db.NomenclatureAlternatives
+                    .Include(r => r.Link).AsQueryable();
+
+                altNomsQry = options.ClientType == ClientType.Customer
+                    ? altNomsQry.Where(r => r.Link.CustomerId == options.ClientId)
+                    : altNomsQry.Where(r => r.Link.SupplierId == options.ClientId);
+
+                var altNomIds = altNomsQry.Where(w => w.Name.Contains(q, strComparison))
                     .Select(w => w.NomenclatureId)
                     .Distinct()
                     .ToList();
@@ -180,28 +185,34 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
         }
 
-        public void AddAlternativeCustomer(Guid nomenclatureId, Guid prItemId)
+        public void AddNomenclatureForCustomer(Guid prItemId)
         {
-            var pr =_db.PurchaseRequestItems.Include(q => q.PurchaseRequest).First(q => q.Id == prItemId);
-            AddAlternative(
-                nomenclatureId,
-                pr.PurchaseRequest.CustomerName,
-                ClientType.Customer,
-                pr.RawName,
-                pr.RawCode,
-                pr.RawUomMatchId);
+            var prItem =_db.PurchaseRequestItems.Include(q => q.PurchaseRequest).First(q => q.Id == prItemId);
+            if (prItem.NomenclatureId.HasValue && prItem.PurchaseRequest.CustomerId.HasValue)
+            {
+                AddAlternative(
+                    prItem.NomenclatureId.Value,
+                    prItem.PurchaseRequest.CustomerId.Value,
+                    ClientType.Customer,
+                    prItem.RawName,
+                    prItem.RawCode,
+                    prItem.RawUomMatchId);
+            }
         }
 
-        public void AddAlternativeSupplier(Guid nomenclatureId, Guid soItemId)
+        public void AddNomenclatureForSupplier(Guid soItemId)
         {
-            var pr =_db.SupplierOfferItems.Include(q => q.SupplierOffer).First(q => q.Id == soItemId);
-            AddAlternative(
-                nomenclatureId,
-                pr.SupplierOffer.SupplierName,
-                ClientType.Supplier,
-                pr.RawName,
-                pr.RawCode,
-                pr.RawUomId);
+            var soItem =_db.SupplierOfferItems.Include(q => q.SupplierOffer).First(q => q.Id == soItemId);
+            if (soItem.NomenclatureId.HasValue && soItem.SupplierOffer.SupplierId.HasValue)
+            {
+                AddAlternative(
+                    soItem.NomenclatureId.Value,
+                    soItem.SupplierOffer.SupplierId.Value,
+                    ClientType.Supplier,
+                    soItem.RawName,
+                    soItem.RawCode,
+                    soItem.RawUomId);
+            }
         }
 
         public NomenclatureAlternativeVm GetAlternativeById(Guid id)
@@ -215,8 +226,8 @@ namespace DigitalPurchasing.Services
         {
             var entity = _db.NomenclatureAlternatives.Find(model.Id);
 
-            entity.ClientName = model.ClientName;
-            entity.ClientType = model.ClientType;
+            //entity.ClientName = model.ClientName;
+            //entity.ClientType = model.ClientType;
             entity.Name = model.Name;
             entity.Code = model.Code;
 
@@ -232,16 +243,21 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
         }
 
-        private void AddAlternative(Guid nomenclatureId, string clientName, ClientType clientType, string name, string code, Guid? uom)
+        private void AddAlternative(Guid nomenclatureId, Guid clientId, ClientType clientType, string name, string code, Guid? uom)
         {
-            clientName = clientName.Trim();
             name = name.Trim();
             code = code.Trim();
 
-            var altName = _db.NomenclatureAlternatives
-                .FirstOrDefault(q => q.NomenclatureId == nomenclatureId &&
-                                     q.ClientName.Equals(clientName, StringComparison.InvariantCultureIgnoreCase) &&
-                                     q.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
+            var altNamesQry = _db.NomenclatureAlternatives
+                .Include(q => q.Link)
+                .AsQueryable();
+
+            altNamesQry = clientType == ClientType.Customer
+                ? altNamesQry.Where(q => q.Link.CustomerId == clientId)
+                : altNamesQry.Where(q => q.Link.SupplierId == clientId);
+
+            var altName = altNamesQry.FirstOrDefault(q =>
+                q.NomenclatureId == nomenclatureId && q.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
 
             if (altName != null)
             {
@@ -259,9 +275,12 @@ namespace DigitalPurchasing.Services
                     Name = name,
                     Code = code,
                     BatchUomId = uom,
-                    ClientName = clientName,
-                    ClientType = clientType,
-                    NomenclatureId = nomenclatureId
+                    NomenclatureId = nomenclatureId,
+                    Link = new NomenclatureAlternativeLink
+                    {
+                        CustomerId = clientType == ClientType.Customer ? clientId : (Guid?)null,
+                        SupplierId = clientType == ClientType.Supplier ? clientId : (Guid?)null
+                    }
                 });
             }
 

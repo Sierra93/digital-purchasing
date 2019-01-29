@@ -19,6 +19,7 @@ namespace DigitalPurchasing.Data
         public DbSet<Company> Companies { get; set; }
         public DbSet<Currency> Currencies { get; set; }
         public DbSet<Nomenclature> Nomenclatures { get; set; }
+        public DbSet<NomenclatureAlternativeLink> NomenclatureAlternativeLinks { get; set; }
         public DbSet<NomenclatureAlternative> NomenclatureAlternatives { get; set; }
         public DbSet<NomenclatureCategory> NomenclatureCategories { get; set; }
         public DbSet<UnitsOfMeasurement> UnitsOfMeasurements { get; set; }

@@ -187,13 +187,14 @@ namespace DigitalPurchasing.Services
             {
                 if (prItem.NomenclatureId != null && prItem.RawUomMatchId != null && ( prItem.CommonFactor > 0 || prItem.NomenclatureFactor > 0 ))
                 {
-                    _nomenclatureService.AddAlternativeCustomer(prItem.NomenclatureId.Value, prItem.Id);
+                    _nomenclatureService.AddNomenclatureForCustomer(prItem.Id);
                 }
             }
         }
 
         private void AutocompleteDataPRItems(Guid prId)
         {
+            var pr = _db.PurchaseRequests.Find(prId);
             var prItems = _db.PurchaseRequestItems.Where(q => q.PurchaseRequestId == prId).ToList();
 
             string customerName = null;
@@ -262,7 +263,13 @@ namespace DigitalPurchasing.Services
                 }
                 else
                 {
-                    var nomRes = _nomenclatureService.Autocomplete(new AutocompleteOptions{ Query = prItem.RawName, ClientName = customerName, SearchInAlts = true });
+                    var nomRes = _nomenclatureService.Autocomplete(new AutocompleteOptions
+                    {
+                        Query = prItem.RawName,
+                        ClientId = pr.CustomerId.Value,
+                        ClientType = ClientType.Customer,
+                        SearchInAlts = true
+                    });
                     if (nomRes.Items != null && nomRes.Items.Count == 1)
                     {
                         noms.TryAdd(nomRes.Items[0].Name, nomRes.Items[0].Id);

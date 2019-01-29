@@ -13,8 +13,8 @@ namespace DigitalPurchasing.Core.Interfaces
         NomenclatureAutocompleteResult Autocomplete(AutocompleteOptions options);
         BaseResult<NomenclatureAutocompleteResult.AutocompleteResultItem> AutocompleteSingle(Guid id);
         void Delete(Guid id);
-        void AddAlternativeCustomer(Guid nomenclatureId, Guid prItemId);
-        void AddAlternativeSupplier(Guid nomenclatureId, Guid soItemId);
+        void AddNomenclatureForCustomer(Guid prItemId);
+        void AddNomenclatureForSupplier(Guid soItemId);
         NomenclatureAlternativeVm GetAlternativeById(Guid id);
         void UpdateAlternative(NomenclatureAlternativeVm model);
     }
@@ -140,7 +140,8 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class AutocompleteOptions : AutocompleteBaseOptions
     {
-        public string ClientName { get; set; }
+        public Guid ClientId { get; set; }
+        public ClientType ClientType { get; set; }
         public bool SearchInAlts { get; set; } = false;
     }
 

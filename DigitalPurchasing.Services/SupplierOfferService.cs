@@ -258,6 +258,7 @@ namespace DigitalPurchasing.Services
 
         private void AutocompleteDataSOItems(Guid soId)
         {
+            var so = _db.SupplierOffers.Find(soId);
             var soItems = _db.SupplierOfferItems.Where(q => q.SupplierOfferId == soId).ToList();
 
             string supplierName = null;
@@ -326,7 +327,14 @@ namespace DigitalPurchasing.Services
                 }
                 else
                 {
-                    var nomRes = _nomenclatureService.Autocomplete(new AutocompleteOptions{ Query = soItem.RawName, ClientName = supplierName, SearchInAlts = true });
+                    var nomRes = _nomenclatureService.Autocomplete(new AutocompleteOptions
+                    {
+                        Query = soItem.RawName,
+                        ClientId = so.SupplierId.Value,
+                        ClientType = ClientType.Supplier,
+                        SearchInAlts = true
+                    });
+
                     if (nomRes.Items != null && nomRes.Items.Count == 1)
                     {
                         noms.TryAdd(nomRes.Items[0].Name, nomRes.Items[0].Id);
@@ -349,6 +357,11 @@ namespace DigitalPurchasing.Services
             }
 
             _db.SaveChanges();
+
+            foreach (var soItem in soItems)
+            {
+                _nomenclatureService.AddNomenclatureForSupplier(soItem.Id);
+            }
         }
 
         public SOMatchItemsVm MatchItemsData(Guid soId)
