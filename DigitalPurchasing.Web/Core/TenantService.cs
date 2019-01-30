@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Security.Claims;
 using DigitalPurchasing.Core;
+using DigitalPurchasing.Core.Interfaces;
 using Microsoft.AspNetCore.Http;
 
 namespace DigitalPurchasing.Web.Core

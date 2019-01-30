@@ -68,7 +68,7 @@ namespace DigitalPurchasing.Web
 
             services.AddHttpContextAccessor();
 
-            services.AddSingleton<IEmailSender, EmailSender>();
+            services.AddSingleton<IEmailService, EmailService>();
 
             services.AddScoped<IUserClaimsPrincipalFactory<User>, CustomUserClaimsPrincipalFactory>();
 

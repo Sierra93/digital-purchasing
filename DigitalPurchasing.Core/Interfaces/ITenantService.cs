@@ -1,4 +1,4 @@
-namespace DigitalPurchasing.Core
+namespace DigitalPurchasing.Core.Interfaces
 {
     public interface ITenantService
     {

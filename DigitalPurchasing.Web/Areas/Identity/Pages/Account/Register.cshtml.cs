@@ -7,6 +7,7 @@ using DigitalPurchasing.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using DigitalPurchasing.Models.Identity;
 using DigitalPurchasing.Services;
+using DigitalPurchasing.Web.Core;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -21,14 +22,14 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account
         private readonly SignInManager<User> _signInManager;
         private readonly UserManager<User> _userManager;
         private readonly ILogger<RegisterModel> _logger;
-        private readonly IEmailSender _emailSender;
+        private readonly IEmailService _emailSender;
         private readonly ICompanyService _companyService;
 
         public RegisterModel(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender,
+            IEmailService emailSender,
             ICompanyService companyService)
         {
             _userManager = userManager;
