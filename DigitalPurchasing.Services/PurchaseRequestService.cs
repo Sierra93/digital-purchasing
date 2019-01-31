@@ -182,14 +182,6 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
 
             AutocompleteDataPRItems(id);
-
-            foreach (var prItem in prItems)
-            {
-                if (prItem.NomenclatureId != null && prItem.RawUomMatchId != null && ( prItem.CommonFactor > 0 || prItem.NomenclatureFactor > 0 ))
-                {
-                    _nomenclatureService.AddNomenclatureForCustomer(prItem.Id);
-                }
-            }
         }
 
         private void AutocompleteDataPRItems(Guid prId)
