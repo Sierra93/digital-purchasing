@@ -49,6 +49,29 @@
         <div class="col-md-6">
             <address-form v-bind:qr="qrId"></address-form>
         </div>
+        <div class="col-md-6">
+            <div class="form-horizontal">
+                <div class="form-group">
+                    <label>Поставщики, кому будет отправлен запрос коммерческого предложения</label>
+                </div>
+                <div class="form-group" v-for="(supplier, index) in suppliers">
+                    <div class="input-group">
+                        <span class="input-group-addon">{{(index+1)}}.</span>
+                        <input type="text" class="form-control" placeholder="" v-model.trim="supplier.name" v-bind:id="('supplier-'+index)">
+                        <typeahead v-model="supplier.autocomplete" force-select force-clear v-bind:target="('#supplier-'+index)" async-src="@Url.Action("Autocomplete", "Supplier")?q=" async-key="items" item-key="name"></typeahead>
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="button" v-on:click="removeSupplier(supplier)"><i class="far fa-trash-alt"></i></button>
+                        </span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-default" v-on:click="addSupplier">Добавить поставщика</button>
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-primary" v-on:click="sendEmailsToSupplier" :disabled="!canSendEmails">Отправить запрос КП</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -63,7 +86,9 @@
                     return {
                         qrId: '@Model.Id',
                         items: [],
-                        selectedCompany: ''
+                        selectedCompany: '',
+                        suppliers: [],
+                        sendingInProgress: false
                     };
                 },
                 created: function() {
@@ -73,14 +98,25 @@
                     keys: function() {
                         return Object.keys(this.items);
                     },
-                    //companyItems: function() {
-                    //    return this.items[this.keys[0]];
-                    //},
-                    //customerItems: function() {
-                    //    return this.items[this.keys[1]];
-                    //},
                     selectedItems: function() {
                         return this.items[this.selectedCompany];
+                    },
+                    canSendEmails: function() {
+                        return !this.sendingInProgress && this.suppliersIds.length > 0;
+                    },
+                    suppliersIds: function() {
+                        var validSuppliers = _.filter(this.suppliers, function(supplier) {
+                            if (supplier) {
+                                return supplier.autocomplete;
+                            }
+                            return false;
+                        });
+
+                        var ids = _.map(validSuppliers, function (supplier) {
+                            return supplier.autocomplete.id;
+                        });
+
+                        return _.uniq(ids);
                     }
                 },
                 filters: {
@@ -96,6 +132,40 @@
                         }, function(res) {
 
                         });
+                    },
+                    fixSuppliersNames: function() {
+                        _.each(this.suppliers, function(supplier) {
+                            if (supplier && supplier.autocomplete) {
+                                supplier.name = supplier.autocomplete.name;
+                            }
+                        });
+                    },
+                    addSupplier: function() {
+                        var vm = this;
+                        vm.suppliers.push({
+                            autocomplete: null,
+                            name: null
+                        });
+                        vm.fixSuppliersNames();
+                    },
+                    removeSupplier: function(supplier) {
+                        var vm = this;
+                        vm.suppliers.splice(vm.suppliers.indexOf(supplier), 1);
+                        vm.fixSuppliersNames();
+                    },
+                    sendEmailsToSupplier: function() {
+                        var vm = this;
+                        vm.sendingInProgress = true;
+                        vm.$http
+                            .post('@Url.Action("SentRequests")', { id: vm.qrId, suppliers: vm.suppliersIds })
+                            .then(function(res) {
+                                var data = res.data;
+                                //console.info(data);
+                                vm.sendingInProgress = false;
+                            }, function (res) {
+                                vm.sendingInProgress = false;
+                                alert('error');
+                            });
                     }
                 }
             });

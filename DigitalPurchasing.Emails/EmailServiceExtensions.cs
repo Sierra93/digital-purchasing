@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Emails.EmailTemplates;
 using RazorLight;
@@ -33,6 +34,23 @@ namespace DigitalPurchasing.Emails
             var model = new DummyEmail { Text = "Test email body" };
             var htmlResult = await GetHtmlString(model);
             await emailSender.SendEmailAsync(emailAddress, emailSubject, htmlResult);
+        }
+
+        public static async Task SendRFQEmail(this IEmailService emailService,
+            string toEmail,
+            string toName,
+            DateTime requestCreated,
+            int requestId)
+        {
+            var subject = $"RFQ_{requestCreated:yyyyMMdd}_{requestId}";
+
+
+            var requestCreatedTime = requestCreated.ToRussianStandardTime();
+
+            var model = new RFQEmail();
+
+            var htmlResult = await GetHtmlString(model);
+            await emailService.SendEmailAsync(toEmail, subject, htmlResult);
         }
     }
 }

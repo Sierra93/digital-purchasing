@@ -1,0 +1,16 @@
+@using RazorLight
+@inherits TemplatePage<DigitalPurchasing.Emails.EmailTemplates.RFQEmail>
+
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+</head>
+<body>
+    <p>Добрый день, @Model.ToName!</p>
+    <p>Прошу направить коммерческое предложение в формате счета на оплату с соответствии с запросом во вложении</p>
+    <p>Срок и время  отправки коммерческого предложения: @Model.Until.ToString("dd/MM/yyyy") до @Model.Until.ToString("hh:mm") МСК</p>
+    <p>С уважением,<br/>@Model.From.Name<br />@Model.From.Position<br />@Model.From.Company</p>
+</body>
+</html>

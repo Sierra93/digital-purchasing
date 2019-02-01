@@ -9,11 +9,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="EmailTemplates\" />
+    <ProjectReference Include="..\DigitalPurchasing.Core\DigitalPurchasing.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DigitalPurchasing.Core\DigitalPurchasing.Core.csproj" />
+    <None Update="EmailTemplates\DummyEmail.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="EmailTemplates\RFQEmail.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

@@ -9,18 +9,31 @@ using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.QuotationRequest;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace DigitalPurchasing.Web.Controllers
 {
     public class QuotationRequestController : Controller
     {
+        public class SentRequestsModel
+        {
+            [JsonProperty("id")]
+            public Guid QuotationRequestId { get; set; }
+            public List<Guid> Suppliers { get; set; }
+        }
+
         private readonly IQuotationRequestService _quotationRequestService;
         private readonly IPurchaseRequestService _purchaseRequestService;
+        private readonly IEmailService _emailService;
 
-        public QuotationRequestController(IQuotationRequestService quotationRequestService, IPurchaseRequestService purchaseRequestService)
+        public QuotationRequestController(
+            IQuotationRequestService quotationRequestService,
+            IPurchaseRequestService purchaseRequestService,
+            IEmailService emailService)
         {
             _quotationRequestService = quotationRequestService;
             _purchaseRequestService = purchaseRequestService;
+            _emailService = emailService;
         }
 
         public IActionResult Index() => View();
@@ -77,6 +90,13 @@ namespace DigitalPurchasing.Web.Controllers
         {
             var result = _quotationRequestService.Delete(vm.Id);
             return Ok(result);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SentRequests([FromBody] SentRequestsModel model)
+        {
+            //await _emailService.SendEmailAsync();
+            return Ok(model);
         }
     }
 }
