@@ -119,8 +119,8 @@ namespace DigitalPurchasing.Core.Interfaces
             public decimal DeliveryCost => TotalDeliveryCost * (_item.Mass.TotalMassPerc != 0 ? _item.Mass.TotalMassPerc :  _item.Mass.TotalPricePerc);
 
             public decimal FinalCost => CustomsDuty + DeliveryCost + _item.Offer.TotalPrice;
-
-            public decimal FinalCostCostPer1 => FinalCost / _item.Offer.Qty;
+            
+            public decimal FinalCostCostPer1 => _item.Offer.Qty != 0 ? FinalCost / _item.Offer.Qty : 0;
         }
 
         public class ConversionData
