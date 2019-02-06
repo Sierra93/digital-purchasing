@@ -14,7 +14,8 @@
       "wwwroot/lib/uiv/uiv.min.js",
       "wwwroot/lib/vue-tags-input/vue-tags-input.js",
       "wwwroot/lib/momentjs/moment.js",
-      "wwwroot/lib/lodash.js/lodash.js"
+      "wwwroot/lib/lodash.js/lodash.js",
+      "wwwroot/lib/jquery.inputmask/jquery.inputmask.bundle.js"
     ],
     "minify": {
       "enabled": true,

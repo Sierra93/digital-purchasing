@@ -1,11 +1,51 @@
-@model DigitalPurchasing.Core.Interfaces.SupplierVm
+@using DigitalPurchasing.Core.Extensions
+@model DigitalPurchasing.Web.ViewModels.Supplier.SupplierEditVm
 
 @{
-    ViewData["Title"] = Model.Name + " - Поставщики" ;
+    ViewData["Title"] = Model.Supplier.Name + " - Поставщики" ;
 }
 
-<h2>@Model.Name</h2>
+<h2>@Model.Supplier.Name</h2>
 <hr />
+
+<h3 class="with-button">Контакты сотрудников</h3>
+<div class="btn-group">
+    <a class="btn btn-primary" asp-action="AddContactPerson" asp-route-supplierId="@Model.Supplier.Id">Добавить</a>
+</div>
+@if (Model.ContactPersons.Any())
+{
+    <div class="row">
+        <div class="col-md-12">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Должность</th>
+                    <th>Фамилия</th>
+                    <th>Имя</th>
+                    <th>Отчество</th>
+                    <th>E-mail</th>
+                    <th>Моб. телефон</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var person in Model.ContactPersons)
+                {
+                    <tr>
+                        <td>@person.JobTitle</td>
+                        <td>@person.LastName</td>
+                        <td>@person.FirstName</td>
+                        <td>@person.Patronymic</td>
+                        <td>@person.Email</td>
+                        <td>@person.PhoneNumber.FormatPhoneNumber()</td>
+                        <td><a asp-action="EditContactPerson" asp-route-personId="@person.Id"><i class="far fa-edit"></i></a></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
 <div class="row">
     <div class="col-md-6">
         <a asp-action="Index" class="btn btn-default">Отмена</a>

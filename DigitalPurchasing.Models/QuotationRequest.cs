@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace DigitalPurchasing.Models
 {
@@ -11,5 +12,7 @@ namespace DigitalPurchasing.Models
 
         public Delivery Delivery { get; set; }
         public Guid? DeliveryId { get; set; }
+
+        public ICollection<QuotationRequestEmail> Emails { get; set; }
     }
 }

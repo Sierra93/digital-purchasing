@@ -10,6 +10,11 @@ namespace DigitalPurchasing.Core.Interfaces
         string GetNameById(Guid id);
         SupplierIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
         SupplierVm GetById(Guid id);
+
+        List<SupplierContactPersonVm> GetContactPersonsBySupplier(Guid supplierId);
+        Guid AddContactPerson(SupplierContactPersonVm vm);
+        Guid EditContactPerson(SupplierContactPersonVm vm);
+        SupplierContactPersonVm GetContactPersonsById(Guid personId);
     }
 
     public class SupplierAutocomplete
@@ -37,5 +42,19 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
+    }
+
+    public class SupplierContactPersonVm
+    {
+        public Guid Id { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Email { get; set; }
+
+        public string JobTitle { get; set; }
+        public string Patronymic { get; set; }
+        public string PhoneNumber { get; set; }
+
+        public Guid SupplierId { get; set; }
     }
 }

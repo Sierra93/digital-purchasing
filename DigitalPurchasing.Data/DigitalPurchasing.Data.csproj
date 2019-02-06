@@ -19,6 +19,8 @@
     <Compile Remove="Migrations\20181214171054_AnalysisVariant_Rework.cs" />
     <Compile Remove="Migrations\20181214171247_AnalysisVariant_Rework.cs" />
     <Compile Remove="Migrations\20181214171450_AnalysisVariant_Rework.cs" />
+    <Compile Remove="Migrations\20190205145905_SupplierContactPerson.cs" />
+    <Compile Remove="Migrations\20190206112413_SupplierContactPerson.cs" />
   </ItemGroup>
 
   <ItemGroup>

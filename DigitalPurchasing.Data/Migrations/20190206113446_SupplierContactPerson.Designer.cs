@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190206113446_SupplierContactPerson")]
+    partial class SupplierContactPerson
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -735,15 +737,9 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<string>("FirstName");
 
-                    b.Property<string>("JobTitle");
-
                     b.Property<string>("LastName");
 
                     b.Property<Guid>("OwnerId");
-
-                    b.Property<string>("Patronymic");
-
-                    b.Property<string>("PhoneNumber");
 
                     b.Property<Guid>("SupplierId");
 

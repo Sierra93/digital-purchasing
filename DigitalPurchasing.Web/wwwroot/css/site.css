@@ -86,28 +86,28 @@ table tr td {
   margin-bottom: 0 !important;
 }
 
-h2.with-button, h2.with-button + .btn-group {
+.with-button, .with-button + .btn-group {
   display: inline-block;
 }
 
-h2.with-button + .btn-group .form-button {
+.with-button + .btn-group .form-button {
   display: inline-block;
   float: left;
 }
 
-h2.with-button + .btn-group .form-button .btn-file {
+.with-button + .btn-group .form-button .btn-file {
    border-top-right-radius: 0;
    border-bottom-right-radius: 0;
    border-right-width: 0;
 }
 
-h2.with-button + .btn-group {
+.with-button + .btn-group {
   position: relative;
   top: -4px;
   left: 4px;
 }
 
-h2.with-button + .btn-group .btn-file label {
+.with-button + .btn-group .btn-file label {
   font-weight: normal;
   margin-bottom: 0;
 }

@@ -30,6 +30,16 @@
         "lodash.js",
         "lodash.min.js"
       ]
+    },
+    {
+      "provider": "cdnjs",
+      "library": "jquery.inputmask@3.3.4",
+      "destination": "wwwroot/lib/jquery.inputmask/",
+      "files": [
+        "jquery.inputmask.bundle.min.js",
+        "jquery.inputmask.bundle.js",
+        "jquery.inputmask.bundle.min.js.map"
+      ]
     }
   ]
 }

@@ -9,5 +9,7 @@ namespace DigitalPurchasing.Models
         public string Name { get; set; }
 
         public ICollection<SupplierOffer> Offers { get; set; }
+
+        public ICollection<SupplierContactPerson> ContactPersons { get; set; }
     }
 }
