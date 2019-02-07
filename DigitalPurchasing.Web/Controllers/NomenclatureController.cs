@@ -214,23 +214,22 @@ namespace DigitalPurchasing.Web.Controllers
                 }
             }
 
-            foreach (var data in datas)
+            var nomenclatures = datas.Select(data => new NomenclatureVm
             {
-                var dataCategory = data.Category.Split('>', StringSplitOptions.RemoveEmptyEntries).Last();
-                _nomenclatureService.CreateOrUpdate(new NomenclatureVm
-                {
-                    Name = data.Name,
-                    NameEng =  data.NameEng,
-                    Code = data.Code,
-                    BatchUomId = dbUoms.First(q => q.Key.Equals(data.Uom, StringComparison.InvariantCultureIgnoreCase)).Value,
-                    MassUomId = dbUoms.First(q => q.Key.Equals(data.UomMass, StringComparison.InvariantCultureIgnoreCase)).Value,
-                    ResourceUomId = dbUoms.First(q => q.Key.Equals(data.ResourceUom, StringComparison.InvariantCultureIgnoreCase)).Value,
-                    ResourceBatchUomId = dbUoms.First(q => q.Key.Equals(data.ResourceBatchUom, StringComparison.InvariantCultureIgnoreCase)).Value,
-                    CategoryId = dbCategories.First(q => q.Value.Equals(dataCategory, StringComparison.InvariantCultureIgnoreCase)).Key,
-                    MassUomValue = data.UomMassValue,
-                    ResourceUomValue = data.ResourceUomValue
-                });
-            }
+                Name = data.Name,
+                NameEng =  data.NameEng,
+                Code = data.Code,
+                BatchUomId = dbUoms.First(q => q.Key.Equals(data.Uom, StringComparison.InvariantCultureIgnoreCase)).Value,
+                MassUomId = dbUoms.First(q => q.Key.Equals(data.UomMass, StringComparison.InvariantCultureIgnoreCase)).Value,
+                ResourceUomId = dbUoms.First(q => q.Key.Equals(data.ResourceUom, StringComparison.InvariantCultureIgnoreCase)).Value,
+                ResourceBatchUomId = dbUoms.First(q => q.Key.Equals(data.ResourceBatchUom, StringComparison.InvariantCultureIgnoreCase)).Value,
+                CategoryId = dbCategories.First(q => q.Value.Equals(
+                    data.Category.Split('>', StringSplitOptions.RemoveEmptyEntries).Last(), StringComparison.InvariantCultureIgnoreCase)).Key,
+                MassUomValue = data.UomMassValue,
+                ResourceUomValue = data.ResourceUomValue
+            }).ToList();
+
+            _nomenclatureService.CreateOrUpdate(nomenclatures);
 
             return RedirectToAction(nameof(Index));
         }

@@ -6,6 +6,7 @@ using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
+using EFCore.BulkExtensions;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
@@ -87,6 +88,18 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
             var result = entry.Entity.Adapt<NomenclatureVm>();
             return result;
+        }
+
+        public void CreateOrUpdate(List<NomenclatureVm> nomenclatures)
+        {
+            var allNames = _db.Nomenclatures.AsQueryable().Select(q => new { Name = q.Name.ToLowerInvariant(), q.Id}).ToDictionary(q => q.Name, w => w.Id);
+            foreach (var nomenclature in nomenclatures)
+            {
+                var normName = nomenclature.Name.ToLowerInvariant();
+                nomenclature.Id = allNames.ContainsKey(normName) ? allNames[normName] : Guid.NewGuid();
+            }
+            var entities = nomenclatures.Adapt<List<Nomenclature>>();
+            _db.BulkInsertOrUpdate(entities);
         }
 
         public NomenclatureVm GetById(Guid id)
