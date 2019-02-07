@@ -41,5 +41,17 @@
         "jquery.inputmask.bundle.min.js.map"
       ]
     }
+  ,
+{
+  "provider": "cdnjs",
+  "library": "axios@0.18.0",
+  "destination": "wwwroot/lib/axios/",
+  "files": [
+    "axios.min.js",
+    "axios.js",
+    "axios.map",
+    "axios.min.map"
   ]
+}
+]
 }

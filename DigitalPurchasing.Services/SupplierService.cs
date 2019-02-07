@@ -98,5 +98,13 @@ namespace DigitalPurchasing.Services
             var entity = _db.SupplierContactPersons.Find(personId);
             return entity?.Adapt<SupplierContactPersonVm>();
         }
+
+        public void DeleteContactPerson(Guid personId)
+        {
+            var person = _db.SupplierContactPersons.Find(personId);
+            if (person == null) return;
+            _db.SupplierContactPersons.Remove(person);
+            _db.SaveChanges();
+        }
     }
 }

@@ -5,18 +5,21 @@
     ViewData["Title"] = Model.Supplier.Name + " - Поставщики" ;
 }
 
-<h2>@Model.Supplier.Name</h2>
+<h2 class="with-button">@Model.Supplier.Name</h2>
+<div class="btn-group">
+    <a asp-action="Index" class="btn btn-default">Назад к списку</a>
+</div>
 <hr />
 
 <h3 class="with-button">Контакты сотрудников</h3>
 <div class="btn-group">
-    <a class="btn btn-primary" asp-action="AddContactPerson" asp-route-supplierId="@Model.Supplier.Id">Добавить</a>
+    <a class="btn btn-default" asp-action="AddContactPerson" asp-route-supplierId="@Model.Supplier.Id">Добавить</a>
 </div>
 @if (Model.ContactPersons.Any())
 {
-    <div class="row">
+    <div class="row" id="table-persons">
         <div class="col-md-12">
-            <table class="table table-striped">
+            <table class="table table-striped"> 
                 <thead>
                 <tr>
                     <th>Должность</th>
@@ -31,14 +34,17 @@
                 <tbody>
                 @foreach (var person in Model.ContactPersons)
                 {
-                    <tr>
+                    <tr data-fullname="@person.FullName" data-id="@person.Id">
                         <td>@person.JobTitle</td>
                         <td>@person.LastName</td>
                         <td>@person.FirstName</td>
                         <td>@person.Patronymic</td>
                         <td>@person.Email</td>
                         <td>@person.PhoneNumber.FormatPhoneNumber()</td>
-                        <td><a asp-action="EditContactPerson" asp-route-personId="@person.Id"><i class="far fa-edit"></i></a></td>
+                        <td>
+                            <a asp-action="EditContactPerson" asp-route-personId="@person.Id"><i class="far fa-edit"></i></a>
+                            <button type="button" class="btn btn-link" data-delete-person><i class="far fa-trash-alt"></i></button>
+                        </td>
                     </tr>
                 }
                 </tbody>
@@ -46,10 +52,54 @@
         </div>
     </div>
 }
-<div class="row">
-    <div class="col-md-6">
-        <a asp-action="Index" class="btn btn-default">Отмена</a>
-    </div>
-</div>
 
+<div class="modal fade" tabindex="-1" role="dialog" id="modal-delete-person">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Удаление контакта</h4>
+            </div>
+            <div class="modal-body">
+                <p>Вы действительно хотите удалить контакт "<b><span data-fullname></span></b>"?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger" data-delete-id>Удалить</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+@section Scripts {
+    <script>
+        (function() {
+            $(document).ready(function() {
+                var $tablePersons = $('#table-persons');
+                var $modalDelete = $('#modal-delete-person');
+                $tablePersons.find('button[data-delete-person]').click(function() {
+                    var $this = $(this);
+                    var $tr = $this.parents('tr');
+                    var data = $tr.data();
+                    $modalDelete.find('[data-fullname]').text(data.fullname);
+                    $modalDelete.find('[data-delete-id]').attr('data-delete-id', data.id);
+                    $modalDelete.modal('show');
+                });
+                $modalDelete.on('click', 'button[data-delete-id]', function() {
+                    var id = $(this).attr('data-delete-id');
+                    axios.post('@Url.Action("DeleteContactPerson")', { id: id }).then(function (res) {
+                        $tablePersons.find('tbody tr[data-id="' + id + '"]').remove();
+                        if ($tablePersons.find('tbody tr').length === 0) {
+                            $tablePersons.remove();
+                        }
+                        $modalDelete.modal('hide');
+                    })
+                    .catch(function (error) {
+                        alert('Ошибка');
+                    });
+                });
+            });
+        })();
+    </script>
+}
 

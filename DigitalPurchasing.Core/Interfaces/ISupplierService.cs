@@ -15,6 +15,7 @@ namespace DigitalPurchasing.Core.Interfaces
         Guid AddContactPerson(SupplierContactPersonVm vm);
         Guid EditContactPerson(SupplierContactPersonVm vm);
         SupplierContactPersonVm GetContactPersonsById(Guid personId);
+        void DeleteContactPerson(Guid personId);
     }
 
     public class SupplierAutocomplete
@@ -56,5 +57,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public string PhoneNumber { get; set; }
 
         public Guid SupplierId { get; set; }
+
+        public string FullName => $"{LastName??""} {FirstName??""} {Patronymic??""}".Trim();
     }
 }

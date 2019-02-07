@@ -6,11 +6,17 @@ using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.Supplier;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace DigitalPurchasing.Web.Controllers
 {
     public class SupplierController : Controller
     {
+        public class DeleteContactPersonPost
+        {
+            [JsonProperty("id")] public Guid PersonId { get; set; }
+        }
+
         private readonly ISupplierService _supplierService;
 
         public SupplierController(ISupplierService supplierService) => _supplierService = supplierService;
@@ -61,6 +67,19 @@ namespace DigitalPurchasing.Web.Controllers
             return View("EditContactPerson", vm);
         }
 
+        [HttpGet, Route("/contactpersons/edit/{personId}")]
+        public IActionResult EditContactPerson([FromRoute]Guid personId)
+        {
+            var person = _supplierService.GetContactPersonsById(personId);
+            if (person == null) return NotFound();
+
+            var supplier = _supplierService.GetById(person.SupplierId);
+
+            var vm = person.Adapt<SupplierContactPersonEditVm>();
+            vm.SupplierName = supplier.Name;
+            return View("EditContactPerson",vm);
+        }
+
         [HttpPost]
         public IActionResult SaveContactPerson(SupplierContactPersonEditVm vm)
         {
@@ -85,17 +104,15 @@ namespace DigitalPurchasing.Web.Controllers
             return RedirectToAction("Edit", new { id = vm.SupplierId });
         }
 
-        [HttpGet, Route("/contactpersons/edit/{personId}")]
-        public IActionResult EditContactPerson([FromRoute]Guid personId)
+        [HttpPost]
+        public IActionResult DeleteContactPerson([FromBody] DeleteContactPersonPost model)
         {
-            var person = _supplierService.GetContactPersonsById(personId);
-            if (person == null) return NotFound();
+            if (model.PersonId != Guid.Empty)
+            {
+                _supplierService.DeleteContactPerson(model.PersonId);
+            }
 
-            var supplier = _supplierService.GetById(person.SupplierId);
-
-            var vm = person.Adapt<SupplierContactPersonEditVm>();
-            vm.SupplierName = supplier.Name;
-            return View("EditContactPerson",vm);
+            return Ok();
         }
     }
 }
