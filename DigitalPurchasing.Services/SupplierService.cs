@@ -87,6 +87,7 @@ namespace DigitalPurchasing.Services
             entity.FirstName = vm.FirstName;
             entity.LastName = vm.LastName;
             entity.Patronymic = vm.Patronymic;
+            entity.UseForRequests = vm.UseForRequests;
             entity.JobTitle = vm.JobTitle;
             entity.PhoneNumber = vm.PhoneNumber.CleanPhoneNumber();
             _db.SaveChanges();

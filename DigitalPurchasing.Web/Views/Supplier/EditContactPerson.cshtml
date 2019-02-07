@@ -57,6 +57,14 @@
                 <span asp-validation-for="PhoneNumber" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <div class="checkbox">
+                    <label asp-for="UseForRequests">
+                        <input asp-for="UseForRequests" />
+                        @Html.DisplayNameFor(m => m.UseForRequests)
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
                 <input type="submit" class="btn btn-primary" value="@($"{(isEdit?"Сохранить":"Создать")}")" />
                 <a asp-controller="Supplier" asp-action="Edit" asp-route-id="@Model.SupplierId" class="btn btn-default">Отмена</a>
             </div>

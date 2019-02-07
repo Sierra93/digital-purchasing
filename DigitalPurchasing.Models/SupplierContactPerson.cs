@@ -14,5 +14,19 @@ namespace DigitalPurchasing.Models
 
         public Guid SupplierId { get; set; }
         public Supplier Supplier { get; set; }
+
+        public bool UseForRequests { get; set; }
     }
+
+    //public class SupplierContactPersonCategory : BaseModel
+    //{
+    //    public SupplierContactPerson ContactPerson { get; set; }
+    //    public Guid ContactPersonId { get; set; }
+
+    //    public SupplierContactPerson ContactPerson { get; set; }
+    //    public Guid ContactPersonId { get; set; }
+
+    //    public NomenclatureCategory NomenclatureCategory { get; set; }
+    //    public Guid NomenclatureCategoryId { get; set; }
+    //}
 }

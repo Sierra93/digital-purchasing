@@ -28,6 +28,7 @@
                     <th>Отчество</th>
                     <th>E-mail</th>
                     <th>Моб. телефон</th>
+                    <th>Использовать для<br/>отправки запросов и<br />получения КП?</th>
                     <th></th>
                 </tr>
                 </thead>
@@ -41,6 +42,7 @@
                         <td>@person.Patronymic</td>
                         <td>@person.Email</td>
                         <td>@person.PhoneNumber.FormatPhoneNumber()</td>
+                        <td>@(person.UseForRequests?"Да":"Нет")</td>
                         <td>
                             <a asp-action="EditContactPerson" asp-route-personId="@person.Id"><i class="far fa-edit"></i></a>
                             <button type="button" class="btn btn-link" data-delete-person><i class="far fa-trash-alt"></i></button>

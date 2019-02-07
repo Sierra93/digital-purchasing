@@ -58,6 +58,8 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public Guid SupplierId { get; set; }
 
+        public bool UseForRequests { get; set; }
+
         public string FullName => $"{LastName??""} {FirstName??""} {Patronymic??""}".Trim();
     }
 }
