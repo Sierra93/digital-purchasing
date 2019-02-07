@@ -227,7 +227,7 @@ namespace DigitalPurchasing.Web.Controllers
                     data.Category.Split('>', StringSplitOptions.RemoveEmptyEntries).Last(), StringComparison.InvariantCultureIgnoreCase)).Key,
                 MassUomValue = data.UomMassValue,
                 ResourceUomValue = data.ResourceUomValue
-            }).ToList();
+            }).GroupBy(q => q.Name).Select(q => q.First()).ToList();
 
             _nomenclatureService.CreateOrUpdate(nomenclatures);
 

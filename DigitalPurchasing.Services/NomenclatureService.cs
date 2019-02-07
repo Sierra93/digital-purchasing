@@ -9,7 +9,6 @@ using DigitalPurchasing.Models;
 using EFCore.BulkExtensions;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 
 namespace DigitalPurchasing.Services
 {
@@ -17,11 +16,13 @@ namespace DigitalPurchasing.Services
     {
         private readonly ApplicationDbContext _db;
         private readonly INomenclatureCategoryService _categoryService;
+        private readonly ITenantService _tenantService;
 
-        public NomenclatureService(ApplicationDbContext dbContext, INomenclatureCategoryService categoryService)
+        public NomenclatureService(ApplicationDbContext dbContext, INomenclatureCategoryService categoryService, ITenantService tenantService)
         {
             _db = dbContext;
             _categoryService = categoryService;
+            _tenantService = tenantService;
         }
 
         public NomenclatureIndexData GetData(int page, int perPage, string sortField, bool sortAsc)
@@ -92,13 +93,18 @@ namespace DigitalPurchasing.Services
 
         public void CreateOrUpdate(List<NomenclatureVm> nomenclatures)
         {
-            var allNames = _db.Nomenclatures.AsQueryable().Select(q => new { Name = q.Name.ToLowerInvariant(), q.Id}).ToDictionary(q => q.Name, w => w.Id);
-            foreach (var nomenclature in nomenclatures)
-            {
-                var normName = nomenclature.Name.ToLowerInvariant();
-                nomenclature.Id = allNames.ContainsKey(normName) ? allNames[normName] : Guid.NewGuid();
-            }
+            var allNames = _db.Nomenclatures
+                .AsQueryable()
+                .GroupBy(q => q.Name)
+                .Select(q => new { Name = q.First().Name.ToLowerInvariant(), q.First().Id}).ToDictionary(q => q.Name, w => w.Id);
+
             var entities = nomenclatures.Adapt<List<Nomenclature>>();
+            foreach (var entity in entities)
+            {
+                var normName = entity.Name.ToLowerInvariant();
+                entity.Id = allNames.ContainsKey(normName) ? allNames[normName] : Guid.NewGuid();
+                entity.OwnerId = _tenantService.Get().CompanyId;
+            }
             _db.BulkInsertOrUpdate(entities);
         }
 
