@@ -6,6 +6,7 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using DigitalPurchasing.Core;
 using DigitalPurchasing.Models;
+using EFCore.BulkExtensions;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -168,8 +169,8 @@ namespace DigitalPurchasing.Services
                 pr.CustomerId = _customerService.CreateCustomer(pr.CustomerName);
             }
 
-            _db.PurchaseRequestItems.RemoveRange(_db.PurchaseRequestItems.Where(q => q.PurchaseRequestId == id));
-            _db.SaveChanges();
+            _db.PurchaseRequestItems.Where(q => q.PurchaseRequestId == id).BatchDelete();
+
             var prItems = items.Adapt<List<PurchaseRequestItem>>().ToList();
             var index = 0;
 
@@ -178,8 +179,8 @@ namespace DigitalPurchasing.Services
                 prItem.PurchaseRequestId = id;
                 prItem.Position = ++index;
             }
-            _db.PurchaseRequestItems.AddRange(prItems);
-            _db.SaveChanges();
+
+            _db.BulkInsert(prItems);
 
             AutocompleteDataPRItems(id);
         }
@@ -189,12 +190,7 @@ namespace DigitalPurchasing.Services
             var pr = _db.PurchaseRequests.Find(prId);
             var prItems = _db.PurchaseRequestItems.Where(q => q.PurchaseRequestId == prId).ToList();
 
-            string customerName = null;
-            if (prItems.Any())
-            {
-                _db.Entry(prItems.First()).Reference(q => q.PurchaseRequest).Load();
-                customerName = prItems.First().PurchaseRequest.CustomerName;
-            }
+            var customerName = pr.CustomerName;
 
             var uoms = new Dictionary<string, Guid>();
             var noms = new Dictionary<string, Guid>();
@@ -203,7 +199,7 @@ namespace DigitalPurchasing.Services
             {
                 #region Try to search in old PR items
 
-                if (string.IsNullOrEmpty(prItem.RawCode))
+                if (string.IsNullOrEmpty(prItem.RawUom))
                 {
                     var otherRecords = _db.PurchaseRequestItems
                         .Include(q => q.PurchaseRequest)
@@ -283,7 +279,7 @@ namespace DigitalPurchasing.Services
                 #endregion
             }
 
-            _db.SaveChanges();
+            _db.BulkUpdate(prItems);
         }
 
         public void UpdateStatus(Guid id, PurchaseRequestStatus status)
