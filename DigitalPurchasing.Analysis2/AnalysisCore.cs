@@ -120,7 +120,7 @@ namespace DigitalPurchasing.Analysis2
 
                         foreach (var item in items.Where(q => q.InternalId != itemWMinPrice.InternalId))
                         {
-                            var score = itemWMinPrice.Price / item.Price;
+                            var score = item.Price > 0 ? itemWMinPrice.Price / item.Price : 0;
                             SetScore(datas, item.InternalId, score);
                         }
                     }
