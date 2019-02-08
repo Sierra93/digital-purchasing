@@ -418,5 +418,63 @@ namespace DigitalPurchasing.Tests
             Assert.Equal(core.Suppliers.Count, result.SuppliersCount);
             Assert.Equal(customerQty, result.Data.Sum(q => q.Item.Quantity));
         }
+
+        [Fact]
+        public void Quantity()
+        {
+            var itemId1 = new Guid("5e654ae674ce4e03be619ec6c5701b21");
+            var itemId2 = new Guid("96d9151eb8f24d7b80a2f2b69fc2e1bc");
+            var itemId3 = new Guid("8916d8409b32431abefa29ed7fd7b785");
+
+            var customer = new AnalysisCustomer
+            {
+                Id = new Guid("01baea5c472d4b5aace9bf7dbaf013c4"),
+                Items =
+                {
+                    new CustomerItem { Id = itemId1, Quantity = 100 },
+                    new CustomerItem { Id = itemId2, Quantity = 100 },
+                    new CustomerItem { Id = itemId3, Quantity = 100 }
+                }
+            };
+
+            var supplier1 = new AnalysisSupplier
+            {
+                Id = new Guid("f0477905690c44cbbfa185800db1a6ad"),
+                Items =
+                {
+                    new SupplierItem { Id = itemId1, Quantity = 90, Price = 10 },
+                    new SupplierItem { Id = itemId2, Quantity = 90, Price = 10 },
+                    new SupplierItem { Id = itemId3, Quantity = 90, Price = 10 }
+                }
+            };
+            
+            var supplier2 = new AnalysisSupplier
+            {
+                Id = new Guid("779add5fdc394cca9bfd7672bce61607"),
+                Items =
+                {
+                    new SupplierItem { Id = itemId1, Quantity = 100, Price = 9 },
+                    new SupplierItem { Id = itemId2, Quantity = 100, Price = 8 },
+                    new SupplierItem { Id = itemId3, Quantity = 100, Price = 7 }
+                }
+            };
+
+            var core = new AnalysisCore
+            {
+                Customer = customer,
+                Suppliers = new List<AnalysisSupplier> { supplier1, supplier2 }
+            };
+
+            var result = core.Run(new AnalysisOptions());
+
+            Assert.True(result.IsSuccess);
+            Assert.All(result.Data, q =>
+            {
+                Assert.True(q.Item.Quantity == 90
+                            || q.Item.Quantity == 100
+                            || q.Item.Quantity == 10);
+            });
+        }
+
     }
 }

@@ -56,19 +56,22 @@ namespace DigitalPurchasing.Analysis2
                     if (diffQty < 0)
                     {
                         var remainingQty = Math.Abs(diffQty);
-                        var variantsToFullFill = datas
+                        var variantsToFulfill = datas
                             .Where(q =>
                                 q.Item.Id == supplierItem.Id &&
                                 q.Item.InternalId != supplierItem.InternalId &&
                                 q.Item.Quantity >= remainingQty).ToList();
-                        if (variantsToFullFill.Any())
+                        if (variantsToFulfill.Any())
                         {
-                            foreach (var variantToFillFull in variantsToFullFill)
+                            foreach (var variantToFulfill in variantsToFulfill)
                             {
-                                variantToFillFull.Item.Quantity = remainingQty;
-                                var newVariant = variant.Select(q => new AnalysisData{ Item = q.Item, Score = q.Score, Supplier = q.Supplier }).ToList();
-                                newVariant.Add(variantToFillFull);
-                                additionalVariants.Add(newVariant);
+                                var existingVariantsCopy = variant.ConvertAll(q => q.Copy());
+
+                                var variantCopy = variantToFulfill.Copy();
+                                variantCopy.Item.Quantity = remainingQty;
+
+                                existingVariantsCopy.Add(variantCopy);
+                                additionalVariants.Add(existingVariantsCopy);
                             }
                         }
                     }
