@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core;
@@ -22,6 +23,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.ExcelReader;
+using Microsoft.AspNetCore.Localization;
 
 namespace DigitalPurchasing.Web
 {
@@ -109,6 +111,22 @@ namespace DigitalPurchasing.Web
                 app.UseExceptionHandler("/Home/Error");
                 app.UseHsts();
             }
+
+            const string defaultCulture = "ru-RU";
+
+            var supportedCultures = new[]
+            {
+                new CultureInfo(defaultCulture),
+            };
+
+            app.UseRequestLocalization(new RequestLocalizationOptions
+            {
+                DefaultRequestCulture = new RequestCulture(defaultCulture),
+                // Formatting numbers, dates, etc.
+                SupportedCultures = supportedCultures,
+                // UI strings that we have localized.
+                SupportedUICultures = supportedCultures
+            });
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();

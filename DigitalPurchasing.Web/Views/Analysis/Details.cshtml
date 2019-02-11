@@ -12,7 +12,7 @@ public string FormatMoney(decimal sum)
 {
     if (sum == 0) return "";
 
-    return sum.ToString(Consts.Format.Money);
+    return Math.Round(sum).ToString(Consts.Format.Money2);
 }
 
 }

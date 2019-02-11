@@ -16,7 +16,9 @@
       "wwwroot/lib/momentjs/moment.js",
       "wwwroot/lib/lodash.js/lodash.js",
       "wwwroot/lib/jquery.inputmask/jquery.inputmask.bundle.js",
-      "wwwroot/lib/axios/axios.js"
+      "wwwroot/lib/axios/axios.js",
+      "wwwroot/lib/numeral.js/numeral.min.js",
+      "wwwroot/lib/numeral.js/locales/ru.min.js"
     ],
     "minify": {
       "enabled": true,

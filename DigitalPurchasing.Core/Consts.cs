@@ -10,6 +10,7 @@ namespace DigitalPurchasing.Core
         {
             public static string Qty = "0.####";
             public static string Money = "0,0.00";
+            public static string Money2 = "0,0";
         }
     }
 }

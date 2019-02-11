@@ -40,18 +40,26 @@
         "jquery.inputmask.bundle.js",
         "jquery.inputmask.bundle.min.js.map"
       ]
+    },
+    {
+      "provider": "cdnjs",
+      "library": "axios@0.18.0",
+      "destination": "wwwroot/lib/axios/",
+      "files": [
+        "axios.min.js",
+        "axios.js",
+        "axios.map",
+        "axios.min.map"
+      ]
+    },
+    {
+      "provider": "cdnjs",
+      "library": "numeral.js@2.0.6",
+      "destination": "wwwroot/lib/numeral.js/",
+      "files": [
+        "numeral.min.js",
+        "locales/ru.min.js"
+      ]
     }
-  ,
-{
-  "provider": "cdnjs",
-  "library": "axios@0.18.0",
-  "destination": "wwwroot/lib/axios/",
-  "files": [
-    "axios.min.js",
-    "axios.js",
-    "axios.map",
-    "axios.min.map"
   ]
-}
-]
 }

@@ -65,10 +65,10 @@
                     <p class="help-block">Доля в итого, %</p>
                 </td>
                 <td v-if="isSuccess(variant)" v-for="result in getOrderedVariantResults(variant.results)">
-                    <p>{{result.total | dontShowZero}}</p>
-                    <p class="help-block">{{supplierTotalPerc(result.total, suppliersTotal(variant.results)) | percentage}}</p>
+                    <p>{{result.total | formatMoney}}</p>
+                    <p class="help-block">{{supplierTotalPerc(result.total, suppliersTotal(variant.results)) | formatPercentage}}</p>
                 </td>
-                <td v-if="isSuccess(variant)">{{suppliersTotal(variant.results)}}</td>
+                <td v-if="isSuccess(variant)">{{suppliersTotal(variant.results) | formatMoney}}</td>
                 <td v-if="isSuccess(variant)">{{suppliersCount(variant.results)}}</td>
                 <td v-if="!isSuccess(variant)" :colspan="variant.results.length+2">
                     <p class="text-center">Предложенные условия не соответствуют параметрам выбора</p>
@@ -131,15 +131,18 @@
                     }
                 },
                 filters: {
-                    percentage: function(value) {
+                    formatPercentage: function(value) {
                         if (!isNumber(value)) return value;
                         if (value === 0) return '';
-                        value = value.toFixed(2);
+                        value = value.toFixed(0);
                         return value + '%';
                     },
-                    dontShowZero: function(value) {
-                        if (!isNumber(value)) return value;
-                        return value === 0 ? '' : value;
+                    formatMoney: function(value) {
+                        if (isNumber(value)) {
+                            if (value === 0) return '';
+                            return numeral(value).format('0,0');
+                        }
+                        return value;
                     },
                     formatDate: function(value) {
                         if (value) {
