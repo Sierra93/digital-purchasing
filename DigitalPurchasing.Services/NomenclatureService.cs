@@ -9,6 +9,7 @@ using DigitalPurchasing.Models;
 using EFCore.BulkExtensions;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using MoreLinq;
 
 namespace DigitalPurchasing.Services
 {
@@ -96,7 +97,10 @@ namespace DigitalPurchasing.Services
             var allNames = _db.Nomenclatures
                 .AsQueryable()
                 .GroupBy(q => q.Name)
-                .Select(q => new { Name = q.First().Name.ToLowerInvariant(), q.First().Id}).ToDictionary(q => q.Name, w => w.Id);
+                .Select(q => new { Name = q.First().Name.ToLowerInvariant(), q.First().Id})
+                .ToList()
+                .DistinctBy(q => q.Name)
+                .ToDictionary(q => q.Name, w => w.Id);
 
             var entities = nomenclatures.Adapt<List<Nomenclature>>();
             foreach (var entity in entities)
