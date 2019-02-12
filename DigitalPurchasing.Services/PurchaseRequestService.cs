@@ -70,7 +70,11 @@ namespace DigitalPurchasing.Services
 
         public PurchaseRequestDetailsResponse GetById(Guid id)
         {
-            var entity = _db.PurchaseRequests.Include(q => q.UploadedDocument).First(q => q.Id == id);
+            var entity = _db.PurchaseRequests
+                .Include(q => q.UploadedDocument)
+                .FirstOrDefault(q => q.Id == id);
+
+            if (entity == null) return null;
 
             var result = entity.Adapt<PurchaseRequestDetailsResponse>();
             result.ExcelTable =
@@ -117,8 +121,7 @@ namespace DigitalPurchasing.Services
 
         public void GenerateRawItems(Guid id)
         {
-            _db.RemoveRange(_db.PurchaseRequestItems.Where(q => q.PurchaseRequestId == id));
-            _db.SaveChanges();
+            _db.PurchaseRequestItems.Where(q => q.PurchaseRequestId == id).BatchDelete();
 
             var entity = _db.PurchaseRequests.Include(q => q.UploadedDocument).ThenInclude(q => q.Headers).First(q => q.Id == id);
             var table = JsonConvert.DeserializeObject<ExcelTable>(entity.UploadedDocument.Data);
@@ -138,8 +141,7 @@ namespace DigitalPurchasing.Services
                 rawItems.Add(rawItem);
             }
 
-            _db.PurchaseRequestItems.AddRange(rawItems);
-            _db.SaveChanges();
+            _db.BulkInsert(rawItems);
         }
 
         public RawItemResponse GetRawItems(Guid id)
