@@ -82,6 +82,12 @@ table tr td {
   vertical-align: middle!important;
 }
 
+td.align-right, th.align-right {
+  text-align: right;
+  padding-right: 16px;
+  min-width: 75px;
+}
+
 .modal-body .table {
   margin-bottom: 0 !important;
 }

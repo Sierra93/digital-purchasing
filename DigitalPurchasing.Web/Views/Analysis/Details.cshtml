@@ -39,16 +39,16 @@ public string FormatMoney(decimal sum)
                         <th>Наименование</th>
                         <th>Валюта</th>
                         <th>ЕИ</th>
-                        <th>Кол-во,<br />ЕИ</th>
+                        <th class="align-right">Кол-во,<br />ЕИ</th>
                         @foreach (var variant in Model.Data.Items[0].Variants.OrderBy(q => q.CreatedOn))
                         {
                             foreach (var supplier in variant.Suppliers.OrderBy(q => q.Key.Name))
                             {
-                                <th>@supplier.Key.Name</th>
+                                <th class="align-right">@supplier.Key.Name</th>
                             }
                             if (variant.Suppliers.Count > 1)
                             {
-                                <th>ИТОГО</th>
+                                <th class="align-right">ИТОГО</th>
                             }
                         }
                     </tr>
@@ -56,16 +56,16 @@ public string FormatMoney(decimal sum)
                 <tfoot>
                     <tr>
                         <th colspan="4"></th>
-                        <th>@Model.Data.Items.Sum(q => q.Quantity).ToString(Consts.Format.Qty)</th>
+                        <th class="align-right">@Model.Data.Items.Sum(q => q.Quantity).ToString(Consts.Format.Qty)</th>
                         @foreach (var variant in Model.Data.Items[0].Variants.OrderBy(q => q.CreatedOn))
                         {
                             foreach (var supplier in variant.Suppliers.OrderBy(q => q.Key.Name))
                             {
-                                <th>@FormatMoney(Model.Data.SumBySupplier(variant, supplier.Key))</th>
+                                <th class="align-right">@FormatMoney(Model.Data.SumBySupplier(variant, supplier.Key))</th>
                             }
                             if (variant.Suppliers.Count > 1)
                             {
-                                <th>@FormatMoney(Model.Data.SumByVariant(variant))</th>
+                                <th class="align-right">@FormatMoney(Model.Data.SumByVariant(variant))</th>
                             }
                         }
                     </tr>
@@ -78,16 +78,16 @@ public string FormatMoney(decimal sum)
                             <td>@item.Name</td>
                             <td>@item.Currency</td>
                             <td>@item.Uom</td>
-                            <td>@item.Quantity.ToString(Consts.Format.Qty)</td>
+                            <td class="align-right">@item.Quantity.ToString(Consts.Format.Qty)</td>
                             @foreach (var variant in item.Variants.OrderBy(q => q.CreatedOn))
                             {
                                 foreach (var supplier in variant.Suppliers.OrderBy(q => q.Key.Name))
                                 {
-                                    <td>@FormatMoney(supplier.Value.TotalPrice)</td>
+                                    <td class="align-right">@FormatMoney(supplier.Value.TotalPrice)</td>
                                 }
                                 if (variant.Suppliers.Count > 1)
                                 {
-                                    <th>@FormatMoney(variant.Suppliers.Sum(q => q.Value.TotalPrice))</th>
+                                    <td class="align-right">@FormatMoney(variant.Suppliers.Sum(q => q.Value.TotalPrice))</td>
                                 }
                             }
                         </tr>

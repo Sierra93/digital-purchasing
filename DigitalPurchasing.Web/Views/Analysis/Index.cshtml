@@ -15,9 +15,9 @@
         <thead>
             <tr>
                 <th>Варианты</th>
-                <th v-for="supplier in orderedSuppliers">{{supplier.name}}</th>
-                <th>ИТОГО</th>
-                <th>Кол-во<br />поставщиков</th>
+                <th class="align-right" v-for="supplier in orderedSuppliers">{{supplier.name}}</th>
+                <th class="align-right">ИТОГО</th>
+                <th class="align-right">Кол-во<br />поставщиков</th>
             </tr>
         </thead>
         <tfoot>
@@ -29,31 +29,31 @@
             </tr>
             <tr>
                 <th>Отсрочка, дней</th>
-                <td v-for="supplier in orderedSuppliers">{{supplier.payWithinDays}}</td>
+                <td class="align-right" v-for="supplier in orderedSuppliers">{{supplier.payWithinDays}}</td>
                 <td></td>
                 <td></td>
             </tr>
             <tr>
                 <th>Условия доставки</th>
-                <td v-for="supplier in orderedSuppliers">{{supplier.deliveryTermsStr}}</td>
+                <td class="align-right" v-for="supplier in orderedSuppliers">{{supplier.deliveryTermsStr}}</td>
                 <td></td>
                 <td></td>
             </tr>
             <tr>
                 <th>Срок поставки не позже, чем в запросе?</th>
-                <td v-for="supplier in orderedSuppliers">{{isDeliveryDataLessOrEqual(supplier.deliveryDate, customerDeliveryDate) | formatBool}}</td>
+                <td class="align-right" v-for="supplier in orderedSuppliers">{{isDeliveryDataLessOrEqual(supplier.deliveryDate, customerDeliveryDate) | formatBool}}</td>
                 <td></td>
                 <td></td>
             </tr>
             <tr>
                 <th>Срок поставки в КП</th>
-                <td v-for="supplier in orderedSuppliers">{{supplier.deliveryDate | formatDate}}</td>
+                <td class="align-right" v-for="supplier in orderedSuppliers">{{supplier.deliveryDate | formatDate}}</td>
                 <td></td>
                 <td></td>
             </tr>
             <tr>
                 <th>Срок поставки в запросе</th>
-                <td v-for="supplier in orderedSuppliers">{{customerDeliveryDate | formatDate}}</td>
+                <td class="align-right" v-for="supplier in orderedSuppliers">{{customerDeliveryDate | formatDate}}</td>
                 <td></td>
                 <td></td>
             </tr>
@@ -64,12 +64,12 @@
                     <p>Вариант {{(index+1)}}</p>
                     <p class="help-block">Доля в итого, %</p>
                 </td>
-                <td v-if="isSuccess(variant)" v-for="result in getOrderedVariantResults(variant.results)">
+                <td class="align-right" v-if="isSuccess(variant)" v-for="result in getOrderedVariantResults(variant.results)">
                     <p>{{result.total | formatMoney}}</p>
                     <p class="help-block">{{supplierTotalPerc(result.total, suppliersTotal(variant.results)) | formatPercentage}}</p>
                 </td>
-                <td v-if="isSuccess(variant)">{{suppliersTotal(variant.results) | formatMoney}}</td>
-                <td v-if="isSuccess(variant)">{{suppliersCount(variant.results)}}</td>
+                <td class="align-right" v-if="isSuccess(variant)">{{suppliersTotal(variant.results) | formatMoney}}</td>
+                <td class="align-right" v-if="isSuccess(variant)">{{suppliersCount(variant.results)}}</td>
                 <td v-if="!isSuccess(variant)" :colspan="variant.results.length+2">
                     <p class="text-center">Предложенные условия не соответствуют параметрам выбора</p>
                 </td>
