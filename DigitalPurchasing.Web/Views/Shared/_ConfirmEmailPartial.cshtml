@@ -1,0 +1,15 @@
+@using DigitalPurchasing.Models.Identity
+@using Microsoft.AspNetCore.Identity
+
+@inject UserManager<User> UserManager
+
+@{
+    var user = await UserManager.GetUserAsync(User);
+}
+
+@if (user != null && !user.EmailConfirmed)
+{
+    <div class="alert alert-warning alert-dismissible" role="alert" style="margin-top: 15px;">
+        Пожалуйста подтвердите адрес вашу электронную почты в <a asp-area="Identity" asp-page="/Account/Manage/Index">профиле</a>
+    </div>
+}

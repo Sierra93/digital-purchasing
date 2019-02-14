@@ -146,10 +146,10 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
                 protocol: Request.Scheme);
             await _emailSender.SendEmailAsync(
                 email,
-                "Confirm your email",
-                $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                "Подтвердите ваш адрес электронной почты",
+                $"Подтвердите свою учетную запись, <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>нажав здесь</a>.");
 
-            StatusMessage = "Verification email sent. Please check your email.";
+            StatusMessage = "Письмо с подтверждением отправлено. Пожалуйста, проверьте вашу электронную почту.";
             return RedirectToPage();
         }
     }

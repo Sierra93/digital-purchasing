@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
@@ -7,41 +9,79 @@ namespace DigitalPurchasing.Services
 {
     public class EmailService : IEmailService
     {
-        public Task SendEmailAsync(string email, string subject, string htmlMessage, ReplyTo replyTo = ReplyTo.Hello)
+        private const string AppName = "DigitalPurchasing.com";
+        private const string RobotEmail = "app@digitalpurchasing.com";
+        private const string DefaultEmail = "hello@digitalpurchasing.com";
+
+        public Task SendFromRobotAsync(string toEmail, string subject, string htmlMessage, IReadOnlyList<string> attachments = null)
+        {
+            var mailMessage = CreateMailMessage(
+                toEmail,
+                RobotEmail,
+                RobotEmail,
+                $"{AppName} Robot",
+                htmlMessage);
+
+            var client = CreateClient();
+            client.Send(mailMessage);
+            return Task.CompletedTask;
+        }
+
+        public Task SendEmailAsync(string toEmail, string subject, string htmlMessage, IReadOnlyList<string> attachments = null)
+        {
+            var mailMessage = CreateMailMessage(
+                toEmail,
+                DefaultEmail,
+                DefaultEmail,
+                AppName,
+                htmlMessage);
+
+            var client = CreateClient();
+            client.Send(mailMessage);
+            return Task.CompletedTask;
+        }
+
+        private SmtpClient CreateClient()
         {
             var client = new SmtpClient("smtp.mandrillapp.com", 587)
             {
                 UseDefaultCredentials = false,
                 Credentials = new NetworkCredential("PurchasingTool", "qbm_XHdv5CerLGRZJpYWfQ")
             };
+            return client;
+        }
 
+        private MailMessage CreateMailMessage(
+            string toEmail,
+            string fromEmail,
+            string replyTo,
+            string subject,
+            string htmlMessage,
+            IReadOnlyList<string> attachments = null)
+        {
             var mailMessage = new MailMessage
             {
-                Sender = new MailAddress("donotreply@digitalpurchasing.com", "DigitalPurchasing.com"),
-                From = new MailAddress("donotreply@digitalpurchasing.com", "DigitalPurchasing.com"),
+                Sender = new MailAddress(fromEmail, AppName),
+                From = new MailAddress(fromEmail, AppName)
             };
 
-            var defaultMailAddress = new MailAddress("hello@digitalpurchasing.com", "DigitalPurchasing.com");
+            mailMessage.ReplyToList.Add(new MailAddress(replyTo, AppName));
 
-            switch (replyTo)
-            {
-                case ReplyTo.Hello:
-                    mailMessage.ReplyToList.Add(defaultMailAddress);
-                    break;
-                case ReplyTo.App:
-                    mailMessage.ReplyToList.Add(new MailAddress("app@digitalpurchasing.com", "DigitalPurchasing.com"));
-                    break;
-                default:
-                    mailMessage.ReplyToList.Add(defaultMailAddress);
-                    break;
-            }
-            
-            mailMessage.To.Add(email);
+            mailMessage.To.Add(toEmail);
             mailMessage.Body = htmlMessage;
             mailMessage.Subject = subject;
             mailMessage.IsBodyHtml = true;
-            client.Send(mailMessage);
-            return Task.FromResult(true);
+
+            if (attachments != null && attachments.Any())
+            {
+                foreach (var attachment in attachments)
+                {
+                    mailMessage.Attachments.Add(new Attachment(attachment));
+                }
+            }
+
+            return mailMessage;
         }
+
     }
 }

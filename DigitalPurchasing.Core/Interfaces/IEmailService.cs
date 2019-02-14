@@ -1,15 +1,14 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace DigitalPurchasing.Core.Interfaces
 {
     public interface IEmailService
     {
-        Task SendEmailAsync(string email, string subject, string htmlMessage, ReplyTo replyTo = ReplyTo.Hello);
-    }
+        Task SendEmailAsync(string toEmail, string subject, string htmlMessage,
+            IReadOnlyList<string> attachments = null);
 
-    public enum ReplyTo
-    {
-        Hello,
-        App
+        Task SendFromRobotAsync(string toEmail, string subject, string htmlMessage,
+            IReadOnlyList<string> attachments = null);
     }
 }
