@@ -18,8 +18,10 @@ namespace DigitalPurchasing.Services
             var mailMessage = CreateMailMessage(
                 toEmail,
                 RobotEmail,
+                $"{AppName} Robot",
                 RobotEmail,
                 $"{AppName} Robot",
+                subject,
                 htmlMessage);
 
             var client = CreateClient();
@@ -32,8 +34,10 @@ namespace DigitalPurchasing.Services
             var mailMessage = CreateMailMessage(
                 toEmail,
                 DefaultEmail,
+                $"{AppName}",
                 DefaultEmail,
-                AppName,
+                $"{AppName}",
+                subject,
                 htmlMessage);
 
             var client = CreateClient();
@@ -54,18 +58,20 @@ namespace DigitalPurchasing.Services
         private MailMessage CreateMailMessage(
             string toEmail,
             string fromEmail,
-            string replyTo,
+            string fromName,
+            string replyToEmail,
+            string replyToName,
             string subject,
             string htmlMessage,
             IReadOnlyList<string> attachments = null)
         {
             var mailMessage = new MailMessage
             {
-                Sender = new MailAddress(fromEmail, AppName),
-                From = new MailAddress(fromEmail, AppName)
+                Sender = new MailAddress(fromEmail, fromName),
+                From = new MailAddress(fromEmail, fromName)
             };
 
-            mailMessage.ReplyToList.Add(new MailAddress(replyTo, AppName));
+            mailMessage.ReplyToList.Add(new MailAddress(replyToEmail, replyToName));
 
             mailMessage.To.Add(toEmail);
             mailMessage.Body = htmlMessage;
