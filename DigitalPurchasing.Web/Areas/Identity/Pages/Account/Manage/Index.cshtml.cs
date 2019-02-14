@@ -118,7 +118,7 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
             _companyService.UpdateName(user.Id, Input.CompanyName);
 
             await _signInManager.RefreshSignInAsync(user);
-            StatusMessage = "Your profile has been updated";
+            StatusMessage = "Ваш профиль был обновлен";
             return RedirectToPage();
         }
 
