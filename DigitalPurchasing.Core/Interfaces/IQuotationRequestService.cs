@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace DigitalPurchasing.Core.Interfaces
 {
@@ -11,6 +11,7 @@ namespace DigitalPurchasing.Core.Interfaces
         QuotationRequestVm GetById(Guid id);
         QuotationRequestViewData GetViewData(Guid qrId);
         DeleteResultVm Delete(Guid id);
+        Task SendRequests(Guid userId, Guid quotationRequestId, IReadOnlyList<Guid> suppliers);
     }
 
     public class QuotationRequestIndexDataItem

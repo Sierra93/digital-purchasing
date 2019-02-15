@@ -30,5 +30,14 @@ namespace DigitalPurchasing.Core.Extensions
 
             return str;
         }
+
+        public static string ToMD5(this string str)
+        {
+            using (var md5 = MD5.Create())
+            {
+                var result = md5.ComputeHash(Encoding.UTF8.GetBytes(str));
+                return Encoding.UTF8.GetString(result);
+            }
+        }
     }
 }

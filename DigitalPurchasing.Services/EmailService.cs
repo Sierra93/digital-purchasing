@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
+using System.Text;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core.Interfaces;
 
@@ -22,7 +23,7 @@ namespace DigitalPurchasing.Services
                 RobotEmail,
                 $"{AppName} Robot",
                 subject,
-                htmlMessage);
+                htmlMessage, attachments);
 
             var client = CreateClient();
             client.Send(mailMessage);
@@ -38,7 +39,7 @@ namespace DigitalPurchasing.Services
                 DefaultEmail,
                 $"{AppName}",
                 subject,
-                htmlMessage);
+                htmlMessage, attachments);
 
             var client = CreateClient();
             client.Send(mailMessage);
@@ -77,6 +78,7 @@ namespace DigitalPurchasing.Services
             mailMessage.Body = htmlMessage;
             mailMessage.Subject = subject;
             mailMessage.IsBodyHtml = true;
+            mailMessage.HeadersEncoding = Encoding.UTF8;
 
             if (attachments != null && attachments.Any())
             {

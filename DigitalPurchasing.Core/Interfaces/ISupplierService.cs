@@ -16,6 +16,7 @@ namespace DigitalPurchasing.Core.Interfaces
         Guid EditContactPerson(SupplierContactPersonVm vm);
         SupplierContactPersonVm GetContactPersonsById(Guid personId);
         void DeleteContactPerson(Guid personId);
+        SupplierContactPersonVm GetContactPersonBySupplier(Guid supplierId);
     }
 
     public class SupplierAutocomplete

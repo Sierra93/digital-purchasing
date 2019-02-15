@@ -7,7 +7,7 @@ namespace DigitalPurchasing.Emails.EmailTemplates
         public class FromData
         {
             public string Name { get; set; }
-            public string Position { get; set; }
+            public string JobTitle { get; set; }
             public string Company { get; set; }
         }
 

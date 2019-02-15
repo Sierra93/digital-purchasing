@@ -1,11 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using System.Threading.Tasks;
 using DigitalPurchasing.Core;
+using DigitalPurchasing.Core.Extensions;
+using DigitalPurchasing.Emails;
+using DigitalPurchasing.ExcelReader;
 using DigitalPurchasing.Models;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
@@ -18,17 +23,26 @@ namespace DigitalPurchasing.Services
         private readonly ICounterService _counterService;
         private readonly IPurchaseRequestService _purchaseRequestService;
         private readonly IDeliveryService _deliveryService;
+        private readonly ISupplierService _supplierService;
+        private readonly IEmailService _emailService;
+        private readonly IUserService _userService;
 
         public QuotationRequestService(
             ApplicationDbContext db,
             ICounterService counterService,
             IPurchaseRequestService purchaseRequestService,
-            IDeliveryService deliveryService)
+            IDeliveryService deliveryService,
+            ISupplierService supplierService,
+            IEmailService emailService,
+            IUserService userService)
         {
             _db = db;
             _counterService = counterService;
             _purchaseRequestService = purchaseRequestService;
             _deliveryService = deliveryService;
+            _supplierService = supplierService;
+            _emailService = emailService;
+            _userService = userService;
         }
 
         public QuotationRequestIndexData GetData(int page, int perPage, string sortField, bool sortAsc)
@@ -149,6 +163,74 @@ namespace DigitalPurchasing.Services
                     transaction.Rollback();
                     return DeleteResultVm.Failure("Внутренняя ошибка. Обратитесь в службу поддержки");
                 }
+            }
+        }
+
+        public async Task SendRequests(Guid userId, Guid quotationRequestId, IReadOnlyList<Guid> suppliers)
+        {
+            var qr = GetById(quotationRequestId);
+            if (qr == null) return;
+
+            // get supplier contacts
+            var contacts = suppliers.Select(supplierId => _supplierService.GetContactPersonBySupplier(supplierId))
+                .Where(q => q != null)
+                .ToList();
+
+            if (!contacts.Any()) return;
+
+            // create excel and save
+            var excelBytes = GenerateExcelForQR(quotationRequestId);
+            var filename = $"RFQ_{qr.CreatedOn:yyyyMMdd}_{qr.PublicId}.xlsx";
+            var filepath = Path.Combine(Path.GetTempPath(), filename);
+            using (var fs = new FileStream(filepath, FileMode.Create, FileAccess.Write))
+            {
+                fs.Write(excelBytes, 0, excelBytes.Length);
+            }
+            
+            // send emails for each contact
+            var emailUid = QuotationRequestToUid(quotationRequestId);
+            var userInfo = _userService.GetUserInfo(userId);
+            foreach (var contact in contacts)
+            {
+                await _emailService.SendRFQEmail(qr, userInfo, contact, emailUid, filepath);
+            }
+        }
+
+        private byte[] GenerateExcelForQR(Guid quotationRequestId)
+        {
+            var data = GetViewData(quotationRequestId);
+            var items = data.GetCompanyItems().Adapt<IEnumerable<ExcelQr.DataItem>>();
+            var excel = new ExcelQr();
+            var bytes = excel.Build(items);
+            return bytes;
+        }
+
+        public string QuotationRequestToUid(Guid quotationRequestId)
+        {
+            var qr = _db.QuotationRequests.Find(quotationRequestId);
+            var md5Time = qr.CreatedOn.ToString("hh:mm:ss").ToMD5().Substring(0, 4).ToUpperInvariant();
+            return $"RFQ-{qr.CreatedOn:yyMMdd}-{qr.PublicId}-{md5Time}";
+        }
+
+        public Guid UidToQuotationRequest(string uid)
+        {
+            if (string.IsNullOrEmpty(uid) || !uid.StartsWith("RFQ-")) return Guid.Empty;
+
+            var parts = uid.Split('-');
+            var date = DateTime.ParseExact(parts[1], "yyMMdd", CultureInfo.InvariantCulture);
+            var id = int.Parse(parts[2]);
+            var strTime = parts[3];
+
+            var qrs = _db.QuotationRequests.IgnoreQueryFilters().Where(q => q.PublicId == id && q.CreatedOn.Date == date).ToList();
+            if (qrs.Count == 1)
+            {
+                return qrs[0].Id;
+            }
+            else
+            {
+                var qr = qrs.FirstOrDefault(q =>
+                    q.CreatedOn.ToString("hh:mm:ss").ToMD5().Substring(0, 4).ToUpperInvariant() == strTime);
+                return qr?.Id ?? Guid.Empty;
             }
         }
     }

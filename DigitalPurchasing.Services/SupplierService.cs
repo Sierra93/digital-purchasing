@@ -107,5 +107,13 @@ namespace DigitalPurchasing.Services
             _db.SupplierContactPersons.Remove(person);
             _db.SaveChanges();
         }
+
+        public SupplierContactPersonVm GetContactPersonBySupplier(Guid supplierId)
+        {
+            var supplierContactPerson = _db.SupplierContactPersons
+                .FirstOrDefault(q => q.SupplierId == supplierId && q.UseForRequests);
+
+            return supplierContactPerson?.Adapt<SupplierContactPersonVm>();
+        }
     }
 }

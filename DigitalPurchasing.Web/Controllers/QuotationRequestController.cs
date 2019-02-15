@@ -13,7 +13,7 @@ using Newtonsoft.Json;
 
 namespace DigitalPurchasing.Web.Controllers
 {
-    public class QuotationRequestController : Controller
+    public class QuotationRequestController : BaseController
     {
         public class SentRequestsModel
         {
@@ -25,15 +25,18 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly IQuotationRequestService _quotationRequestService;
         private readonly IPurchaseRequestService _purchaseRequestService;
         private readonly IEmailService _emailService;
+        private readonly ITenantService _tenantService;
 
         public QuotationRequestController(
             IQuotationRequestService quotationRequestService,
             IPurchaseRequestService purchaseRequestService,
-            IEmailService emailService)
+            IEmailService emailService,
+            ITenantService tenantService)
         {
             _quotationRequestService = quotationRequestService;
             _purchaseRequestService = purchaseRequestService;
             _emailService = emailService;
+            _tenantService = tenantService;
         }
 
         public IActionResult Index() => View();
@@ -95,7 +98,8 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> SentRequests([FromBody] SentRequestsModel model)
         {
-            //await _emailService.SendEmailAsync();
+            var userId = _tenantService.Get().UserId;
+            await _quotationRequestService.SendRequests(userId, model.QuotationRequestId, model.Suppliers);
             return Ok(model);
         }
     }

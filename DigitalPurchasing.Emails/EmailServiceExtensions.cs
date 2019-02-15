@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core.Extensions;
@@ -37,20 +38,30 @@ namespace DigitalPurchasing.Emails
         }
 
         public static async Task SendRFQEmail(this IEmailService emailService,
-            string toEmail,
-            string toName,
-            DateTime requestCreated,
-            int requestId)
+            QuotationRequestVm quotationRequest,
+            UserInfoDto userInfo,
+            SupplierContactPersonVm supplierContact,
+            string emailUid,
+            string attachment)
         {
-            var subject = $"RFQ_{requestCreated:yyyyMMdd}_{requestId}";
+            var subject = $"[{emailUid}] Запрос коммерческого предложения №{quotationRequest.PublicId}";
 
+            var until = DateTime.UtcNow.AddDays(3).ToRussianStandardTime();
 
-            var requestCreatedTime = requestCreated.ToRussianStandardTime();
-
-            var model = new RFQEmail();
+            var model = new RFQEmail
+            {
+                From =
+                {
+                    Name = $"{userInfo.LastName} {userInfo.FirstName}",
+                    JobTitle = userInfo.JobTitle,
+                    Company = userInfo.Company,
+                },
+                Until = until,
+                ToName = supplierContact.LastName
+            };
 
             var htmlResult = await GetHtmlString(model);
-            await emailService.SendEmailAsync(toEmail, subject, htmlResult);
+            await emailService.SendEmailAsync(supplierContact.Email, subject, htmlResult, new List<string> { attachment });
         }
     }
 }
