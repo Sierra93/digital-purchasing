@@ -11,6 +11,7 @@ namespace DigitalPurchasing.Services
     public class EmailService : IEmailService
     {
         private const string AppName = "DigitalPurchasing.com";
+        private const string SenderEmail = "donotreply@digitalpurchasing.com";
         private const string RobotEmail = "app@digitalpurchasing.com";
         private const string DefaultEmail = "hello@digitalpurchasing.com";
 
@@ -18,10 +19,9 @@ namespace DigitalPurchasing.Services
         {
             var mailMessage = CreateMailMessage(
                 toEmail,
-                RobotEmail,
-                $"{AppName} Robot",
-                RobotEmail,
-                $"{AppName} Robot",
+                RobotEmail, $"{AppName} Robot", // from
+                RobotEmail, $"{AppName} Robot", // reply to
+                SenderEmail, $"{AppName}",      // sender
                 subject,
                 htmlMessage, attachments);
 
@@ -34,10 +34,9 @@ namespace DigitalPurchasing.Services
         {
             var mailMessage = CreateMailMessage(
                 toEmail,
-                DefaultEmail,
-                $"{AppName}",
-                DefaultEmail,
-                $"{AppName}",
+                DefaultEmail, $"{AppName}", // from
+                DefaultEmail, $"{AppName}", // reply to
+                SenderEmail, $"{AppName}",  // sender
                 subject,
                 htmlMessage, attachments);
 
@@ -62,13 +61,15 @@ namespace DigitalPurchasing.Services
             string fromName,
             string replyToEmail,
             string replyToName,
+            string senderEmail,
+            string senderName,
             string subject,
             string htmlMessage,
             IReadOnlyList<string> attachments = null)
         {
             var mailMessage = new MailMessage
             {
-                Sender = new MailAddress(fromEmail, fromName),
+                Sender = new MailAddress(senderEmail, senderName),
                 From = new MailAddress(fromEmail, fromName)
             };
 
@@ -90,6 +91,5 @@ namespace DigitalPurchasing.Services
 
             return mailMessage;
         }
-
     }
 }

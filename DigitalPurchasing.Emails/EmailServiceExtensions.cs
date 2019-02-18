@@ -61,7 +61,7 @@ namespace DigitalPurchasing.Emails
             };
 
             var htmlResult = await GetHtmlString(model);
-            await emailService.SendEmailAsync(supplierContact.Email, subject, htmlResult, new List<string> { attachment });
+            await emailService.SendFromRobotAsync(supplierContact.Email, subject, htmlResult, new List<string> { attachment });
         }
     }
 }
