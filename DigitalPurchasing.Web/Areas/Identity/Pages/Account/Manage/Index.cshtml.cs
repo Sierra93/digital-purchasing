@@ -52,6 +52,16 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
 
             [Required, Display(Name = "Название организации")]
             public string CompanyName { get; set; }
+
+            [Required, Display(Name = "Имя")]
+            public string FirstName { get; set; }
+            [Required, Display(Name = "Фамилия")]
+            public string LastName { get; set; }
+            [Display(Name = "Отчество")]
+            public string Patronymic { get; set; }
+
+            [Required, Display(Name = "Должность")]
+            public string JobTitle { get; set; }
         }
 
         public async Task<IActionResult> OnGetAsync()
@@ -72,7 +82,11 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
             {
                 Email = email,
                 PhoneNumber = phoneNumber,
-                CompanyName = _companyService.GetByUser(user.Id).Name
+                CompanyName = _companyService.GetByUser(user.Id).Name,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Patronymic = user.Patronymic,
+                JobTitle = user.JobTitle
             };
 
             IsEmailConfirmed = await _userManager.IsEmailConfirmedAsync(user);
@@ -92,6 +106,12 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
             {
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
+
+            user.FirstName = Input.FirstName;
+            user.LastName = Input.LastName;
+            user.Patronymic = Input.Patronymic;
+            user.JobTitle = Input.JobTitle;
+            await _userManager.UpdateAsync(user);
 
             var email = await _userManager.GetEmailAsync(user);
             if (Input.Email != email)

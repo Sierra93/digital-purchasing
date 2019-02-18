@@ -22,10 +22,10 @@ namespace DigitalPurchasing.Services
             return new UserInfoDto
             {
                 Company = user.Company.Name,
-                LastName = "Фамилия",
-                FirstName = "Имя",
-                Patronymic = "Отчество",
-                JobTitle = "Должность"
+                LastName = user.LastName,
+                FirstName = user.FirstName,
+                Patronymic = user.Patronymic,
+                JobTitle = user.JobTitle
             };
         }
     }
