@@ -1,95 +1,78 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Mail;
-using System.Text;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core.Interfaces;
+using Mandrill;
+using Mandrill.Model;
 
 namespace DigitalPurchasing.Services
 {
     public class EmailService : IEmailService
     {
+        private readonly IMandrillMessagesApi _messages;
+
         private const string AppName = "DigitalPurchasing.com";
-        private const string SenderEmail = "donotreply@digitalpurchasing.com";
         private const string RobotEmail = "app@digitalpurchasing.com";
         private const string DefaultEmail = "hello@digitalpurchasing.com";
 
-        public Task SendFromRobotAsync(string toEmail, string subject, string htmlMessage, IReadOnlyList<string> attachments = null)
+        public EmailService(IMandrillMessagesApi messages)
+            => _messages = messages;
+
+        public async Task SendFromRobotAsync(string toEmail, string subject, string htmlMessage, IReadOnlyList<string> attachments = null)
         {
             var mailMessage = CreateMailMessage(
                 toEmail,
                 RobotEmail, $"{AppName} Robot", // from
                 RobotEmail, $"{AppName} Robot", // reply to
-                SenderEmail, $"{AppName}",      // sender
                 subject,
                 htmlMessage, attachments);
 
-            var client = CreateClient();
-            client.Send(mailMessage);
-            return Task.CompletedTask;
+            await _messages.SendAsync(mailMessage);
         }
 
-        public Task SendEmailAsync(string toEmail, string subject, string htmlMessage, IReadOnlyList<string> attachments = null)
+        public async Task SendEmailAsync(string toEmail, string subject, string htmlMessage, IReadOnlyList<string> attachments = null)
         {
             var mailMessage = CreateMailMessage(
                 toEmail,
                 DefaultEmail, $"{AppName}", // from
                 DefaultEmail, $"{AppName}", // reply to
-                SenderEmail, $"{AppName}",  // sender
                 subject,
                 htmlMessage, attachments);
 
-            var client = CreateClient();
-            client.Send(mailMessage);
-            return Task.CompletedTask;
+            await _messages.SendAsync(mailMessage);
         }
 
-        private SmtpClient CreateClient()
-        {
-            var client = new SmtpClient("smtp.mandrillapp.com", 587)
-            {
-                UseDefaultCredentials = false,
-                Credentials = new NetworkCredential("PurchasingTool", "qbm_XHdv5CerLGRZJpYWfQ")
-            };
-            return client;
-        }
-
-        private MailMessage CreateMailMessage(
+        private MandrillMessage CreateMailMessage(
             string toEmail,
             string fromEmail,
             string fromName,
             string replyToEmail,
             string replyToName,
-            string senderEmail,
-            string senderName,
             string subject,
             string htmlMessage,
             IReadOnlyList<string> attachments = null)
         {
-            var mailMessage = new MailMessage
-            {
-                Sender = new MailAddress(senderEmail, senderName),
-                From = new MailAddress(fromEmail, fromName)
-            };
-
-            mailMessage.ReplyToList.Add(new MailAddress(replyToEmail, replyToName));
-
-            mailMessage.To.Add(toEmail);
-            mailMessage.Body = htmlMessage;
-            mailMessage.Subject = subject;
-            mailMessage.IsBodyHtml = true;
-            mailMessage.HeadersEncoding = Encoding.UTF8;
+            var message = new MandrillMessage();
+            message.AddTo(toEmail);
+            message.FromEmail = fromEmail;
+            message.FromName = fromName;
+            message.ReplyTo = $"{replyToName} <{replyToEmail}>";
+            message.Subject = subject;
+            message.Html = htmlMessage;
 
             if (attachments != null && attachments.Any())
             {
                 foreach (var attachment in attachments)
                 {
-                    mailMessage.Attachments.Add(new Attachment(attachment));
+                    var filename = Path.GetFileName(attachment);
+                    var type = MimeTypes.GetMimeType(filename);
+                    var bytes = File.ReadAllBytes(attachment);
+                    message.Attachments.Add(new MandrillAttachment(type, filename, bytes));
                 }
             }
 
-            return mailMessage;
+            return message;
         }
     }
 }

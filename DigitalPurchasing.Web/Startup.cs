@@ -23,6 +23,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.ExcelReader;
+using DigitalPurchasing.Web.Jobs;
 using Hangfire;
 using Microsoft.AspNetCore.Localization;
 
@@ -97,6 +98,8 @@ namespace DigitalPurchasing.Web
             services.AddScoped<ISupplierService, SupplierService>();
             services.AddScoped<IAnalysisService, AnalysisService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IRobotEmailService, RobotEmailService>();
+            services.AddMandrill();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -35,8 +35,13 @@ namespace DigitalPurchasing.Core.Extensions
         {
             using (var md5 = MD5.Create())
             {
-                var result = md5.ComputeHash(Encoding.UTF8.GetBytes(str));
-                return Encoding.UTF8.GetString(result);
+                var bytes = md5.ComputeHash(Encoding.UTF8.GetBytes(str));
+                var sb = new StringBuilder();
+                for (var i = 0; i < bytes.Length; i++)
+                {
+                    sb.Append(bytes[i].ToString("x2"));
+                }
+                return sb.ToString();
             }
         }
     }
