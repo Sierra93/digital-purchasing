@@ -22,19 +22,22 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly ICompanyService _companyService;
         private readonly UserManager<User> _userManager;
         private readonly IUomService _uomService;
+        private readonly ITenantService _tenantService;
 
         public PurchaseRequestController(
             IPurchaseRequestService purchasingRequestService,
             INomenclatureService nomenclatureService,
             ICompanyService companyService,
             UserManager<User> userManager,  
-            IUomService uomService)
+            IUomService uomService,
+            ITenantService tenantService)
         {
             _purchasingRequestService = purchasingRequestService;
             _nomenclatureService = nomenclatureService;
             _companyService = companyService;
             _userManager = userManager;
             _uomService = uomService;
+            _tenantService = tenantService;
         }
 
         public IActionResult Edit(Guid id)
@@ -75,7 +78,9 @@ namespace DigitalPurchasing.Web.Controllers
             using (var output = System.IO.File.Create(filePath))
                 await file.CopyToAsync(output);
 
-            var response = _purchasingRequestService.CreateFromFile(filePath);
+            var ownerId = _tenantService.Get().CompanyId;
+
+            var response = _purchasingRequestService.CreateFromFile(filePath, ownerId);
             if (!response.IsSuccess)
             {
                 TempData["Message"] = response.Message;

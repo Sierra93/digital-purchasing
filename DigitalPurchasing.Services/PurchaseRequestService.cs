@@ -47,9 +47,9 @@ namespace DigitalPurchasing.Services
             _customerService = customerService;
         }
 
-        public CreateFromFileResponse CreateFromFile(string filePath)
+        public CreateFromFileResponse CreateFromFile(string filePath, Guid ownerId)
         {
-            var result = _excelRequestReader.ToTable(filePath);
+            var result = _excelRequestReader.ToTable(filePath, ownerId);
             if (result == null || !result.IsSuccess) return new CreateFromFileResponse { IsSuccess = false, Message = result?.Message };
 
             var entry = _db.PurchaseRequests.Add(new PurchaseRequest
@@ -57,10 +57,12 @@ namespace DigitalPurchasing.Services
                 UploadedDocument = new UploadedDocument
                 {
                     Data = JsonConvert.SerializeObject(result.Table),
-                    Headers = new UploadedDocumentHeaders()
+                    Headers = new UploadedDocumentHeaders(),
+                    OwnerId = ownerId
                 },
                 Status = PurchaseRequestStatus.MatchColumns,
-                PublicId = _counterService.GetPRNextId()
+                PublicId = _counterService.GetPRNextId(ownerId),
+                OwnerId = ownerId
             });
 
             _db.SaveChanges();

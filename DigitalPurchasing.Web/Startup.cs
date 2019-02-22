@@ -99,6 +99,8 @@ namespace DigitalPurchasing.Web
             services.AddScoped<IAnalysisService, AnalysisService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRobotEmailService, RobotEmailService>();
+            services.AddScoped<IEmailProcessor, RFQEmailProcessor>();
+            services.AddScoped<IReceivedEmailService, ReceivedEmailService>();
             services.AddMandrill();
         }
 
@@ -153,6 +155,8 @@ namespace DigitalPurchasing.Web
             {
                 Authorization = new [] { new HangfireDashboardAuthorizationFilter() }
             });
+
+            RecurringJob.AddOrUpdate<EmailJobs>("check-app-email", q => q.CheckAppEmail(), Cron.MinuteInterval(5));
         }
     }
 }

@@ -12,6 +12,8 @@ namespace DigitalPurchasing.Core.Interfaces
         QuotationRequestViewData GetViewData(Guid qrId);
         DeleteResultVm Delete(Guid id);
         Task SendRequests(Guid userId, Guid quotationRequestId, IReadOnlyList<Guid> suppliers);
+        string QuotationRequestToUid(Guid quotationRequestId);
+        Guid UidToQuotationRequest(string uid);
     }
 
     public class QuotationRequestIndexDataItem

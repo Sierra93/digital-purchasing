@@ -7,7 +7,7 @@ namespace DigitalPurchasing.Core.Interfaces
     public interface ISupplierOfferService
     {
         void UpdateStatus(Guid id, SupplierOfferStatus status);
-        void UpdateSupplierName(Guid id, string name, Guid? supplierId);
+        void UpdateSupplierName(Guid id, string name, Guid? supplierId, bool globalSearch = false);
         void UpdateDeliveryCost(Guid id, decimal deliveryCost);
 
         CreateFromFileResponse CreateFromFile(Guid competitionListId, string filePath);

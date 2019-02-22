@@ -5,7 +5,7 @@ namespace DigitalPurchasing.Core.Interfaces
 {
     public interface IPurchaseRequestService
     {
-        CreateFromFileResponse CreateFromFile(string filePath);
+        CreateFromFileResponse CreateFromFile(string filePath, Guid ownerId);
         PurchaseRequestDetailsResponse GetById(Guid id);
         PurchaseRequestColumnsResponse GetColumnsById(Guid id);
         void SaveColumns(Guid id, PurchaseRequestColumns purchasingRequestColumns);

@@ -57,6 +57,8 @@ namespace DigitalPurchasing.Data
         public DbSet<UploadedDocument> UploadedDocuments { get; set; }
         public DbSet<UploadedDocumentHeaders> UploadedDocumentHeaders { get; set; }
 
+        public DbSet<ReceivedEmail> ReceivedEmails { get; set; }
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ITenantService tenantService) : base(options) => _tenantService = tenantService;
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -179,13 +181,15 @@ namespace DigitalPurchasing.Data
 
         public override int SaveChanges()
         {
-            var companyId = _tenantService.Get().CompanyId;
-
             var addedEntities = ChangeTracker.Entries().Where(c => c.State == EntityState.Added).Select(q => q.Entity).ToList();
-
+            
             foreach (var entity in addedEntities.OfType<IHaveOwner>())
             {
-                entity.OwnerId = companyId;
+                if (entity.OwnerId == Guid.Empty)
+                {
+                    var companyId = _tenantService.Get().CompanyId;
+                    entity.OwnerId = companyId;
+                }
             }
 
             return base.SaveChanges();

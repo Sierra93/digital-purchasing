@@ -6,7 +6,7 @@ namespace DigitalPurchasing.Core.Interfaces
 {
     public interface IExcelRequestReader
     {
-        ExcelTableResponse ToTable(string filePath);
+        ExcelTableResponse ToTable(string filePath, Guid ownerId);
     }
 
     public class ExcelTable

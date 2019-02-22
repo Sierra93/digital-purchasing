@@ -12,7 +12,7 @@ namespace DigitalPurchasing.Tests
         public void ExcelRequestReaderTest()
         {
             var c1 = new ExcelRequestReader(new TestColumnNameService());
-            var result = c1.ToTable(@"c:\ru1.xlsx");
+            var result = c1.ToTable(@"c:\ru1.xlsx", Guid.Empty);
             Assert.True(result != null);
         }
 
@@ -25,7 +25,7 @@ namespace DigitalPurchasing.Tests
 
     public class TestColumnNameService : IColumnNameService
     {
-        public string[] GetNames(TableColumnType type)
+        public string[] GetNames(TableColumnType type, Guid ownerId)
         {
             switch (type)
             {

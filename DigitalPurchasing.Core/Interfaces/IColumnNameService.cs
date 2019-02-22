@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -5,7 +6,7 @@ namespace DigitalPurchasing.Core.Interfaces
 {
     public interface IColumnNameService
     {
-        string[] GetNames(TableColumnType type);
+        string[] GetNames(TableColumnType type, Guid ownerId);
         void SaveName(TableColumnType type, string name);
         void SaveAllNames(ColumnResponse model);
         ColumnResponse GetAllNames();

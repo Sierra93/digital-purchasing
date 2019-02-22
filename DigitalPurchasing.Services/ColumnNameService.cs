@@ -5,6 +5,7 @@ using System.Linq.Dynamic.Core;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 namespace DigitalPurchasing.Services
@@ -23,9 +24,11 @@ namespace DigitalPurchasing.Services
 
         public ColumnNameService(ApplicationDbContext db) => _db = db;
 
-        public string[] GetNames(TableColumnType type)
+        public string[] GetNames(TableColumnType type, Guid ownerId)
         {
-            var entity = _db.ColumnNames.AsQueryable().FirstOrDefault(q => q.Type == type);
+            var entity = _db.ColumnNames
+                .IgnoreQueryFilters()
+                .FirstOrDefault(q => q.Type == type && q.OwnerId == ownerId);
             if (entity == null) return new string[0];
             return entity.Names.Split(Separator);
         }

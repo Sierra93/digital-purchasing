@@ -58,12 +58,16 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
         }
 
-        public void UpdateSupplierName(Guid id, string name, Guid? supplierId)
+        public void UpdateSupplierName(Guid id, string name, Guid? supplierId, bool globalSearch = false)
         {
             name = supplierId.HasValue
                 ? _supplierService.GetNameById(supplierId.Value)
                 : string.IsNullOrEmpty(name) ? null : name.Trim();
-            var so = _db.SupplierOffers.Find(id);
+
+            var qry = _db.SupplierOffers.AsQueryable();
+            if (globalSearch) qry = qry.IgnoreQueryFilters();
+
+            var so = qry.First(q => q.Id == id);
             so.SupplierName = name;
             so.SupplierId = supplierId;
             _db.SaveChanges();
@@ -77,20 +81,25 @@ namespace DigitalPurchasing.Services
 
         public CreateFromFileResponse CreateFromFile(Guid competitionListId, string filePath)
         {
-            var result = _excelRequestReader.ToTable(filePath);
-            if (result == null || !result.IsSuccess) return new CreateFromFileResponse { IsSuccess = false, Message = result?.Message };
+            var competitionList = _db.CompetitionLists.IgnoreQueryFilters().First(q => q.Id == competitionListId);
+            var ownerId = competitionList.OwnerId;
 
+            var result = _excelRequestReader.ToTable(filePath, ownerId);
+            if (result == null || !result.IsSuccess) return new CreateFromFileResponse { IsSuccess = false, Message = result?.Message };
+            
             var entry = _db.SupplierOffers.Add(new SupplierOffer
             {
                 CompetitionListId = competitionListId,
                 UploadedDocument = new UploadedDocument
                 {
                     Data = JsonConvert.SerializeObject(result.Table),
-                    Headers = new UploadedDocumentHeaders()
+                    Headers = new UploadedDocumentHeaders(),
+                    OwnerId = ownerId,
                 },
                 Status = SupplierOfferStatus.MatchColumns,
-                PublicId = _counterService.GetSONextId(),
-                CurrencyId = _currencyService.GetDefaultCurrency(_tenantService.Get().CompanyId).Id
+                OwnerId = ownerId,
+                PublicId = _counterService.GetSONextId(ownerId),
+                CurrencyId = _currencyService.GetDefaultCurrency(ownerId).Id
             });
 
             _db.SaveChanges();

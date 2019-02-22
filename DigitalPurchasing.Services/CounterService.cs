@@ -14,15 +14,23 @@ namespace DigitalPurchasing.Services
 
         public CounterService(ApplicationDbContext db) => _db = db;
 
-        private int GetNextId<TEntity>() where TEntity : Counter, new()
+        private int GetNextId<TEntity>(Guid? ownerId) where TEntity : Counter, new()
         {
             var dbSet = _db.Set<TEntity>();
 
-            var counter = dbSet.FirstOrDefault();
+            var counter = ownerId.HasValue
+                ? dbSet.IgnoreQueryFilters().FirstOrDefault(q => q.OwnerId == ownerId.Value)
+                : dbSet.FirstOrDefault();
+
             if (counter == null)
             {
-                var counterEntry = dbSet.Add(new TEntity { CurrentId = 0 });
-                 _db.SaveChanges();
+                var entity = new TEntity {CurrentId = 0};
+                if (ownerId.HasValue)
+                {
+                    entity.OwnerId = ownerId.Value;
+                }
+                var counterEntry = dbSet.Add(entity);
+                _db.SaveChanges();
                 counter = counterEntry.Entity;
             }
 
@@ -69,12 +77,12 @@ namespace DigitalPurchasing.Services
             return nextId;
         }
 
-        public int GetQRNextId() => GetNextId<QRCounter>();
+        public int GetQRNextId(Guid? ownerId = null) => GetNextId<QRCounter>(ownerId);
 
-        public int GetPRNextId() => GetNextId<PRCounter>();
+        public int GetPRNextId(Guid? ownerId = null) => GetNextId<PRCounter>(ownerId);
 
-        public int GetCLNextId() => GetNextId<CLCounter>();
+        public int GetCLNextId(Guid? ownerId = null) => GetNextId<CLCounter>(ownerId);
 
-        public int GetSONextId() => GetNextId<SOCounter>();
+        public int GetSONextId(Guid? ownerId = null) => GetNextId<SOCounter>(ownerId);
     }
 }

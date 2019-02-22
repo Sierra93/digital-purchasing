@@ -51,23 +51,31 @@ namespace DigitalPurchasing.Services
             };
         }
 
-        public Guid GetId(Guid qrId)
+        public Guid GetIdByQR(Guid qrId, bool globalSearch)
         {
-            var quotationRequest = _db.CompetitionLists.FirstOrDefault(q => q.QuotationRequestId == qrId);
-            if (quotationRequest != null)
+            var qry = _db.CompetitionLists.AsQueryable();
+            if (globalSearch)
             {
-                return quotationRequest.Id;
+                qry = qry.IgnoreQueryFilters();
             }
 
-            return Create(qrId);
+            var competitionList = qry.FirstOrDefault(q => q.QuotationRequestId == qrId);
+            if (competitionList != null)
+            {
+                return competitionList.Id;
+            }
+
+            return CreateFromQR(qrId);
         }
 
-        private Guid Create(Guid qrId)
+        private Guid CreateFromQR(Guid qrId)
         {
+            var qr = _db.QuotationRequests.IgnoreQueryFilters().First(q => q.Id == qrId);
             var entity = new CompetitionList
             {
-                PublicId = _counterService.GetCLNextId(),
-                QuotationRequestId = qrId
+                PublicId = _counterService.GetCLNextId(qr.OwnerId),
+                QuotationRequestId = qr.Id,
+                OwnerId = qr.OwnerId
             };
             var entry = _db.CompetitionLists.Add(entity);
             _db.SaveChanges();

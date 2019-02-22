@@ -44,7 +44,7 @@ namespace DigitalPurchasing.Web.Controllers
 
         public IActionResult Create([FromQuery]Guid qrId)
         {
-            var id = _competitionListService.GetId(qrId);
+            var id = _competitionListService.GetIdByQR(qrId, false);
             if (id == Guid.Empty) return NotFound();
             return RedirectToAction(nameof(Edit), new { id });
         }

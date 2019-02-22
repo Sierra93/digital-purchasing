@@ -1,10 +1,12 @@
+using System;
+
 namespace DigitalPurchasing.Core.Interfaces
 {
     public interface ICounterService
     {
-        int GetQRNextId();
-        int GetPRNextId();
-        int GetCLNextId();
-        int GetSONextId();
+        int GetQRNextId(Guid? ownerId = null);
+        int GetPRNextId(Guid? ownerId = null);
+        int GetCLNextId(Guid? ownerId = null);
+        int GetSONextId(Guid? ownerId = null);
     }
 }

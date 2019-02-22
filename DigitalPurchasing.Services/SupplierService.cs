@@ -7,6 +7,7 @@ using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
 using Mapster;
+using Microsoft.EntityFrameworkCore;
 
 namespace DigitalPurchasing.Services
 {
@@ -63,7 +64,15 @@ namespace DigitalPurchasing.Services
             };
         }
 
-        public SupplierVm GetById(Guid id) => _db.Suppliers.Find(id)?.Adapt<SupplierVm>();
+        public SupplierVm GetById(Guid id) => GetById(id, false);
+
+        public SupplierVm GetById(Guid id, bool globalSearch)
+        {
+            var qry = _db.Suppliers.AsQueryable();
+            if (globalSearch) qry = qry.IgnoreQueryFilters();
+
+            return qry.FirstOrDefault(q => q.Id == id)?.Adapt<SupplierVm>();
+        }
 
         public List<SupplierContactPersonVm> GetContactPersonsBySupplier(Guid supplierId)
             => _db.SupplierContactPersons
@@ -114,6 +123,14 @@ namespace DigitalPurchasing.Services
                 .FirstOrDefault(q => q.SupplierId == supplierId && q.UseForRequests);
 
             return supplierContactPerson?.Adapt<SupplierContactPersonVm>();
+        }
+
+        public Guid GetSupplierByEmail(string email)
+        {
+            var supplierContactPerson = _db.SupplierContactPersons.IgnoreQueryFilters()
+                .FirstOrDefault(q => q.Email.Equals(email) && q.UseForRequests);
+
+            return supplierContactPerson?.SupplierId ?? Guid.Empty;
         }
     }
 }

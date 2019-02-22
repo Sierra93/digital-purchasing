@@ -26,9 +26,10 @@ namespace DigitalPurchasing.ExcelReader
 
         private readonly IColumnNameService _columnNameService;
 
-        public ExcelRequestReader(IColumnNameService columnNameService) => _columnNameService = columnNameService;
+        public ExcelRequestReader(IColumnNameService columnNameService)
+            => _columnNameService = columnNameService;
 
-        public ExcelTableResponse ToTable(string path)
+        public ExcelTableResponse ToTable(string path, Guid ownerId)
         {
             var ext = Path.GetExtension(path).ToLower();
             if (ext == ".xls")
@@ -55,14 +56,14 @@ namespace DigitalPurchasing.ExcelReader
                 var tempColumnDatas = new List<TempColumnData>();
 
                 var defaultNameAddr = SearchHeaderAddresses(ws, true, "Наименование", "Name");
-                var nameAddr = SearchHeaderAddresses(ws, false, _columnNameService.GetNames(TableColumnType.Name));
+                var nameAddr = SearchHeaderAddresses(ws, false, _columnNameService.GetNames(TableColumnType.Name, ownerId));
 
                 if (defaultNameAddr.Count == 0 && nameAddr.Count == 0) return ExcelTableResponse.Error(CantFindColumnWithName);
 
-                var codeAddr = SearchHeaderAddresses(ws, false, _columnNameService.GetNames(TableColumnType.Code));
-                var uomAddr = SearchHeaderAddresses(ws, false, _columnNameService.GetNames(TableColumnType.Uom));
-                var qtyAddr = SearchHeaderAddresses(ws, false, _columnNameService.GetNames(TableColumnType.Qty));
-                var priceAddr = SearchHeaderAddresses(ws, false, _columnNameService.GetNames(TableColumnType.Price));
+                var codeAddr = SearchHeaderAddresses(ws, false, _columnNameService.GetNames(TableColumnType.Code, ownerId));
+                var uomAddr = SearchHeaderAddresses(ws, false, _columnNameService.GetNames(TableColumnType.Uom, ownerId));
+                var qtyAddr = SearchHeaderAddresses(ws, false, _columnNameService.GetNames(TableColumnType.Qty, ownerId));
+                var priceAddr = SearchHeaderAddresses(ws, false, _columnNameService.GetNames(TableColumnType.Price, ownerId));
 
                 tempColumnDatas.AddRange(defaultNameAddr.Select(q => new TempColumnData(TableColumnType.Name, q)));
                 tempColumnDatas.AddRange(nameAddr.Select(q => new TempColumnData(TableColumnType.Name, q)));
