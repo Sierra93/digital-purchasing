@@ -16,7 +16,7 @@
                 <input type="text" class="form-control" placeholder="" v-model.trim="customerName" v-on:input="updateCustomerName" id="customerName">
                 <typeahead v-model="customerAutocomplete" target="#customerName" :async-function="customerAutocompleteFunc" item-key="name"></typeahead>
                 <span class="help-block" v-show="customerNameHasError">Укажите имя клиента</span>
-                <span class="help-block" v-show="isNewCustomer">Новый клиента</span>
+                <span class="help-block" v-show="isNewCustomer">Новый клиент</span>
             </div>
         </div>
         @*<div class="col-md-4">
