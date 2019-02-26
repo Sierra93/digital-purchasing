@@ -85,9 +85,17 @@ namespace DigitalPurchasing.Services
             return result;
         }
 
-        public PurchaseRequestColumnsResponse GetColumnsById(Guid id)
+        public PurchaseRequestColumnsResponse GetColumnsById(Guid id, bool globalSearch = false)
         {
-            var entity = _db.PurchaseRequests.Include(q => q.UploadedDocument).ThenInclude(q => q.Headers).First(q => q.Id == id);
+            var qry = _db.PurchaseRequests
+                .Include(q => q.UploadedDocument)
+                .ThenInclude(q => q.Headers)
+                .AsQueryable();
+
+            if (globalSearch) qry = qry.IgnoreQueryFilters();
+
+            var entity = qry.First(q => q.Id == id);
+
             var excelTable = JsonConvert.DeserializeObject<ExcelTable>(entity.UploadedDocument.Data);
 
             // load from raw columns first
@@ -104,21 +112,32 @@ namespace DigitalPurchasing.Services
             return result;
         }
 
-        public void SaveColumns(Guid id, PurchaseRequestColumns purchasingRequestColumns)
+        public void SaveColumns(Guid id, PurchaseRequestColumns purchasingRequestColumns, bool globalSearch = false)
         {
-            var entity = _db.PurchaseRequests.Include(q => q.UploadedDocument).ThenInclude(q => q.Headers).First(q => q.Id == id);
+            var qry = _db.PurchaseRequests
+                .Include(q => q.UploadedDocument)
+                .ThenInclude(q => q.Headers)
+                .AsQueryable();
+
+            if (globalSearch) qry = qry.IgnoreQueryFilters();
+
+            var entity = qry.First(q => q.Id == id);
             if (entity.UploadedDocument == null)
             {
-                entity.UploadedDocument = new UploadedDocument();
+                entity.UploadedDocument = new UploadedDocument { OwnerId = entity.OwnerId };
             }
 
             entity.UploadedDocument.Headers = purchasingRequestColumns.Adapt(entity.UploadedDocument.Headers);
             _db.SaveChanges();
 
-            if (!string.IsNullOrEmpty(purchasingRequestColumns.Name)) _columnNameService.SaveName(TableColumnType.Name, purchasingRequestColumns.Name);
-            if (!string.IsNullOrEmpty(purchasingRequestColumns.Code)) _columnNameService.SaveName(TableColumnType.Code, purchasingRequestColumns.Code);
-            if (!string.IsNullOrEmpty(purchasingRequestColumns.Qty)) _columnNameService.SaveName(TableColumnType.Qty, purchasingRequestColumns.Qty);
-            if (!string.IsNullOrEmpty(purchasingRequestColumns.Uom)) _columnNameService.SaveName(TableColumnType.Uom, purchasingRequestColumns.Uom);
+            if (!string.IsNullOrEmpty(purchasingRequestColumns.Name))
+                _columnNameService.SaveName(TableColumnType.Name, purchasingRequestColumns.Name, entity.OwnerId);
+            if (!string.IsNullOrEmpty(purchasingRequestColumns.Code))
+                _columnNameService.SaveName(TableColumnType.Code, purchasingRequestColumns.Code, entity.OwnerId);
+            if (!string.IsNullOrEmpty(purchasingRequestColumns.Qty))
+                _columnNameService.SaveName(TableColumnType.Qty, purchasingRequestColumns.Qty, entity.OwnerId);
+            if (!string.IsNullOrEmpty(purchasingRequestColumns.Uom))
+                _columnNameService.SaveName(TableColumnType.Uom, purchasingRequestColumns.Uom, entity.OwnerId);
         }
 
         public void GenerateRawItems(Guid id)
@@ -234,7 +253,7 @@ namespace DigitalPurchasing.Services
                 }
                 else
                 {
-                    var res = _uomService.Autocomplete(prItem.RawUom);
+                    var res = _uomService.Autocomplete(prItem.RawUom, pr.OwnerId);
                     if (res.Items != null && res.Items.Any())
                     {
                         var match = res.Items.First();
@@ -260,7 +279,8 @@ namespace DigitalPurchasing.Services
                         Query = prItem.RawName,
                         ClientId = pr.CustomerId.Value,
                         ClientType = ClientType.Customer,
-                        SearchInAlts = true
+                        SearchInAlts = true,
+                        OwnerId = pr.OwnerId
                     });
                     if (nomRes.Items != null && nomRes.Items.Count == 1)
                     {
@@ -288,7 +308,7 @@ namespace DigitalPurchasing.Services
 
         public void UpdateStatus(Guid id, PurchaseRequestStatus status)
         {
-            var entity = _db.PurchaseRequests.Find(id);
+            var entity = _db.PurchaseRequests.IgnoreQueryFilters().First(q => q.Id == id);
             entity.Status = status;
             _db.SaveChanges();
         }
@@ -378,6 +398,13 @@ namespace DigitalPurchasing.Services
                     return DeleteResultVm.Failure("Внутренняя ошибка. Обратитесь в службу поддержки");
                 }
             }
+        }
+
+        public Guid GetIdByQR(Guid qrId, bool globalSearch = false)
+        {
+            var qry = _db.QuotationRequests.AsQueryable();
+            if (globalSearch) qry = qry.IgnoreQueryFilters();
+            return qry.FirstOrDefault(q => q.Id == qrId)?.PurchaseRequestId ?? Guid.Empty;
         }
 
         public PurchaseRequestIndexData GetData(int page, int perPage, string sortField, bool sortAsc)

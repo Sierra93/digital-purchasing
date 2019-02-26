@@ -7,7 +7,7 @@ namespace DigitalPurchasing.Core.Interfaces
     public interface IColumnNameService
     {
         string[] GetNames(TableColumnType type, Guid ownerId);
-        void SaveName(TableColumnType type, string name);
+        void SaveName(TableColumnType type, string name, Guid ownerId);
         void SaveAllNames(ColumnResponse model);
         ColumnResponse GetAllNames();
     }

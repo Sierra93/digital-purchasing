@@ -40,10 +40,10 @@ namespace DigitalPurchasing.Tests
             }
         }
 
-        public void SaveName(TableColumnType type, string name) => throw new NotImplementedException();
-
         public void SaveAllNames(ColumnResponse model) => throw new NotImplementedException();
 
         public ColumnResponse GetAllNames() => throw new NotImplementedException();
+
+        public void SaveName(TableColumnType type, string name, Guid ownerId) => throw new NotImplementedException();
     }
 }

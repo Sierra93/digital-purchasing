@@ -14,8 +14,15 @@ namespace DigitalPurchasing.Web.Controllers
     public class UomController : BaseController
     {
         private readonly IUomService _uomService;
+        private readonly ITenantService _tenantService;
 
-        public UomController(IUomService uomService) => _uomService = uomService;
+        public UomController(
+            IUomService uomService,
+            ITenantService tenantService)
+        {
+            _uomService = uomService;
+            _tenantService = tenantService;
+        }
 
         public IActionResult Index() => View();
 
@@ -81,7 +88,7 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpGet]
         public IActionResult Autocomplete(string q)
         {
-            var response = _uomService.Autocomplete(q);
+            var response = _uomService.Autocomplete(q, _tenantService.Get().CompanyId);
             return Json(response);
         }
 

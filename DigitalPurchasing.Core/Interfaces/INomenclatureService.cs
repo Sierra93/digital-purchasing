@@ -14,10 +14,17 @@ namespace DigitalPurchasing.Core.Interfaces
         NomenclatureAutocompleteResult Autocomplete(AutocompleteOptions options);
         BaseResult<NomenclatureAutocompleteResult.AutocompleteResultItem> AutocompleteSingle(Guid id);
         void Delete(Guid id);
-        void AddNomenclatureForCustomer(Guid prItemId);
-        void AddNomenclatureForSupplier(Guid soItemId);
         NomenclatureAlternativeVm GetAlternativeById(Guid id);
         void UpdateAlternative(NomenclatureAlternativeVm model);
+
+        void AddNomenclatureForCustomer(Guid prItemId);
+        void AddNomenclatureForSupplier(Guid soItemId);
+
+        void AddOrUpdateNomenclatureAlts(Guid ownerId, Guid clientId, ClientType clientType,
+            Guid nomenclatureId, string name, string code, Guid? uom);
+
+        void AddOrUpdateNomenclatureAlts(Guid ownerId,Guid clientId, ClientType clientType,
+            List<(Guid NomenclatureId, string Name, string Code, Guid? Uom)> alts);
     }
 
     public class NomenclatureDetailsDataItem
@@ -144,6 +151,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid ClientId { get; set; }
         public ClientType ClientType { get; set; }
         public bool SearchInAlts { get; set; } = false;
+        public Guid OwnerId { get; set; }
     }
 
     public class NomenclatureAutocompleteResult

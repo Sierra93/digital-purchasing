@@ -11,7 +11,7 @@ namespace DigitalPurchasing.Core.Interfaces
         UomResult CreateOrUpdate(string name);
         IEnumerable<UomResult> GetAll();
         UomConversionRateResponse GetConversionRate(Guid fromUomId, Guid nomenclatureId);
-        UomAutocompleteResponse Autocomplete(string s);
+        UomAutocompleteResponse Autocomplete(string s, Guid ownerId);
         BaseResult<UomAutocompleteResponse.AutocompleteItem> AutocompleteSingle(Guid id);
         void SaveConversionRate(Guid fromUomId, Guid toUomId, Guid? nomenclatureId, decimal factorC, decimal factorN);
         void Delete(Guid id);

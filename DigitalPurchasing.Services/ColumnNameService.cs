@@ -33,17 +33,17 @@ namespace DigitalPurchasing.Services
             return entity.Names.Split(Separator);
         }
 
-        public void SaveName(TableColumnType type, string name)
+        public void SaveName(TableColumnType type, string name, Guid ownerId)
         {
             if (string.IsNullOrEmpty(name)) return;
             name = name.Trim();
             var defaultName = DefaultName(type);
-            var entity = _db.ColumnNames.AsQueryable().FirstOrDefault(q => q.Type == type);
+            var entity = _db.ColumnNames.IgnoreQueryFilters().FirstOrDefault(q => q.Type == type && q.OwnerId == ownerId);
             if (entity == null)
             {
                 if (!defaultName.Equals(name, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    _db.ColumnNames.Add(new ColumnName { Type = type, Names = name });
+                    _db.ColumnNames.Add(new ColumnName { Type = type, Names = name, OwnerId = ownerId });
                     _db.SaveChanges();
                 }                
                 return;

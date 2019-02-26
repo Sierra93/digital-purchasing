@@ -22,17 +22,20 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly INomenclatureCategoryService _nomenclatureCategoryService;
         private readonly IDictionaryService _dictionaryService;
         private readonly IUomService _uomService;
+        private readonly ITenantService _tenantService;
 
         public NomenclatureController(
             INomenclatureService nomenclatureService,
             INomenclatureCategoryService nomenclatureCategoryService,
             IDictionaryService dictionaryService,
-            IUomService uomService)
+            IUomService uomService,
+            ITenantService tenantService)
         {
             _nomenclatureService = nomenclatureService;
             _nomenclatureCategoryService = nomenclatureCategoryService;
             _dictionaryService = dictionaryService;
             _uomService = uomService;
+            _tenantService = tenantService;
         }
 
         public IActionResult Index() => View();
@@ -66,7 +69,11 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         [HttpGet]
-        public IActionResult Autocomplete([FromQuery] string q) => Json(_nomenclatureService.Autocomplete(new AutocompleteOptions { Query = q }));
+        public IActionResult Autocomplete([FromQuery] string q)
+        {
+            var ownerId = _tenantService.Get().CompanyId;
+            return Json(_nomenclatureService.Autocomplete(new AutocompleteOptions { Query = q, OwnerId = ownerId }));
+        }
 
         [HttpGet]
         public IActionResult AutocompleteSingle([FromQuery] Guid id) => Json(_nomenclatureService.AutocompleteSingle(id));

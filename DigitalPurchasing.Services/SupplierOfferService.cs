@@ -8,6 +8,7 @@ using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
+using EFCore.BulkExtensions;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -51,9 +52,12 @@ namespace DigitalPurchasing.Services
             _supplierService = supplierService;
         }
 
-        public void UpdateStatus(Guid id, SupplierOfferStatus status)
+        public void UpdateStatus(Guid id, SupplierOfferStatus status, bool globalSearch = false)
         {
-            var entity = _db.SupplierOffers.Find(id);
+            var qry = _db.SupplierOffers.AsQueryable();
+            if (globalSearch) qry = qry.IgnoreQueryFilters();
+
+            var entity = qry.First(q => q.Id == id);
             entity.Status = status;
             _db.SaveChanges();
         }
@@ -107,21 +111,27 @@ namespace DigitalPurchasing.Services
             return new CreateFromFileResponse { Id = entry.Entity.Id, IsSuccess = true };
         }
 
-        public SupplierOfferVm GetById(Guid id)
+        public SupplierOfferVm GetById(Guid id, bool globalSearch = false)
         {
-            var entity = _db.SupplierOffers
+            var qry = _db.SupplierOffers
                 .Include(q => q.Supplier)
                 .Include(q => q.UploadedDocument)
-                    .ThenInclude(q => q.Headers)
+                .ThenInclude(q => q.Headers)
                 .Include(q => q.CompetitionList)
-                    .ThenInclude(q => q.QuotationRequest)
-                .FirstOrDefault(q => q.Id == id);
+                .ThenInclude(q => q.QuotationRequest)
+                .AsQueryable();
+
+            if (globalSearch) qry = qry.IgnoreQueryFilters();
+
+            var entity = qry.FirstOrDefault(q => q.Id == id);
             
             var vm = entity?.Adapt<SupplierOfferVm>();
             if (vm != null)
             {
                 vm.ExcelTable =  vm.UploadedDocument?.Data != null ? JsonConvert.DeserializeObject<ExcelTable>(vm.UploadedDocument?.Data) : null;
-                vm.CompanyName = _db.PurchaseRequests.Find(entity.CompetitionList.QuotationRequest.PurchaseRequestId).CompanyName;
+                vm.CompanyName = _db.PurchaseRequests
+                    .IgnoreQueryFilters()
+                    .First(q => q.Id == entity.CompetitionList.QuotationRequest.PurchaseRequestId).CompanyName;
                 if (entity.Supplier != null)
                 {
                     vm.SupplierName = entity.Supplier.Name;
@@ -198,9 +208,9 @@ namespace DigitalPurchasing.Services
             return result;
         }
 
-        public SupplierOfferColumnsDataVm GetColumnsData(Guid id)
+        public SupplierOfferColumnsDataVm GetColumnsData(Guid id, bool globalSearch = false)
         {
-            var vm = GetById(id);
+            var vm = GetById(id, globalSearch);
             var result = new SupplierOfferColumnsDataVm
             {
                 SupplierId = vm.SupplierId,
@@ -215,26 +225,41 @@ namespace DigitalPurchasing.Services
             return result;
         }
 
-        public void SaveColumns(Guid supplierOfferId, SupplierOfferColumnsVm columns)
+        public void SaveColumns(Guid supplierOfferId, SupplierOfferColumnsVm columns, bool globalSearch = false)
         {
-            var entity = _db.SupplierOffers.Include(q => q.UploadedDocument).ThenInclude(q => q.Headers).First(q => q.Id == supplierOfferId);
+            var qry = _db.SupplierOffers
+                .Include(q => q.UploadedDocument)
+                .ThenInclude(q => q.Headers)
+                .AsQueryable();
+
+            if (globalSearch) qry = qry.IgnoreQueryFilters();
+
+            var entity = qry.First(q => q.Id == supplierOfferId);
 
             entity.UploadedDocument.Headers = columns.Adapt(entity.UploadedDocument.Headers);
             _db.SaveChanges();
 
-            if (!string.IsNullOrEmpty(columns.Name)) _columnNameService.SaveName(TableColumnType.Name, columns.Name);
-            if (!string.IsNullOrEmpty(columns.Code)) _columnNameService.SaveName(TableColumnType.Code, columns.Code);
-            if (!string.IsNullOrEmpty(columns.Qty)) _columnNameService.SaveName(TableColumnType.Qty, columns.Qty);
-            if (!string.IsNullOrEmpty(columns.Uom)) _columnNameService.SaveName(TableColumnType.Uom, columns.Uom);
-            if (!string.IsNullOrEmpty(columns.Price)) _columnNameService.SaveName(TableColumnType.Price, columns.Price);
+            if (!string.IsNullOrEmpty(columns.Name)) _columnNameService.SaveName(TableColumnType.Name, columns.Name, entity.OwnerId);
+            if (!string.IsNullOrEmpty(columns.Code)) _columnNameService.SaveName(TableColumnType.Code, columns.Code, entity.OwnerId);
+            if (!string.IsNullOrEmpty(columns.Qty)) _columnNameService.SaveName(TableColumnType.Qty, columns.Qty, entity.OwnerId);
+            if (!string.IsNullOrEmpty(columns.Uom)) _columnNameService.SaveName(TableColumnType.Uom, columns.Uom, entity.OwnerId);
+            if (!string.IsNullOrEmpty(columns.Price)) _columnNameService.SaveName(TableColumnType.Price, columns.Price, entity.OwnerId);
         }
 
-        public void GenerateRawItems(Guid id)
+        public void GenerateRawItems(Guid id, bool globalSearch = false)
         {
-            _db.RemoveRange(_db.SupplierOfferItems.Where(q => q.SupplierOfferId == id));
-            _db.SaveChanges();
+            var qrySo = _db.SupplierOffers.AsQueryable();
+            var qrySoItems = _db.SupplierOfferItems.AsQueryable();
+            
+            if (globalSearch)
+            {
+                qrySo = qrySo.IgnoreQueryFilters();
+                qrySoItems = qrySoItems.IgnoreQueryFilters();
+            }
 
-            var supplierOffer = _db.SupplierOffers.Include(q => q.UploadedDocument).ThenInclude(q => q.Headers).First(q => q.Id == id);
+            qrySoItems.Where(q => q.SupplierOfferId == id).BatchDelete();
+
+            var supplierOffer = qrySo.Include(q => q.UploadedDocument).ThenInclude(q => q.Headers).First(q => q.Id == id);
 
             if (!supplierOffer.SupplierId.HasValue)
             {
@@ -259,22 +284,27 @@ namespace DigitalPurchasing.Services
                 rawItems.Add(rawItem);
             }
 
-            _db.SupplierOfferItems.AddRange(rawItems);
-            _db.SaveChanges();
+            _db.BulkInsert(rawItems);
 
-            AutocompleteDataSOItems(id);
+            AutocompleteDataSOItems(supplierOffer.Id);
         }
 
         private void AutocompleteDataSOItems(Guid soId)
         {
-            var so = _db.SupplierOffers.Find(soId);
-            var soItems = _db.SupplierOfferItems.Where(q => q.SupplierOfferId == soId).ToList();
+            var so = _db.SupplierOffers.IgnoreQueryFilters().First(q => q.Id == soId);
+            var ownerId = so.OwnerId;
+
+            var qrySoItems = _db.SupplierOfferItems
+                .IgnoreQueryFilters()
+                .Include(q => q.SupplierOffer)
+                .Where(q => q.SupplierOffer.OwnerId == ownerId);
+            
+            var soItems = qrySoItems.Where(q => q.SupplierOfferId == soId).ToList();
 
             string supplierName = null;
             if (soItems.Any())
             {
-                _db.Entry(soItems.First()).Reference(q => q.SupplierOffer).Load();
-                supplierName = soItems.First().SupplierOffer.SupplierName;
+                supplierName = so.SupplierName;
             }
 
             var uoms = new Dictionary<string, Guid>();
@@ -286,8 +316,7 @@ namespace DigitalPurchasing.Services
 
                 if (string.IsNullOrEmpty(soItem.RawCode))
                 {
-                    var otherRecords = _db.SupplierOfferItems
-                        .Include(q => q.SupplierOffer)
+                    var otherRecords = qrySoItems
                         .Where(q =>
                             q.RawName == soItem.RawName &&
                             q.SupplierOffer.SupplierName == supplierName &&
@@ -315,7 +344,7 @@ namespace DigitalPurchasing.Services
                 }
                 else
                 {
-                    var res = _uomService.Autocomplete(soItem.RawUomStr);
+                    var res = _uomService.Autocomplete(soItem.RawUomStr, so.OwnerId);
                     if (res.Items != null && res.Items.Any())
                     {
                         var match = res.Items.First();
@@ -341,7 +370,8 @@ namespace DigitalPurchasing.Services
                         Query = soItem.RawName,
                         ClientId = so.SupplierId.Value,
                         ClientType = ClientType.Supplier,
-                        SearchInAlts = true
+                        SearchInAlts = true,
+                        OwnerId = so.OwnerId
                     });
 
                     if (nomRes.Items != null && nomRes.Items.Count == 1)
@@ -365,11 +395,20 @@ namespace DigitalPurchasing.Services
                 #endregion
             }
 
-            _db.SaveChanges();
+            _db.BulkUpdate(soItems);
 
-            foreach (var soItem in soItems)
+            if (so.SupplierId.HasValue)
             {
-                _nomenclatureService.AddNomenclatureForSupplier(soItem.Id);
+                _nomenclatureService.AddOrUpdateNomenclatureAlts(
+                    so.OwnerId, so.SupplierId.Value, ClientType.Supplier,
+                    soItems
+                        .Where(q => q.NomenclatureId.HasValue)
+                        .Select(q => (
+                            NomenclatureId: q.NomenclatureId.Value,
+                            Name: q.RawName,
+                            Code: q.RawCode,
+                            Uom: q.RawUomId)
+                        ).ToList());
             }
         }
 

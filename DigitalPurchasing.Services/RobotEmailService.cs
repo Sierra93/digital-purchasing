@@ -81,6 +81,7 @@ namespace DigitalPurchasing.Services
 
     public class RFQEmailProcessor : IEmailProcessor
     {
+        private readonly IPurchaseRequestService _purchaseRequestService;
         private readonly IQuotationRequestService _quotationRequestService;
         private readonly ICompetitionListService _competitionListService;
         private readonly ISupplierService _supplierService;
@@ -92,11 +93,13 @@ namespace DigitalPurchasing.Services
         };
 
         public RFQEmailProcessor(
+            IPurchaseRequestService purchaseRequestService,
             IQuotationRequestService quotationRequestService,
             ICompetitionListService competitionListService,
             ISupplierService supplierService,
             ISupplierOfferService supplierOfferService)
         {
+            _purchaseRequestService = purchaseRequestService;
             _quotationRequestService = quotationRequestService;
             _supplierService = supplierService;
             _competitionListService = competitionListService;
@@ -138,8 +141,24 @@ namespace DigitalPurchasing.Services
                         var supplier = _supplierService.GetById(supplierId, true);
                         _supplierOfferService.UpdateSupplierName(soId, supplier.Name, supplier.Id, true);
 
-                        //todo: next...
-
+                        // detect columns
+                        var columns = _supplierOfferService.GetColumnsData(soId, true);
+                        _supplierOfferService.UpdateStatus(soId, SupplierOfferStatus.MatchColumns, true);
+                        if (!string.IsNullOrEmpty(columns.Name) &&
+                            !string.IsNullOrEmpty(columns.Uom) &&
+                            !string.IsNullOrEmpty(columns.Price) &&
+                            !string.IsNullOrEmpty(columns.Qty))
+                        {
+                            _supplierOfferService.SaveColumns(soId, columns, true);
+                            // raw items + match
+                            _supplierOfferService.GenerateRawItems(soId, true);
+                            _supplierOfferService.UpdateStatus(soId, SupplierOfferStatus.MatchItems, true);
+                        }
+                        else
+                        {
+                            // todo message
+                            return true;
+                        }
                         return true;
                     }
                 }

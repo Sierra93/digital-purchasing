@@ -6,19 +6,19 @@ namespace DigitalPurchasing.Core.Interfaces
 {
     public interface ISupplierOfferService
     {
-        void UpdateStatus(Guid id, SupplierOfferStatus status);
+        void UpdateStatus(Guid id, SupplierOfferStatus status, bool globalSearch = false);
         void UpdateSupplierName(Guid id, string name, Guid? supplierId, bool globalSearch = false);
         void UpdateDeliveryCost(Guid id, decimal deliveryCost);
 
         CreateFromFileResponse CreateFromFile(Guid competitionListId, string filePath);
 
-        SupplierOfferVm GetById(Guid id);
+        SupplierOfferVm GetById(Guid id, bool globalSearch = false);
         SupplierOfferDetailsVm GetDetailsById(Guid id);
 
-        SupplierOfferColumnsDataVm GetColumnsData(Guid id);
-        void SaveColumns(Guid supplierOfferId, SupplierOfferColumnsVm columns);
+        SupplierOfferColumnsDataVm GetColumnsData(Guid id, bool globalSearch = false);
+        void SaveColumns(Guid supplierOfferId, SupplierOfferColumnsVm columns, bool globalSearch = false);
 
-        void GenerateRawItems(Guid id);
+        void GenerateRawItems(Guid id, bool globalSearch = false);
 
         SOMatchItemsVm MatchItemsData(Guid id);
         void SaveMatch(Guid itemId, Guid nomenclatureId, Guid uomId, decimal factorC, decimal factorN);

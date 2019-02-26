@@ -7,8 +7,10 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         CreateFromFileResponse CreateFromFile(string filePath, Guid ownerId);
         PurchaseRequestDetailsResponse GetById(Guid id);
-        PurchaseRequestColumnsResponse GetColumnsById(Guid id);
-        void SaveColumns(Guid id, PurchaseRequestColumns purchasingRequestColumns);
+
+        PurchaseRequestColumnsResponse GetColumnsById(Guid id, bool globalSearch = false);
+        void SaveColumns(Guid id, PurchaseRequestColumns purchasingRequestColumns, bool globalSearch = false);
+
         PurchaseRequestIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
         void GenerateRawItems(Guid id);
         RawItemResponse GetRawItems(Guid id);
@@ -19,6 +21,7 @@ namespace DigitalPurchasing.Core.Interfaces
         void SaveCompanyName(Guid prId, string companyName);
         void SaveCustomerName(Guid prId, string customerName, Guid? modelCustomerId);
         DeleteResultVm Delete(Guid id);
+        Guid GetIdByQR(Guid qrId, bool globalSearch = false);
     }
 
     public class CreateFromFileResponse

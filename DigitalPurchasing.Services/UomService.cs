@@ -90,15 +90,20 @@ namespace DigitalPurchasing.Services
 
         public UomConversionRateResponse GetConversionRate(Guid fromUomId, Guid nomenclatureId)
         {
-            var toUomId = _db.Nomenclatures.First(q => q.Id == nomenclatureId).BatchUomId;
+            var qryNomenclatures = _db.Nomenclatures.AsNoTracking().IgnoreQueryFilters().AsQueryable();
+            var nomenclature = qryNomenclatures.First(q => q.Id == nomenclatureId);
+            
+            var toUomId = nomenclature.BatchUomId;
             if (fromUomId == toUomId)
             {
                 return new UomConversionRateResponse { CommonFactor = 1, NomenclatureFactor = 0 };
             }
 
-            var conversionRates = _db.UomConversionRates.AsNoTracking()
-                .Where(q =>
-                    ( q.FromUomId == fromUomId && q.ToUomId == toUomId ) ||
+            var conversionRates = _db.UomConversionRates
+                .AsNoTracking()
+                .IgnoreQueryFilters()
+                .Where(q => q.OwnerId == nomenclature.OwnerId)
+                .Where(q => ( q.FromUomId == fromUomId && q.ToUomId == toUomId ) ||
                     ( q.FromUomId == toUomId && q.ToUomId == fromUomId ));
 
             var result = new UomConversionRateResponse { CommonFactor = 0, NomenclatureFactor = 0 };
@@ -128,14 +133,18 @@ namespace DigitalPurchasing.Services
             return result;
         }
 
-        public UomAutocompleteResponse Autocomplete(string s)
+        public UomAutocompleteResponse Autocomplete(string s, Guid ownerId)
         {
             if (string.IsNullOrEmpty(s)) return new UomAutocompleteResponse();
 
             var normalizedName = s.CustomNormalize();
 
-            var autocompleteItems = _db.UnitsOfMeasurements
+            var qry = _db.UnitsOfMeasurements
+                .IgnoreQueryFilters()
                 .AsNoTracking()
+                .Where(q => q.OwnerId == ownerId);
+
+            var autocompleteItems = qry
                 .Where(q => (q.Name == s || q.NormalizedName == normalizedName || q.Name.Contains(s)) && !q.IsDeleted)
                 .Select(q => new { q.Id, q.Name, q.NormalizedName, IsFullMatch = q.Name == s || q.NormalizedName == s})
                 .OrderByDescending(q => q.IsFullMatch)
