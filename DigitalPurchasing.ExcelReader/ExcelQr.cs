@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using OfficeOpenXml;
 
@@ -5,11 +6,13 @@ namespace DigitalPurchasing.ExcelReader
 {
     public class ExcelQr
     {
+        string _currencyCellFormat = "### ### ##0.00";  
+
         public class DataItem
         {
             public string Code { get; set; }
             public string Name { get; set; }
-            public string Qty { get; set; }
+            public decimal Qty { get; set; }
             public string Uom { get; set; }
         }
 
@@ -17,7 +20,7 @@ namespace DigitalPurchasing.ExcelReader
         {
             using (var excel = new ExcelPackage())
             {
-                var ws = excel.Workbook.Worksheets.Add("Template");
+                var ws = excel.Workbook.Worksheets.Add("RFQ");
                 ws.Cells[1, 1].Value = "Код";
                 ws.Cells[1, 2].Value = "Название";
                 ws.Cells[1, 3].Value = "Кол-во";
@@ -27,8 +30,12 @@ namespace DigitalPurchasing.ExcelReader
                 {
                     ws.Cells[i, 1].Value = item.Code;
                     ws.Cells[i, 2].Value = item.Name;
-                    ws.Cells[i, 3].Value = item.Qty;
+                    using(var cellQty = ws.Cells[i, 3]) {  
+                        cellQty.Style.Numberformat.Format = _currencyCellFormat;
+                        cellQty.Value = item.Qty;
+                    }  
                     ws.Cells[i, 4].Value = item.Uom;
+                    i++;
                 }
                 ws.Column(1).AutoFit();
                 ws.Column(2).AutoFit();

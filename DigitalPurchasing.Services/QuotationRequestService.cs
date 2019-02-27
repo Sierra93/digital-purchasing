@@ -196,10 +196,26 @@ namespace DigitalPurchasing.Services
             }
         }
 
-        private byte[] GenerateExcelForQR(Guid quotationRequestId)
+        public byte[] GenerateExcelForQR(Guid quotationRequestId)
         {
-            var data = GetViewData(quotationRequestId);
-            var items = data.GetCompanyItems().Adapt<IEnumerable<ExcelQr.DataItem>>();
+            var qr = _db.QuotationRequests.Find(quotationRequestId);
+            var prId = qr.PurchaseRequestId;
+            var data = _purchaseRequestService.MatchItemsData(prId);;
+
+            var items = new List<ExcelQr.DataItem>();
+            foreach (var dataItem in data.Items)
+            {
+                var factor = dataItem.CommonFactor > 0 ? dataItem.CommonFactor : dataItem.NomenclatureFactor;
+                var companyQty = dataItem.RawQty * factor;
+                items.Add(new ExcelQr.DataItem
+                {
+                    Code = dataItem.NomenclatureCode,
+                    Name = dataItem.NomenclatureName,
+                    Uom = dataItem.NomenclatureUom,
+                    Qty = companyQty
+                });
+            }
+
             var excel = new ExcelQr();
             var bytes = excel.Build(items);
             return bytes;

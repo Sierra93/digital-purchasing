@@ -14,6 +14,7 @@ namespace DigitalPurchasing.Core.Interfaces
         Task SendRequests(Guid userId, Guid quotationRequestId, IReadOnlyList<Guid> suppliers);
         string QuotationRequestToUid(Guid quotationRequestId);
         Guid UidToQuotationRequest(string uid);
+        byte[] GenerateExcelForQR(Guid quotationRequestId);
     }
 
     public class QuotationRequestIndexDataItem

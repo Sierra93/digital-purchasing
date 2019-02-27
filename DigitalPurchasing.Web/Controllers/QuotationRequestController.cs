@@ -79,12 +79,8 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult Download([FromQuery]Guid qrId)
         {
             var qr = _quotationRequestService.GetById(qrId);
-            var data = _quotationRequestService.GetViewData(qrId);
-            var items = data.GetCompanyItems().Adapt<IEnumerable<ExcelQr.DataItem>>();
-            var excel = new ExcelQr();
-
-            var bytes = excel.Build(items);
-            var filename = $"qr_{qr.PublicId}_{qr.CreatedOn:yyyy_MM_dd}_.xlsx";
+            var bytes = _quotationRequestService.GenerateExcelForQR(qrId);
+            var filename = $"RFQ_{qr.CreatedOn:yyyyMMdd}_{qr.PublicId}.xlsx";
             return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
         }
 
