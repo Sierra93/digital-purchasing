@@ -130,6 +130,20 @@
                         return this.sendingInProgress ? 'Отправка...' : 'Отправить запрос КП';
                     }
                 },
+                watch: {
+                    suppliers: {
+                        handler: function(newSuppliers) {
+                            _.forEach(newSuppliers, function(supplier) {
+                                if (supplier && supplier.autocomplete && supplier.autocomplete.name) {
+                                    supplier.name = supplier.autocomplete.name;
+                                } else {
+                                    supplier.name = null;
+                                }
+                            });
+                        },
+                        deep: true 
+                    }
+                },
                 filters: {
                     decimal: function (value) {
                         return parseFloat(value).toFixed(4);
