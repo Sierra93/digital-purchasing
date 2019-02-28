@@ -70,7 +70,7 @@ namespace DigitalPurchasing.Web.Controllers
             return View(model);
         }
 
-        public IActionResult ViewNomenclatureData([FromQuery]Guid qrId)
+        public IActionResult ViewDData([FromQuery]Guid qrId)
         {
             var model = _quotationRequestService.GetViewData(qrId);
             return Ok(model);
@@ -96,7 +96,8 @@ namespace DigitalPurchasing.Web.Controllers
         {
             var userId = _tenantService.Get().UserId;
             await _quotationRequestService.SendRequests(userId, model.QuotationRequestId, model.Suppliers);
-            return Ok(model);
+            var sentRequests = _quotationRequestService.GetSentRequests(model.QuotationRequestId);
+            return Ok(sentRequests);
         }
     }
 }

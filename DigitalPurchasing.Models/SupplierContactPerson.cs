@@ -16,6 +16,8 @@ namespace DigitalPurchasing.Models
         public Supplier Supplier { get; set; }
 
         public bool UseForRequests { get; set; }
+
+        public string FullName => $"{FirstName} {LastName}";
     }
 
     //public class SupplierContactPersonCategory : BaseModel

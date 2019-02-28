@@ -118,9 +118,10 @@ namespace DigitalPurchasing.Services
             var pr = _db.PurchaseRequests.Find(prId);
 
             var data = _purchaseRequestService.MatchItemsData(prId);
-            var companyName = pr.CompanyName;
-            var customerName = pr.CustomerName;
-            var result = new QuotationRequestViewData(companyName, customerName);
+            var result = new QuotationRequestViewData(pr.CompanyName, pr.CustomerName)
+            {
+                SentRequests = GetSentRequests(qrId)
+            };
 
             foreach (var dataItem in data.Items)
             {
@@ -192,7 +193,14 @@ namespace DigitalPurchasing.Services
             var userInfo = _userService.GetUserInfo(userId);
             foreach (var contact in contacts)
             {
+
                 await _emailService.SendRFQEmail(qr, userInfo, contact, emailUid, filepath);
+                await _db.QuotationRequestEmails.AddAsync(new QuotationRequestEmail
+                {
+                    RequestId = qr.Id,
+                    ContactPersonId = contact.Id
+                });
+                await _db.SaveChangesAsync();
             }
         }
 
@@ -219,6 +227,23 @@ namespace DigitalPurchasing.Services
             var excel = new ExcelQr();
             var bytes = excel.Build(items);
             return bytes;
+        }
+
+        public List<SentRequest> GetSentRequests(Guid quotationRequestId)
+        {
+            var entities = _db.QuotationRequestEmails
+                .Include(q => q.ContactPerson)
+                .ThenInclude(q => q.Supplier)
+                .Where(q => q.RequestId == quotationRequestId)
+                .ToList();
+
+            return entities.Select(q => new SentRequest
+            {
+                CreatedOn = q.CreatedOn,
+                SupplierName = q.ContactPerson.Supplier.Name,
+                PersonFullName = q.ContactPerson.FullName,
+                Email = q.ContactPerson.Email
+            }).ToList();
         }
 
         public string QuotationRequestToUid(Guid quotationRequestId)

@@ -70,6 +70,29 @@
                 <div class="form-group">
                     <button class="btn btn-primary" v-on:click="sendEmailsToSupplier" :disabled="!canSendEmails">{{sendEmailsText}}</button>
                 </div>
+                <div class="form-group" v-if="orderedRequests.length > 0">
+                    <label>Отправленные запросы:</label>
+                </div>
+                <div class="form-group" v-if="orderedRequests.length > 0">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Дата и время отправки</th>
+                                <th>Поставщик</th>
+                                <th>Сотрудник</th>
+                                <th>E-mail</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="req in orderedRequests">
+                                <td>{{req.createdOn | formatDateTime}}</td>
+                                <td>{{req.supplierName}}</td>
+                                <td>{{req.personFullName}}</td>
+                                <td>{{req.email}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -93,6 +116,7 @@
                     return {
                         qrId: '@Model.Id',
                         items: [],
+                        requests: [],
                         selectedCompany: '',
                         suppliers: [],
                         sendingInProgress: false,
@@ -128,6 +152,11 @@
                     },
                     sendEmailsText: function() {
                         return this.sendingInProgress ? 'Отправка...' : 'Отправить запрос КП';
+                    },
+                    orderedRequests: function() {
+                        return _.orderBy(this.requests, function(e) {
+                            return new Date(e.createdOn);
+                        }, ['desc']);
                     }
                 },
                 watch: {
@@ -147,12 +176,19 @@
                 filters: {
                     decimal: function (value) {
                         return parseFloat(value).toFixed(4);
+                    },
+                    formatDateTime: function(value) {
+                        if (value) {
+                            return moment(String(value)).format('DD.MM.YYYY HH:mm');
+                        }
+                        return value;
                     }
                 },
                 methods: {
                     load: function() {
-                        this.$http.get('@Url.Action("ViewNomenclatureData")?qrId=' + this.qrId).then(function(res) {
+                        this.$http.get('@Url.Action("ViewDData")?qrId=' + this.qrId).then(function(res) {
                             this.items = res.data.items;
+                            this.requests = res.data.sentRequests;
                             this.selectedCompany = this.keys[0];
                         }, function(res) {
 
@@ -185,6 +221,7 @@
                             .post('@Url.Action("SentRequests")', { id: vm.qrId, suppliers: vm.suppliersIds })
                             .then(function(res) {
                                 var data = res.data;
+                                vm.requests = data;
                                 //console.info(data);
                                 vm.sendingInProgress = false;
                                 vm.modalSendEmails = true;

@@ -15,6 +15,7 @@ namespace DigitalPurchasing.Core.Interfaces
         string QuotationRequestToUid(Guid quotationRequestId);
         Guid UidToQuotationRequest(string uid);
         byte[] GenerateExcelForQR(Guid quotationRequestId);
+        List<SentRequest> GetSentRequests(Guid quotationRequestId);
     }
 
     public class QuotationRequestIndexDataItem
@@ -51,6 +52,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public QuotationRequestViewData(string company, string customer)
         {
+            SentRequests = new List<SentRequest>();
             Items = new Dictionary<string, List<NomenclatureItem>>
             {
                 { company, new List<NomenclatureItem>() },
@@ -59,6 +61,8 @@ namespace DigitalPurchasing.Core.Interfaces
             _company = company;
             _customer = customer;
         }
+
+        public List<SentRequest> SentRequests { get; set; }
 
         public Dictionary<string, List<NomenclatureItem>> Items { get; set; }
 
@@ -71,5 +75,13 @@ namespace DigitalPurchasing.Core.Interfaces
             => AddItem(_customer, new NomenclatureItem { Code = code, Name = name, Uom = uom, Qty = qty });
 
         public IEnumerable<NomenclatureItem> GetCompanyItems() => Items[_company];
+    }
+
+    public class SentRequest
+    {
+        public string SupplierName { get; set; }
+        public string PersonFullName { get; set; }
+        public string Email { get; set; }
+        public DateTime CreatedOn { get; set; }
     }
 }
