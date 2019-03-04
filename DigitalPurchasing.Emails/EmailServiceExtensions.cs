@@ -63,5 +63,22 @@ namespace DigitalPurchasing.Emails
             var htmlResult = await GetHtmlString(model);
             await emailService.SendFromRobotAsync(supplierContact.Email, subject, htmlResult, new List<string> { attachment });
         }
+
+        public static async Task SendSOPartiallyProcessedEmail(this IEmailService emailService,
+            string email,
+            int qrPublicId,
+            string qrUrl)
+        {
+            var subject = "Получено новое КП";
+
+            var model = new SOPartiallyProcessedEmail
+            {
+                QRPublicId = qrPublicId,
+                Url = qrUrl
+            };
+
+            var htmlResult = await GetHtmlString(model);
+            await emailService.SendFromRobotAsync(email, subject, htmlResult);
+        }
     }
 }

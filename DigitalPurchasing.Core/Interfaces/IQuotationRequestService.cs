@@ -30,6 +30,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid Id { get; set; }
         public int PublicId { get; set; }
         public DateTime CreatedOn { get; set; }
+        public Guid OwnerId { get; set; } 
     }
 
     public class QuotationRequestIndexData : BaseDataResponse<QuotationRequestIndexDataItem>

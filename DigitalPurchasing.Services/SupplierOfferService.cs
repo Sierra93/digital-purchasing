@@ -482,6 +482,24 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
         }
 
+        public bool IsAllMatched(Guid supplierOfferId)
+        {
+            var itemsQry = _db.SupplierOfferItems
+                .IgnoreQueryFilters()
+                .Where(q => q.SupplierOfferId == supplierOfferId);
+
+            var totalCount = itemsQry.Count();
+
+            var matchedQry = itemsQry
+                .Where(q => q.NomenclatureId.HasValue
+                            && ( q.CommonFactor > 0 || q.NomenclatureFactor > 0 )
+                            && q.RawUomId.HasValue);
+
+            var matchedCount = matchedQry.Count();
+
+            return totalCount == matchedCount;
+        }
+
         private SoTermsVm DefaultResult() => new SoTermsVm {
             DeliveryTermsOptions = GetDeliveryTermsOptions(),
             PaymentTermsOptions = GetPaymentTermsOptions(),

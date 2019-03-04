@@ -25,8 +25,9 @@ namespace DigitalPurchasing.Core.Interfaces
 
         DeleteResultVm Delete(Guid id);
 
-        SoTermsVm GetTerms(Guid soId);
-        void SaveTerms(SoTermsVm req, Guid soId);
+        SoTermsVm GetTerms(Guid supplierOfferId);
+        void SaveTerms(SoTermsVm req, Guid supplierOfferId);
+        bool IsAllMatched(Guid supplierOfferId);
     }
 
     public class SupplierOfferDetailsVm

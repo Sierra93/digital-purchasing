@@ -39,5 +39,12 @@ namespace DigitalPurchasing.Services
             user.Company.Name = newName;
             _db.SaveChanges();
         }
+
+        public string GetContactEmailByOwner(Guid ownerId)
+        {
+            var user = _db.Users.FirstOrDefault(q => q.CompanyId == ownerId);
+            if (user != null && user.EmailConfirmed) return user.Email;
+            return null;
+        }
     }
 }

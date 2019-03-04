@@ -26,6 +26,9 @@ using DigitalPurchasing.ExcelReader;
 using DigitalPurchasing.Web.Jobs;
 using Hangfire;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Routing;
 
 namespace DigitalPurchasing.Web
 {
@@ -102,6 +105,15 @@ namespace DigitalPurchasing.Web
             services.AddScoped<IEmailProcessor, RFQEmailProcessor>();
             services.AddScoped<IReceivedEmailService, ReceivedEmailService>();
             services.AddMandrill();
+
+            services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
+            services.AddScoped<IUrlHelper>(x =>
+            {
+                var actionContextAccessor = x.GetRequiredService<IActionContextAccessor>();
+                var actionContext = actionContextAccessor.ActionContext;
+                var factory = x.GetRequiredService<IUrlHelperFactory>();
+                return factory.GetUrlHelper(actionContext);
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

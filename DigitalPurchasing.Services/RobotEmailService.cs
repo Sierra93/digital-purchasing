@@ -3,10 +3,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
+using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Interfaces;
+using DigitalPurchasing.Emails;
 using MailKit;
 using MailKit.Net.Imap;
 using MailKit.Search;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
 using MimeKit;
 using MimeKit.Text;
 
@@ -81,11 +88,14 @@ namespace DigitalPurchasing.Services
 
     public class RFQEmailProcessor : IEmailProcessor
     {
-        private readonly IPurchaseRequestService _purchaseRequestService;
         private readonly IQuotationRequestService _quotationRequestService;
         private readonly ICompetitionListService _competitionListService;
         private readonly ISupplierService _supplierService;
         private readonly ISupplierOfferService _supplierOfferService;
+        private readonly IEmailService _emailService;
+        private readonly ICompanyService _companyService;
+        private readonly LinkGenerator _linkGenerator;
+        private readonly AppSettings _settings;
 
         private readonly List<string> _supportedFormats = new List<string>
         {
@@ -93,17 +103,23 @@ namespace DigitalPurchasing.Services
         };
 
         public RFQEmailProcessor(
-            IPurchaseRequestService purchaseRequestService,
+            IConfiguration configuration,
             IQuotationRequestService quotationRequestService,
             ICompetitionListService competitionListService,
             ISupplierService supplierService,
-            ISupplierOfferService supplierOfferService)
+            ISupplierOfferService supplierOfferService,
+            IEmailService emailService,
+            ICompanyService companyService,
+            LinkGenerator linkGenerator)
         {
-            _purchaseRequestService = purchaseRequestService;
+            _settings = configuration.GetSection(Consts.Settings.AppPath).Get<AppSettings>();
             _quotationRequestService = quotationRequestService;
             _supplierService = supplierService;
             _competitionListService = competitionListService;
             _supplierOfferService = supplierOfferService;
+            _emailService = emailService;
+            _companyService = companyService;
+            _linkGenerator = linkGenerator;
         }
 
         public bool Process(string fromEmail, string subject, string body, IList<string> attachments)
@@ -118,9 +134,13 @@ namespace DigitalPurchasing.Services
 
                 // qr id
                 var qrId = _quotationRequestService.UidToQuotationRequest(uid);
+                var qr = _quotationRequestService.GetById(qrId);
 
                 // detect supplier by contact email
                 var supplierId = _supplierService.GetSupplierByEmail(fromEmail);
+
+                // get owner email
+                var email = _companyService.GetContactEmailByOwner(qr.OwnerId);
 
                 // upload supplier offer
                 if (qrId != Guid.Empty && supplierId != Guid.Empty)
@@ -144,21 +164,29 @@ namespace DigitalPurchasing.Services
                         // detect columns
                         var columns = _supplierOfferService.GetColumnsData(soId, true);
                         _supplierOfferService.UpdateStatus(soId, SupplierOfferStatus.MatchColumns, true);
-                        if (!string.IsNullOrEmpty(columns.Name) &&
-                            !string.IsNullOrEmpty(columns.Uom) &&
-                            !string.IsNullOrEmpty(columns.Price) &&
-                            !string.IsNullOrEmpty(columns.Qty))
+
+                        var allColumns = !string.IsNullOrEmpty(columns.Name) &&
+                                         !string.IsNullOrEmpty(columns.Uom) &&
+                                         !string.IsNullOrEmpty(columns.Price) &&
+                                         !string.IsNullOrEmpty(columns.Qty);
+
+                        var allMatched = true;
+
+                        if (allColumns)
                         {
                             _supplierOfferService.SaveColumns(soId, columns, true);
                             // raw items + match
                             _supplierOfferService.GenerateRawItems(soId, true);
                             _supplierOfferService.UpdateStatus(soId, SupplierOfferStatus.MatchItems, true);
+
+                            allMatched = _supplierOfferService.IsAllMatched(soId);
                         }
-                        else
+
+                        if (!allColumns || !allMatched)
                         {
-                            // todo message
-                            return true;
+                            PartiallyProcessedEmail(email, qr.PublicId, qr.Id);
                         }
+
                         return true;
                     }
                 }
@@ -173,6 +201,13 @@ namespace DigitalPurchasing.Services
         {
             var ext = Path.GetExtension(path);
             return _supportedFormats.Contains(ext);
+        }
+
+        private void PartiallyProcessedEmail(string toEmail, int publicId, Guid id)
+        {
+            var url = _linkGenerator.GetPathByAction("View", "QuotationRequest", new {id = id });
+            var fullUrl = $"{_settings.DefaultDomain}{url}";
+            Task.Run(() => _emailService.SendSOPartiallyProcessedEmail(toEmail, publicId, fullUrl));
         }
     }
 }

@@ -104,10 +104,7 @@ namespace DigitalPurchasing.Services
         public QuotationRequestVm GetById(Guid id)
         {
             var quotationRequest = _db.QuotationRequests.Find(id);
-            if (quotationRequest == null) return null;
-
-            var result = quotationRequest.Adapt<QuotationRequestVm>();
-            
+            var result = quotationRequest?.Adapt<QuotationRequestVm>();
             return result;
         }
 

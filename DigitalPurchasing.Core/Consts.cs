@@ -6,6 +6,11 @@ namespace DigitalPurchasing.Core
 {
     public static class Consts
     {
+        public static class Settings
+        {
+            public static string AppPath = "App";
+        }
+
         public static class Format
         {
             public static string Qty = "0.####";

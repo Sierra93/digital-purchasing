@@ -1,0 +1,14 @@
+@using RazorLight
+@inherits TemplatePage<DigitalPurchasing.Emails.EmailTemplates.SOPartiallyProcessedEmail>
+
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+</head>
+<body>
+<p>По запросу предложения №@(Model.QRPublicId) получено КП, но не все столбцы или номенклатуру удалось сопоставить.<p/>
+<p>Пожалуйста, перейдите по ссылке для сопоставления. Ссылка: <a href="@(Model.Url)">@(Model.Url)</a></p>
+</body>
+</html>
