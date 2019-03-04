@@ -46,7 +46,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public decimal GetDecimalValue(string header, int index)
         {
             var value = GetValue(header, index);
-            return value != null ? decimal.Parse(value) : 0;
+            return !string.IsNullOrEmpty(value) ? decimal.Parse(value) : 0;
         }
     }
 
