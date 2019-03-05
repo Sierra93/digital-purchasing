@@ -9,6 +9,8 @@ using DigitalPurchasing.Models;
 using EFCore.BulkExtensions;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using MoreLinq;
 
 namespace DigitalPurchasing.Services
@@ -18,12 +20,21 @@ namespace DigitalPurchasing.Services
         private readonly ApplicationDbContext _db;
         private readonly INomenclatureCategoryService _categoryService;
         private readonly ITenantService _tenantService;
+        private readonly IMemoryCache _cache;
+        private readonly ILogger _logger;
 
-        public NomenclatureService(ApplicationDbContext dbContext, INomenclatureCategoryService categoryService, ITenantService tenantService)
+        public NomenclatureService(
+            ApplicationDbContext dbContext,
+            INomenclatureCategoryService categoryService,
+            ITenantService tenantService,
+            IMemoryCache cache,
+            ILogger<NomenclatureService> logger)
         {
             _db = dbContext;
             _categoryService = categoryService;
             _tenantService = tenantService;
+            _cache = cache;
+            _logger = logger;
         }
 
         public NomenclatureIndexData GetData(int page, int perPage, string sortField, bool sortAsc)
@@ -35,8 +46,8 @@ namespace DigitalPurchasing.Services
 
             var qry = _db.Nomenclatures.Where(q => !q.IsDeleted);
             var total = qry.Count();
-            var orderedResults = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}");
-            var result = orderedResults.Skip((page-1)*perPage).Take(perPage).ProjectToType<NomenclatureIndexDataItem>().ToList();
+            var orderedResults = qry.OrderBy($"{sortField}{(sortAsc ? "" : " DESC")}");
+            var result = orderedResults.Skip((page - 1) * perPage).Take(perPage).ProjectToType<NomenclatureIndexDataItem>().ToList();
 
             foreach (var nomenclatureResult in result)
             {
@@ -59,8 +70,8 @@ namespace DigitalPurchasing.Services
 
             var qry = _db.NomenclatureAlternatives.Where(q => q.NomenclatureId == nomId);
             var total = qry.Count();
-            var orderedResults = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}");
-            var result = orderedResults.Skip((page-1)*perPage).Take(perPage).ProjectToType<NomenclatureDetailsDataItem>().ToList();
+            var orderedResults = qry.OrderBy($"{sortField}{(sortAsc ? "" : " DESC")}");
+            var result = orderedResults.Skip((page - 1) * perPage).Take(perPage).ProjectToType<NomenclatureDetailsDataItem>().ToList();
 
             return new NomenclatureDetailsData
             {
@@ -97,7 +108,7 @@ namespace DigitalPurchasing.Services
             var allNames = _db.Nomenclatures
                 .AsQueryable()
                 .GroupBy(q => q.Name)
-                .Select(q => new { Name = q.First().Name.ToLowerInvariant(), q.First().Id})
+                .Select(q => new { Name = q.First().Name.ToLowerInvariant(), q.First().Id })
                 .ToList()
                 .DistinctBy(q => q.Name)
                 .ToDictionary(q => q.Name, w => w.Id);
@@ -138,7 +149,7 @@ namespace DigitalPurchasing.Services
             entity.MassUomId = model.MassUomId;
 
             entity.MassUomValue = model.MassUomValue;
-            
+
             _db.SaveChanges();
             return true;
         }
@@ -150,7 +161,7 @@ namespace DigitalPurchasing.Services
                 throw new ArgumentNullException(nameof(options.OwnerId));
             }
 
-            var result =  new NomenclatureAutocompleteResult
+            var result = new NomenclatureAutocompleteResult
             {
                 Items = new List<NomenclatureAutocompleteResult.AutocompleteResultItem>()
             };
@@ -161,33 +172,67 @@ namespace DigitalPurchasing.Services
 
             var strComparison = StringComparison.InvariantCultureIgnoreCase;
 
-            var resultQry = _db.Nomenclatures
-                .IgnoreQueryFilters()
-                .AsNoTracking()
-                .AsQueryable()
-                .Include(w => w.BatchUom)
-                .Where(w => !w.IsDeleted && w.OwnerId == options.OwnerId &&
-                        ((!string.IsNullOrEmpty(w.Name) && w.Name.Contains(q, strComparison)) ||
-                         (!string.IsNullOrEmpty(w.NameEng) && w.NameEng.Contains(q, strComparison)) ||
-                         (!string.IsNullOrEmpty(w.Code) && w.Code.Contains(q, strComparison))
-                         )
-                      );
+            var cacheKey = Consts.CacheKeys.NomenclatureAutocomplete(options.OwnerId);
 
-            var mainResults = resultQry.ToList();
-            
+            if (!_cache.TryGetValue(cacheKey, out List<Nomenclature> ownerNomenclatures))
+            {
+                ownerNomenclatures = _db.Nomenclatures
+                    .IgnoreQueryFilters()
+                    .AsNoTracking()
+                    .AsQueryable()
+                    .Include(w => w.BatchUom)
+                    .Where(w => !w.IsDeleted && w.OwnerId == options.OwnerId)
+                    .ToList();
+
+                var cacheEntryOptions = new MemoryCacheEntryOptions()
+                    .SetSlidingExpiration(TimeSpan.FromSeconds(5));
+
+                _cache.Set(cacheKey, ownerNomenclatures, cacheEntryOptions);
+            }
+            else
+            {
+                _logger.LogInformation($"Autocomplete cache hit - {cacheKey}");
+            }
+
+            var mainResults = ownerNomenclatures
+                .Where(w =>
+                    (!string.IsNullOrEmpty(w.Name) && w.Name.Contains(q, strComparison)) ||
+                    (!string.IsNullOrEmpty(w.NameEng) && w.NameEng.Contains(q, strComparison)) ||
+                    (!string.IsNullOrEmpty(w.Code) && w.Code.Contains(q, strComparison)))
+                .ToList();
+
             if (options.SearchInAlts)
             {
-                var altNomsQry = _db.NomenclatureAlternatives
-                    .IgnoreQueryFilters()
-                    .Include(r => r.Link)
-                    .Where(n => n.OwnerId == options.OwnerId)
-                    .AsQueryable();
+                var altCacheKey =
+                    Consts.CacheKeys.NomenclatureAutocompleteSearchInAlts(options.OwnerId, options.ClientId);
 
-                altNomsQry = options.ClientType == ClientType.Customer
-                    ? altNomsQry.Where(r => r.Link.CustomerId == options.ClientId)
-                    : altNomsQry.Where(r => r.Link.SupplierId == options.ClientId);
+                if (!_cache.TryGetValue(altCacheKey,
+                    out List<NomenclatureAlternative> altNoms))
+                {
+                    var altNomsQry = _db.NomenclatureAlternatives
+                        .AsNoTracking()
+                        .IgnoreQueryFilters()
+                        .Include(r => r.Link)
+                        .Where(n => n.OwnerId == options.OwnerId)
+                        .AsQueryable();
 
-                var altNomIds = altNomsQry.Where(w => w.Name.Contains(q, strComparison))
+                    altNomsQry = options.ClientType == ClientType.Customer
+                        ? altNomsQry.Where(r => r.Link.CustomerId == options.ClientId)
+                        : altNomsQry.Where(r => r.Link.SupplierId == options.ClientId);
+
+                    altNoms = altNomsQry.ToList();
+
+                    var cacheEntryOptions = new MemoryCacheEntryOptions()
+                        .SetSlidingExpiration(TimeSpan.FromSeconds(5));
+
+                    _cache.Set(altCacheKey, altNoms, cacheEntryOptions);
+                }
+                else
+                {
+                    _logger.LogInformation($"Autocomplete cache hit - {altCacheKey}");
+                }
+
+                var altNomIds = altNoms.Where(w => w.Name.Contains(q, strComparison))
                     .Select(w => w.NomenclatureId)
                     .Distinct()
                     .ToList();
@@ -222,7 +267,7 @@ namespace DigitalPurchasing.Services
 
         public void AddNomenclatureForCustomer(Guid prItemId)
         {
-            var prItem =_db.PurchaseRequestItems.Include(q => q.PurchaseRequest).First(q => q.Id == prItemId);
+            var prItem = _db.PurchaseRequestItems.Include(q => q.PurchaseRequest).First(q => q.Id == prItemId);
             if (prItem.NomenclatureId.HasValue && prItem.PurchaseRequest.CustomerId.HasValue)
             {
                 AddOrUpdateNomenclatureAlts(
@@ -238,7 +283,7 @@ namespace DigitalPurchasing.Services
 
         public void AddNomenclatureForSupplier(Guid soItemId)
         {
-            var soItem =_db.SupplierOfferItems.IgnoreQueryFilters().Include(q => q.SupplierOffer).First(q => q.Id == soItemId);
+            var soItem = _db.SupplierOfferItems.IgnoreQueryFilters().Include(q => q.SupplierOffer).First(q => q.Id == soItemId);
             if (soItem.NomenclatureId.HasValue && soItem.SupplierOffer.SupplierId.HasValue)
             {
                 AddOrUpdateNomenclatureAlts(
@@ -276,7 +321,7 @@ namespace DigitalPurchasing.Services
 
             entity.MassUomId = model.MassUomId;
             entity.MassUomValue = model.MassUomValue;
-            
+
             _db.SaveChanges();
         }
 
@@ -342,8 +387,8 @@ namespace DigitalPurchasing.Services
                         Link = new NomenclatureAlternativeLink
                         {
                             Id = Guid.NewGuid(),
-                            CustomerId = clientType == ClientType.Customer ? clientId : (Guid?) null,
-                            SupplierId = clientType == ClientType.Supplier ? clientId : (Guid?) null
+                            CustomerId = clientType == ClientType.Customer ? clientId : (Guid?)null,
+                            SupplierId = clientType == ClientType.Supplier ? clientId : (Guid?)null
                         }
                     };
                     forBulkUpdate.Add(altName);

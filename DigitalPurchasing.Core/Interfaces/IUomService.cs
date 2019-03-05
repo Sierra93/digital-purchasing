@@ -10,6 +10,7 @@ namespace DigitalPurchasing.Core.Interfaces
         UomFactorData GetFactorData(Guid uomId, int page, int perPage, string sortField, bool sortAsc);
         UomResult CreateOrUpdate(string name);
         IEnumerable<UomResult> GetAll();
+        UomConversionRateResponse GetConversionRate(Guid ownerId, Guid fromUomId, Guid toUomId, Guid nomenclatureId);
         UomConversionRateResponse GetConversionRate(Guid fromUomId, Guid nomenclatureId);
         UomAutocompleteResponse Autocomplete(string s, Guid ownerId);
         BaseResult<UomAutocompleteResponse.AutocompleteItem> AutocompleteSingle(Guid id);

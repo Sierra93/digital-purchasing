@@ -301,84 +301,35 @@ namespace DigitalPurchasing.Services
             
             var soItems = qrySoItems.Where(q => q.SupplierOfferId == soId).ToList();
 
-            string supplierName = null;
-            if (soItems.Any())
-            {
-                supplierName = so.SupplierName;
-            }
-
-            var uoms = new Dictionary<string, Guid>();
-            var noms = new Dictionary<string, Guid>();
-
             foreach (var soItem in soItems)
             {
-                #region Try to search in old PR items
-
-                if (string.IsNullOrEmpty(soItem.RawCode))
-                {
-                    var otherRecords = qrySoItems
-                        .Where(q =>
-                            q.RawName == soItem.RawName &&
-                            q.SupplierOffer.SupplierName == supplierName &&
-                            q.SupplierOfferId != soId &&
-                            !string.IsNullOrEmpty(q.RawUomStr))
-                        .ToList();
-
-                    if (otherRecords.Any())
-                    {
-                        var rawUom = otherRecords.FirstOrDefault(q => !string.IsNullOrEmpty(q.RawUomStr))?.RawUomStr;
-                        if (!string.IsNullOrEmpty(rawUom))
-                        {
-                            soItem.RawUomStr = rawUom;
-                        }
-                    }
-                }
-
-                #endregion
-
                 #region Try to find UoM in db
                 
-                if (uoms.ContainsKey(soItem.RawUomStr))
+                var res = _uomService.Autocomplete(soItem.RawUomStr, so.OwnerId);
+                if (res.Items != null && res.Items.Any())
                 {
-                    soItem.RawUomId = uoms[soItem.RawUomStr];
-                }
-                else
-                {
-                    var res = _uomService.Autocomplete(soItem.RawUomStr, so.OwnerId);
-                    if (res.Items != null && res.Items.Any())
+                    var match = res.Items.First();
+                    if (match != null)
                     {
-                        var match = res.Items.First();
-                        if (match != null)
-                        {
-                            uoms.TryAdd(match.Name, match.Id);
-                            soItem.RawUomId = match.Id;
-                        }
+                        soItem.RawUomId = match.Id;
                     }
                 }
 
                 #endregion
                 #region Try to find in nomeclature
                 
-                if (noms.ContainsKey(soItem.RawName))
+                var nomRes = _nomenclatureService.Autocomplete(new AutocompleteOptions
                 {
-                    soItem.NomenclatureId = noms[soItem.RawName];
-                }
-                else
-                {
-                    var nomRes = _nomenclatureService.Autocomplete(new AutocompleteOptions
-                    {
-                        Query = soItem.RawName,
-                        ClientId = so.SupplierId.Value,
-                        ClientType = ClientType.Supplier,
-                        SearchInAlts = true,
-                        OwnerId = so.OwnerId
-                    });
+                    Query = soItem.RawName,
+                    ClientId = so.SupplierId.Value,
+                    ClientType = ClientType.Supplier,
+                    SearchInAlts = true,
+                    OwnerId = so.OwnerId
+                });
 
-                    if (nomRes.Items != null && nomRes.Items.Count == 1)
-                    {
-                        noms.TryAdd(nomRes.Items[0].Name, nomRes.Items[0].Id);
-                        soItem.NomenclatureId = nomRes.Items[0].Id;
-                    }
+                if (nomRes.Items != null && nomRes.Items.Count == 1)
+                {
+                    soItem.NomenclatureId = nomRes.Items[0].Id;
                 }
 
                 #endregion

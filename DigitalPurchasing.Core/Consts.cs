@@ -1,6 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
+using DigitalPurchasing.Core.Extensions;
 
 namespace DigitalPurchasing.Core
 {
@@ -16,6 +15,18 @@ namespace DigitalPurchasing.Core
             public static string Qty = "0.####";
             public static string Money = "0,0.00";
             public static string Money2 = "0,0";
+        }
+
+        public static class CacheKeys
+        {
+            public static string UomAutocomplete(Guid ownerId, string qry)
+                => $"uom_ac_{ownerId:N}_{qry.ToMD5()}";
+
+            public static string NomenclatureAutocomplete(Guid ownerId)
+                => $"nom_ac_{ownerId:N}";
+
+            public static string NomenclatureAutocompleteSearchInAlts(Guid ownerId, Guid clientId)
+                => $"nom_ac_alt_{ownerId:N}_{clientId:N}";
         }
     }
 }
