@@ -65,6 +65,7 @@ namespace DigitalPurchasing.Web
             });
 
             services.AddHangfire(x => x.UseSqlServerStorage(Configuration.GetConnectionString("HangfireConnection")));
+            GlobalJobFilters.Filters.Add(new AutomaticRetryAttribute { Attempts = 0 });
 
             services.AddMemoryCache();
 
