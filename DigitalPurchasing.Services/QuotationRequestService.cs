@@ -101,9 +101,18 @@ namespace DigitalPurchasing.Services
             return Guid.Empty;;
         }
 
-        public QuotationRequestVm GetById(Guid id)
+        public QuotationRequestVm GetById(Guid id, bool globalSearch = false)
         {
-            var quotationRequest = _db.QuotationRequests.Find(id);
+            var qry = _db.QuotationRequests
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (globalSearch)
+            {
+                qry = qry.IgnoreQueryFilters();
+            }
+
+            var quotationRequest = qry.FirstOrDefault(q => q.Id == id);
             var result = quotationRequest?.Adapt<QuotationRequestVm>();
             return result;
         }

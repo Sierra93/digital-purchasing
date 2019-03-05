@@ -134,7 +134,16 @@ namespace DigitalPurchasing.Services
 
                 // qr id
                 var qrId = _quotationRequestService.UidToQuotationRequest(uid);
-                var qr = _quotationRequestService.GetById(qrId);
+                if (qrId == Guid.Empty)
+                {
+                    return false;
+                }
+
+                var qr = _quotationRequestService.GetById(qrId, true);
+                if (qr == null)
+                {
+                    return false;
+                }
 
                 // detect supplier by contact email
                 var supplierId = _supplierService.GetSupplierByEmail(fromEmail);
@@ -143,7 +152,7 @@ namespace DigitalPurchasing.Services
                 var email = _companyService.GetContactEmailByOwner(qr.OwnerId);
 
                 // upload supplier offer
-                if (qrId != Guid.Empty && supplierId != Guid.Empty)
+                if (supplierId != Guid.Empty)
                 {
                     var clId = _competitionListService.GetIdByQR(qrId, true);
 

@@ -8,7 +8,7 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         QuotationRequestIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
         Guid GetQuotationRequestId(Guid purchaseRequestId);
-        QuotationRequestVm GetById(Guid id);
+        QuotationRequestVm GetById(Guid id, bool globalSearch = false);
         QuotationRequestViewData GetViewData(Guid qrId);
         DeleteResultVm Delete(Guid id);
         Task SendRequests(Guid userId, Guid quotationRequestId, IReadOnlyList<Guid> suppliers);
