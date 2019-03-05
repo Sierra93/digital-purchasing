@@ -12,6 +12,11 @@ namespace DigitalPurchasing.Analysis2.Filters
         {
             if (Options != null && Options.DeliveryDateTerms != DeliveryDateTerms.Any)
             {
+                if (suppliers.Count(q => q.Date.HasValue) == 0)
+                {
+                    return new List<AnalysisSupplier>();
+                }
+
                 if (Options.DeliveryDateTerms == DeliveryDateTerms.Min)
                 {
                     var minDate = suppliers.Where(q => q.Date.HasValue).Select(q => q.Date.Value).Min();
