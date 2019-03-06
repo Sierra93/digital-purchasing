@@ -201,64 +201,55 @@ namespace DigitalPurchasing.Services
             {
                 prItem.PurchaseRequestId = id;
                 prItem.Position = ++index;
+                Autocomplete(pr, prItem);
             }
 
             _db.BulkInsert(prItems);
-
-            AutocompleteDataPRItems(id);
         }
 
-        private void AutocompleteDataPRItems(Guid prId)
+        private void Autocomplete(PurchaseRequest pr, PurchaseRequestItem prItem)
         {
-            var pr = _db.PurchaseRequests.Find(prId);
-            var prItems = _db.PurchaseRequestItems.Where(q => q.PurchaseRequestId == prId).ToList();
-
-            foreach (var prItem in prItems)
+            #region Try to find UoM in db
+                
+            var res = _uomService.Autocomplete(prItem.RawUom, pr.OwnerId);
+            if (res.Items != null && res.Items.Any())
             {
-                #region Try to find UoM in db
-                
-                var res = _uomService.Autocomplete(prItem.RawUom, pr.OwnerId);
-                if (res.Items != null && res.Items.Any())
+                var match = res.Items.First();
+                if (match != null)
                 {
-                    var match = res.Items.First();
-                    if (match != null)
-                    {
-                        prItem.RawUomMatchId = match.Id;
-                    }
+                    prItem.RawUomMatchId = match.Id;
                 }
-
-                #endregion
-                #region Try to find in nomeclature
-                
-                var nomRes = _nomenclatureService.Autocomplete(new AutocompleteOptions
-                {
-                    Query = prItem.RawName,
-                    ClientId = pr.CustomerId.Value,
-                    ClientType = ClientType.Customer,
-                    SearchInAlts = true,
-                    OwnerId = pr.OwnerId
-                });
-
-                if (nomRes.Items != null && nomRes.Items.Count == 1)
-                {
-                    prItem.NomenclatureId = nomRes.Items[0].Id;
-                }
-
-                #endregion
-
-                #region Calc UoMs factor
-
-                if (prItem.NomenclatureId != null && prItem.RawUomMatchId != null)
-                {
-                    var rate = _uomService.GetConversionRate(prItem.RawUomMatchId.Value, prItem.NomenclatureId.Value);
-                    prItem.CommonFactor = rate.CommonFactor;
-                    prItem.NomenclatureFactor = rate.NomenclatureFactor;
-                }
-
-                #endregion
             }
 
-            _db.BulkUpdate(prItems);
+            #endregion
+            #region Try to find in nomeclature
+                
+            var nomRes = _nomenclatureService.Autocomplete(new AutocompleteOptions
+            {
+                Query = prItem.RawName,
+                ClientId = pr.CustomerId.Value,
+                ClientType = ClientType.Customer,
+                SearchInAlts = true,
+                OwnerId = pr.OwnerId
+            });
+
+            if (nomRes.Items != null && nomRes.Items.Count == 1)
+            {
+                prItem.NomenclatureId = nomRes.Items[0].Id;
+            }
+
+            #endregion
+
+            #region Calc UoMs factor
+
+            if (prItem.NomenclatureId != null && prItem.RawUomMatchId != null)
+            {
+                var rate = _uomService.GetConversionRate(prItem.RawUomMatchId.Value, prItem.NomenclatureId.Value);
+                prItem.CommonFactor = rate.CommonFactor;
+                prItem.NomenclatureFactor = rate.NomenclatureFactor;
+            }
+
+            #endregion
         }
 
         public void UpdateStatus(Guid id, PurchaseRequestStatus status)
