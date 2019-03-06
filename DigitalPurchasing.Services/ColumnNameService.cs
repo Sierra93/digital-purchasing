@@ -30,7 +30,14 @@ namespace DigitalPurchasing.Services
                 .IgnoreQueryFilters()
                 .FirstOrDefault(q => q.Type == type && q.OwnerId == ownerId);
             if (entity == null) return new string[0];
-            return entity.Names.Split(Separator);
+            var names = entity.Names.Split(Separator);
+            var defaultName = DefaultName(type);
+            if (!names.Contains(defaultName, StringComparer.InvariantCultureIgnoreCase))
+            {
+                names = names.Union(new [] {defaultName}).ToArray();
+            }
+
+            return names;
         }
 
         public void SaveName(TableColumnType type, string name, Guid ownerId)
@@ -49,7 +56,7 @@ namespace DigitalPurchasing.Services
                 return;
             }
 
-            var names = entity.Names.Split(Separator, StringSplitOptions.RemoveEmptyEntries).Union(new [] { defaultName }).ToList();
+            var names = entity.Names.Split(Separator, StringSplitOptions.RemoveEmptyEntries).ToList();
             if (names.Contains(name, StringComparer.InvariantCultureIgnoreCase)) return;
             names.Add(name);
             entity.Names = string.Join(Separator, names);
