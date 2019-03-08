@@ -15,18 +15,15 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly IEmailService _emailSender;
-        private readonly ICompanyService _companyService;
 
         public IndexModel(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
-            IEmailService emailSender,
-            ICompanyService companyService)
+            IEmailService emailSender)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
-            _companyService = companyService;
         }
 
         [Display(Name = "Имя пользователя")]
@@ -49,9 +46,6 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
             [Phone]
             [Display(Name = "Номер телефона")]
             public string PhoneNumber { get; set; }
-
-            [Required, Display(Name = "Название организации")]
-            public string CompanyName { get; set; }
 
             [Required, Display(Name = "Имя")]
             public string FirstName { get; set; }
@@ -82,7 +76,6 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
             {
                 Email = email,
                 PhoneNumber = phoneNumber,
-                CompanyName = _companyService.GetByUser(user.Id).Name,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Patronymic = user.Patronymic,
@@ -135,8 +128,6 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
                 }
             }
 
-            _companyService.UpdateName(user.Id, Input.CompanyName);
-
             await _signInManager.RefreshSignInAsync(user);
             StatusMessage = "Ваш профиль был обновлен";
             return RedirectToPage();
@@ -154,7 +145,6 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
             {
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
-
 
             var userId = await _userManager.GetUserIdAsync(user);
             var email = await _userManager.GetEmailAsync(user);
