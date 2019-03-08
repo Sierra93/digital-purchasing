@@ -8,7 +8,7 @@ namespace DigitalPurchasing.Core.Interfaces
         NomenclatureIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
         NomenclatureDetailsData GetDetailsData(Guid nomId, int page, int perPage, string sortField, bool sortAsc);
         NomenclatureVm CreateOrUpdate(NomenclatureVm model);
-        void CreateOrUpdate(List<NomenclatureVm> models);
+        void CreateOrUpdate(List<NomenclatureVm> models, Guid ownerId);
         NomenclatureVm GetById(Guid id);
         bool Update(NomenclatureVm model);
         NomenclatureAutocompleteResult Autocomplete(AutocompleteOptions options);

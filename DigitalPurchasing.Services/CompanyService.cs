@@ -1,9 +1,13 @@
 using System;
 using System.Linq;
+using System.Security.Claims;
+using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
+using DigitalPurchasing.Models.Identity;
 using Mapster;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace DigitalPurchasing.Services
@@ -12,15 +16,33 @@ namespace DigitalPurchasing.Services
     {
         private readonly ApplicationDbContext _db;
 
-        public CompanyService(ApplicationDbContext db) => _db = db;
+        private readonly UserManager<User> _userManager;
+
+        public CompanyService(
+            ApplicationDbContext db,
+            UserManager<User> userManager)
+        {
+            _db = db;
+            _userManager = userManager;
+        }
 
         public CompanyResponse Create(string name)
         {
-            var entry = _db.Companies.Add(new Company {Name = name});
+            var entry = _db.Companies.Add(new Company {Name = name });
             _db.SaveChanges();
             var response = entry.Entity.Adapt<CompanyResponse>();
             response.IsOwner = true;
             return response;
+        }
+
+        public void AssignOwner(Guid companyId, Guid userId)
+        {
+            var user = _userManager.FindByIdAsync(userId.ToString("N")).Result;
+            var result = _userManager.AddToRoleAsync(user, Consts.Roles.CompanyOwner).Result;
+            if (!result.Succeeded)
+            {
+                throw new Exception();
+            }
         }
 
         public CompanyResponse GetByUser(Guid userId)

@@ -28,5 +28,10 @@ namespace DigitalPurchasing.Core
             public static string NomenclatureAutocompleteSearchInAlts(Guid ownerId, Guid clientId)
                 => $"nom_ac_alt_{ownerId:N}_{clientId:N}";
         }
+
+        public static class Roles
+        {
+            public static string CompanyOwner = "CompanyOwner";
+        }
     }
 }

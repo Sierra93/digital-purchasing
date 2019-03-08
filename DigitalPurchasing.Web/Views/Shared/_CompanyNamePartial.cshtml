@@ -4,13 +4,13 @@
 
 @inject SignInManager<User> SignInManager
 
-@if (SignInManager.IsSignedIn(User))
+@if (SignInManager.IsSignedIn(User) && User.IsInRole(Consts.Roles.CompanyOwner))
 {
     var companyName = User.FindFirst(CustomClaimTypes.CompanyName).Value;
     if (string.IsNullOrEmpty(companyName))
     {
         <div class="alert alert-warning alert-dismissible" role="alert" style="margin-top: 15px;">
-            Пожалуйста укажите название вашей организации в <a asp-area="Identity" asp-page="/Account/Manage/Index">профиле</a>
+            Пожалуйста укажите название вашей организации в <a asp-area="Identity" asp-page="/Account/Manage/Company">профиле</a>
         </div>
     }
 }

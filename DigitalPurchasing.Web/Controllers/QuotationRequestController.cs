@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.ExcelReader;
 using DigitalPurchasing.Web.Core;
@@ -23,21 +24,9 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         private readonly IQuotationRequestService _quotationRequestService;
-        private readonly IPurchaseRequestService _purchaseRequestService;
-        private readonly IEmailService _emailService;
-        private readonly ITenantService _tenantService;
 
-        public QuotationRequestController(
-            IQuotationRequestService quotationRequestService,
-            IPurchaseRequestService purchaseRequestService,
-            IEmailService emailService,
-            ITenantService tenantService)
-        {
-            _quotationRequestService = quotationRequestService;
-            _purchaseRequestService = purchaseRequestService;
-            _emailService = emailService;
-            _tenantService = tenantService;
-        }
+        public QuotationRequestController(IQuotationRequestService quotationRequestService)
+            => _quotationRequestService = quotationRequestService;
 
         public IActionResult Index() => View();
 
@@ -94,8 +83,8 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> SentRequests([FromBody] SentRequestsModel model)
         {
-            var userId = _tenantService.Get().UserId;
-            await _quotationRequestService.SendRequests(userId, model.QuotationRequestId, model.Suppliers);
+
+            await _quotationRequestService.SendRequests(User.Id(), model.QuotationRequestId, model.Suppliers);
             var sentRequests = _quotationRequestService.GetSentRequests(model.QuotationRequestId);
             return Ok(sentRequests);
         }

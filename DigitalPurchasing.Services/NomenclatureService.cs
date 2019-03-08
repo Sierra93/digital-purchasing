@@ -19,20 +19,17 @@ namespace DigitalPurchasing.Services
     {
         private readonly ApplicationDbContext _db;
         private readonly INomenclatureCategoryService _categoryService;
-        private readonly ITenantService _tenantService;
         private readonly IMemoryCache _cache;
         private readonly ILogger _logger;
 
         public NomenclatureService(
             ApplicationDbContext dbContext,
             INomenclatureCategoryService categoryService,
-            ITenantService tenantService,
             IMemoryCache cache,
             ILogger<NomenclatureService> logger)
         {
             _db = dbContext;
             _categoryService = categoryService;
-            _tenantService = tenantService;
             _cache = cache;
             _logger = logger;
         }
@@ -103,7 +100,7 @@ namespace DigitalPurchasing.Services
             return result;
         }
 
-        public void CreateOrUpdate(List<NomenclatureVm> nomenclatures)
+        public void CreateOrUpdate(List<NomenclatureVm> nomenclatures, Guid ownerId)
         {
             var allNames = _db.Nomenclatures
                 .AsQueryable()
@@ -118,7 +115,7 @@ namespace DigitalPurchasing.Services
             {
                 var normName = entity.Name.ToLowerInvariant();
                 entity.Id = allNames.ContainsKey(normName) ? allNames[normName] : Guid.NewGuid();
-                entity.OwnerId = _tenantService.Get().CompanyId;
+                entity.OwnerId = ownerId;
             }
             _db.BulkInsertOrUpdate(entities);
         }

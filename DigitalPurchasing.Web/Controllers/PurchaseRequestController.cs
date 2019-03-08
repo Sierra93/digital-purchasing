@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Models.Identity;
 using DigitalPurchasing.Web.Core;
@@ -22,22 +23,19 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly ICompanyService _companyService;
         private readonly UserManager<User> _userManager;
         private readonly IUomService _uomService;
-        private readonly ITenantService _tenantService;
 
         public PurchaseRequestController(
             IPurchaseRequestService purchasingRequestService,
             INomenclatureService nomenclatureService,
             ICompanyService companyService,
             UserManager<User> userManager,  
-            IUomService uomService,
-            ITenantService tenantService)
+            IUomService uomService)
         {
             _purchasingRequestService = purchasingRequestService;
             _nomenclatureService = nomenclatureService;
             _companyService = companyService;
             _userManager = userManager;
             _uomService = uomService;
-            _tenantService = tenantService;
         }
 
         public IActionResult Edit(Guid id)
@@ -78,7 +76,7 @@ namespace DigitalPurchasing.Web.Controllers
             using (var output = System.IO.File.Create(filePath))
                 await file.CopyToAsync(output);
 
-            var ownerId = _tenantService.Get().CompanyId;
+            var ownerId = User.CompanyId();
 
             var response = _purchasingRequestService.CreateFromFile(filePath, ownerId);
             if (!response.IsSuccess)

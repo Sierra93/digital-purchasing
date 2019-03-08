@@ -85,7 +85,6 @@ namespace DigitalPurchasing.Web
 
             services.AddScoped<IUserClaimsPrincipalFactory<User>, CustomUserClaimsPrincipalFactory>();
 
-            services.AddScoped<ITenantService, TenantService>();
             services.AddScoped<ICompanyService, CompanyService>();
             services.AddScoped<INomenclatureCategoryService, NomenclatureCategoryService>();
             services.AddScoped<IUomService, UomService>();

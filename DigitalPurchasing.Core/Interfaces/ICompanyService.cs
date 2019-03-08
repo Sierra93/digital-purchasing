@@ -7,6 +7,7 @@ namespace DigitalPurchasing.Core.Interfaces
         CompanyResponse Create(string name);
         CompanyResponse GetByUser(Guid userId);
         void UpdateName(Guid userId, string newName);
+        void AssignOwner(Guid companyId, Guid userId);
         string GetContactEmailByOwner(Guid ownerId);
     }
 

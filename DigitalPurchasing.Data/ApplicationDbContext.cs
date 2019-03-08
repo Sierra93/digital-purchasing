@@ -1,10 +1,12 @@
 using System;
 using System.Linq;
 using DigitalPurchasing.Core;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Models;
 using DigitalPurchasing.Models.Counters;
 using DigitalPurchasing.Models.Identity;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,9 +14,9 @@ namespace DigitalPurchasing.Data
 {
     public class ApplicationDbContext : IdentityDbContext<User, Role, Guid, UserClaim, UserRole, UserLogin, RoleClaim, UserToken>
     {
-        private readonly ITenantService _tenantService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        private Guid CompanyId => _tenantService.Get().CompanyId;
+        private Guid CompanyId() => _httpContextAccessor?.HttpContext?.User.CompanyId() ?? Guid.Empty;
 
         public DbSet<Company> Companies { get; set; }
         public DbSet<Currency> Currencies { get; set; }
@@ -59,14 +61,26 @@ namespace DigitalPurchasing.Data
 
         public DbSet<ReceivedEmail> ReceivedEmails { get; set; }
 
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ITenantService tenantService) : base(options) => _tenantService = tenantService;
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IHttpContextAccessor httpContextAccessor) : base(options)
+        {
+            _httpContextAccessor = httpContextAccessor;
+        }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
             builder.Entity<User>().ToTable("Users");
-            builder.Entity<Role>().ToTable("Roles");
+            builder.Entity<Role>(e =>
+            {
+                e.ToTable("Roles");
+                e.HasData(new Role
+                {
+                    Id = new Guid("523a1a9dfa7045ed9ca01ddf3f037779"),
+                    Name = Consts.Roles.CompanyOwner,
+                    NormalizedName = Consts.Roles.CompanyOwner.ToUpper()
+                });
+            });
             builder.Entity<UserClaim>().ToTable("UserClaims");
             builder.Entity<UserLogin>().ToTable("UserLogins");
             builder.Entity<UserRole>().ToTable("UserRoles");
@@ -157,26 +171,26 @@ namespace DigitalPurchasing.Data
             });
 
             // default filters to show company data
-            builder.Entity<Customer>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<PurchaseRequest>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<QuotationRequest>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<CompetitionList>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<Supplier>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<SupplierOffer>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<SupplierContactPerson>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<Delivery>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<Nomenclature>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<NomenclatureAlternative>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<NomenclatureCategory>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<ColumnName>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<UnitsOfMeasurement>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<UomConversionRate>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<UploadedDocument>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<AnalysisVariant>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<PRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<QRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<CLCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
-            builder.Entity<SOCounter>().HasQueryFilter(o => o.OwnerId == CompanyId);
+            builder.Entity<Customer>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<PurchaseRequest>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<QuotationRequest>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<CompetitionList>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<Supplier>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<SupplierOffer>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<SupplierContactPerson>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<Delivery>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<Nomenclature>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<NomenclatureAlternative>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<NomenclatureCategory>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<ColumnName>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<UnitsOfMeasurement>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<UomConversionRate>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<UploadedDocument>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<AnalysisVariant>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<PRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<QRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<CLCounter>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<SOCounter>().HasQueryFilter(o => o.OwnerId == CompanyId());
         }
 
         public override int SaveChanges()
@@ -187,8 +201,7 @@ namespace DigitalPurchasing.Data
             {
                 if (entity.OwnerId == Guid.Empty)
                 {
-                    var companyId = _tenantService.Get().CompanyId;
-                    entity.OwnerId = companyId;
+                    entity.OwnerId = CompanyId();
                 }
             }
 

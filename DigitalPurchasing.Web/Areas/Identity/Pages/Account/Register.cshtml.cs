@@ -85,6 +85,8 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account
                 {
                     _logger.LogInformation("User created a new account with password.");
 
+                    _companyService.AssignOwner(emptyCompany.Id, user.Id);
+
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     var callbackUrl = Url.Page(
                         "/Account/ConfirmEmail",

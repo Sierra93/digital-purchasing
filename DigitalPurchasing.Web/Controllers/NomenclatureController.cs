@@ -3,16 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.ExcelReader;
-using DigitalPurchasing.Services;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.Nomenclature;
 using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 
 namespace DigitalPurchasing.Web.Controllers
 {
@@ -22,20 +21,17 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly INomenclatureCategoryService _nomenclatureCategoryService;
         private readonly IDictionaryService _dictionaryService;
         private readonly IUomService _uomService;
-        private readonly ITenantService _tenantService;
 
         public NomenclatureController(
             INomenclatureService nomenclatureService,
             INomenclatureCategoryService nomenclatureCategoryService,
             IDictionaryService dictionaryService,
-            IUomService uomService,
-            ITenantService tenantService)
+            IUomService uomService)
         {
             _nomenclatureService = nomenclatureService;
             _nomenclatureCategoryService = nomenclatureCategoryService;
             _dictionaryService = dictionaryService;
             _uomService = uomService;
-            _tenantService = tenantService;
         }
 
         public IActionResult Index() => View();
@@ -71,8 +67,7 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpGet]
         public IActionResult Autocomplete([FromQuery] string q)
         {
-            var ownerId = _tenantService.Get().CompanyId;
-            return Json(_nomenclatureService.Autocomplete(new AutocompleteOptions { Query = q, OwnerId = ownerId }));
+            return Json(_nomenclatureService.Autocomplete(new AutocompleteOptions { Query = q, OwnerId = User.CompanyId() }));
         }
 
         [HttpGet]
@@ -236,7 +231,9 @@ namespace DigitalPurchasing.Web.Controllers
                 ResourceUomValue = data.ResourceUomValue
             }).GroupBy(q => q.Name).Select(q => q.First()).ToList();
 
-            _nomenclatureService.CreateOrUpdate(nomenclatures);
+            var companyId = User.CompanyId();
+
+            _nomenclatureService.CreateOrUpdate(nomenclatures, companyId);
 
             return RedirectToAction(nameof(Index));
         }

@@ -22,7 +22,6 @@ namespace DigitalPurchasing.Services
         private readonly IColumnNameService _columnNameService;
         private readonly ICounterService _counterService;
         private readonly ICurrencyService _currencyService;
-        private readonly ITenantService _tenantService;
         private readonly INomenclatureService _nomenclatureService;
         private readonly IUploadedDocumentService _uploadedDocumentService;
         private readonly IUomService _uomService;
@@ -34,7 +33,6 @@ namespace DigitalPurchasing.Services
             IColumnNameService columnNameService,
             ICounterService counterService,
             ICurrencyService currencyService,
-            ITenantService tenantService,
             INomenclatureService nomenclatureService,
             IUploadedDocumentService uploadedDocumentService,
             IUomService uomService,
@@ -45,7 +43,6 @@ namespace DigitalPurchasing.Services
             _columnNameService = columnNameService;
             _counterService = counterService;
             _currencyService = currencyService;
-            _tenantService = tenantService;
             _nomenclatureService = nomenclatureService;
             _uploadedDocumentService = uploadedDocumentService;
             _uomService = uomService;
