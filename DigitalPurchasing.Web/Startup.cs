@@ -131,10 +131,11 @@ namespace DigitalPurchasing.Web
             }
             else
             {
-                dbContext.Database.Migrate();
                 app.UseExceptionHandler("/Home/Error");
                 app.UseHsts();
             }
+
+            dbContext.Database.Migrate();
 
             const string defaultCulture = "ru-RU";
 
