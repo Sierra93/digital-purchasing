@@ -11,5 +11,7 @@ namespace DigitalPurchasing.Models
         public ICollection<UnitsOfMeasurement> UnitsOfMeasurements { get; set; }
         public ICollection<NomenclatureCategory> NomenclatureCategories { get; set; }
         public ICollection<PRCounter> PRCounters { get; set; }
+
+        public string InvitationCode { get; set; }
     }
 }
