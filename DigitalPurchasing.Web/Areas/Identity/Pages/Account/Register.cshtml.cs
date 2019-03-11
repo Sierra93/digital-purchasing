@@ -1,15 +1,10 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using DigitalPurchasing.Models.Identity;
-using DigitalPurchasing.Services;
-using DigitalPurchasing.Web.Core;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
@@ -40,58 +35,72 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account
         }
 
         [BindProperty]
-        public InputModel Input { get; set; }
+        public InputModel Input { get; set; } = new InputModel();
 
         public string ReturnUrl { get; set; }
+
+        public string InvitationCode { get; set; }
+
+        public string CompanyName { get; set; }
 
         public class InputModel
         {
             [Required]
             [EmailAddress]
-            [Display(Name = "Email")]
+            [Display(Name = "E-mail")]
             public string Email { get; set; }
 
             [Required]
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
             [DataType(DataType.Password)]
-            [Display(Name = "Password")]
+            [Display(Name = "Пароль")]
             public string Password { get; set; }
 
             [Required]
             [DataType(DataType.PhoneNumber)]
-            [Display(Name = "Phone Number")]
+            [Display(Name = "Номер телефона")]
             public string PhoneNumber { get; set; }
 
             [DataType(DataType.Password)]
-            [Display(Name = "Confirm password")]
-            [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+            [Display(Name = "Подтвердите пароль")]
+            [Compare("Password", ErrorMessage = "Пароль и пароль подтверждения не совпадают.")]
             public string ConfirmPassword { get; set; }
         }
 
-        public void OnGet(string returnUrl = null)
+        public async Task<IActionResult> OnGetAsync(string returnUrl = null, string code = null)
         {
             ReturnUrl = returnUrl;
+            InvitationCode = code;
+            var company = await _companyService.GetByInvitationCode(code);
+            if (company == null) return NotFound();
+            CompanyName = company.Name;
+            return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync(string returnUrl = null)
+        public async Task<IActionResult> OnPostAsync(string returnUrl = null, string code = null)
         {
             returnUrl = returnUrl ?? Url.Content("~/");
             if (ModelState.IsValid)
             {
-                var emptyCompany = _companyService.Create(null);
-                var user = new User { UserName = Input.Email, Email = Input.Email, PhoneNumber = Input.PhoneNumber, CompanyId = emptyCompany.Id };
+                var company = string.IsNullOrEmpty(code)
+                    ? _companyService.Create(null)
+                    : await _companyService.GetByInvitationCode(code);
+                    
+                var user = new User { UserName = Input.Email, Email = Input.Email, PhoneNumber = Input.PhoneNumber, CompanyId = company.Id };
                 var result = await _userManager.CreateAsync(user, Input.Password);
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
 
-                    _companyService.AssignOwner(emptyCompany.Id, user.Id);
+                    if (!await _companyService.HaveOwner(company.Id))
+                    {
+                        await _companyService.AssignOwner(company.Id, user.Id);
+                    }
 
-                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    var emailConfirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     var callbackUrl = Url.Page(
                         "/Account/ConfirmEmail",
                         pageHandler: null,
-                        values: new { userId = user.Id.ToString("N"), code = code },
+                        values: new { userId = user.Id.ToString("N"), code = emailConfirmationToken },
                         protocol: Request.Scheme);
 
                     await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",

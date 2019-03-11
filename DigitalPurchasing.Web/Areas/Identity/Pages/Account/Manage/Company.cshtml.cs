@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core.Extensions;
@@ -39,11 +40,20 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
             public string CompanyName { get; set; }
         }
 
-        public void OnGet()
-            => Input = new InputModel
+        [Display(Name = "Ссылка для приглашения")]
+        public string InvitationUrl { get; set; }
+
+        public async Task<IActionResult> OnGetAsync()
+        {
+            Input = new InputModel
             {
                 CompanyName = _companyService.GetByUser(User.Id()).Name
             };
+
+            var invitationCode = await _companyService.GetInvitationCode(User.CompanyId());
+            InvitationUrl = Url.Action("Index", "Invite", new { code = invitationCode }, Request.Scheme);
+            return Page();
+        }
 
         public async Task<IActionResult> OnPostAsync()
         {

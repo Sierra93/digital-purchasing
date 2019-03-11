@@ -1,6 +1,6 @@
 using System;
 using System.Linq;
-using System.Security.Claims;
+using System.Threading.Tasks;
 using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
@@ -26,32 +26,35 @@ namespace DigitalPurchasing.Services
             _userManager = userManager;
         }
 
-        public CompanyResponse Create(string name)
+        public CompanyDto Create(string name)
         {
             var entry = _db.Companies.Add(new Company {Name = name });
             _db.SaveChanges();
-            var response = entry.Entity.Adapt<CompanyResponse>();
-            response.IsOwner = true;
+            var response = entry.Entity.Adapt<CompanyDto>();
             return response;
         }
 
-        public void AssignOwner(Guid companyId, Guid userId)
+        public async Task AssignOwner(Guid companyId, Guid userId)
         {
-            var user = _userManager.FindByIdAsync(userId.ToString("N")).Result;
-            var result = _userManager.AddToRoleAsync(user, Consts.Roles.CompanyOwner).Result;
+            var user = await _userManager.FindByIdAsync(userId.ToString("N"));
+            var result = await _userManager.AddToRoleAsync(user, Consts.Roles.CompanyOwner);
             if (!result.Succeeded)
             {
                 throw new Exception();
             }
         }
 
-        public CompanyResponse GetByUser(Guid userId)
+        public CompanyDto GetByUser(Guid userId)
         {
             var user = _db.Users.Include(q => q.Company).FirstOrDefault(q => q.Id == userId);
-            if (user == null) return null;
-            var response = user.Company.Adapt<CompanyResponse>();
-            response.IsOwner = true;
+            var response = user?.Company.Adapt<CompanyDto>();
             return response;
+        }
+
+        public async Task<CompanyDto> GetByInvitationCode(string code)
+        {
+            var company = await _db.Companies.FirstOrDefaultAsync(q => q.InvitationCode == code);
+            return company?.Adapt<CompanyDto>();
         }
 
         public void UpdateName(Guid userId, string newName)
@@ -67,6 +70,28 @@ namespace DigitalPurchasing.Services
             var user = _db.Users.FirstOrDefault(q => q.CompanyId == ownerId);
             if (user != null && user.EmailConfirmed) return user.Email;
             return null;
+        }
+
+        public async Task<bool> IsValidInvitationCode(string code)
+        {
+            if (string.IsNullOrEmpty(code)) return false;
+            return await _db.Companies.AnyAsync(q => q.InvitationCode == code);
+        }
+
+        public async Task<string> GetInvitationCode(Guid companyId)
+        {
+            var company =  await _db.Companies.FindAsync(companyId);
+            return company?.InvitationCode;
+        }
+
+        public async Task<bool> HaveOwner(Guid companyId)
+        {
+            var company =  await _db.Companies.FindAsync(companyId);
+            if (company == null)
+                throw new Exception();
+
+            var owners = await _userManager.GetUsersInRoleAsync(Consts.Roles.CompanyOwner);
+            return owners.Any(q => q.CompanyId == companyId);
         }
     }
 }
