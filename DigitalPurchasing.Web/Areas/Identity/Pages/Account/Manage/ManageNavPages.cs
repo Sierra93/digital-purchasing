@@ -26,6 +26,8 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
 
         public static string Company = "Company";
 
+        public static string Users = "Users";
+
         public static string IndexNavClass(ViewContext viewContext) => PageNavClass(viewContext, Index);
 
         public static string ChangePasswordNavClass(ViewContext viewContext) => PageNavClass(viewContext, ChangePassword);
@@ -39,6 +41,8 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
         public static string ExternalLoginsNavClass(ViewContext viewContext) => PageNavClass(viewContext, ExternalLogins);
 
         public static string CompanyNavClass(ViewContext viewContext) => PageNavClass(viewContext, Company);
+
+        public static string UsersNavClass(ViewContext viewContext) => PageNavClass(viewContext, Users);
 
         public static string PersonalDataNavClass(ViewContext viewContext) => PageNavClass(viewContext, PersonalData);
 

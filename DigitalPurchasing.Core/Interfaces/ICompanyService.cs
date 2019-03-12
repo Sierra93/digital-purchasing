@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace DigitalPurchasing.Core.Interfaces
@@ -14,11 +15,25 @@ namespace DigitalPurchasing.Core.Interfaces
         string GetContactEmailByOwner(Guid ownerId);
         Task<bool> IsValidInvitationCode(string code);
         Task<string> GetInvitationCode(Guid companyId);
+        Task<List<CompanyUserDto>> GetCompanyUsers(Guid companyId);
     }
 
     public class CompanyDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
+    }
+
+    public class CompanyUserDto
+    {
+        public Guid Id { get; set; }
+        public string Email { get; set; }
+        public bool EmailConfirmed { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Patronymic { get; set; }
+        public string PhoneNumber { get; set; }
+        public string JobTitle { get; set; }
+        public bool IsCompanyOwner { get; set;}
     }
 }

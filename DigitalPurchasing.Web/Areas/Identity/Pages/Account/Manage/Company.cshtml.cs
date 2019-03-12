@@ -40,9 +40,6 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
             public string CompanyName { get; set; }
         }
 
-        [Display(Name = "Ссылка для приглашения")]
-        public string InvitationUrl { get; set; }
-
         public async Task<IActionResult> OnGetAsync()
         {
             Input = new InputModel
@@ -50,8 +47,6 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
                 CompanyName = _companyService.GetByUser(User.Id()).Name
             };
 
-            var invitationCode = await _companyService.GetInvitationCode(User.CompanyId());
-            InvitationUrl = Url.Action("Index", "Invite", new { code = invitationCode }, Request.Scheme);
             return Page();
         }
 

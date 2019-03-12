@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core;
@@ -92,6 +93,26 @@ namespace DigitalPurchasing.Services
 
             var owners = await _userManager.GetUsersInRoleAsync(Consts.Roles.CompanyOwner);
             return owners.Any(q => q.CompanyId == companyId);
+        }
+
+        public async Task<List<CompanyUserDto>> GetCompanyUsers(Guid companyId)
+        {
+            var users = await _db.Users.Where(q => q.CompanyId == companyId).ToListAsync();
+            if (users.Any())
+            {
+                var companyUsers = users.Adapt<List<CompanyUserDto>>();
+
+                foreach (var companyUser in companyUsers)
+                {
+                    companyUser.IsCompanyOwner = await _userManager.IsInRoleAsync(
+                        users.Find(q => q.Id == companyUser.Id),
+                        Consts.Roles.CompanyOwner);
+                }
+
+                return companyUsers;
+            }
+
+            return new List<CompanyUserDto>();
         }
     }
 }

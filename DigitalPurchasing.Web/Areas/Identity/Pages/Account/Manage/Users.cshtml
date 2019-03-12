@@ -1,0 +1,47 @@
+@page
+@model DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage.UsersModel
+@{
+    ViewData["Title"] = "Сотрудники";
+}
+
+<h4>@ViewData["Title"]</h4>
+<partial name="_StatusMessage" model="@Model.StatusMessage" />
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label asp-for="InvitationUrl"></label>
+            <input asp-for="InvitationUrl" class="form-control" readonly="readonly" />
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>E-mail</th>
+                <th>Фамилия</th>
+                <th>Имя</th>
+                <th>Отчество</th>
+                <th>Должность</th>
+                <th>Телефон</th>
+                <th>Роль владелеца</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var user in Model.Users.OrderByDescending(q => q.IsCompanyOwner).ThenBy(q => q.LastName))
+            {
+                <tr>
+                    <td>@(user.EmailConfirmed ? user.Email : $"{user.Email} (неподтвержден)")</td>
+                    <td>@user.LastName</td>
+                    <td>@user.FirstName</td>
+                    <td>@user.Patronymic</td>
+                    <td>@user.JobTitle</td>
+                    <td>@user.PhoneNumber</td>
+                    <td>@(user.IsCompanyOwner ? "Да" : "Нет")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
