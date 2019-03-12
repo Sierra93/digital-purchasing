@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core.Interfaces;
+using DigitalPurchasing.Emails;
 using DigitalPurchasing.Models.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -154,10 +155,7 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
                 pageHandler: null,
                 values: new { userId = userId, code = code },
                 protocol: Request.Scheme);
-            await _emailSender.SendEmailAsync(
-                email,
-                "Подтвердите ваш адрес электронной почты",
-                $"Подтвердите свою учетную запись, <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>нажав здесь</a>.");
+            await _emailSender.SendEmailConfirmationEmail(email, callbackUrl);
 
             StatusMessage = "Письмо с подтверждением отправлено. Пожалуйста, проверьте вашу электронную почту.";
             return RedirectToPage();

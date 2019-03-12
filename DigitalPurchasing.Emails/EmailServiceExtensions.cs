@@ -80,5 +80,17 @@ namespace DigitalPurchasing.Emails
             var htmlResult = await GetHtmlString(model);
             await emailService.SendFromRobotAsync(email, subject, htmlResult);
         }
+
+        public static async Task SendEmailConfirmationEmail(this IEmailService emailService, string email, string url)
+        {
+            var subject = "Подтвердите ваш адрес электронной почты";
+            var model = new EmailConfirmationEmail
+            {
+                Url = url
+            };
+
+            var htmlResult = await GetHtmlString(model);
+            await emailService.SendEmailAsync(email, subject, htmlResult);
+        }
     }
 }

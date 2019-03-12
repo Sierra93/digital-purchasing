@@ -40,15 +40,11 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
             public string CompanyName { get; set; }
         }
 
-        public async Task<IActionResult> OnGetAsync()
-        {
-            Input = new InputModel
+        public void OnGet()
+            => Input = new InputModel
             {
                 CompanyName = _companyService.GetByUser(User.Id()).Name
             };
-
-            return Page();
-        }
 
         public async Task<IActionResult> OnPostAsync()
         {
