@@ -72,8 +72,7 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account
             ReturnUrl = returnUrl;
             InvitationCode = code;
             var company = await _companyService.GetByInvitationCode(code);
-            if (company == null) return NotFound();
-            CompanyName = company.Name;
+            CompanyName = company?.Name;
             return Page();
         }
 
