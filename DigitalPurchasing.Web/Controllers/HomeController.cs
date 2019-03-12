@@ -13,7 +13,7 @@ namespace DigitalPurchasing.Web.Controllers
                 return RedirectToAction("Index", "Dashboard");
             }
 
-            return View();
+            return RedirectToPage("/Account/Login", new { area = "Identity" });
         }
 
         public IActionResult Offerta()
