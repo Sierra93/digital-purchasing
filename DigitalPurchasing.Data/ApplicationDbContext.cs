@@ -77,8 +77,16 @@ namespace DigitalPurchasing.Data
                 e.HasData(new Role
                 {
                     Id = new Guid("523a1a9dfa7045ed9ca01ddf3f037779"),
+                    ConcurrencyStamp = "523a1a9dfa7045ed9ca01ddf3f037779",
                     Name = Consts.Roles.CompanyOwner,
                     NormalizedName = Consts.Roles.CompanyOwner.ToUpper()
+                });
+                e.HasData(new Role
+                {
+                    Id = new Guid("8de94260ade74062aec1a1568f62ecd1"),
+                    ConcurrencyStamp = "8de94260ade74062aec1a1568f62ecd1",
+                    Name = Consts.Roles.Admin,
+                    NormalizedName = Consts.Roles.Admin.ToUpper()
                 });
             });
             builder.Entity<UserClaim>().ToTable("UserClaims");
