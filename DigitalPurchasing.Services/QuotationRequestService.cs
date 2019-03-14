@@ -45,7 +45,7 @@ namespace DigitalPurchasing.Services
             _userService = userService;
         }
 
-        public async Task<int> CountByCompany(Guid companyId) => await _db.QuotationRequests.CountAsync(q => q.OwnerId == companyId);
+        public async Task<int> CountByCompany(Guid companyId) => await _db.QuotationRequests.IgnoreQueryFilters().CountAsync(q => q.OwnerId == companyId);
 
         public QuotationRequestIndexData GetData(int page, int perPage, string sortField, bool sortAsc)
         {

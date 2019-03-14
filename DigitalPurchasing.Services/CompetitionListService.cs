@@ -29,7 +29,7 @@ namespace DigitalPurchasing.Services
             _supplierOfferService = supplierOfferService;
         }
 
-        public async Task<int> CountByCompany(Guid companyId) => await _db.CompetitionLists.CountAsync(q => q.OwnerId == companyId);
+        public async Task<int> CountByCompany(Guid companyId) => await _db.CompetitionLists.IgnoreQueryFilters().CountAsync(q => q.OwnerId == companyId);
 
         public CompetitionListIndexData GetData(int page, int perPage, string sortField, bool sortAsc)
         {

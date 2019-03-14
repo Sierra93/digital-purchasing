@@ -48,7 +48,7 @@ namespace DigitalPurchasing.Services
             _customerService = customerService;
         }
 
-        public async Task<int> CountByCompany(Guid companyId) => await _db.PurchaseRequests.CountAsync(q => q.OwnerId == companyId);
+        public async Task<int> CountByCompany(Guid companyId) => await _db.PurchaseRequests.IgnoreQueryFilters().CountAsync(q => q.OwnerId == companyId);
 
         public CreateFromFileResponse CreateFromFile(string filePath, Guid ownerId)
         {
