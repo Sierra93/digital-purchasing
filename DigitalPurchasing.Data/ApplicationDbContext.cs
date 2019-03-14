@@ -70,6 +70,22 @@ namespace DigitalPurchasing.Data
         {
             base.OnModelCreating(builder);
 
+            builder.Entity<UserRole>(userRole =>
+            {
+                userRole.ToTable("UserRoles");
+                userRole.HasKey(ur => new { ur.UserId, ur.RoleId });
+
+                userRole.HasOne(ur => ur.Role)
+                    .WithMany(r => r.UserRoles)
+                    .HasForeignKey(ur => ur.RoleId)
+                    .IsRequired();
+
+                userRole.HasOne(ur => ur.User)
+                    .WithMany(r => r.UserRoles)
+                    .HasForeignKey(ur => ur.UserId)
+                    .IsRequired();
+            });
+
             builder.Entity<User>().ToTable("Users");
             builder.Entity<Role>(e =>
             {
@@ -91,7 +107,6 @@ namespace DigitalPurchasing.Data
             });
             builder.Entity<UserClaim>().ToTable("UserClaims");
             builder.Entity<UserLogin>().ToTable("UserLogins");
-            builder.Entity<UserRole>().ToTable("UserRoles");
             builder.Entity<UserToken>().ToTable("UserTokens");
             builder.Entity<RoleClaim>().ToTable("RoleClaims");
 

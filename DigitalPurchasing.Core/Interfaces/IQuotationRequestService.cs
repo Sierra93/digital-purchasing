@@ -6,6 +6,8 @@ namespace DigitalPurchasing.Core.Interfaces
 {
     public interface IQuotationRequestService
     {
+        Task<int> CountByCompany(Guid companyId);
+
         QuotationRequestIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
         Guid GetQuotationRequestId(Guid purchaseRequestId);
         QuotationRequestVm GetById(Guid id, bool globalSearch = false);

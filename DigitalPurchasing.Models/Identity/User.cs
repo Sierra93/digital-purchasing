@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Identity;
 
 namespace DigitalPurchasing.Models.Identity
@@ -15,5 +16,7 @@ namespace DigitalPurchasing.Models.Identity
         public string Patronymic { get; set; }
 
         public string JobTitle { get; set; }
+
+        public ICollection<UserRole> UserRoles { get; set; }
     }
 }

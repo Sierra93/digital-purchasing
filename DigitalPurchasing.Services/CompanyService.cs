@@ -114,5 +114,12 @@ namespace DigitalPurchasing.Services
 
             return new List<CompanyUserDto>();
         }
+
+        public async Task<int> Count() => await _db.Companies.CountAsync();
+        public async Task<List<CompanyDto>> GetAll()
+        {
+            var companies = await _db.Companies.ToListAsync();
+            return companies.Adapt<List<CompanyDto>>();
+        }
     }
 }

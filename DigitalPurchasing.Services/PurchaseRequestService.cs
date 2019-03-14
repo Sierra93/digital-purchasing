@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using System.Threading.Tasks;
 using DigitalPurchasing.Core;
 using DigitalPurchasing.Models;
 using EFCore.BulkExtensions;
@@ -46,6 +47,8 @@ namespace DigitalPurchasing.Services
             _uploadedDocumentService = uploadedDocumentService;
             _customerService = customerService;
         }
+
+        public async Task<int> CountByCompany(Guid companyId) => await _db.PurchaseRequests.CountAsync(q => q.OwnerId == companyId);
 
         public CreateFromFileResponse CreateFromFile(string filePath, Guid ownerId)
         {

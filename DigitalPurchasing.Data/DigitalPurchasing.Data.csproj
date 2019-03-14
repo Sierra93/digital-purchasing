@@ -21,6 +21,8 @@
     <Compile Remove="Migrations\20181214171450_AnalysisVariant_Rework.cs" />
     <Compile Remove="Migrations\20190205145905_SupplierContactPerson.cs" />
     <Compile Remove="Migrations\20190206112413_SupplierContactPerson.cs" />
+    <Compile Remove="Migrations\20190314133609_UserRole_User.cs" />
+    <Compile Remove="Migrations\20190314134619_UserRole.cs" />
   </ItemGroup>
 
   <ItemGroup>

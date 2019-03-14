@@ -16,12 +16,15 @@ namespace DigitalPurchasing.Core.Interfaces
         Task<bool> IsValidInvitationCode(string code);
         Task<string> GetInvitationCode(Guid companyId);
         Task<List<CompanyUserDto>> GetCompanyUsers(Guid companyId);
+        Task<int> Count();
+        Task<List<CompanyDto>> GetAll();
     }
 
     public class CompanyDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
+        public DateTime CreatedOn { get; set; }
     }
 
     public class CompanyUserDto

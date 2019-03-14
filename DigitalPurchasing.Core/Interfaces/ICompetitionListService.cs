@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace DigitalPurchasing.Core.Interfaces
 {
     public interface ICompetitionListService
     {
+        Task<int> CountByCompany(Guid companyId);
+
         CompetitionListIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
         Guid GetIdByQR(Guid qrId, bool ignoreQueryFilters);
         CompetitionListVm GetById(Guid id);

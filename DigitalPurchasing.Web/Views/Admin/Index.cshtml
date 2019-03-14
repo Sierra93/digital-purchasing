@@ -1,0 +1,12 @@
+@model DigitalPurchasing.Core.Interfaces.AdminDashboardDto
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Статистика</h2>
+
+<ul>
+    <li>Кол-во организаций: @Model.CompaniesCount</li>
+    <li>Кол-во пользователей: @Model.UsersCount (подтвердили e-mail @Model.ConfirmedUsersCount)</li>
+</ul>

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using System.Threading.Tasks;
 using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
@@ -27,6 +28,8 @@ namespace DigitalPurchasing.Services
             _counterService = counterService;
             _supplierOfferService = supplierOfferService;
         }
+
+        public async Task<int> CountByCompany(Guid companyId) => await _db.CompetitionLists.CountAsync(q => q.OwnerId == companyId);
 
         public CompetitionListIndexData GetData(int page, int perPage, string sortField, bool sortAsc)
         {

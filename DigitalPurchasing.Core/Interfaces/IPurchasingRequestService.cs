@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace DigitalPurchasing.Core.Interfaces
 {
     public interface IPurchaseRequestService
     {
+        Task<int> CountByCompany(Guid companyId);
+
         CreateFromFileResponse CreateFromFile(string filePath, Guid ownerId);
         PurchaseRequestDetailsResponse GetById(Guid id);
 

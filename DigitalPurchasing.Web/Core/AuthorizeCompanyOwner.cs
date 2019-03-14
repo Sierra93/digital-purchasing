@@ -11,4 +11,9 @@ namespace DigitalPurchasing.Web.Core
     {
         public AuthorizeCompanyOwner() => Roles = Consts.Roles.CompanyOwner;
     }
+
+    public class AuthorizeAdmin: AuthorizeAttribute
+    {
+        public AuthorizeAdmin() => Roles = Consts.Roles.Admin;
+    }
 }
