@@ -40,6 +40,7 @@ namespace DigitalPurchasing.Services
                 company.CLCount = await _competitionListService.CountByCompany(company.Id);
                 company.Owner = (await _userService.GetCompanyOwner(company.Id))
                     .Adapt<AdminCompanyDto.OwnerData>();
+                company.UsersCount = await _userService.TotalCountByCompany(company.Id);
             }
             return adminCompanies;
         }

@@ -12,6 +12,7 @@
     <tr>
         <th>Дата</th>
         <th>Название</th>
+        <th>Сотрудники</th>
         <th title="Заявка / Запрос / КЛ">Заявки</th>
         <th>Владелец</th>
     </tr>
@@ -22,6 +23,7 @@
         <tr>
             <td><span title="@company.Id">@company.CreatedOn.ToString("yyyy.MM.dd HH:mm")</span></td>
             <td>@company.Name</td>
+            <td>@company.UsersCount</td>
             <td>@company.PRCount / @company.QRCount / @company.CLCount</td>
             <td>@company.Owner?.ToString()</td>
         </tr>

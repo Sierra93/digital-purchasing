@@ -54,5 +54,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public int PRCount { get; set; }
         public int QRCount { get; set; }
         public int CLCount { get; set; }
+
+        public int UsersCount { get; set; }
     }
 }
