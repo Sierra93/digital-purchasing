@@ -28,6 +28,7 @@ namespace DigitalPurchasing.Core.Interfaces
             public string FirstName { get; set; }
             public string Patronymic { get; set; }
             public string JobTitle { get; set; }
+            public bool EmailConfirmed { get; set; }
 
             public override string ToString()
             {
@@ -36,13 +37,15 @@ namespace DigitalPurchasing.Core.Interfaces
                 {
                     if (!string.IsNullOrEmpty(JobTitle))
                     {
-                        return $"{fullName} ({JobTitle} / {Email})";
+                        return $"{GetFullEmail()} ({fullName} / {JobTitle})";
                     }
-                    return $"{fullName} ({Email})";
+                    return $"{GetFullEmail()} ({fullName})";
                 }
 
-                return $"{Email}";
+                return $"{GetFullEmail()}";
             }
+
+            private string GetFullEmail() => EmailConfirmed ? Email : $"{Email} неподтвержден";
         }
 
         public Guid Id { get; set; }

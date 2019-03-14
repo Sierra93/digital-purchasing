@@ -21,6 +21,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public string FirstName { get; set; }
         public string Patronymic { get; set; }
         public string JobTitle { get; set; }
+        public bool EmailConfirmed { get; set; }
     }
 
     public class UserInfoDto
