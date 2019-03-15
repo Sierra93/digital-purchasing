@@ -10,7 +10,12 @@
     <div class="col-md-6">
         <div class="form-group">
             <label asp-for="InvitationUrl"></label>
-            <input asp-for="InvitationUrl" class="form-control" readonly="readonly" />
+            <div class="input-group">
+                <input asp-for="InvitationUrl" class="form-control" readonly="readonly" />
+                <span class="input-group-btn">
+                    <button id="invitation-url-btn" class="btn btn-default" type="button" data-clipboard-target="#InvitationUrl">Скопировать</button>
+                </span>
+            </div>
         </div>
     </div>
 </div>
@@ -45,3 +50,11 @@
         </table>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        (function() {
+            new ClipboardJS('#invitation-url-btn');
+        })();
+    </script>
+}
