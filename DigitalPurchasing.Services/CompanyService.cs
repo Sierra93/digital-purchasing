@@ -29,7 +29,11 @@ namespace DigitalPurchasing.Services
 
         public CompanyDto Create(string name)
         {
-            var entry = _db.Companies.Add(new Company {Name = name });
+            var entry = _db.Companies.Add(new Company
+            {
+                Name = name,
+                InvitationCode = Guid.NewGuid().ToString("N")
+            });
             _db.SaveChanges();
             var response = entry.Entity.Adapt<CompanyDto>();
             return response;
@@ -63,6 +67,10 @@ namespace DigitalPurchasing.Services
             var user = _db.Users.Include(q => q.Company).FirstOrDefault(q => q.Id == userId);
             if (user == null) return;
             user.Company.Name = newName;
+            if (string.IsNullOrEmpty(user.Company.InvitationCode))
+            {
+                user.Company.InvitationCode = Guid.NewGuid().ToString("N");
+            }
             _db.SaveChanges();
         }
 

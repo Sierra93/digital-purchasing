@@ -27,8 +27,9 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
 
         public async Task<IActionResult> OnGetAsync()
         {
-            Users = await _companyService.GetCompanyUsers(User.CompanyId());
-            var invitationCode = await _companyService.GetInvitationCode(User.CompanyId());
+            var companyId = User.CompanyId();
+            Users = await _companyService.GetCompanyUsers(companyId);
+            var invitationCode = await _companyService.GetInvitationCode(companyId);
             InvitationUrl = Url.Action("Index", "Invite", new { code = invitationCode }, Request.Scheme);
             return Page();
         }
