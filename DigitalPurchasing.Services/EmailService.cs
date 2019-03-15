@@ -13,7 +13,8 @@ namespace DigitalPurchasing.Services
         private readonly IMandrillMessagesApi _messages;
 
         private const string AppName = "DigitalPurchasing.com";
-        private const string RobotEmail = "app@digitalpurchasing.com";
+        private const string NotificationsEmail = "notifications@digitalpurchasing.com"; // only for sending (from)
+        private const string RobotEmail = "robot@digitalpurchasing.com";
         private const string DefaultEmail = "hello@digitalpurchasing.com";
 
         public EmailService(IMandrillMessagesApi messages)
@@ -23,7 +24,7 @@ namespace DigitalPurchasing.Services
         {
             var mailMessage = CreateMailMessage(
                 toEmail,
-                RobotEmail, $"{AppName} Robot", // from
+                NotificationsEmail, $"{AppName}", // from
                 RobotEmail, $"{AppName} Robot", // reply to
                 subject,
                 htmlMessage, attachments);
@@ -35,7 +36,7 @@ namespace DigitalPurchasing.Services
         {
             var mailMessage = CreateMailMessage(
                 toEmail,
-                DefaultEmail, $"{AppName}", // from
+                NotificationsEmail, $"{AppName}", // from
                 DefaultEmail, $"{AppName}", // reply to
                 subject,
                 htmlMessage, attachments);
