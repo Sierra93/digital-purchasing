@@ -175,7 +175,7 @@ namespace DigitalPurchasing.Web
 
             RecurringJob.RemoveIfExists("check-app-email");
             RecurringJob.AddOrUpdate<EmailJobs>(
-                "CheckRobotEmails",
+                "check_robot_emails",
                 q => q.CheckRobotEmails(),
                 Cron.MinuteInterval(5),
                 queue: Environment.MachineName);
