@@ -173,7 +173,6 @@ namespace DigitalPurchasing.Web
                 Authorization = new [] { new HangfireDashboardAuthorizationFilter() }
             });
 
-            RecurringJob.RemoveIfExists("check-app-email");
             RecurringJob.AddOrUpdate<EmailJobs>(
                 "check_robot_emails",
                 q => q.CheckRobotEmails(),
