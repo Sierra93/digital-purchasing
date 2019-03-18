@@ -32,7 +32,7 @@ namespace DigitalPurchasing.Services
             _receivedEmails = receivedEmails;
         }
 
-        public void CheckAppEmail()
+        public void CheckRobotEmails()
         {
             using (var client = new ImapClient(new NullProtocolLogger()))
             {

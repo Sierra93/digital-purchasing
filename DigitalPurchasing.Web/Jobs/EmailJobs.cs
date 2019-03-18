@@ -9,7 +9,7 @@ namespace DigitalPurchasing.Web.Jobs
         public EmailJobs(IRobotEmailService robotEmail)
             => _robotEmail = robotEmail;
 
-        public void CheckAppEmail()
-            => _robotEmail.CheckAppEmail();
+        public void CheckRobotEmails()
+            => _robotEmail.CheckRobotEmails();
     }
 }

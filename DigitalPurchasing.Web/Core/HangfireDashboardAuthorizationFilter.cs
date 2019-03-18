@@ -1,3 +1,4 @@
+using DigitalPurchasing.Core;
 using Hangfire.Dashboard;
 
 namespace DigitalPurchasing.Web.Core
@@ -7,8 +8,8 @@ namespace DigitalPurchasing.Web.Core
         public bool Authorize(DashboardContext context)
         {
             var httpContext = context.GetHttpContext();
-            return true;
-            //return httpContext.User.IsAdmin();
+            var isAdmin = httpContext.User.IsInRole(Consts.Roles.Admin);
+            return isAdmin;
         }
     }
 }

@@ -174,8 +174,8 @@ namespace DigitalPurchasing.Web
             });
 
             RecurringJob.AddOrUpdate<EmailJobs>(
-                "check-app-email",
-                q => q.CheckAppEmail(),
+                "CheckRobotEmails",
+                q => q.CheckRobotEmails(),
                 Cron.MinuteInterval(5),
                 queue: Environment.MachineName);
         }
