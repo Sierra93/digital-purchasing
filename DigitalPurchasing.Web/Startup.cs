@@ -173,7 +173,11 @@ namespace DigitalPurchasing.Web
                 Authorization = new [] { new HangfireDashboardAuthorizationFilter() }
             });
 
-            RecurringJob.AddOrUpdate<EmailJobs>("check-app-email", q => q.CheckAppEmail(), Cron.MinuteInterval(5));
+            RecurringJob.AddOrUpdate<EmailJobs>(
+                "check-app-email",
+                q => q.CheckAppEmail(),
+                Cron.MinuteInterval(5),
+                queue: Environment.MachineName);
         }
     }
 }
