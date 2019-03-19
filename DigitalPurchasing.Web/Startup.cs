@@ -176,8 +176,7 @@ namespace DigitalPurchasing.Web
 
             RecurringJob.AddOrUpdate<EmailJobs>("check_robot_emails",
                 q => q.CheckRobotEmails(),
-                Cron.MinuteInterval(5),
-                queue: Environment.MachineName.ToLowerInvariant());
+                Cron.MinuteInterval(5));
         }
     }
 }
