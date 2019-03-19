@@ -1,23 +1,38 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
-using Microsoft.AspNetCore.Http;
+using DigitalPurchasing.Web.ViewModels.Dashboard;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalPurchasing.Web.Controllers
 {
     public class DashboardController : BaseController
     {
-        private readonly IPurchaseRequestService _purchasingRequestService;
+        private readonly IDashboardService _dashboardService;
 
-        public DashboardController(IPurchaseRequestService purchasingRequestService)
+        public DashboardController(IDashboardService dashboardService)
+            => _dashboardService = dashboardService;
+
+        public async Task<IActionResult> Index()
         {
-            _purchasingRequestService = purchasingRequestService;
-        }
+            var companyId = User.CompanyId();
+            var nowDate = DateTime.UtcNow.Date;
+            var daysInMonth = DateTime.DaysInMonth(nowDate.Year, nowDate.Month);
+            var fromDate = new DateTime(nowDate.Year, nowDate.Month, 1, 0, 0, 0);
+            var toDate = new DateTime(nowDate.Year, nowDate.Month, daysInMonth, 23, 59, 59);
+            var requestStatuses = await _dashboardService.GetRequestStatuses(companyId, fromDate, toDate);
+            var suppliers = await _dashboardService.GetTopSuppliers(companyId, fromDate, toDate);
 
-        public IActionResult Index() => View();
+            var vm = new DashboardIndexVm
+            {
+                FromDate = fromDate,
+                ToDate = toDate,
+                RequestStatuses = requestStatuses,
+                Suppliers = suppliers
+            };
+
+            return View(vm);
+        }
     }
 }

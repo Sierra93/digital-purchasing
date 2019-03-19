@@ -1,3 +1,6 @@
+@using DigitalPurchasing.Core
+@model DigitalPurchasing.Web.ViewModels.Dashboard.DashboardIndexVm
+
 @{
     ViewData["Title"] = "Главная";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -10,4 +13,96 @@
             Загрузить заявку <input type="file" style="display: none;" name="file">
         </label>
     </form>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <h4>@Model.FromDate.ToString("dd.MM.yyyy") - @Model.ToDate.ToString("dd.MM.yyyy")</h4>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <h3>Статус обработки заявок</h3>
+        <table class="table">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Статус</th>
+                <th class="align-right">Кол-во заявок</th>
+                <th class="align-right">Доля в итого</th>
+            </tr>
+            </thead>
+            <tfoot>
+            @{
+                var total = Model.RequestStatuses.Sum(q => q.Qty);
+                var idx = 0;
+            }
+            <tr>
+                <th></th>
+                <th>Итого заявки</th>
+                <th class="align-right">@(total.ToString(Consts.Format.Qty))</th>
+                <th class="align-right">@(1.ToString("P1"))</th>
+            </tr>
+            </tfoot>
+            <tbody>
+            @foreach (var req in Model.RequestStatuses)
+            {
+                <tr>
+                    <td>@(++idx)</td>
+                    <td>@req.Name</td>
+                    <td class="align-right">@req.Qty.ToString(Consts.Format.Qty)</td>
+                    <td class="align-right">@req.Percentage(total).ToString("P1")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <div class="col-md-6">
+        <h3>ТОП-10 поставщиков по объему закупок</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Поставщик</th>
+                    <th class="align-right">Сумма</th>
+                    <th class="align-right">Доля в итого</th>
+                </tr>
+            </thead>
+            <tfoot>
+                <tr>
+                    <th></th>
+                    <th>Итого ТОП-10 поставщиков</th>
+                    <th class="align-right">@Model.Suppliers.TopSuppliersAmount.ToString(Consts.Format.Money)</th>
+                    <th class="align-right">@Model.Suppliers.TopSuppliersPercentage.ToString("P1")</th>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>Итого все постащики</td>
+                    <td class="align-right">@Model.Suppliers.AllSuppliersAmount.ToString(Consts.Format.Money)</td>
+                    <td class="align-right">@(1.ToString("P1"))</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>Всего постащиков</td>
+                    <td class="align-right">@Model.Suppliers.AllSuppliersCount</td>
+                    <td class="align-right">шт</td>
+                </tr>
+            </tfoot>
+            <tbody>
+                @{
+                    idx = 0;
+                }
+                @foreach (var req in Model.Suppliers.TopSuppliers)
+                {
+                    <tr>
+                        <td>@(++idx)</td>
+                        <td>@req.Name</td>
+                        <td class="align-right">@req.Amount.ToString(Consts.Format.Money)</td>
+                        <td class="align-right">@req.Percentage(Model.Suppliers.AllSuppliersAmount).ToString("P1")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
