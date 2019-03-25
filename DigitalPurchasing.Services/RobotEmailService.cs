@@ -204,7 +204,7 @@ namespace DigitalPurchasing.Services
 
                         if (!allColumns || !allMatched)
                         {
-                            PartiallyProcessedEmail(email, qr.PublicId, qr.Id);
+                            PartiallyProcessedEmail(email, qr.PublicId, soId);
                         }
 
                         return true;
@@ -225,7 +225,7 @@ namespace DigitalPurchasing.Services
 
         private void PartiallyProcessedEmail(string toEmail, int publicId, Guid id)
         {
-            var url = _linkGenerator.GetPathByAction("View", "QuotationRequest", new {id = id });
+            var url = _linkGenerator.GetPathByAction("Edit", "SupplierOffer", new { id = id });
             var fullUrl = $"{_settings.DefaultDomain}{url}";
             Task.Run(() => _emailService.SendSOPartiallyProcessedEmail(toEmail, publicId, fullUrl));
         }
