@@ -9,7 +9,7 @@ namespace DigitalPurchasing.Core.Interfaces
         Task<int> CountByCompany(Guid companyId);
 
         CompetitionListIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
-        Guid GetIdByQR(Guid qrId, bool ignoreQueryFilters);
+        Task<Guid> GetIdByQR(Guid qrId, bool globalSearch);
         CompetitionListVm GetById(Guid id);
         DeleteResultVm Delete(Guid id);
     }

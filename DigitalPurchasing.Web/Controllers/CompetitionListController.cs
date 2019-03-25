@@ -42,9 +42,9 @@ namespace DigitalPurchasing.Web.Controllers
             return Json(new VueTableResponse<CompetitionListIndexDataItemVm, VueTableRequest>(data, request, result.Total, nextUrl, prevUrl));
         }
 
-        public IActionResult Create([FromQuery]Guid qrId)
+        public async Task<IActionResult> Create([FromQuery]Guid qrId)
         {
-            var id = _competitionListService.GetIdByQR(qrId, false);
+            var id = await _competitionListService.GetIdByQR(qrId, false);
             if (id == Guid.Empty) return NotFound();
             return RedirectToAction(nameof(Edit), new { id });
         }
@@ -71,7 +71,7 @@ namespace DigitalPurchasing.Web.Controllers
             using (var output = System.IO.File.Create(filePath))
                 await file.CopyToAsync(output);
 
-            var response = _supplierOfferService.CreateFromFile(id, filePath);
+            var response = await _supplierOfferService.CreateFromFile(id, filePath);
             if (!response.IsSuccess)
             {
                 TempData["Message"] = response.Message;

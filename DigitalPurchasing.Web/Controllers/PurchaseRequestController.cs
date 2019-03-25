@@ -78,7 +78,7 @@ namespace DigitalPurchasing.Web.Controllers
 
             var ownerId = User.CompanyId();
 
-            var response = _purchasingRequestService.CreateFromFile(filePath, ownerId);
+            var response = await _purchasingRequestService.CreateFromFile(filePath, ownerId);
             if (!response.IsSuccess)
             {
                 TempData["Message"] = response.Message;

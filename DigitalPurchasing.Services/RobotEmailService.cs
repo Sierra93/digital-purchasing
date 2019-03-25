@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core;
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Emails;
 using MailKit;
@@ -32,7 +33,7 @@ namespace DigitalPurchasing.Services
             _receivedEmails = receivedEmails;
         }
 
-        public void CheckRobotEmails()
+        public async Task CheckRobotEmails()
         {
             using (var client = new ImapClient(new NullProtocolLogger()))
             {
@@ -71,7 +72,10 @@ namespace DigitalPurchasing.Services
                         files.Add(path);
                     }
 
-                    var isProcessed = _emailProcessors.Any(q => q.Process(fromEmail, subject, body, files));
+                    var processTasks = _emailProcessors.Select(q => q.Process(fromEmail, subject, body, files));
+                    var processResults = await Task.WhenAll(processTasks);
+                    
+                    var isProcessed = processResults.Any(q => q);
                     if (isProcessed)
                     {
                         _receivedEmails.MarkProcessed(uniqueId.Id, true);
@@ -94,6 +98,7 @@ namespace DigitalPurchasing.Services
         private readonly ISupplierOfferService _supplierOfferService;
         private readonly IEmailService _emailService;
         private readonly ICompanyService _companyService;
+        private readonly IRootService _rootService;
         private readonly LinkGenerator _linkGenerator;
         private readonly AppSettings _settings;
 
@@ -110,7 +115,8 @@ namespace DigitalPurchasing.Services
             ISupplierOfferService supplierOfferService,
             IEmailService emailService,
             ICompanyService companyService,
-            LinkGenerator linkGenerator)
+            LinkGenerator linkGenerator,
+            IRootService rootService)
         {
             _settings = configuration.GetSection(Consts.Settings.AppPath).Get<AppSettings>();
             _quotationRequestService = quotationRequestService;
@@ -120,9 +126,10 @@ namespace DigitalPurchasing.Services
             _emailService = emailService;
             _companyService = companyService;
             _linkGenerator = linkGenerator;
+            _rootService = rootService;
         }
 
-        public bool Process(string fromEmail, string subject, string body, IList<string> attachments)
+        public async Task<bool> Process(string fromEmail, string subject, string body, IList<string> attachments)
         {
             if (string.IsNullOrEmpty(subject)) return false;
 
@@ -154,11 +161,11 @@ namespace DigitalPurchasing.Services
                 // upload supplier offer
                 if (supplierId != Guid.Empty)
                 {
-                    var clId = _competitionListService.GetIdByQR(qrId, true);
+                    var clId = await _competitionListService.GetIdByQR(qrId, true);
 
                     foreach (var attachment in attachments.Where(IsSupportedFile))
                     {
-                        var createOfferResult = _supplierOfferService.CreateFromFile(clId, attachment);
+                        var createOfferResult = await _supplierOfferService.CreateFromFile(clId, attachment);
                         if (!createOfferResult.IsSuccess) // unable parse excel file
                         {
                             // send email with attachment?
@@ -189,6 +196,10 @@ namespace DigitalPurchasing.Services
                             _supplierOfferService.UpdateStatus(soId, SupplierOfferStatus.MatchItems, true);
 
                             allMatched = _supplierOfferService.IsAllMatched(soId);
+                            var rootId = await _rootService.GetIdByQR(qrId);
+                            await _rootService.SetStatus(rootId, allMatched
+                                ? RootStatus.EverythingMatches
+                                : RootStatus.MatchingRequired);
                         }
 
                         if (!allColumns || !allMatched)

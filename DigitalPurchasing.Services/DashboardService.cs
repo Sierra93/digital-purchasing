@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
@@ -19,16 +20,36 @@ namespace DigitalPurchasing.Services
         {
             var result = new List<DashboardRequestStatus>();
 
-            var requests = await _db.PurchaseRequests
+            var requests = await _db.Roots
                 .IgnoreQueryFilters()
-                .Where(q => q.CustomerId == companyId && q.CreatedOn >= from && q.CreatedOn <= to)
+                .Where(q => q.OwnerId == companyId && q.CreatedOn >= from && q.CreatedOn <= to)
                 .ToListAsync();
 
-            result.Add(new DashboardRequestStatus { Name = "Не обработанные заявки", Qty = requests.Count } );
-            result.Add(new DashboardRequestStatus { Name = "Отправлен запрос КП", Qty = requests.Count } );
-            result.Add(new DashboardRequestStatus { Name = "Нужно сопоставить номенклатуру КП", Qty = requests.Count } );
-            result.Add(new DashboardRequestStatus { Name = "Нужно подтвердить выбор поставщика", Qty = requests.Count } );
-            result.Add(new DashboardRequestStatus { Name = "Закрытые заявки", Qty = requests.Count } );
+            result.Add(new DashboardRequestStatus
+            {
+                Name = "Не обработанные заявки",
+                Qty = requests.Count(q => q.Status == RootStatus.JustCreated)
+            } );
+            result.Add(new DashboardRequestStatus
+            {
+                Name = "Отправлен запрос КП",
+                Qty = requests.Count(q => q.Status == RootStatus.QuotationRequestSent)
+            });
+            result.Add(new DashboardRequestStatus
+            {
+                Name = "Нужно сопоставить номенклатуру КП",
+                Qty = requests.Count(q => q.Status == RootStatus.MatchingRequired)
+            });
+            result.Add(new DashboardRequestStatus
+            {
+                Name = "Нужно подтвердить выбор поставщика",
+                Qty = requests.Count(q => q.Status == RootStatus.EverythingMatches)
+            });
+            result.Add(new DashboardRequestStatus
+            {
+                Name = "Закрытые заявки",
+                Qty = requests.Count(q => q.Status == RootStatus.SupplierSelected)
+            });
             
             return result;
         }

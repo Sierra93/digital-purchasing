@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core;
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
@@ -26,6 +27,7 @@ namespace DigitalPurchasing.Services
         private readonly IUploadedDocumentService _uploadedDocumentService;
         private readonly IUomService _uomService;
         private readonly ISupplierService _supplierService;
+        private readonly IRootService _rootService;
 
         public SupplierOfferService(
             ApplicationDbContext db,
@@ -36,7 +38,8 @@ namespace DigitalPurchasing.Services
             INomenclatureService nomenclatureService,
             IUploadedDocumentService uploadedDocumentService,
             IUomService uomService,
-            ISupplierService supplierService)
+            ISupplierService supplierService,
+            IRootService rootService)
         {
             _db = db;
             _excelRequestReader = excelRequestReader;
@@ -47,6 +50,7 @@ namespace DigitalPurchasing.Services
             _uploadedDocumentService = uploadedDocumentService;
             _uomService = uomService;
             _supplierService = supplierService;
+            _rootService = rootService;
         }
 
         public void UpdateStatus(Guid id, SupplierOfferStatus status, bool globalSearch = false)
@@ -80,7 +84,7 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
         }
 
-        public CreateFromFileResponse CreateFromFile(Guid competitionListId, string filePath)
+        public async Task<CreateFromFileResponse> CreateFromFile(Guid competitionListId, string filePath)
         {
             var competitionList = _db.CompetitionLists.IgnoreQueryFilters().First(q => q.Id == competitionListId);
             var ownerId = competitionList.OwnerId;
@@ -88,7 +92,7 @@ namespace DigitalPurchasing.Services
             var result = _excelRequestReader.ToTable(filePath, ownerId);
             if (result == null || !result.IsSuccess) return new CreateFromFileResponse { IsSuccess = false, Message = result?.Message };
             
-            var entry = _db.SupplierOffers.Add(new SupplierOffer
+            var entry = await _db.SupplierOffers.AddAsync(new SupplierOffer
             {
                 CompetitionListId = competitionListId,
                 UploadedDocument = new UploadedDocument
@@ -103,7 +107,10 @@ namespace DigitalPurchasing.Services
                 CurrencyId = _currencyService.GetDefaultCurrency(ownerId).Id
             });
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
+
+            var rootId = await _rootService.GetIdByCL(competitionListId);
+            await _rootService.SetStatus(rootId, RootStatus.MatchingRequired);
 
             return new CreateFromFileResponse { Id = entry.Entity.Id, IsSuccess = true };
         }
@@ -363,9 +370,9 @@ namespace DigitalPurchasing.Services
             return res;
         }
 
-        public void SaveMatch(Guid itemId, Guid nomenclatureId, Guid uomId, decimal factorC, decimal factorN)
+        public void SaveMatch(Guid soItemId, Guid nomenclatureId, Guid uomId, decimal factorC, decimal factorN)
         {
-            var entity = _db.SupplierOfferItems.Find(itemId);
+            var entity = _db.SupplierOfferItems.Find(soItemId);
             entity.NomenclatureId = nomenclatureId;
             entity.RawUomId = uomId;
             entity.CommonFactor = factorC;
@@ -411,6 +418,22 @@ namespace DigitalPurchasing.Services
                 so.PayWithinDays = 0;
             }
             _db.SaveChanges();
+        }
+
+        public bool IsAllMatchedBySoItem(Guid soItemId)
+        {
+            var item = _db.SupplierOfferItems.Find(soItemId);
+            return IsAllMatched(item.SupplierOfferId);
+        }
+
+        public async Task<Guid> GetCLIdBySoItem(Guid soItemId)
+        {
+            var soItem = await _db.SupplierOfferItems
+                .Include(q => q.SupplierOffer)
+                .IgnoreQueryFilters()
+                .FirstAsync(q => q.Id == soItemId);
+
+            return soItem.SupplierOffer.CompetitionListId;
         }
 
         public bool IsAllMatched(Guid supplierOfferId)

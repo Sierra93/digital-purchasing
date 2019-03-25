@@ -18,15 +18,18 @@ namespace DigitalPurchasing.Services
         private readonly ApplicationDbContext _db;
         private readonly ICounterService _counterService;
         private readonly ISupplierOfferService _supplierOfferService;
+        private readonly IRootService _rootService;
 
         public CompetitionListService(
             ApplicationDbContext db,
             ICounterService counterService,
-            ISupplierOfferService supplierOfferService)
+            ISupplierOfferService supplierOfferService,
+            IRootService rootService)
         {
             _db = db;
             _counterService = counterService;
             _supplierOfferService = supplierOfferService;
+            _rootService = rootService;
         }
 
         public async Task<int> CountByCompany(Guid companyId) => await _db.CompetitionLists.IgnoreQueryFilters().CountAsync(q => q.OwnerId == companyId);
@@ -54,7 +57,7 @@ namespace DigitalPurchasing.Services
             };
         }
 
-        public Guid GetIdByQR(Guid qrId, bool globalSearch)
+        public async Task<Guid> GetIdByQR(Guid qrId, bool globalSearch)
         {
             var qry = _db.CompetitionLists.AsQueryable();
             if (globalSearch)
@@ -62,27 +65,30 @@ namespace DigitalPurchasing.Services
                 qry = qry.IgnoreQueryFilters();
             }
 
-            var competitionList = qry.FirstOrDefault(q => q.QuotationRequestId == qrId);
+            var competitionList = await qry.FirstOrDefaultAsync(q => q.QuotationRequestId == qrId);
             if (competitionList != null)
             {
                 return competitionList.Id;
             }
 
-            return CreateFromQR(qrId);
+            return await CreateFromQR(qrId);
         }
 
-        private Guid CreateFromQR(Guid qrId)
+        private async Task<Guid> CreateFromQR(Guid qrId)
         {
-            var qr = _db.QuotationRequests.IgnoreQueryFilters().First(q => q.Id == qrId);
+            var qr = await _db.QuotationRequests.IgnoreQueryFilters().FirstAsync(q => q.Id == qrId);
             var entity = new CompetitionList
             {
                 PublicId = _counterService.GetCLNextId(qr.OwnerId),
                 QuotationRequestId = qr.Id,
                 OwnerId = qr.OwnerId
             };
-            var entry = _db.CompetitionLists.Add(entity);
-            _db.SaveChanges();
-            return entry.Entity.Id;
+            var entry = await _db.CompetitionLists.AddAsync(entity);
+            await _db.SaveChangesAsync();
+            var clId = entry.Entity.Id;
+            var rootId = await _rootService.GetIdByQR(qrId);
+            await _rootService.AssignCL(qr.OwnerId, rootId, clId);
+            return clId;
         }
 
         public CompetitionListVm GetById(Guid id)

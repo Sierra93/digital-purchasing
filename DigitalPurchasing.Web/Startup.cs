@@ -109,6 +109,7 @@ namespace DigitalPurchasing.Web
             services.AddScoped<IReceivedEmailService, ReceivedEmailService>();
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IDashboardService, DashboardService>();
+            services.AddScoped<IRootService, RootService>();
             services.AddMandrill();
 
             services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();

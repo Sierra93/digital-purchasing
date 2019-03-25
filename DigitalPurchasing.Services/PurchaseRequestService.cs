@@ -6,6 +6,7 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core;
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Models;
 using EFCore.BulkExtensions;
 using Mapster;
@@ -25,6 +26,7 @@ namespace DigitalPurchasing.Services
         private readonly IDeliveryService _deliveryService;
         private readonly IUploadedDocumentService _uploadedDocumentService;
         private readonly ICustomerService _customerService;
+        private readonly IRootService _rootService;
 
         public PurchaseRequestService(
             ApplicationDbContext db,
@@ -35,7 +37,8 @@ namespace DigitalPurchasing.Services
             INomenclatureService nomenclatureService,
             IDeliveryService deliveryService,
             IUploadedDocumentService uploadedDocumentService,
-            ICustomerService customerService)
+            ICustomerService customerService,
+            IRootService rootService)
         {
             _db = db;
             _excelRequestReader = excelFileReader;
@@ -46,16 +49,17 @@ namespace DigitalPurchasing.Services
             _deliveryService = deliveryService;
             _uploadedDocumentService = uploadedDocumentService;
             _customerService = customerService;
+            _rootService = rootService;
         }
 
         public async Task<int> CountByCompany(Guid companyId) => await _db.PurchaseRequests.IgnoreQueryFilters().CountAsync(q => q.OwnerId == companyId);
 
-        public CreateFromFileResponse CreateFromFile(string filePath, Guid ownerId)
+        public async Task<CreateFromFileResponse> CreateFromFile(string filePath, Guid ownerId)
         {
             var result = _excelRequestReader.ToTable(filePath, ownerId);
             if (result == null || !result.IsSuccess) return new CreateFromFileResponse { IsSuccess = false, Message = result?.Message };
 
-            var entry = _db.PurchaseRequests.Add(new PurchaseRequest
+            var entry = await _db.PurchaseRequests.AddAsync(new PurchaseRequest
             {
                 UploadedDocument = new UploadedDocument
                 {
@@ -68,7 +72,9 @@ namespace DigitalPurchasing.Services
                 OwnerId = ownerId
             });
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
+            var rootId = await _rootService.Create(ownerId, entry.Entity.Id);
+            await _rootService.SetStatus(rootId, RootStatus.JustCreated);
 
             return new CreateFromFileResponse { IsSuccess = true, Id = entry.Entity.Id };
         }

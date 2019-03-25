@@ -8,6 +8,7 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core;
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Emails;
 using DigitalPurchasing.ExcelReader;
@@ -26,6 +27,7 @@ namespace DigitalPurchasing.Services
         private readonly ISupplierService _supplierService;
         private readonly IEmailService _emailService;
         private readonly IUserService _userService;
+        private readonly IRootService _rootService;
 
         public QuotationRequestService(
             ApplicationDbContext db,
@@ -34,7 +36,8 @@ namespace DigitalPurchasing.Services
             IDeliveryService deliveryService,
             ISupplierService supplierService,
             IEmailService emailService,
-            IUserService userService)
+            IUserService userService,
+            IRootService rootService)
         {
             _db = db;
             _counterService = counterService;
@@ -43,6 +46,7 @@ namespace DigitalPurchasing.Services
             _supplierService = supplierService;
             _emailService = emailService;
             _userService = userService;
+            _rootService = rootService;
         }
 
         public async Task<int> CountByCompany(Guid companyId) => await _db.QuotationRequests.IgnoreQueryFilters().CountAsync(q => q.OwnerId == companyId);
@@ -70,21 +74,32 @@ namespace DigitalPurchasing.Services
             };
         }
 
-        private Guid CreateQuotationRequest(Guid purchaseRequestId)
+        private async Task<Guid> CreateQuotationRequest(Guid purchaseRequestId)
         {
             var publicId = _counterService.GetQRNextId();
-            var entry = _db.QuotationRequests.Add(new QuotationRequest {PublicId = publicId, PurchaseRequestId = purchaseRequestId});
+            var entry = _db.QuotationRequests.Add(
+                new QuotationRequest
+                {
+                    PublicId = publicId,
+                    PurchaseRequestId = purchaseRequestId
+                });
             _db.SaveChanges();
+            var qrId = entry.Entity.Id;
+            var ownerId = entry.Entity.OwnerId;
 
             // copy delivery to QR
             var prDelivery = _deliveryService.GetByPrId(purchaseRequestId);
             prDelivery.Id = Guid.Empty;
-            _deliveryService.CreateOrUpdate(prDelivery, null, entry.Entity.Id);
-            
-            return entry.Entity.Id;
+            _deliveryService.CreateOrUpdate(prDelivery, null, qrId);
+
+            var rootId = await _rootService.GetIdByPR(purchaseRequestId);
+
+            await _rootService.AssignQR(ownerId, rootId, qrId);
+
+            return qrId;
         }
 
-        public Guid GetQuotationRequestId(Guid purchaseRequestId)
+        public async Task<Guid> GetQuotationRequestId(Guid purchaseRequestId)
         {
             var quotationRequest = _db.QuotationRequests.FirstOrDefault(q => q.PurchaseRequestId == purchaseRequestId);
             if (quotationRequest != null)
@@ -97,7 +112,7 @@ namespace DigitalPurchasing.Services
 
             if (data.Items.All(q => q.NomenclatureId.HasValue && q.RawUomMatchId.HasValue && (q.CommonFactor > 0 || q.NomenclatureFactor > 0 )))
             {
-                return CreateQuotationRequest(purchaseRequestId);
+                return await CreateQuotationRequest(purchaseRequestId);
             }
 
             return Guid.Empty;;
@@ -210,6 +225,9 @@ namespace DigitalPurchasing.Services
                 });
                 await _db.SaveChangesAsync();
             }
+
+            var rootId = await _rootService.GetIdByQR(quotationRequestId);
+            await _rootService.SetStatus(rootId, RootStatus.QuotationRequestSent);
         }
 
         public byte[] GenerateExcelForQR(Guid quotationRequestId)

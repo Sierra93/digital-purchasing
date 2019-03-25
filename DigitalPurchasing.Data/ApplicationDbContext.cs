@@ -18,6 +18,8 @@ namespace DigitalPurchasing.Data
 
         private Guid CompanyId() => _httpContextAccessor?.HttpContext?.User.CompanyId() ?? Guid.Empty;
 
+        public DbSet<Root> Roots { get; set; }
+
         public DbSet<Company> Companies { get; set; }
         public DbSet<Currency> Currencies { get; set; }
         public DbSet<Nomenclature> Nomenclatures { get; set; }

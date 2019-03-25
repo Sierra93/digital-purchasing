@@ -8,7 +8,7 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         Task<int> CountByCompany(Guid companyId);
 
-        CreateFromFileResponse CreateFromFile(string filePath, Guid ownerId);
+        Task<CreateFromFileResponse> CreateFromFile(string filePath, Guid ownerId);
         PurchaseRequestDetailsResponse GetById(Guid id);
 
         PurchaseRequestColumnsResponse GetColumnsById(Guid id, bool globalSearch = false);

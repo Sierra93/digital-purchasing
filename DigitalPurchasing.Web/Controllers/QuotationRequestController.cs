@@ -46,9 +46,9 @@ namespace DigitalPurchasing.Web.Controllers
             return Json(new VueTableResponse<QuotationRequestIndexDataItemVm, VueTableRequest>(data, request, result.Total, nextUrl, prevUrl));
         }
 
-        public IActionResult Create([FromQuery]Guid prId)
+        public async Task<IActionResult> Create([FromQuery]Guid prId)
         {
-            var id = _quotationRequestService.GetQuotationRequestId(prId);
+            var id = await _quotationRequestService.GetQuotationRequestId(prId);
             if (id == Guid.Empty) return NotFound();
             return RedirectToAction(nameof(View), new { id });
         }

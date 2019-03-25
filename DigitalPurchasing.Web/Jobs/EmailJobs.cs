@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using DigitalPurchasing.Core.Interfaces;
 
 namespace DigitalPurchasing.Web.Jobs
@@ -9,7 +10,7 @@ namespace DigitalPurchasing.Web.Jobs
         public EmailJobs(IRobotEmailService robotEmail)
             => _robotEmail = robotEmail;
 
-        public void CheckRobotEmails()
+        public Task CheckRobotEmails()
             => _robotEmail.CheckRobotEmails();
     }
 }

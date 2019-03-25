@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace DigitalPurchasing.Core.Interfaces
 {
@@ -10,7 +11,7 @@ namespace DigitalPurchasing.Core.Interfaces
         void UpdateSupplierName(Guid id, string name, Guid? supplierId, bool globalSearch = false);
         void UpdateDeliveryCost(Guid id, decimal deliveryCost);
 
-        CreateFromFileResponse CreateFromFile(Guid competitionListId, string filePath);
+        Task<CreateFromFileResponse> CreateFromFile(Guid competitionListId, string filePath);
 
         SupplierOfferVm GetById(Guid id, bool globalSearch = false);
         SupplierOfferDetailsVm GetDetailsById(Guid id);
@@ -21,13 +22,15 @@ namespace DigitalPurchasing.Core.Interfaces
         void GenerateRawItems(Guid id, bool globalSearch = false);
 
         SOMatchItemsVm MatchItemsData(Guid id);
-        void SaveMatch(Guid itemId, Guid nomenclatureId, Guid uomId, decimal factorC, decimal factorN);
+        void SaveMatch(Guid soItemId, Guid nomenclatureId, Guid uomId, decimal factorC, decimal factorN);
 
         DeleteResultVm Delete(Guid id);
 
         SoTermsVm GetTerms(Guid supplierOfferId);
         void SaveTerms(SoTermsVm req, Guid supplierOfferId);
         bool IsAllMatched(Guid supplierOfferId);
+        bool IsAllMatchedBySoItem(Guid soItemId);
+        Task<Guid> GetCLIdBySoItem(Guid soItemId);
     }
 
     public class SupplierOfferDetailsVm

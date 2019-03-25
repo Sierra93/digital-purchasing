@@ -1,4 +1,6 @@
 using System;
+using System.Threading.Tasks;
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Web.ViewModels.SupplierOffer;
 using Microsoft.AspNetCore.Mvc;
@@ -32,15 +34,18 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly ISupplierOfferService _supplierOfferService;
         private readonly INomenclatureService _nomenclatureService;
         private readonly IUomService _uomService;
+        private readonly IRootService _rootService;
 
         public SupplierOfferController(
             ISupplierOfferService supplierOfferService,
             INomenclatureService nomenclatureService,
-            IUomService uomService)
+            IUomService uomService,
+            IRootService rootService)
         {
             _supplierOfferService = supplierOfferService;
             _nomenclatureService = nomenclatureService;
             _uomService = uomService;
+            _rootService = rootService;
         }
 
         public IActionResult Edit(Guid id)
@@ -103,12 +108,21 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         [HttpPost]
-        public IActionResult SaveMatchItem([FromBody] SaveMatchItemVm model)
+        public async Task<IActionResult> SaveMatchItem([FromBody] SaveMatchItemVm model)
         {
             var nomenclature = _nomenclatureService.AutocompleteSingle(model.NomenclatureId);
             _uomService.SaveConversionRate(model.UomId, nomenclature.Data.BatchUomId, nomenclature.Data.Id, model.FactorC, model.FactorN);
             _supplierOfferService.SaveMatch(model.ItemId, model.NomenclatureId, model.UomId, model.FactorC, model.FactorN);
             _nomenclatureService.AddNomenclatureForSupplier(model.ItemId);
+
+            var clId = await _supplierOfferService.GetCLIdBySoItem(model.ItemId);
+
+            var rootId = await _rootService.GetIdByCL(clId);
+            var isAllMatched = _supplierOfferService.IsAllMatchedBySoItem(model.ItemId);
+            await _rootService.SetStatus(rootId, isAllMatched
+                ? RootStatus.EverythingMatches
+                : RootStatus.MatchingRequired);
+            
             return Ok();
         }
 
