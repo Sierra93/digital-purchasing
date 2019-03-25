@@ -34,9 +34,10 @@ namespace DigitalPurchasing.ExcelReader
             var ext = Path.GetExtension(path).ToLower();
             if (ext == ".xls")
             {
-                // todo: convert file
-                //filePath = Path.GetTempFileName()+".xlsx";
-                return ExcelTableResponse.Error(CantOpenFile);
+                var workbook = new Spire.Xls.Workbook();
+                workbook.LoadFromFile(path);
+                path = Path.GetTempFileName()+".xlsx";
+                workbook.SaveToFile(path, Spire.Xls.ExcelVersion.Version2013);
             }
 
             var result = new ExcelTable();

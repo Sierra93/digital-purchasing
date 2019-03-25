@@ -1,12 +1,13 @@
 using DigitalPurchasing.ExcelReader;
 using System;
+using System.Linq;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using Xunit;
 
 namespace DigitalPurchasing.Tests
 {
-    public class UnitTest1
+    public class ExcelTests
     {
         [Fact]
         public void ExcelRequestReaderTest()
@@ -14,6 +15,27 @@ namespace DigitalPurchasing.Tests
             var c1 = new ExcelRequestReader(new TestColumnNameService());
             var result = c1.ToTable(@"c:\ru1.xlsx", Guid.Empty);
             Assert.True(result != null);
+        }
+
+        [Fact]
+        public void CanReadBinaryFormat()
+        {
+            var c1 = new ExcelRequestReader(new TestColumnNameService());
+            var result = c1.ToTable(@"W:\DP\T1\req1.xls", Guid.Empty);
+            Assert.True(result != null);
+            Assert.True(result.IsSuccess);
+        }
+
+        [Fact]
+        public void CanReadBinaryFormat_BigFiles()
+        {
+            var c1 = new ExcelRequestReader(new TestColumnNameService());
+            var result = c1.ToTable(@"W:\DP\big.xls", Guid.Empty);
+            Assert.True(result != null);
+            Assert.True(result.IsSuccess);
+            Assert.True(result.Table.Columns
+                            .First(q => q.Type == TableColumnType.Name)
+                            .Values.Count >= 199);
         }
 
         [Theory]
@@ -30,7 +52,12 @@ namespace DigitalPurchasing.Tests
             switch (type)
             {
                 case TableColumnType.Name:
-                    return new [] {"Товары (работы, услуги)", "Наименование", "Name"};
+                    return new []
+                    {
+                        "Товары (работы, услуги)",
+                        "Наименование", "Name", "Товар",
+                        "Наименование работ"
+                    };
                 case TableColumnType.Qty:
                     return new [] {"Количество"};
                 case TableColumnType.Price:
