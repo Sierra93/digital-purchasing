@@ -347,8 +347,10 @@ namespace DigitalPurchasing.Services
 
             var altNomenclatures = altNomenclaturesQry.ToList();
 
-            var forBulkUpdate = new List<NomenclatureAlternative>();
-
+            var forBulkInsertNA = new List<NomenclatureAlternative>();
+            var forBulkUpdateNA = new List<NomenclatureAlternative>();
+            var forBulkInsertLink = new List<NomenclatureAlternativeLink>();
+            
             foreach (var alt in alts)
             {
                 var altName = altNomenclatures.FirstOrDefault(q =>
@@ -369,30 +371,42 @@ namespace DigitalPurchasing.Services
                         altName.BatchUomId = alt.Uom;
                     }
 
-                    forBulkUpdate.Add(altName);
+                    forBulkUpdateNA.Add(altName);
                 }
                 else
                 {
+                    var naId = Guid.NewGuid();
                     altName = new NomenclatureAlternative
                     {
-                        Id = Guid.NewGuid(),
+                        Id = naId,
                         Name = alt.Name,
                         Code = alt.Code,
                         BatchUomId = alt.Uom,
                         NomenclatureId = alt.NomenclatureId,
-                        OwnerId = ownerId,
-                        Link = new NomenclatureAlternativeLink
-                        {
-                            Id = Guid.NewGuid(),
-                            CustomerId = clientType == ClientType.Customer ? clientId : (Guid?)null,
-                            SupplierId = clientType == ClientType.Supplier ? clientId : (Guid?)null
-                        }
+                        OwnerId = ownerId
                     };
-                    forBulkUpdate.Add(altName);
+
+                    var link = new NomenclatureAlternativeLink
+                    {
+                        Id = Guid.NewGuid(),
+                        CustomerId = clientType == ClientType.Customer ? clientId : (Guid?) null,
+                        SupplierId = clientType == ClientType.Supplier ? clientId : (Guid?) null,
+                        AlternativeId = naId
+                    };
+
+                    forBulkInsertNA.Add(altName);
+                    forBulkInsertLink.Add(link);
                 }
             }
-            if (forBulkUpdate.Any())
-                _db.BulkInsertOrUpdate(forBulkUpdate);
+
+            if (forBulkInsertNA.Any())
+            {
+                _db.BulkInsert(forBulkInsertNA);
+                _db.BulkInsert(forBulkInsertLink);
+            }
+
+            if (forBulkUpdateNA.Any())
+                _db.BulkUpdate(forBulkUpdateNA);
         }
 
         // todo: add owner id?
