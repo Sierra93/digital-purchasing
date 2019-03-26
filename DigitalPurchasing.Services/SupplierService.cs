@@ -21,6 +21,7 @@ namespace DigitalPurchasing.Services
         public SupplierAutocomplete Autocomplete(AutocompleteBaseOptions options)
         {
             var entities = _db.Suppliers
+                .Where(q => !string.IsNullOrEmpty(q.Name))
                 .Where(q => q.Name.Equals(options.Query, StrComparison) || q.Name.Contains(options.Query, StrComparison))
                 .OrderBy(q => q.Name)
                 .Select(q => new SupplierAutocomplete.Supplier { Name = q.Name, Id = q.Id })

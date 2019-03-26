@@ -17,6 +17,7 @@ namespace DigitalPurchasing.Services
         public CustomerAutocomplete Autocomplete(AutocompleteBaseOptions options)
         {
             var entities = _db.Customers
+                .Where(q => !string.IsNullOrEmpty(q.Name))
                 .Where(q => q.Name.Equals(options.Query, StrComparison) || q.Name.Contains(options.Query, StrComparison))
                 .OrderBy(q => q.Name)
                 .Select(q => new CustomerAutocomplete.Customer { Name = q.Name, Id = q.Id })
