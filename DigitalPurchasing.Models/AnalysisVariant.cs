@@ -19,5 +19,7 @@ namespace DigitalPurchasing.Models
         
         public int SupplierCount { get; set; }
         public SupplierCountType SupplierCountType { get; set; }
+
+        public bool IsSelected { get; set; }
     }
 }

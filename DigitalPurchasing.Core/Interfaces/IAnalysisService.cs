@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using DigitalPurchasing.Analysis2.Enums;
 using DigitalPurchasing.Core.Extensions;
 using Newtonsoft.Json;
@@ -18,6 +19,7 @@ namespace DigitalPurchasing.Core.Interfaces
         void DeleteVariant(Guid id);
         AnalysisDetails GetDetails(Guid clId);
         List<Guid> GetDefaultVariantsIds();
+        Task SelectVariant(Guid variantId);
     }
 
     public class AnalysisDetails
@@ -166,5 +168,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public List<Supplier> Suppliers { get; set; } = new List<Supplier>();
         public List<Variant> Variants { get; set; } = new List<Variant>();
+
+        public Guid? SelectedVariant { get; set; }
     }
 }

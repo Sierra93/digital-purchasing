@@ -3,7 +3,7 @@ using DigitalPurchasing.Analysis2.Filters;
 
 namespace DigitalPurchasing.Analysis2
 {
-    public class AnalysisOptions
+    public class AnalysisCoreVariant
     {
         public Guid Id { get; set; }
         public DateTime CreatedOn { get; set; }

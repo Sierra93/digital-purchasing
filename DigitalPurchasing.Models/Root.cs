@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
 using DigitalPurchasing.Core.Enums;
 
 namespace DigitalPurchasing.Models
 {
     public class Root : BaseModelWithOwner
     {
+        public RootStatus Status { get; set; }
+
         public PurchaseRequest PurchaseRequest { get; set; }
         public Guid? PurchaseRequestId { get; set; }
 
@@ -13,6 +16,7 @@ namespace DigitalPurchasing.Models
 
         public CompetitionList CompetitionList { get; set; }
         public Guid? CompetitionListId { get; set; }
-        public RootStatus Status { get; set; }
+
+        public ICollection<SelectedSupplier> SelectedSuppliers { get; set; }
     }
 }

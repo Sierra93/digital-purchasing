@@ -14,7 +14,7 @@
     <table class="table table-striped">
         <thead>
             <tr>
-                <th>Варианты</th>
+                <th style="padding-left: 38px">Варианты</th>
                 <th class="align-right" v-for="supplier in orderedSuppliers">{{supplier.name}}</th>
                 <th class="align-right">ИТОГО</th>
                 <th class="align-right">Кол-во<br />поставщиков</th>
@@ -61,8 +61,19 @@
         <tbody>
             <tr v-for="(variant, index) in orderedVariants" v-if="orderedVariants.length>0">
                 <td>
-                    <p>Вариант {{(index+1)}}</p>
-                    <p class="help-block">Доля в итого, %</p>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td style="padding-right: 16px">
+                                    <input type="radio" :id="(selectedVariant+index)" :value="variant.id" v-model="selectedVariant">
+                                </td>
+                                <td>
+                                    <p><span>Вариант {{(index+1)}}</span></p>
+                                    <p class="help-block">Доля в итого, %</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </td>
                 <td class="align-right" v-if="isSuccess(variant)" v-for="result in getOrderedVariantResults(variant.results)">
                     <p>{{result.total | formatMoney}}</p>
@@ -107,7 +118,8 @@
                         dateFormat: 'DD.MM.YYYY',
                         suppliers: [],
                         variants: [],
-                        customerDeliveryDate: null
+                        customerDeliveryDate: null,
+                        selectedVariant: null
                     };
                 },
                 computed: {
@@ -128,6 +140,9 @@
                         if (val.length === 0) {
                             this.loadData();
                         }
+                    },
+                    selectedVariant: function(id) {
+                        this.saveSelectedVariant(id);
                     }
                 },
                 filters: {
@@ -184,10 +199,11 @@
                     loadData: function() {
                         var vm = this;
                         this.$http.get('@Url.Action("Data", "Analysis", new {clId = Model.ClId})').then(function(response) {
-                                var data = response.body;
-                                vm.suppliers = data.suppliers;
-                                vm.variants = data.variants;
-                                vm.customerDeliveryDate = data.customerDeliveryDate;
+                            var data = response.body;
+                            vm.suppliers = data.suppliers;
+                            vm.variants = data.variants;
+                            vm.customerDeliveryDate = data.customerDeliveryDate;
+                            vm.selectedVariant = data.selectedVariant;
                         },
                         function(response) {
                             alert('Ошибка загрузки');
@@ -211,6 +227,15 @@
                         console.info('deleted'+id);
                         this.variants = _.remove(this.variants, function(v) {
                             return v.id !== id;
+                        });
+                    },
+                    saveSelectedVariant: function(id) {
+                        console.info('saveSelectedVariant, id', id);
+                        var vm = this;
+                        this.$http.post('@Url.Action("SaveSelectedVariant", "Analysis")', { id: id })
+                        .then(function(response) {
+                        }, function(response) {
+                            alert('Ошибка');
                         });
                     }
                 }

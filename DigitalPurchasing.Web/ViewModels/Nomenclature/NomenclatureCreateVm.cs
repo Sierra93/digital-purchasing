@@ -20,7 +20,7 @@ namespace DigitalPurchasing.Web.ViewModels
         [Required, DisplayName("Наименование")]
         public string Name { get; set; }
 
-        [Required, DisplayName("Наименование (eng)")]
+        [DisplayName("Наименование (eng)")]
         public string NameEng { get; set; }
 
         [DisplayName("ЕИ")]

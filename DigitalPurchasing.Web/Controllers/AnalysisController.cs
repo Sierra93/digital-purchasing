@@ -10,6 +10,11 @@ namespace DigitalPurchasing.Web.Controllers
 {
     public class AnalysisController : Controller
     {
+        public class SaveSelectedVariantVm
+        {
+            public Guid Id { get; set; }
+        }
+
         public class DeleteVariantVm
         {
             public Guid Id { get; set; }
@@ -51,6 +56,13 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult SaveVariant([FromBody]AnalysisSaveVariant vm)
         {
             _analysisService.SaveVariant(vm);
+            return Ok();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SaveSelectedVariant([FromBody]SaveSelectedVariantVm vm)
+        {
+            await _analysisService.SelectVariant(vm.Id);
             return Ok();
         }
 

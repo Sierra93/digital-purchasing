@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190327154839_SelectedSupplier")]
+    partial class SelectedSupplier
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -31,8 +33,6 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<int>("DeliveryDateTerms");
 
                     b.Property<int>("DeliveryTerms");
-
-                    b.Property<bool>("IsSelected");
 
                     b.Property<Guid>("OwnerId");
 

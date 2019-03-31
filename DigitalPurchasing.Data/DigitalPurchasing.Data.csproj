@@ -24,6 +24,7 @@
     <Compile Remove="Migrations\20190314133609_UserRole_User.cs" />
     <Compile Remove="Migrations\20190314134619_UserRole.cs" />
     <Compile Remove="Migrations\20190322095142_RequestRoot.cs" />
+    <Compile Remove="Migrations\20190327152216_SelectedSupplier.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -63,6 +63,8 @@ namespace DigitalPurchasing.Data
 
         public DbSet<ReceivedEmail> ReceivedEmails { get; set; }
 
+        public DbSet<SelectedSupplier> SelectedSuppliers { get; set; }
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IHttpContextAccessor httpContextAccessor) : base(options)
         {
             _httpContextAccessor = httpContextAccessor;
@@ -161,6 +163,14 @@ namespace DigitalPurchasing.Data
                 e.HasOne(q => q.UploadedDocument).WithOne().HasForeignKey<SupplierOffer>(q => q.UploadedDocumentId).OnDelete(DeleteBehavior.Restrict);
             });
 
+            builder.Entity<SelectedSupplier>(e =>
+            {
+                e.HasOne(q => q.Owner).WithMany().HasForeignKey(q => q.OwnerId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(q => q.Nomenclature).WithMany().HasForeignKey(q => q.NomenclatureId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(q => q.Supplier).WithMany().HasForeignKey(q => q.SupplierId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(q => q.Root).WithMany(q => q.SelectedSuppliers).HasForeignKey(q => q.RootId).OnDelete(DeleteBehavior.Restrict);
+            });
+
             builder.Entity<UomConversionRate>().HasOne(q => q.FromUom).WithMany(q => q.FromConversionRates).HasForeignKey(q => q.FromUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<UomConversionRate>().HasOne(q => q.ToUom).WithMany(q => q.ToConversionRates).HasForeignKey(q => q.ToUomId).OnDelete(DeleteBehavior.Restrict);
 
@@ -212,6 +222,7 @@ namespace DigitalPurchasing.Data
             builder.Entity<UomConversionRate>().HasQueryFilter(o => o.OwnerId == CompanyId());
             builder.Entity<UploadedDocument>().HasQueryFilter(o => o.OwnerId == CompanyId());
             builder.Entity<AnalysisVariant>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<SelectedSupplier>().HasQueryFilter(o => o.OwnerId == CompanyId());
             builder.Entity<PRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId());
             builder.Entity<QRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId());
             builder.Entity<CLCounter>().HasQueryFilter(o => o.OwnerId == CompanyId());

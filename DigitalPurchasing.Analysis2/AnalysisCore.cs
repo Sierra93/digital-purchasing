@@ -10,7 +10,7 @@ namespace DigitalPurchasing.Analysis2
         public AnalysisCustomer Customer { get; set; }
         public List<AnalysisSupplier> Suppliers { get; set; } = new List<AnalysisSupplier>();
 
-        public AnalysisResult Run(AnalysisOptions options)
+        public AnalysisResult Run(AnalysisCoreVariant options)
         {
             var suppliers = Suppliers;
             var customerItemIds = Customer.Items.Select(q => q.Id);

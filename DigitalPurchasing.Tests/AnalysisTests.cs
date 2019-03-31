@@ -94,7 +94,7 @@ namespace DigitalPurchasing.Tests
                 Suppliers = testData.Suppliers,
             };
 
-            var options = new AnalysisOptions
+            var options = new AnalysisCoreVariant
             {
                 SuppliersCountOptions =
                 {
@@ -123,7 +123,7 @@ namespace DigitalPurchasing.Tests
                 Suppliers = testData.Suppliers,
             };
 
-            var options = new AnalysisOptions
+            var options = new AnalysisCoreVariant
             {
                 SuppliersCountOptions =
                 {
@@ -151,7 +151,7 @@ namespace DigitalPurchasing.Tests
                 Suppliers = testData.Suppliers,
             };
 
-            var options = new AnalysisOptions
+            var options = new AnalysisCoreVariant
             {
                 DeliveryDateTermsOptions =
                 {
@@ -182,7 +182,7 @@ namespace DigitalPurchasing.Tests
         {
             var core = CreateAnalysisCoreWTestData();
 
-            var options = new AnalysisOptions
+            var options = new AnalysisCoreVariant
             {
                 TotalValueOptions =
                 {
@@ -200,7 +200,7 @@ namespace DigitalPurchasing.Tests
         {
             var core = CreateAnalysisCoreWTestData();
 
-            var options = new AnalysisOptions
+            var options = new AnalysisCoreVariant
             {
                 TotalValueOptions =
                 {
@@ -220,7 +220,7 @@ namespace DigitalPurchasing.Tests
         {
             var analysisCore = CreateAnalysisCoreWTestData();
 
-            var options = new AnalysisOptions
+            var options = new AnalysisCoreVariant
             {
                 PaymentTermsOptions =
                 {
@@ -241,7 +241,7 @@ namespace DigitalPurchasing.Tests
         {
             var core = CreateAnalysisCoreWTestData();
 
-            var options = new AnalysisOptions
+            var options = new AnalysisCoreVariant
             {
                 DeliveryTermsOptions =
                 {
@@ -261,7 +261,7 @@ namespace DigitalPurchasing.Tests
         {
             var core = CreateAnalysisCoreWTestData();
 
-            var options = new AnalysisOptions
+            var options = new AnalysisCoreVariant
             {
                 DeliveryTermsOptions =
                 {
@@ -313,7 +313,7 @@ namespace DigitalPurchasing.Tests
                 Suppliers = new List<AnalysisSupplier> { supplier1 }
             };
 
-            var result = core.Run(new AnalysisOptions());
+            var result = core.Run(new AnalysisCoreVariant());
 
             Assert.Empty(result.Data);
         }
@@ -361,7 +361,7 @@ namespace DigitalPurchasing.Tests
                 Suppliers = new List<AnalysisSupplier> { supplier1, supplier2 }
             };
 
-            var result = core.Run(new AnalysisOptions());
+            var result = core.Run(new AnalysisCoreVariant());
 
             Assert.True(result != null);
             Assert.True(result.IsSuccess);
@@ -411,7 +411,7 @@ namespace DigitalPurchasing.Tests
                 Suppliers = new List<AnalysisSupplier> { supplier1, supplier2 }
             };
 
-            var result = core.Run(new AnalysisOptions());
+            var result = core.Run(new AnalysisCoreVariant());
 
             Assert.True(result != null);
             Assert.True(result.IsSuccess);
@@ -465,7 +465,7 @@ namespace DigitalPurchasing.Tests
                 Suppliers = new List<AnalysisSupplier> { supplier1, supplier2 }
             };
 
-            var result = core.Run(new AnalysisOptions());
+            var result = core.Run(new AnalysisCoreVariant());
 
             Assert.True(result.IsSuccess);
             Assert.All(result.Data, q =>

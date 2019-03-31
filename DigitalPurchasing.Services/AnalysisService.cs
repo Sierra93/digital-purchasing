@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Dynamic;
-using System.Text;
+using System.Threading.Tasks;
 using DigitalPurchasing.Analysis2;
 using DigitalPurchasing.Analysis2.Enums;
 using DigitalPurchasing.Core;
@@ -37,12 +36,14 @@ namespace DigitalPurchasing.Services
 
             var data = GetAnalysisData(cl);
             var core = CreateAnalysisCore(cl);
-            var options = GetAnalysisOptions(clId);
+            var variants = GetVariants(clId);
 
-            foreach (var option in options)
+            foreach (var variant in variants)
             {
-                AddVariantToData(data, option, core.Run(option));
+                AddVariantToData(data, variant, core.Run(ToCoreVariant(variant)));
             }
+
+            data.SelectedVariant = variants.FirstOrDefault(q => q.IsSelected)?.Id;
 
             return data;
         }
@@ -53,18 +54,23 @@ namespace DigitalPurchasing.Services
             var variants = _db.AnalysisVariants.Where(q => ids.Contains(q.Id)).ToList();
 
             var data = new AnalysisDataVm();
-            data.Variants.AddRange(variants.Select(q => new AnalysisDataVm.Variant { Id  = q.Id, CreatedOn = q.CreatedOn }));
+            data.Variants.AddRange(variants.Select(q => new AnalysisDataVm.Variant
+            {
+                Id  = q.Id,
+                CreatedOn = q.CreatedOn
+            }));
 
             return data;
         }
 
-        private void AddVariantToData(AnalysisDataVm data, AnalysisOptions option, AnalysisResult result)
+        private void AddVariantToData(AnalysisDataVm data, AnalysisVariant variant, AnalysisResult result)
         {
             var totalBySupplier = result.GetTotalBySupplier();
-            var variant = new AnalysisDataVm.Variant
+            var coreVariant = ToCoreVariant(variant);
+            var dataVariant = new AnalysisDataVm.Variant
             {
-                Id = option.Id,
-                CreatedOn = option.CreatedOn,
+                Id = coreVariant.Id,
+                CreatedOn = coreVariant.CreatedOn,
                 Results = totalBySupplier.Select(q => new AnalysisDataVm.Result
                 {
                     SupplierId = q.Key,
@@ -75,9 +81,9 @@ namespace DigitalPurchasing.Services
 
             foreach (var supplier in data.Suppliers)
             {
-                if (variant.Results.All(q => q.SupplierId != supplier.Id))
+                if (dataVariant.Results.All(q => q.SupplierId != supplier.Id))
                 {
-                    variant.Results.Add(new AnalysisDataVm.Result
+                    dataVariant.Results.Add(new AnalysisDataVm.Result
                     {
                         SupplierId = supplier.Id,
                         Total = 0,
@@ -86,7 +92,7 @@ namespace DigitalPurchasing.Services
                 }
             }
 
-            data.Variants.Add(variant);
+            data.Variants.Add(dataVariant);
         }
 
         private AnalysisDataVm GetAnalysisData(CompetitionListVm cl)
@@ -153,7 +159,7 @@ namespace DigitalPurchasing.Services
             return core;
         }
 
-        private List<AnalysisOptions> GetAnalysisOptions(Guid clId)
+        private List<AnalysisVariant> GetVariants(Guid clId)
         {
             var variants = _db.AnalysisVariants.Where(q => q.CompetitionListId == clId).ToList();
             if (!variants.Any())
@@ -169,17 +175,10 @@ namespace DigitalPurchasing.Services
                 _db.AnalysisVariants.AddRange(defaultVariants);
                 _db.SaveChanges();
 
-                return GetAnalysisOptions(clId);
+                return GetVariants(clId);
             }
 
-            var result = new List<AnalysisOptions>();
-
-            foreach (var variant in variants)
-            {
-                result.Add(ToOption(variant));
-            }
-
-            return result;
+            return variants;
         }
 
         private void CreateDefaultVariants()
@@ -251,9 +250,9 @@ namespace DigitalPurchasing.Services
             var entry = _db.AnalysisVariants.Add(av);
             _db.SaveChanges();
 
-            var option = ToOption(entry.Entity);
+            var variant = entry.Entity;
 
-            AddVariantToData(data, option, core.Run(option));
+            AddVariantToData(data, variant, core.Run(ToCoreVariant(variant)));
 
             return data;
         }
@@ -275,12 +274,14 @@ namespace DigitalPurchasing.Services
         {
             var cl = _competitionListService.GetById(clId);
             var core = CreateAnalysisCore(cl);
-            var options = GetAnalysisOptions(clId);
+            var variants = GetVariants(clId);
 
-            var variantResults = new Dictionary<AnalysisResult, AnalysisOptions>();
-            foreach (var option in options)
+            var variantResults = new Dictionary<AnalysisResult, AnalysisCoreVariant>();
+            foreach (var variant in variants)
             {
-                variantResults.Add(core.Run(option), option);
+                var coreVariant = ToCoreVariant(variant);
+                var variantResult = core.Run(coreVariant);
+                variantResults.Add(variantResult, coreVariant);
             }
 
             var result = new AnalysisDetails();
@@ -356,9 +357,24 @@ namespace DigitalPurchasing.Services
             return result;
         }
 
-        private AnalysisOptions ToOption(AnalysisVariant av)
+        public async Task SelectVariant(Guid variantId)
         {
-            var op = new AnalysisOptions
+            var variant = await _db.AnalysisVariants.FindAsync(variantId);
+            if (variant.CompetitionListId.HasValue)
+            {
+                var clId = variant.CompetitionListId.Value;
+                var allVariants = await _db.AnalysisVariants
+                    .Where(q => q.CompetitionListId == clId)
+                    .ToListAsync();
+                allVariants.ForEach(q => q.IsSelected = false);
+                variant.IsSelected = true;
+                _db.SaveChanges();
+            } 
+        }
+
+        private AnalysisCoreVariant ToCoreVariant(AnalysisVariant av)
+        {
+            var op = new AnalysisCoreVariant
             {
                 Id = av.Id,
                 CreatedOn = av.CreatedOn,
