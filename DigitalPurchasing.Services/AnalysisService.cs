@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using DigitalPurchasing.Analysis2;
 using DigitalPurchasing.Analysis2.Enums;
 using DigitalPurchasing.Core;
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
@@ -19,15 +20,18 @@ namespace DigitalPurchasing.Services
         private readonly ApplicationDbContext _db;
         private readonly ICompetitionListService _competitionListService;
         private readonly INomenclatureService _nomenclatureService;
+        private readonly IRootService _rootService;
 
         public AnalysisService(
             ApplicationDbContext db,
             ICompetitionListService competitionListService,
-            INomenclatureService nomenclatureService)
+            INomenclatureService nomenclatureService,
+            IRootService rootService)
         {
             _db = db;
             _competitionListService = competitionListService;
             _nomenclatureService = nomenclatureService;
+            _rootService = rootService;
         }
 
         public AnalysisDataVm GetData(Guid clId)
@@ -369,6 +373,9 @@ namespace DigitalPurchasing.Services
                 allVariants.ForEach(q => q.IsSelected = false);
                 variant.IsSelected = true;
                 _db.SaveChanges();
+
+                var rootId = await _rootService.GetIdByCL(clId);
+                await _rootService.SetStatus(rootId, RootStatus.SupplierSelected);
             } 
         }
 
