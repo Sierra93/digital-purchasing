@@ -46,7 +46,7 @@ namespace DigitalPurchasing.Services
 
         public string GetNameById(Guid id) => _db.Suppliers.Find(id).Name;
 
-        public SupplierIndexData GetData(int page, int perPage, string sortField, bool sortAsc)
+        public SupplierIndexData GetData(int page, int perPage, string sortField, bool sortAsc, string search)
         {
             if (string.IsNullOrEmpty(sortField))
             {
@@ -54,6 +54,12 @@ namespace DigitalPurchasing.Services
             }
             
             var qry = _db.Suppliers.AsQueryable();//.Where(q => !q.IsDeleted);
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                qry = qry.Where(q => q.Name.Contains(search));
+            }
+
             var total = qry.Count();
             var orderedResults = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}");
             var result = orderedResults.Skip((page-1)*perPage).Take(perPage).ProjectToType<SupplierIndexDataItem>().ToList();

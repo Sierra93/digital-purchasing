@@ -82,6 +82,8 @@ namespace DigitalPurchasing.Services
 
         public async Task SetStatus(Guid rootId, RootStatus status)
         {
+            if (rootId == Guid.Empty) return;
+
             var root = await _db.Roots
                 .IgnoreQueryFilters()
                 .FirstOrDefaultAsync(q => q.Id == rootId);

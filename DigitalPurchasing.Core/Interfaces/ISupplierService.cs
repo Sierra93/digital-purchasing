@@ -8,7 +8,7 @@ namespace DigitalPurchasing.Core.Interfaces
         SupplierAutocomplete Autocomplete(AutocompleteBaseOptions options);
         Guid CreateSupplier(string name);
         string GetNameById(Guid id);
-        SupplierIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
+        SupplierIndexData GetData(int page, int perPage, string sortField, bool sortAsc, string search);
         SupplierVm GetById(Guid id);
         SupplierVm GetById(Guid id, bool globalSearch);
 

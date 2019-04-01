@@ -24,6 +24,9 @@ namespace DigitalPurchasing.Web.Core
         [FromQuery(Name="per_page")]
         public int PerPage { get; set; }
 
+        [FromQuery(Name="s")]
+        public string Search { get; set; }
+
         public T NextPageRequest()
         {
             var next = this;

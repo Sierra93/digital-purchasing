@@ -26,7 +26,13 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpGet]
         public IActionResult Data(VueTableRequest request)
         {
-            var result = _supplierService.GetData(request.Page, request.PerPage, request.SortField, request.SortAsc);
+            var result = _supplierService.GetData(
+                request.Page,
+                request.PerPage,
+                request.SortField,
+                request.SortAsc,
+                request.Search);
+
             var nextUrl = Url.Action(nameof(Data), "Supplier", request.NextPageRequest(), Request.Scheme);
             var prevUrl = Url.Action(nameof(Data), "Supplier", request.PrevPageRequest(), Request.Scheme);
 
