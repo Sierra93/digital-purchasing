@@ -34,7 +34,12 @@ namespace DigitalPurchasing.Services
             _logger = logger;
         }
 
-        public NomenclatureIndexData GetData(int page, int perPage, string sortField, bool sortAsc)
+        public NomenclatureIndexData GetData(
+            int page,
+            int perPage,
+            string sortField,
+            bool sortAsc,
+            string search)
         {
             if (string.IsNullOrEmpty(sortField))
             {
@@ -42,6 +47,14 @@ namespace DigitalPurchasing.Services
             }
 
             var qry = _db.Nomenclatures.Where(q => !q.IsDeleted);
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                qry = qry.Where(q =>
+                    ( q.Name.Contains(search) && !string.IsNullOrEmpty(q.Name) ) ||
+                    ( q.NameEng.Contains(search) && !string.IsNullOrEmpty(q.NameEng) ));
+            }
+
             var total = qry.Count();
             var orderedResults = qry.OrderBy($"{sortField}{(sortAsc ? "" : " DESC")}");
             var result = orderedResults.Skip((page - 1) * perPage).Take(perPage).ProjectToType<NomenclatureIndexDataItem>().ToList();

@@ -5,7 +5,7 @@ namespace DigitalPurchasing.Core.Interfaces
 {
     public interface INomenclatureService
     {
-        NomenclatureIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
+        NomenclatureIndexData GetData(int page, int perPage, string sortField, bool sortAsc, string search);
         NomenclatureDetailsData GetDetailsData(Guid nomId, int page, int perPage, string sortField, bool sortAsc);
         NomenclatureVm CreateOrUpdate(NomenclatureVm model);
         void CreateOrUpdate(List<NomenclatureVm> models, Guid ownerId);

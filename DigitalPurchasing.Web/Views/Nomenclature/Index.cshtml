@@ -17,38 +17,54 @@
 </div>
 
 <div id="app">
-    <vuetable ref="vuetable"
-              api-url="@Url.Action("Data")"
-              :fields="fields"
-              :sort-order="sortOrder"
-              pagination-path=""
-              detail-row-component="row-details"
-              no-data-template="Нет данных"
-              :css="css"
-              @@vuetable:pagination-data="onPaginationData"
-              @@vuetable:cell-clicked="onCellClicked">
-        <div slot="slot-actions" slot-scope="props">
-            <div class="btn-group" role="group" aria-label="...">
-                <a class="btn btn-default" :href="props.rowData.editUrl"><i class="far fa-edit"></i></a>
-                <button type="button" class="btn btn-default" @@click="deleteRow(props.rowData, props.rowIndex)"><i class="far fa-trash-alt"></i></button>
+    <div class="row" style="margin-bottom: 10px">
+        <div class="col-xs-12 col-sm-8 col-md-6 col-lg-4">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Поиск" v-model="search">
+                <span class="input-group-btn">
+                    <button class="btn btn-default" type="button" v-on:click="resetSearch">x</button>
+                </span>
             </div>
         </div>
-    </vuetable>
-    <div>
-        <vuetable-pagination-info ref="paginationInfo"
-                                  info-template="Показано с {from} по {to} из {total}"
-                                  no-data-template="Нет данных"
-                                  info-class="pull-left"
-                                  :css="css.pagination">
-        </vuetable-pagination-info>
-        <vuetable-pagination ref="pagination"
-                             :css="css.pagination"
-                             @@vuetable-pagination:change-page="onChangePage">
-        </vuetable-pagination>
     </div>
-
+    <div class="row">
+        <div class="col-xs-12">
+            <vuetable ref="vuetable"
+                      api-url="@Url.Action("Data")"
+                      :fields="fields"
+                      :sort-order="sortOrder"
+                      :query-params="getQueryParams"
+                      pagination-path=""
+                      detail-row-component="row-details"
+                      no-data-template="Нет данных"
+                      :css="css"
+                      @@vuetable:pagination-data="onPaginationData"
+                      @@vuetable:cell-clicked="onCellClicked">
+                <div slot="slot-actions" slot-scope="props">
+                    <div class="btn-group" role="group" aria-label="...">
+                        <a class="btn btn-default" :href="props.rowData.editUrl"><i class="far fa-edit"></i></a>
+                        <button type="button" class="btn btn-default" @@click="deleteRow(props.rowData, props.rowIndex)"><i class="far fa-trash-alt"></i></button>
+                    </div>
+                </div>
+            </vuetable>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <vuetable-pagination-info ref="paginationInfo"
+                                      info-template="Показано с {from} по {to} из {total}"
+                                      no-data-template="Нет данных"
+                                      info-class="pull-left"
+                                      :css="css.pagination">
+            </vuetable-pagination-info>
+            <vuetable-pagination ref="pagination"
+                                 :css="css.pagination"
+                                 @@vuetable-pagination:change-page="onChangePage">
+            </vuetable-pagination>
+        </div>
+    </div>
     <modal v-model="modalDelete" title="Удаление">
-        <p>Вы уверены что хотите удалить "<b>{{modalData.name}}</b>"?<br />Это действие нельзя отменить.</p>
+        <p>Вы уверены что хотите удалить "<b>{{modalData.name}}</b>"?<br/>Это действие нельзя отменить.</p>
         <div slot="footer">
             <button v-on:click="deleteOk" class="btn btn-danger">Удалить</button>
             <button v-on:click="deleteCancel" class="btn btn-default">Отмена</button>
@@ -301,12 +317,18 @@
                                 direction: 'asc'
                             }
                         ],
+                        search: null,
                         modalDelete: false,
                         modalData: {
                             name: '',
                             id: null
                         }
                     };
+                },
+                watch: {
+                    search: _.debounce(function () {
+                        this.$refs.vuetable.refresh();
+                    }, 250)
                 },
                 methods: {
                     onPaginationData: function (paginationData) {
@@ -335,6 +357,17 @@
                     },
                     deleteCancel: function() {
                         this.modalDelete = false;
+                    },
+                    getQueryParams (sortOrder, currentPage, perPage) {
+                        return {
+                            'sort': sortOrder[0].field + '|' + sortOrder[0].direction,
+                            'page': currentPage,
+                            'per_page': perPage,
+                            's': this.search
+                        };
+                    },
+                    resetSearch: function() {
+                        this.search = null;
                     }
                 }
             });

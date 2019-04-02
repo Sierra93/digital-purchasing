@@ -92,7 +92,7 @@
                 },
                 watch: {
                     search: _.debounce(function () {
-                        this.$refs.vuetable.reload();
+                        this.$refs.vuetable.refresh();
                     }, 250)
                 },
                 methods: {

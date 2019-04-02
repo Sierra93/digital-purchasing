@@ -39,7 +39,7 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpGet]
         public IActionResult Data(VueTableRequest request)
         {
-            var result = _nomenclatureService.GetData(request.Page, request.PerPage, request.SortField, request.SortAsc);
+            var result = _nomenclatureService.GetData(request.Page, request.PerPage, request.SortField, request.SortAsc, request.Search);
             var nextUrl = Url.Action("Data", "Nomenclature", request.NextPageRequest(), Request.Scheme);
             var prevUrl = Url.Action("Data", "Nomenclature", request.PrevPageRequest(), Request.Scheme);
             var data = result.Data.Adapt<List<NomenclatureIndexDataItemEdit>>();

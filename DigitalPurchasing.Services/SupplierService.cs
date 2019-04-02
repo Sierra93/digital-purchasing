@@ -57,7 +57,8 @@ namespace DigitalPurchasing.Services
 
             if (!string.IsNullOrEmpty(search))
             {
-                qry = qry.Where(q => q.Name.Contains(search));
+                qry = qry.Where(q =>
+                    !string.IsNullOrEmpty(q.Name) && q.Name.Contains(search));
             }
 
             var total = qry.Count();
