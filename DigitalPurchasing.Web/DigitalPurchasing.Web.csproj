@@ -4,6 +4,7 @@
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <UserSecretsId>aspnet-DigitalPurchasing.Web-BEA22BE5-8796-46B8-93EC-6B5E5233CBA2</UserSecretsId>
     <MvcRazorExcludeRefAssembliesFromPublish>false</MvcRazorExcludeRefAssembliesFromPublish>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
