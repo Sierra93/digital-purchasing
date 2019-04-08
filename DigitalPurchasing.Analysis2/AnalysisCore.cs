@@ -40,7 +40,6 @@ namespace DigitalPurchasing.Analysis2
                 }
             }
 
-            CalculateScores(datas);
             var itemPairs = GenerateItemPairs(datas);
 
             var coreVariants = itemPairs.CartesianProduct();
@@ -80,6 +79,7 @@ namespace DigitalPurchasing.Analysis2
 
             var allVariants = coreVariants.Union(additionalVariants).ToList();
 
+
             var variantsFilters = new List<IVariantsFilter>
             {
                 new VariantsItemMustHavePriceFilter(),
@@ -95,37 +95,9 @@ namespace DigitalPurchasing.Analysis2
 
             if (!allVariants.Any()) return new AnalysisResult(new List<AnalysisData>());
 
-            var resultData = allVariants.OrderByDescending(q => q.Sum(w => w.Score)).Take(1).First();
+            var resultData = allVariants.OrderBy(q => q.Sum(w => w.Item.TotalPrice)).Take(1).First();
 
             return new AnalysisResult(resultData);
-        }
-
-        private void CalculateScores(List<AnalysisData> datas)
-        {
-            var customerItemIds = Customer.Items.Select(q => q.Id).ToList();
-
-            foreach (var itemId in customerItemIds)
-            {
-                var items = datas.Where(q => q.Item.Id == itemId).Select(q => q.Item).ToList();
-                if (items.Any())
-                {
-                    if (items.Count == 1)
-                    {
-                        SetScore(datas, items[0].InternalId, 1);
-                    }
-                    else
-                    {
-                        var itemWMinPrice = items.OrderBy(q => q.Price).First();
-                        SetScore(datas, itemWMinPrice.InternalId, 1);
-
-                        foreach (var item in items.Where(q => q.InternalId != itemWMinPrice.InternalId))
-                        {
-                            var score = item.Price > 0 ? itemWMinPrice.Price / item.Price : 0;
-                            SetScore(datas, item.InternalId, score);
-                        }
-                    }
-                }
-            }
         }
 
         private List<List<AnalysisData>> GenerateItemPairs(List<AnalysisData> datas)
@@ -143,7 +115,5 @@ namespace DigitalPurchasing.Analysis2
 
             return results;
         }
-
-        private void SetScore(List<AnalysisData> datas, Guid internalId, decimal score) => datas.Find(q => q.Item.InternalId == internalId).Score = score;
     }
 }

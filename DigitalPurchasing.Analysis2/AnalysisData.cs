@@ -7,11 +7,9 @@ namespace DigitalPurchasing.Analysis2
     {
         public AnalysisSupplier Supplier { get; set; }
         public SupplierItem Item { get; set; }
-        public decimal Score { get; set; }
 
         public AnalysisData Copy() => new AnalysisData
         {
-            Score = Score,
             Item = Item.Copy(),
             Supplier = Supplier.Copy()
         };
