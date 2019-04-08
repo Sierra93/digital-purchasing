@@ -45,12 +45,14 @@ namespace DigitalPurchasing.Analysis2
             var coreVariants = itemPairs.CartesianProduct();
             var additionalVariants = new List<List<AnalysisData>>();
 
+            var customerItemsLookup = Customer.Items.ToDictionary(q => q.Id);
+
             foreach (var variant in coreVariants)
             {
                 foreach (var data in variant)
                 {
                     var supplierItem = data.Item;
-                    var customerItem = Customer.Items.Find(q => q.Id == supplierItem.Id);
+                    var customerItem = customerItemsLookup[supplierItem.Id];
                     var diffQty = supplierItem.Quantity - customerItem.Quantity;
                     if (diffQty < 0)
                     {

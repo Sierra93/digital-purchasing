@@ -8,25 +8,16 @@ namespace DigitalPurchasing.Analysis2.Filters
     {
         public override List<List<AnalysisData>> Filter(List<List<AnalysisData>> allVariants, IAnalysisContext context)
         {
-
-
-            //var variants = allVariants
-            //    .Where(q => q
-            //        .All(w => w.Item.Quantity >= GetCustomerQtyByItem(w.Item.Id, context)))
-            //    .ToList();
-
+            var customerItems = context.Customer.Items.ToDictionary(q => q.Id);
             var v = allVariants
                 .Where(
                     w => w
                         .GroupBy(g=> g.Item.Id)
                         .Select(q => new { ItemId = q.Key, Qty = q.Sum(e => e.Item.Quantity) })
-                        .All(r => r.Qty >= GetCustomerQtyByItem(r.ItemId, context)))
+                        .All(r => r.Qty >= customerItems[r.ItemId].Quantity))
                 .ToList();
 
             return v;
         }
-
-        private decimal GetCustomerQtyByItem(Guid itemId, IAnalysisContext context)
-            => context.Customer.Items.Find(e => e.Id == itemId).Quantity;
     }
 }
