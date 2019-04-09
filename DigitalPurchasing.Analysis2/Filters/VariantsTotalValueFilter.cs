@@ -5,6 +5,8 @@ namespace DigitalPurchasing.Analysis2.Filters
 {
     public class VariantsTotalValueFilter : VariantsFilter<VariantsTotalValueOptions>
     {
+        public override int Order => 10;
+
         public VariantsTotalValueFilter(VariantsTotalValueOptions options) => Options = options;
 
         public override List<List<AnalysisData>> Filter(List<List<AnalysisData>> allVariants, IAnalysisContext context)

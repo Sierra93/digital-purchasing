@@ -6,6 +6,8 @@ namespace DigitalPurchasing.Analysis2.Filters
 {
     public class VariantsItemQuantityFilter : VariantsFilter
     {
+        public override int Order => 30;
+
         public override List<List<AnalysisData>> Filter(List<List<AnalysisData>> variants, IAnalysisContext context)
         {
             var customerItems = context.Customer.Items.ToDictionary(q => q.Id);
