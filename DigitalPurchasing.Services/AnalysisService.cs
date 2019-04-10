@@ -48,7 +48,7 @@ namespace DigitalPurchasing.Services
 
             foreach (var variant in variants)
             {
-                AddVariantToData(data, variant, new AnalysisCore().Run(persons.Customer, persons.Suppliers, ToCoreVariant(variant)));
+                AddVariantToData(data, variant, new AnalysisCore(persons.Customer, persons.Suppliers).Run(ToCoreVariant(variant)));
             }
 
             data.SelectedVariant = variants.FirstOrDefault(q => q.IsSelected)?.Id;
@@ -258,7 +258,7 @@ namespace DigitalPurchasing.Services
 
             var variant = entry.Entity;
 
-            AddVariantToData(data, variant, new AnalysisCore().Run(persons.Customer, persons.Suppliers, ToCoreVariant(variant)));
+            AddVariantToData(data, variant, new AnalysisCore(persons.Customer, persons.Suppliers).Run(ToCoreVariant(variant)));
 
             return data;
         }
@@ -286,7 +286,7 @@ namespace DigitalPurchasing.Services
             foreach (var variant in variants)
             {
                 var coreVariant = ToCoreVariant(variant);
-                var variantResult = new AnalysisCore().Run(persons.Customer, persons.Suppliers, coreVariant);
+                var variantResult = new AnalysisCore(persons.Customer, persons.Suppliers).Run(coreVariant);
                 variantResults.Add(variantResult, coreVariant);
             }
 

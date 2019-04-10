@@ -86,7 +86,7 @@ namespace DigitalPurchasing.Tests
                 }
             };
 
-            var result = new AnalysisCore().Run(testData.Customer, testData.Suppliers, options);
+            var result = new AnalysisCore(testData.Customer, testData.Suppliers).Run(options);
 
             Assert.Equal(3, result.Data.Count);
             Assert.Equal(suppliersCount, result.Data.Select(q => q.SupplierId).Distinct().Count());
@@ -108,7 +108,7 @@ namespace DigitalPurchasing.Tests
             };
 
             var testData = GetTestData();
-            var result = new AnalysisCore().Run(testData.Customer, testData.Suppliers, options);
+            var result = new AnalysisCore(testData.Customer, testData.Suppliers).Run(options);
 
             Assert.Equal(3, result.Data.Count);
             Assert.True(result.Data.Select(q => q.SupplierId).Distinct().Count() <= suppliersCount);
@@ -128,7 +128,7 @@ namespace DigitalPurchasing.Tests
             };
 
             var testData = GetTestData();
-            var result = new AnalysisCore().Run(testData.Customer, testData.Suppliers, options);
+            var result = new AnalysisCore(testData.Customer, testData.Suppliers).Run(options);
 
             Assert.Equal(3, result.Data.Count);
             if (deliveryDate == DeliveryDateTerms.LessThanInRequest)
@@ -160,7 +160,7 @@ namespace DigitalPurchasing.Tests
             };
 
             var testData = GetTestData();
-            var result = new AnalysisCore().Run(testData.Customer, testData.Suppliers, options);
+            var result = new AnalysisCore(testData.Customer, testData.Suppliers).Run(options);
 
             Assert.True(result.IsSuccess);
         }
@@ -177,7 +177,7 @@ namespace DigitalPurchasing.Tests
             };
 
             var testData = GetTestData();
-            var result = new AnalysisCore().Run(testData.Customer, testData.Suppliers, options);
+            var result = new AnalysisCore(testData.Customer, testData.Suppliers).Run(options);
 
             Assert.True(result.IsSuccess);
             // 2 suppliers with s date
@@ -196,7 +196,7 @@ namespace DigitalPurchasing.Tests
             };
 
             var testData = GetTestData();
-            var result = new AnalysisCore().Run(testData.Customer, testData.Suppliers, options);
+            var result = new AnalysisCore(testData.Customer, testData.Suppliers).Run(options);
 
             Assert.True(result.IsSuccess);
             Assert.Single(result.Data.Select(q => q.SupplierId).Distinct());
@@ -216,7 +216,7 @@ namespace DigitalPurchasing.Tests
             };
 
             var testData = GetTestData();
-            var result = new AnalysisCore().Run(testData.Customer, testData.Suppliers, options);
+            var result = new AnalysisCore(testData.Customer, testData.Suppliers).Run(options);
 
             Assert.Equal(
                 GetTestData().Suppliers.Count(q => q.DeliveryTerms == deliveryTerms),
@@ -236,7 +236,7 @@ namespace DigitalPurchasing.Tests
 
             var testData = GetTestData();
 
-            var result = new AnalysisCore().Run(testData.Customer, testData.Suppliers, options);
+            var result = new AnalysisCore(testData.Customer, testData.Suppliers).Run(options);
 
             Assert.Equal(
                 GetTestData().Suppliers.Count,
@@ -274,7 +274,7 @@ namespace DigitalPurchasing.Tests
                 }
             };
 
-            var result = new AnalysisCore().Run(customer, new List<AnalysisSupplier> { supplier1 }, new AnalysisCoreVariant());
+            var result = new AnalysisCore(customer, new List<AnalysisSupplier> { supplier1 }).Run(new AnalysisCoreVariant());
 
             Assert.Empty(result.Data);
         }
@@ -318,7 +318,7 @@ namespace DigitalPurchasing.Tests
 
             var suppliers = new List<AnalysisSupplier> {supplier1, supplier2};
 
-            var result = new AnalysisCore().Run(customer, suppliers, new AnalysisCoreVariant());
+            var result = new AnalysisCore(customer, suppliers).Run(new AnalysisCoreVariant());
 
             Assert.True(result != null);
             Assert.True(result.IsSuccess);
@@ -365,7 +365,7 @@ namespace DigitalPurchasing.Tests
 
             var suppliers = new List<AnalysisSupplier> {supplier1, supplier2};
 
-            var result = new AnalysisCore().Run(customer, suppliers, new AnalysisCoreVariant());
+            var result = new AnalysisCore(customer, suppliers).Run(new AnalysisCoreVariant());
 
             Assert.True(result != null);
             Assert.True(result.IsSuccess);
@@ -413,7 +413,7 @@ namespace DigitalPurchasing.Tests
                 }
             };
 
-            var result = new AnalysisCore().Run(customer, new List<AnalysisSupplier> { supplier1, supplier2 }, new AnalysisCoreVariant());
+            var result = new AnalysisCore(customer, new List<AnalysisSupplier> { supplier1, supplier2 }).Run(new AnalysisCoreVariant());
 
             Assert.True(result.IsSuccess);
             Assert.All(result.Data, q =>
