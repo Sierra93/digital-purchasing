@@ -9,6 +9,8 @@ namespace DigitalPurchasing.Analysis2
         public Guid SupplierId { get; set; }
         public SupplierItem Item { get; set; }
 
+        public decimal CustomerQuantity { get; set; }
+
         public AnalysisData Copy() => new AnalysisData
         {
             Item = Item.Copy(),

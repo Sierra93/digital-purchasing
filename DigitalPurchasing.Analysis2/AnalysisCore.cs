@@ -158,7 +158,7 @@ namespace DigitalPurchasing.Analysis2
                 var items = supplier.Items.Where(q => _customerItemsLookup.ContainsKey(q.Id));
                 foreach (var item in items)
                 {
-                    datas.Add(new AnalysisData { SupplierId = supplier.Id, Item = item });
+                    datas.Add(new AnalysisData { SupplierId = supplier.Id, Item = item, CustomerQuantity = _customerItemsLookup[item.Id].Quantity  });
                 }
             }
 

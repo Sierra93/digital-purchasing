@@ -12,7 +12,7 @@ namespace DigitalPurchasing.Analysis2.Filters
         {
             var customerItems = context.Customer.Items.ToDictionary(q => q.Id);
 
-            var fullVariants = variants.Where(q => q.All(w => w.Item.Quantity >= customerItems[w.Item.Id].Quantity)).ToList();
+            var fullVariants = variants.Where(q => q.All(w => w.Item.Quantity >= w.CustomerQuantity)).ToList();
 
             if (fullVariants.Count == variants.Count)
             {
