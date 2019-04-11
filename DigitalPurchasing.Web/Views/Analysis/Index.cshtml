@@ -59,7 +59,7 @@
             </tr>
         </tfoot>
         <tbody>
-            <tr v-for="(variant, index) in orderedVariants" v-if="orderedVariants.length>0">
+            <tr v-for="(variant, index) in orderedVariants" v-if="orderedVariants.length>0 && !noVariants && !isLoading">
                 <td>
                     <table>
                         <tbody>
@@ -85,8 +85,11 @@
                     <p class="text-center">Предложенные условия не соответствуют параметрам выбора</p>
                 </td>
             </tr>
-            <tr v-if="orderedVariants.length === 0" class="text-center">
+            <tr v-if="noVariants" class="text-center">
                 <td colspan="6"><button type="button" class="btn btn-primary" v-on:click="variantAdded">Добавить вариант</button></td>
+            </tr>
+            <tr v-if="isLoading" class="text-center">
+                <td colspan="6">Загрузка...</td>
             </tr>
         </tbody>
     </table>
@@ -119,7 +122,8 @@
                         suppliers: [],
                         variants: [],
                         customerDeliveryDate: null,
-                        selectedVariant: null
+                        selectedVariant: null,
+                        loading: false
                     };
                 },
                 computed: {
@@ -130,6 +134,12 @@
                         return _.orderBy(this.variants, function(url) {
                             return new Date(url.createdOn);
                         }, ['asc']);
+                    },
+                    noVariants: function() {
+                        return this.orderedVariants.length === 0 && !this.loading;
+                    },
+                    isLoading: function() {
+                        return this.orderedVariants.length === 0 && this.loading;
                     }
                 },
                 created: function() {
@@ -198,14 +208,17 @@
                     },
                     loadData: function() {
                         var vm = this;
+                        vm.loading = true;
                         this.$http.get('@Url.Action("Data", "Analysis", new {clId = Model.ClId})').then(function(response) {
                             var data = response.body;
                             vm.suppliers = data.suppliers;
                             vm.variants = data.variants;
                             vm.customerDeliveryDate = data.customerDeliveryDate;
                             vm.selectedVariant = data.selectedVariant;
+                            vm.loading = false;
                         },
                         function(response) {
+                            vm.loading = false;
                             alert('Ошибка загрузки');
                         });
                     },
