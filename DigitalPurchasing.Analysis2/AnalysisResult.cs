@@ -6,9 +6,15 @@ namespace DigitalPurchasing.Analysis2
 {
     public class AnalysisResult
     {
-        public List<AnalysisData> Data { get; set; }
+        public Guid VariantId { get;  }
 
-        public AnalysisResult(List<AnalysisData> data) => Data = data;
+        public List<AnalysisData> Data { get; }
+
+        public AnalysisResult(Guid variantId, List<AnalysisData> data)
+        {
+            VariantId = variantId;
+            Data = data;
+        }
 
         public bool IsSuccess => Data.Any();
 
@@ -36,5 +42,7 @@ namespace DigitalPurchasing.Analysis2
         }
 
         public int SuppliersCount => Data?.Select(q => q.SupplierId).Distinct().Count() ?? 0;
+
+        public static AnalysisResult Empty(Guid variantId) => new AnalysisResult(variantId, new List<AnalysisData>());
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using DigitalPurchasing.Core;
 using DigitalPurchasing.Analysis2;
 using DigitalPurchasing.Analysis2.Enums;
+using DigitalPurchasing.Analysis2.Filters;
 using Xunit;
 
 namespace DigitalPurchasing.Tests
@@ -422,6 +423,73 @@ namespace DigitalPurchasing.Tests
                             || q.Item.Quantity == 100
                             || q.Item.Quantity == 10);
             });
+        }
+
+        [Fact]
+        public void MultipleOptionsAtOnce()
+        {
+            var itemId1 = new Guid("5e654ae674ce4e03be619ec6c5701b21");
+            var itemId2 = new Guid("96d9151eb8f24d7b80a2f2b69fc2e1bc");
+
+            var customer = new AnalysisCustomer
+            {
+                Id = new Guid("01baea5c472d4b5aace9bf7dbaf013c4"),
+                Items =
+                {
+                    new CustomerItem { Id = itemId1, Quantity = 100 },
+                    new CustomerItem { Id = itemId2, Quantity = 100 },
+                }
+            };
+
+            var supplier1 = new AnalysisSupplier
+            {
+                Id = new Guid("f0477905690c44cbbfa185800db1a6ad"),
+                Items =
+                {
+                    new SupplierItem { Id = itemId1, Quantity = 100, Price = 8 },
+                    new SupplierItem { Id = itemId2, Quantity = 100, Price = 11 },
+                }
+            };
+            
+            var supplier2 = new AnalysisSupplier
+            {
+                Id = new Guid("779add5fdc394cca9bfd7672bce61607"),
+                Items =
+                {
+                    new SupplierItem { Id = itemId1, Quantity = 100, Price = 10 },
+                    new SupplierItem { Id = itemId2, Quantity = 100, Price = 8 },
+                }
+            };
+
+            var suppliers = new List<AnalysisSupplier> {supplier1, supplier2};
+
+            var core = new AnalysisCore(customer, suppliers);
+
+            var variant1 = new AnalysisCoreVariant
+            {
+                Id = new Guid("4650979df43843c3874737a2692d8b4d"),
+                SuppliersCountOptions = new VariantsSuppliersCountOptions()
+                {
+                    Count = 1, Type = SupplierCountType.Equal
+                }
+            };
+
+            var variant2 = new AnalysisCoreVariant
+            {
+                Id = new Guid("04a895f1f846495ca363693eba8d4b19"),
+                SuppliersCountOptions = new VariantsSuppliersCountOptions()
+                {
+                    Count = 2, Type = SupplierCountType.Equal
+                }
+            };
+
+            var results = core.Run(variant1, variant2);
+
+            Assert.Equal(2, results.Count);
+            Assert.Contains(results, q => q.VariantId == variant1.Id);
+            Assert.Contains(results, q => q.VariantId == variant2.Id);
+            Assert.Equal(1, results.Count(q => q.SuppliersCount == 1));
+            Assert.Equal(1, results.Count(q => q.SuppliersCount == 2));
         }
 
     }

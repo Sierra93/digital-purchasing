@@ -44,11 +44,11 @@ namespace DigitalPurchasing.Services
 
             var coreVariants = variants.Select(ToCoreVariant).ToArray();
 
-            //var results = new AnalysisCore().Run(persons.Customer, persons.Suppliers, coreVariants);
+            var results = new AnalysisCore(persons.Customer, persons.Suppliers).Run(coreVariants);
 
             foreach (var variant in variants)
             {
-                AddVariantToData(data, variant, new AnalysisCore(persons.Customer, persons.Suppliers).Run(ToCoreVariant(variant)));
+                AddVariantToData(data, variant, results.Find(q => q.VariantId == variant.Id));
             }
 
             data.SelectedVariant = variants.FirstOrDefault(q => q.IsSelected)?.Id;
