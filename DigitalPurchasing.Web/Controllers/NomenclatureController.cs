@@ -50,7 +50,7 @@ namespace DigitalPurchasing.Web.Controllers
             return Json(new VueTableResponse<NomenclatureIndexDataItemEdit, VueTableRequest>(data, request, result.Total, nextUrl, prevUrl));
         }
 
-        [HttpGet, Route("/nomenclature/datadetails/{id}")]
+        [HttpGet, Route("/nomenclature/detailsdata/{id}")]
         public IActionResult DataDetails(VueTableRequestWithId request)
         {
             var result = _nomenclatureService.GetDetailsData(request.Id, request.Page, request.PerPage, request.SortField, request.SortAsc);

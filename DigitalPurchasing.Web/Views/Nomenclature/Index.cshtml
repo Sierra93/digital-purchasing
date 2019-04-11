@@ -236,9 +236,8 @@
                 },
                 computed: {
                     getDetailsUrl: function () {
-                        console.info('rowData', this.rowData);
-                        var id = this.rowData.id;
-                        return '@Url.Action("DataDetails")/'+id;
+                        var url = '/nomenclature/detailsdata/'+this.rowData.id;
+                        return url;
                     }
                 },
             });
