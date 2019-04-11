@@ -281,13 +281,14 @@ namespace DigitalPurchasing.Services
             var cl = _competitionListService.GetById(clId);
             var persons = CreateAnalysisPersons(cl);
             var variants = GetVariants(clId);
+            
+            var coreOptions = variants.Select(ToCoreVariant).ToArray();
+            var analysisResults = new AnalysisCore(persons.Customer, persons.Suppliers).Run(coreOptions);
+            var variantResults = new Dictionary<AnalysisResult, AnalysisCoreVariant>(analysisResults.Count);
 
-            var variantResults = new Dictionary<AnalysisResult, AnalysisCoreVariant>();
-            foreach (var variant in variants)
+            foreach (var analysisResult in analysisResults)
             {
-                var coreVariant = ToCoreVariant(variant);
-                var variantResult = new AnalysisCore(persons.Customer, persons.Suppliers).Run(coreVariant);
-                variantResults.Add(variantResult, coreVariant);
+                variantResults.Add(analysisResult, coreOptions.First(q => q.Id == analysisResult.VariantId));
             }
 
             var result = new AnalysisDetails();

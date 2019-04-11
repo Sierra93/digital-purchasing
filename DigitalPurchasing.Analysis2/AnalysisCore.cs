@@ -10,10 +10,10 @@ namespace DigitalPurchasing.Analysis2
 {
     public class AnalysisCore
     {
-        private IAnalysisContext _context;
-        private Dictionary<Guid, CustomerItem> _customerItemsLookup;
-        private AnalysisCustomer _analysisCustomer;
-        private List<AnalysisSupplier> _analysisSuppliers;
+        private readonly IAnalysisContext _context;
+        private readonly Dictionary<Guid, CustomerItem> _customerItemsLookup;
+        private readonly AnalysisCustomer _analysisCustomer;
+        private readonly List<AnalysisSupplier> _analysisSuppliers;
 
         public AnalysisCore(AnalysisCustomer analysisCustomer, List<AnalysisSupplier> analysisSuppliers)
         {
@@ -21,18 +21,6 @@ namespace DigitalPurchasing.Analysis2
             _analysisSuppliers = analysisSuppliers;
             _context = new AnalysisContext { Customer = analysisCustomer };
             _customerItemsLookup = analysisCustomer.Items.ToDictionary(q => q.Id);
-        }
-
-        public AnalysisResult Run(AnalysisCoreVariant options)
-        {
-            var suppliers = _analysisSuppliers;
-
-            foreach (var filter in GetSuppliersFilter(options))
-            {
-                suppliers = filter.Filter(suppliers, _context);
-            }
-
-            return Process(_analysisCustomer, suppliers, options);
         }
 
         private List<ISuppliersFilter> GetSuppliersFilter(AnalysisCoreVariant options)
@@ -57,29 +45,6 @@ namespace DigitalPurchasing.Analysis2
             };
             return variantsFilters.OrderBy(q => q.Order).ToList();
         }
-
-
-
-        private AnalysisResult Process(AnalysisCustomer analysisCustomer, List<AnalysisSupplier> suppliers, AnalysisCoreVariant options)
-        {
-            var sw = new Stopwatch();
-            
-            var allVariants = GenerateAllVariants(suppliers); 
-            
-            foreach (var variantsFilter in GetVariantsFilters(options))
-            {
-                sw.Restart();
-                allVariants = variantsFilter.Filter(allVariants, _context);
-                sw.Stop();
-                Console.WriteLine($"---- {variantsFilter.GetType().Name} ---- {sw.Elapsed.TotalMilliseconds} ms");
-            }
-
-            if (!allVariants.Any()) return AnalysisResult.Empty(options.Id);
-
-            var resultData = allVariants.OrderBy(q => q.Sum(w => w.Item.TotalPrice)).Take(1).First();
-
-            return new AnalysisResult(options.Id, resultData);
-        }
         
         public List<AnalysisResult> Run(params AnalysisCoreVariant[] options)
         {
@@ -91,12 +56,7 @@ namespace DigitalPurchasing.Analysis2
             {
                 var variantSuppliers = _analysisSuppliers;
 
-                var suppliersFilters = new List<ISuppliersFilter>
-                {
-                    new SupplierDeliveryTermsFilter(option.DeliveryTermsOptions),
-                    new SupplierPaymentTermsFilter(option.PaymentTermsOptions),
-                    new SupplierDeliveryDateTermsFilter(option.DeliveryDateTermsOptions)
-                };
+                var suppliersFilters = GetSuppliersFilter(option);
 
                 foreach (var filter in suppliersFilters)
                 {
@@ -149,6 +109,8 @@ namespace DigitalPurchasing.Analysis2
 
             return results;
         }
+
+        public AnalysisResult Run(AnalysisCoreVariant option) => Run(new[] { option }).First();
 
         private List<List<AnalysisData>> GenerateAllVariants(List<AnalysisSupplier> suppliers)
         {
