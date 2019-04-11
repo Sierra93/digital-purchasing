@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using DigitalPurchasing.Core;
+using DigitalPurchasing.Core.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -13,10 +14,12 @@ namespace DigitalPurchasing.Web.ViewModels.Nomenclature
         [HiddenInput]
         public Guid Id { get; set; }
 
-        [Required, DisplayName("Тип организации")]
+        [DisplayName("Тип организации")]
         public ClientType ClientType { get; set; }
 
-        [Required, DisplayName("Название организации")]
+        public string ClientTypeStr => ClientType.GetDescription();
+
+        [DisplayName("Название организации")]
         public string ClientName { get; set; }
 
         [DisplayName("Код")]

@@ -81,7 +81,25 @@ namespace DigitalPurchasing.Services
             var qry = _db.NomenclatureAlternatives.Where(q => q.NomenclatureId == nomId);
             var total = qry.Count();
             var orderedResults = qry.OrderBy($"{sortField}{(sortAsc ? "" : " DESC")}");
-            var result = orderedResults.Skip((page - 1) * perPage).Take(perPage).ProjectToType<NomenclatureDetailsDataItem>().ToList();
+            var result = orderedResults
+                .Skip((page - 1) * perPage)
+                .Take(perPage)
+                .ProjectToType<NomenclatureDetailsDataItem>().ToList();
+
+            var ids = result.Select(q => q.Id).ToList();
+
+            var links = _db.NomenclatureAlternativeLinks
+                .Include(q => q.Customer)
+                .Include(q => q.Supplier)
+                .Where(q => ids.Contains(q.AlternativeId))
+                .ToList();
+
+            foreach (var link in links)
+            {
+                var alt = result.Find(q => q.Id == link.AlternativeId);
+                alt.ClientName = link.CustomerId.HasValue ? link.Customer.Name : link.Supplier.Name;
+                alt.ClientType = (int) (link.CustomerId.HasValue ? ClientType.Customer : ClientType.Supplier);
+            }
 
             return new NomenclatureDetailsData
             {
@@ -311,6 +329,20 @@ namespace DigitalPurchasing.Services
         {
             var entity = _db.NomenclatureAlternatives.Find(id);
             var result = entity.Adapt<NomenclatureAlternativeVm>();
+            var link = _db.NomenclatureAlternativeLinks
+                .Include(q => q.Supplier)
+                .Include(q => q.Customer)
+                .FirstOrDefault(q => q.AlternativeId == id);
+            if (link != null)
+            {
+                result.ClientName = link.CustomerId.HasValue
+                    ? link.Customer.Name
+                    : link.Supplier.Name;
+                result.ClientType = link.CustomerId.HasValue
+                    ? ClientType.Customer
+                    : ClientType.Supplier;
+            }
+
             return result;
         }
 
