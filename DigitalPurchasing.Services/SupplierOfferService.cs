@@ -310,13 +310,10 @@ namespace DigitalPurchasing.Services
             #region Try to find UoM in db
                 
             var res = _uomService.Autocomplete(soItem.RawUomStr, so.OwnerId);
-            if (res.Items != null && res.Items.Any())
+            var fullMatch = res.Items?.FirstOrDefault(q => q.IsFullMatch);
+            if (fullMatch != null)
             {
-                var match = res.Items.First();
-                if (match != null)
-                {
-                    soItem.RawUomId = match.Id;
-                }
+                soItem.RawUomId = fullMatch.Id;
             }
 
             #endregion

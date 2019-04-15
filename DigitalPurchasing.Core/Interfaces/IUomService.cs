@@ -72,6 +72,7 @@ namespace DigitalPurchasing.Core.Interfaces
         {
             public Guid Id { get; set; }
             public string Name { get; set; }
+            public bool IsFullMatch { get; set; }
         }
 
         public List<AutocompleteItem> Items = new List<AutocompleteItem>();
