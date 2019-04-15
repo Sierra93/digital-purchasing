@@ -1,32 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Migrations\20180927143535_Nomenclature_Factors.cs" />
-    <Compile Remove="Migrations\20180927154409_Fix_CreatedOn.cs" />
-    <Compile Remove="Migrations\20181004123723_QuotationRequest_PurchaseRequest.cs" />
-    <Compile Remove="Migrations\20181005101952_Delivery.cs" />
-    <Compile Remove="Migrations\20181005102818_Delivery.cs" />
-    <Compile Remove="Migrations\20181029105918_PurchaseRequest_UploadedDocument.cs" />
-    <Compile Remove="Migrations\20181029110216_SupplierOffer_PurchaseRequest_UploadedDocument.cs" />
-    <Compile Remove="Migrations\20181029111022_SupplierOffer_PurchaseRequest_UploadedDocument.cs" />
-    <Compile Remove="Migrations\20181029111439_SupplierOffer_PurchaseRequest_UploadedDocument.cs" />
-    <Compile Remove="Migrations\20181105115844_Test.cs" />
-    <Compile Remove="Migrations\20181203093714_Analysis.cs" />
-    <Compile Remove="Migrations\20181214171054_AnalysisVariant_Rework.cs" />
-    <Compile Remove="Migrations\20181214171247_AnalysisVariant_Rework.cs" />
-    <Compile Remove="Migrations\20181214171450_AnalysisVariant_Rework.cs" />
-    <Compile Remove="Migrations\20190205145905_SupplierContactPerson.cs" />
-    <Compile Remove="Migrations\20190206112413_SupplierContactPerson.cs" />
-    <Compile Remove="Migrations\20190314133609_UserRole_User.cs" />
-    <Compile Remove="Migrations\20190314134619_UserRole.cs" />
-    <Compile Remove="Migrations\20190322095142_RequestRoot.cs" />
-    <Compile Remove="Migrations\20190327152216_SelectedSupplier.cs" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" />

@@ -32,12 +32,6 @@ namespace DigitalPurchasing.Models
         public Guid CategoryId { get; set; }
         public NomenclatureCategory Category { get; set; }
 
-        public ICollection<UomConversionRate> ConversionRates { get; set; }
-
-        public ICollection<PurchaseRequestItem> PurchasingRequestItems { get; set; }
-
         public bool IsDeleted { get; set; }
-
-        public ICollection<NomenclatureAlternative> Alternatives { get; set; }
     }
 }

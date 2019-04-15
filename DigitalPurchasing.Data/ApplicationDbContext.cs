@@ -43,10 +43,9 @@ namespace DigitalPurchasing.Data
         public DbSet<SupplierOffer> SupplierOffers { get; set; }
         public DbSet<SupplierOfferItem> SupplierOfferItems { get; set; }
 
-        #region
         public DbSet<AnalysisVariant> AnalysisVariants { get; set; }
-        #endregion
-
+        public DbSet<AnalysisResultItem> AnalysisResultItems { get; set; }
+        
         #region Counters
 
         public DbSet<PRCounter> PRCounters { get; set; }
@@ -115,7 +114,7 @@ namespace DigitalPurchasing.Data
             builder.Entity<RoleClaim>().ToTable("RoleClaims");
 
             builder.Entity<NomenclatureCategory>().HasOne(q => q.Parent).WithMany(q => q.Children).HasForeignKey(q => q.ParentId);
-            builder.Entity<NomenclatureCategory>().HasOne(q => q.Owner).WithMany(q => q.NomenclatureCategories).HasForeignKey(q => q.OwnerId);
+            builder.Entity<NomenclatureCategory>().HasOne(q => q.Owner).WithMany().HasForeignKey(q => q.OwnerId);
 
             builder.Entity<Nomenclature>().HasOne(q => q.Category).WithMany(q => q.Nomenclatures).HasForeignKey(q => q.CategoryId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<Nomenclature>().HasOne(q => q.BatchUom).WithMany(q => q.BatchNomenclatures).HasForeignKey(q => q.BatchUomId).OnDelete(DeleteBehavior.Restrict);
@@ -123,7 +122,7 @@ namespace DigitalPurchasing.Data
             builder.Entity<Nomenclature>().HasOne(q => q.ResourceUom).WithMany(q => q.ResourceNomenclatures).HasForeignKey(q => q.ResourceUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<Nomenclature>().HasOne(q => q.ResourceBatchUom).WithMany(q => q.ResourceBatchNomenclatures).HasForeignKey(q => q.ResourceBatchUomId).OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<NomenclatureAlternative>().HasOne(q => q.Nomenclature).WithMany(q => q.Alternatives).HasForeignKey(q => q.NomenclatureId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<NomenclatureAlternative>().HasOne(q => q.Nomenclature).WithMany().HasForeignKey(q => q.NomenclatureId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<NomenclatureAlternative>().HasOne(q => q.BatchUom).WithMany(q => q.BatchNomenclatureAlternatives).HasForeignKey(q => q.BatchUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<NomenclatureAlternative>().HasOne(q => q.MassUom).WithMany(q => q.MassNomenclatureAlternatives).HasForeignKey(q => q.MassUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<NomenclatureAlternative>().HasOne(q => q.ResourceUom).WithMany(q => q.ResourceNomenclatureAlternatives).HasForeignKey(q => q.ResourceUomId).OnDelete(DeleteBehavior.Restrict);
@@ -140,7 +139,7 @@ namespace DigitalPurchasing.Data
                 e.HasOne(q => q.UploadedDocument).WithOne().HasForeignKey<PurchaseRequest>(q => q.UploadedDocumentId).OnDelete(DeleteBehavior.Restrict);
             });
 
-            builder.Entity<PurchaseRequestItem>().HasOne(q => q.Nomenclature).WithMany(q => q.PurchasingRequestItems).HasForeignKey(q => q.NomenclatureId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<PurchaseRequestItem>().HasOne(q => q.Nomenclature).WithMany().HasForeignKey(q => q.NomenclatureId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<PurchaseRequestItem>().HasOne(q => q.RawUomMatch).WithMany(q => q.PurchasingRequestItems).HasForeignKey(q => q.RawUomMatchId).OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<QuotationRequest>(e =>
@@ -183,6 +182,13 @@ namespace DigitalPurchasing.Data
                 e.HasOne(q => q.Owner).WithMany().HasForeignKey(q => q.OwnerId).OnDelete(DeleteBehavior.Restrict);
             });
 
+            builder.Entity<AnalysisResultItem>(e =>
+            {
+                e.HasOne(q => q.Nomenclature).WithMany().HasForeignKey(q => q.NomenclatureId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(q => q.Variant).WithMany().HasForeignKey(q => q.VariantId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(q => q.Supplier).WithMany().HasForeignKey(q => q.SupplierId).OnDelete(DeleteBehavior.Restrict);
+            });
+
             builder.Entity<Currency>(e =>
             {
                 e.HasData(new Currency
@@ -222,6 +228,7 @@ namespace DigitalPurchasing.Data
             builder.Entity<UomConversionRate>().HasQueryFilter(o => o.OwnerId == CompanyId());
             builder.Entity<UploadedDocument>().HasQueryFilter(o => o.OwnerId == CompanyId());
             builder.Entity<AnalysisVariant>().HasQueryFilter(o => o.OwnerId == CompanyId());
+            builder.Entity<AnalysisResultItem>().HasQueryFilter(o => o.OwnerId == CompanyId());
             builder.Entity<SelectedSupplier>().HasQueryFilter(o => o.OwnerId == CompanyId());
             builder.Entity<PRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId());
             builder.Entity<QRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId());
