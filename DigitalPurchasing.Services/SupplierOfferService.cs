@@ -162,7 +162,12 @@ namespace DigitalPurchasing.Services
                 .Include(q => q.Nomenclature.ResourceUom)
                 .Include(q => q.Nomenclature.ResourceBatchUom)
                 .Where(q => q.PurchaseRequestId == purchaseRequestId).ToList();
-            var offerItems = _db.SupplierOfferItems.Include(q => q.Nomenclature).ThenInclude(q => q.BatchUom).Where(q => q.SupplierOfferId == id).ToList();
+            var offerItems = _db.SupplierOfferItems
+                .Include(q => q.RawUom)
+                .Include(q => q.Nomenclature)
+                    .ThenInclude(q => q.BatchUom)
+                .Where(q => q.SupplierOfferId == id)
+                .ToList();
 
             var result = new SupplierOfferDetailsVm
             {
@@ -182,7 +187,8 @@ namespace DigitalPurchasing.Services
                 item.Request.Currency = "RUB"; //TODO
                 item.Request.Uom = requestItem.Nomenclature.BatchUom.Name;
 
-                var offerItem = offerItems.FirstOrDefault(q => q.NomenclatureId.HasValue && q.NomenclatureId == requestItem.NomenclatureId);
+                var offerItem = offerItems
+                    .FirstOrDefault(q => q.NomenclatureId.HasValue && q.NomenclatureId == requestItem.NomenclatureId);
                 if (offerItem == null) continue;
 
                 item.Offer.Code = offerItem.RawCode;
@@ -190,16 +196,18 @@ namespace DigitalPurchasing.Services
                 item.Offer.Qty = offerItem.RawQty;
                 item.Offer.Price = offerItem.RawPrice;
                 item.Offer.Currency = supplierOffer.Currency.Name;
-                item.Offer.Uom = offerItem.Nomenclature.BatchUom.Name;
+                item.Offer.Uom = offerItem.RawUomId.HasValue ? offerItem.RawUom.Name : string.Empty;
 
-                item.Mass.MassOf1 = requestItem.Nomenclature.MassUomValue;
+                var factor = offerItem.CommonFactor > 0 ? offerItem.CommonFactor : offerItem.NomenclatureFactor;
+
+                item.Mass.MassOf1 = requestItem.Nomenclature.MassUomValue * factor; //todo: try to get from nom alt first
                 item.Mass.MassUom = requestItem.Nomenclature.MassUom.Name;
 
                 item.ImportAndDelivery.DeliveryTerms = supplierOffer.DeliveryTerms;
                 item.ImportAndDelivery.TotalDeliveryCost = supplierOffer.DeliveryCost;
 
                 item.Conversion.CurrencyExchangeRate = 1; //TODO
-                item.Conversion.UomRatio = 1; //TODO
+                item.Conversion.UomRatio = factor;
 
                 item.ResourceConversion.ResourceUom = requestItem.Nomenclature.ResourceUom.Name;
                 item.ResourceConversion.ResourceBatchUom = requestItem.Nomenclature.ResourceBatchUom.Name;

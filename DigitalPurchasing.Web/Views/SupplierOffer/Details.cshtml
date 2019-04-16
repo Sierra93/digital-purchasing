@@ -20,7 +20,7 @@
                         <th colspan="7">Коммерческое предложение в полученном варианте</th>
                         <th colspan="5">Расчет доли товара по стоимости и массе в итого</th>
                         <th colspan="3">Пересчет стоимости с учетом доставки @*и таможенной пошлины*@
-                        <th colspan="7">Перевод коммерческих условий в ЕИ и валюту запроса</th>
+                        <th colspan="9">Перевод коммерческих условий в ЕИ и валюту запроса</th>
                         <th colspan="7">Пересчет стоимости по количеству в запросе с учетом @*пошлины и*@ доставки и ресурса</th>
                     </tr>
                     <tr>
@@ -52,7 +52,9 @@
                         <th>Цена с учетом@*<br />пошлины<br />и*@ доставки,<br />валюта запроса<br />за ЕИ КП</th>
 
                         <th>ЕИ<br />запроса</th>
+                        <th>ЕИ<br />КП</th>
                         <th>Валюта<br />запроса</th>
+                        <th>Валюта<br />КП</th>
                         <th>Коэффициент<br />перевода<br />из ЕИ<br />предложения<br />в ЕИ запроса</th>
                         <th>Курс валют<br />для перевода<br />из валюты КП<br />в валюту<br />запроса</th>
                         <th>Количество<br />в КП,<br />ЕИ запроса</th>
@@ -89,7 +91,7 @@
                         <th>@Model.Items.Sum(q => q.ImportAndDelivery.FinalCost).ToString(Consts.Format.Money)</th>
                         <th></th>
 
-                        <th colspan="6"></th>
+                        <th colspan="8"></th>
                         <th>@Model.Items.Sum(q => q.Conversion.OfferTotalPrice).ToString(Consts.Format.Money)</th>
 
                         <th colspan="6"></th>
@@ -128,9 +130,11 @@
                             <td>@item.ImportAndDelivery.FinalCostCostPer1.ToString(Consts.Format.Money)</td>
 
                             <td>@item.Request.Uom</td>
+                            <td>@item.Offer.Uom</td>
                             <td>@item.Request.Currency</td>
-                            <td>@item.Conversion.UomRatio</td>
-                            <td>@item.Conversion.CurrencyExchangeRate</td>
+                            <td>@item.Offer.Currency</td>
+                            <td>@item.Conversion.UomRatio.ToString(Consts.Format.Qty)</td>
+                            <td>@item.Conversion.CurrencyExchangeRate.ToString(Consts.Format.Qty)</td>
                             <td>@item.Conversion.OfferQty.ToString(Consts.Format.Qty)</td>
                             <td>@item.Conversion.OfferPrice.ToString(Consts.Format.Money)</td>
                             <td>@item.Conversion.OfferTotalPrice.ToString(Consts.Format.Money)</td>

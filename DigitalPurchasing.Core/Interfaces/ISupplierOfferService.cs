@@ -120,7 +120,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
             public decimal TotalDeliveryCost { get; set; }
 
-            public decimal DeliveryCost => TotalDeliveryCost * (_item.Mass.TotalMassPerc != 0 ? _item.Mass.TotalMassPerc :  _item.Mass.TotalPricePerc);
+            public decimal DeliveryCost => TotalDeliveryCost * (_item.Mass.TotalMassPerc > 0 ? _item.Mass.TotalMassPerc :  _item.Mass.TotalPricePerc);
 
             public decimal FinalCost => CustomsDuty + DeliveryCost + _item.Offer.TotalPrice;
             
