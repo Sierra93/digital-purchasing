@@ -43,7 +43,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="MassUomValue" class="control-label"></label>
-                <input asp-for="MassUomValue" class="form-control" />
+                <input asp-for="MassUomValue" asp-is-invariant="true" class="form-control" />
                 <span asp-validation-for="MassUomValue" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -53,7 +53,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="ResourceUomValue" class="control-label"></label>
-                <input asp-for="ResourceUomValue" class="form-control" />
+                <input asp-for="ResourceUomValue" asp-is-invariant="true" class="form-control" />
                 <span asp-validation-for="ResourceUomValue" class="text-danger"></span>
             </div>
             <div class="form-group">

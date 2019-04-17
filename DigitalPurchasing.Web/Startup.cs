@@ -164,22 +164,6 @@ namespace DigitalPurchasing.Web
 
             dbContext.Database.Migrate();
 
-            const string defaultCulture = "ru-RU";
-
-            var supportedCultures = new[]
-            {
-                new CultureInfo(defaultCulture),
-            };
-
-            app.UseRequestLocalization(new RequestLocalizationOptions
-            {
-                DefaultRequestCulture = new RequestCulture(defaultCulture),
-                // Formatting numbers, dates, etc.
-                SupportedCultures = supportedCultures,
-                // UI strings that we have localized.
-                SupportedUICultures = supportedCultures
-            });
-
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCookiePolicy();
