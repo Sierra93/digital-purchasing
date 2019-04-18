@@ -78,6 +78,10 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid ResourceBatchUomId { get; set; }
         public string ResourceBatchUomName { get; set; }
 
+        public Guid? PackUomId { get; set; }
+        public string PackUomName { get; set; }
+        public decimal PackUomValue { get; set; }
+
         public Guid CategoryId { get; set; }
         public string CategoryName { get; set; }
         public string CategoryFullName { get; set; }
@@ -104,6 +108,10 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public Guid ResourceBatchUomId { get; set; }
         public string ResourceBatchUomName { get; set; }
+
+        public Guid? PackUomId { get; set; }
+        public string PackUomName { get; set; }
+        public decimal PackUomValue { get; set; }
 
         public Guid CategoryId { get; set; }
         public string CategoryName { get; set; }

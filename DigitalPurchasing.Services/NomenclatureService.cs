@@ -120,6 +120,8 @@ namespace DigitalPurchasing.Services
                 oldEntity.ResourceBatchUomId = vm.ResourceBatchUomId;
                 oldEntity.ResourceUomValue = vm.ResourceUomValue;
                 oldEntity.MassUomValue = vm.MassUomValue;
+                oldEntity.PackUomId = vm.PackUomId;
+                oldEntity.PackUomValue = vm.PackUomValue;
                 _db.SaveChanges();
                 return oldEntity.Adapt<NomenclatureVm>();
             }
@@ -175,8 +177,10 @@ namespace DigitalPurchasing.Services
             entity.BatchUomId = model.BatchUomId;
 
             entity.MassUomId = model.MassUomId;
-
             entity.MassUomValue = model.MassUomValue;
+
+            entity.PackUomId = model.PackUomId;
+            entity.PackUomValue = model.PackUomValue;
 
             _db.SaveChanges();
             return true;

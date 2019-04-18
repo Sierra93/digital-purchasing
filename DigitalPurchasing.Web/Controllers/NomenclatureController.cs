@@ -75,14 +75,13 @@ namespace DigitalPurchasing.Web.Controllers
 
         public IActionResult Create()
         {
-            var vm = new NomenclatureCreateVm();
-            vm.BatchUoms = vm.ResourceBatchUoms = vm.MassUoms = vm.ResourceUoms = _dictionaryService.GetUoms();
-            vm.Categories = _dictionaryService.GetCategories();
-            return View(vm);
+            var vm = new NomenclatureEditVm();
+            LoadDictionaries(vm);
+            return View(nameof(Edit), vm);
         }
 
         [HttpPost]
-        public IActionResult Create(NomenclatureCreateVm vm)
+        public IActionResult Create(NomenclatureEditVm vm)
         {
             if (ModelState.IsValid)
             {
@@ -90,10 +89,9 @@ namespace DigitalPurchasing.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            vm.BatchUoms = vm.ResourceBatchUoms = vm.MassUoms = vm.ResourceUoms = _dictionaryService.GetUoms();
-            vm.Categories = _dictionaryService.GetCategories();
+            LoadDictionaries(vm);
 
-            return View(vm);
+            return View(nameof(Edit), vm);
         }
 
         public IActionResult Edit(Guid id)
@@ -103,16 +101,15 @@ namespace DigitalPurchasing.Web.Controllers
             var data = _nomenclatureService.GetById(id);
             if (data == null) return NotFound();
 
-            var vm = data.Adapt<NomenclatureCreateVm>();
+            var vm = data.Adapt<NomenclatureEditVm>();
 
-            vm.BatchUoms = vm.ResourceBatchUoms = vm.MassUoms = vm.ResourceUoms = _dictionaryService.GetUoms();
-            vm.Categories = _dictionaryService.GetCategories();
+            LoadDictionaries(vm);
 
-            return View(nameof(Create), vm);
+            return View(nameof(Edit), vm);
         }
 
         [HttpPost]
-        public IActionResult Edit(NomenclatureCreateVm vm)
+        public IActionResult Edit(NomenclatureEditVm vm)
         {
             if (ModelState.IsValid)
             {
@@ -120,10 +117,16 @@ namespace DigitalPurchasing.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            vm.BatchUoms = vm.ResourceBatchUoms = vm.MassUoms = vm.ResourceUoms = _dictionaryService.GetUoms();
-            vm.Categories = _dictionaryService.GetCategories();
+            LoadDictionaries(vm);
 
             return View(nameof(Create), vm);
+        }
+
+        private void LoadDictionaries(NomenclatureEditVm vm)
+        {
+            vm.BatchUoms = vm.ResourceBatchUoms = vm.MassUoms = vm.ResourceUoms = _dictionaryService.GetUoms();
+            vm.PackUoms = _dictionaryService.GetUoms().AddEmpty();
+            vm.Categories = _dictionaryService.GetCategories();
         }
 
         public IActionResult DetailsEdit(Guid id)

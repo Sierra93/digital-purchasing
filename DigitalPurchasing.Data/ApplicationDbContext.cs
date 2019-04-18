@@ -121,6 +121,7 @@ namespace DigitalPurchasing.Data
             builder.Entity<Nomenclature>().HasOne(q => q.MassUom).WithMany(q => q.MassNomenclatures).HasForeignKey(q => q.MassUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<Nomenclature>().HasOne(q => q.ResourceUom).WithMany(q => q.ResourceNomenclatures).HasForeignKey(q => q.ResourceUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<Nomenclature>().HasOne(q => q.ResourceBatchUom).WithMany(q => q.ResourceBatchNomenclatures).HasForeignKey(q => q.ResourceBatchUomId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<Nomenclature>().HasOne(q => q.PackUom).WithMany().HasForeignKey(q => q.PackUomId).OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<NomenclatureAlternative>().HasOne(q => q.Nomenclature).WithMany().HasForeignKey(q => q.NomenclatureId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<NomenclatureAlternative>().HasOne(q => q.BatchUom).WithMany(q => q.BatchNomenclatureAlternatives).HasForeignKey(q => q.BatchUomId).OnDelete(DeleteBehavior.Restrict);

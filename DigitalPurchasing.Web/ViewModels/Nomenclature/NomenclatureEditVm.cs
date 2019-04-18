@@ -9,7 +9,7 @@ using System.ComponentModel;
 
 namespace DigitalPurchasing.Web.ViewModels
 {
-    public class NomenclatureCreateVm
+    public class NomenclatureEditVm
     {
         [HiddenInput]
         public Guid Id { get; set; }
@@ -43,6 +43,12 @@ namespace DigitalPurchasing.Web.ViewModels
         [DisplayName("ЕИ ресурса")]
         public Guid ResourceBatchUomId { get; set; }
         public List<SelectListItem> ResourceBatchUoms { get; set; }
+
+        [DisplayName("ЕИ товара в упаковке")]
+        public Guid? PackUomId { get; set; }
+        public List<SelectListItem> PackUoms { get; set; }
+        [DisplayName("Количество товара в упаковке")]
+        public decimal PackUomValue { get; set; }
 
         [DisplayName("Категория")]
         public Guid CategoryId { get; set; }
