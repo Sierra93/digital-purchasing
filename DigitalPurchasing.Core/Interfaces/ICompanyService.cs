@@ -6,7 +6,7 @@ namespace DigitalPurchasing.Core.Interfaces
 {
     public interface ICompanyService
     {
-        CompanyDto Create(string name);
+        Task<CompanyDto> Create(string name);
         CompanyDto GetByUser(Guid userId);
         Task<CompanyDto> GetByInvitationCode(string code);
         void UpdateName(Guid userId, string newName);

@@ -119,7 +119,7 @@ namespace DigitalPurchasing.Web.Controllers
 
             LoadDictionaries(vm);
 
-            return View(nameof(Create), vm);
+            return View(nameof(Edit), vm);
         }
 
         private void LoadDictionaries(NomenclatureEditVm vm)
@@ -198,7 +198,7 @@ namespace DigitalPurchasing.Web.Controllers
                 var result = _uomService.CreateOrUpdate(uom);
                 if (!dbUoms.ContainsValue(result.Id))
                 {
-                    dbUoms.Add(result.Name, result.Id);
+                    dbUoms.Add(uom, result.Id);
                 }
             }
 

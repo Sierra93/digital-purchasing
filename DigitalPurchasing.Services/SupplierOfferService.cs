@@ -27,6 +27,7 @@ namespace DigitalPurchasing.Services
         private readonly IUploadedDocumentService _uploadedDocumentService;
         private readonly IUomService _uomService;
         private readonly ISupplierService _supplierService;
+        private readonly IConversionRateService _conversionRateService;
         private readonly IRootService _rootService;
 
         public SupplierOfferService(
@@ -39,6 +40,7 @@ namespace DigitalPurchasing.Services
             IUploadedDocumentService uploadedDocumentService,
             IUomService uomService,
             ISupplierService supplierService,
+            IConversionRateService conversionRateService,
             IRootService rootService)
         {
             _db = db;
@@ -50,6 +52,7 @@ namespace DigitalPurchasing.Services
             _uploadedDocumentService = uploadedDocumentService;
             _uomService = uomService;
             _supplierService = supplierService;
+            _conversionRateService = conversionRateService;
             _rootService = rootService;
         }
 
@@ -347,7 +350,7 @@ namespace DigitalPurchasing.Services
 
             if (soItem.NomenclatureId != null && soItem.RawUomId != null)
             {
-                var rate = _uomService.GetConversionRate(soItem.RawUomId.Value, soItem.NomenclatureId.Value);
+                var rate = _conversionRateService.GetRate(soItem.RawUomId.Value, soItem.NomenclatureId.Value);
                 soItem.CommonFactor = rate.CommonFactor;
                 soItem.NomenclatureFactor = rate.NomenclatureFactor;
             }

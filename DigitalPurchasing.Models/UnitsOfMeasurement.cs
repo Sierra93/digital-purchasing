@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using DigitalPurchasing.Core.Interfaces;
 
 namespace DigitalPurchasing.Models
@@ -12,6 +13,9 @@ namespace DigitalPurchasing.Models
         public Company Owner { get; set; }
 
         public string NormalizedName { get; set; }
+
+        [Column(TypeName = "decimal(18, 4)")]
+        public decimal? Quantity { get; set; }
 
         public ICollection<Nomenclature> BatchNomenclatures { get; set; }
         public ICollection<Nomenclature> MassNomenclatures { get; set; }

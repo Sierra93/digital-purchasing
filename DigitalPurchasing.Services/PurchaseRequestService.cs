@@ -27,6 +27,7 @@ namespace DigitalPurchasing.Services
         private readonly IUploadedDocumentService _uploadedDocumentService;
         private readonly ICustomerService _customerService;
         private readonly IRootService _rootService;
+        private readonly IConversionRateService _conversionRateService;
 
         public PurchaseRequestService(
             ApplicationDbContext db,
@@ -38,7 +39,8 @@ namespace DigitalPurchasing.Services
             IDeliveryService deliveryService,
             IUploadedDocumentService uploadedDocumentService,
             ICustomerService customerService,
-            IRootService rootService)
+            IRootService rootService,
+            IConversionRateService conversionRateService)
         {
             _db = db;
             _excelRequestReader = excelFileReader;
@@ -50,6 +52,7 @@ namespace DigitalPurchasing.Services
             _uploadedDocumentService = uploadedDocumentService;
             _customerService = customerService;
             _rootService = rootService;
+            _conversionRateService = conversionRateService;
         }
 
         public async Task<int> CountByCompany(Guid companyId) => await _db.PurchaseRequests.IgnoreQueryFilters().CountAsync(q => q.OwnerId == companyId);
@@ -253,7 +256,7 @@ namespace DigitalPurchasing.Services
 
             if (prItem.NomenclatureId != null && prItem.RawUomMatchId != null)
             {
-                var rate = _uomService.GetConversionRate(prItem.RawUomMatchId.Value, prItem.NomenclatureId.Value);
+                var rate = _conversionRateService.GetRate(prItem.RawUomMatchId.Value, prItem.NomenclatureId.Value);
                 prItem.CommonFactor = rate.CommonFactor;
                 prItem.NomenclatureFactor = rate.NomenclatureFactor;
             }

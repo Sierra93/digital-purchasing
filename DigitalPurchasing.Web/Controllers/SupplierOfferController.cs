@@ -1,13 +1,14 @@
 using System;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core.Enums;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Web.ViewModels.SupplierOffer;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalPurchasing.Web.Controllers
 {
-    public class SupplierOfferController : Controller
+    public class SupplierOfferController : BaseController
     {
         public class UpdateSupplierNameData
         {
@@ -110,8 +111,9 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveMatchItem([FromBody] SaveMatchItemVm model)
         {
+            var companyId = User.CompanyId();
             var nomenclature = _nomenclatureService.AutocompleteSingle(model.NomenclatureId);
-            _uomService.SaveConversionRate(model.UomId, nomenclature.Data.BatchUomId, nomenclature.Data.Id, model.FactorC, model.FactorN);
+            _uomService.SaveConversionRate(companyId, model.UomId, nomenclature.Data.BatchUomId, nomenclature.Data.Id, model.FactorC, model.FactorN);
             _supplierOfferService.SaveMatch(model.ItemId, model.NomenclatureId, model.UomId, model.FactorC, model.FactorN);
             _nomenclatureService.AddNomenclatureForSupplier(model.ItemId);
 

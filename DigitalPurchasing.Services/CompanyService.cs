@@ -16,25 +16,29 @@ namespace DigitalPurchasing.Services
     public class CompanyService : ICompanyService
     {
         private readonly ApplicationDbContext _db;
-
         private readonly UserManager<User> _userManager;
+        private readonly IUomService _uomService;
+        
 
         public CompanyService(
             ApplicationDbContext db,
-            UserManager<User> userManager)
+            UserManager<User> userManager,
+            IUomService uomService)
         {
             _db = db;
             _userManager = userManager;
+            _uomService = uomService;
         }
 
-        public CompanyDto Create(string name)
+        public async Task<CompanyDto> Create(string name)
         {
-            var entry = _db.Companies.Add(new Company
+            var entry = await _db.Companies.AddAsync(new Company
             {
                 Name = name,
                 InvitationCode = Guid.NewGuid().ToString("N")
             });
             _db.SaveChanges();
+            await SeedCompanyData(entry.Entity.Id);
             var response = entry.Entity.Adapt<CompanyDto>();
             return response;
         }
@@ -128,6 +132,18 @@ namespace DigitalPurchasing.Services
         {
             var companies = await _db.Companies.ToListAsync();
             return companies.Adapt<List<CompanyDto>>();
+        }
+
+        private async Task SeedCompanyData(Guid companyId)
+        {
+            var psc1 = await _uomService.Create(companyId, "шт", 1);
+            var psc1000 = await _uomService.Create(companyId, "тыс. шт", 1000);
+            var kilogram = await _uomService.Create(companyId, "кг");
+            var hour = await _uomService.Create(companyId, "час");
+            var durability = await _uomService.Create(companyId, "стойкость");
+            var pack = await _uomService.Create(companyId, "упаковка");
+
+            _uomService.SaveConversionRate(companyId, psc1000.Id, psc1.Id, null, 1000, 0);
         }
     }
 }

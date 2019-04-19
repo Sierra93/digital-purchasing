@@ -129,20 +129,20 @@ namespace DigitalPurchasing.Core.Interfaces
         public string Name { get; set; }
 
         public Guid? BatchUomId { get; set; }
-        public UomVm BatchUom { get; set; }
+        public UomDto BatchUom { get; set; }
 
         public Guid? MassUomId { get; set; }
-        public UomVm MassUom { get; set; }
+        public UomDto MassUom { get; set; }
 
         public decimal MassUomValue { get; set; }
        
         public Guid? ResourceUomId { get; set; }
-        public UomVm ResourceUom { get; set; }
+        public UomDto ResourceUom { get; set; }
 
         public decimal ResourceUomValue { get; set; }
 
         public Guid? ResourceBatchUomId { get; set; }
-        public UomVm ResourceBatchUom { get; set; }
+        public UomDto ResourceBatchUom { get; set; }
     }
 
     public class NomenclatureIndexData : BaseDataResponse<NomenclatureIndexDataItem>

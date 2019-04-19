@@ -82,7 +82,7 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account
             if (ModelState.IsValid)
             {
                 var company = string.IsNullOrEmpty(code)
-                    ? _companyService.Create(null)
+                    ? await _companyService.Create(null)
                     : await _companyService.GetByInvitationCode(code);
                     
                 var user = new User { UserName = Input.Email, Email = Input.Email, PhoneNumber = Input.PhoneNumber, CompanyId = company.Id };
