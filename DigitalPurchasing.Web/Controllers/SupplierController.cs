@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
 using System.Linq;
+using DigitalPurchasing.Core.Extensions;
 
 namespace DigitalPurchasing.Web.Controllers
 {
@@ -22,6 +23,7 @@ namespace DigitalPurchasing.Web.Controllers
 
         private readonly ISupplierService _supplierService;
         private readonly IHtmlHelper _htmlHelper;
+        private const string SameInnErrorMessage = "Контрагент с таким ИНН уже есть в системе";
 
         public SupplierController(ISupplierService supplierService, IHtmlHelper htmlHelper)
         {
@@ -88,9 +90,9 @@ namespace DigitalPurchasing.Web.Controllers
                     _supplierService.Update(vm.Supplier.Adapt<SupplierVm>());
                     return RedirectToAction(nameof(Index));
                 }
-                catch (SameInnException e)
+                catch (SameInnException)
                 {
-                    ModelState.AddModelError(string.Empty, "Поставщик с таким же ИНН уже зарегистрирован в системе");
+                    ModelState.AddModelError(string.Empty, SameInnErrorMessage);
                 }
             }
 
@@ -172,6 +174,31 @@ namespace DigitalPurchasing.Web.Controllers
             }
 
             return Ok();
+        }
+
+        public IActionResult Create()
+        {
+            var vm = new SupplierEditVm();
+            return View(vm);
+        }
+
+        [HttpPost]
+        public IActionResult Create(SupplierEditVm vm)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _supplierService.CreateSupplier(vm.Supplier.Adapt<SupplierVm>(), User.CompanyId());
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (SameInnException)
+                {
+                    ModelState.AddModelError(string.Empty, SameInnErrorMessage);
+                }                
+            }
+
+            return View(vm);
         }
     }
 }

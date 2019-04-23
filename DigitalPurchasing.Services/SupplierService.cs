@@ -179,7 +179,35 @@ namespace DigitalPurchasing.Services
             }
         }
 
-        private bool HasSameSupplierInn(Guid ownerId, Guid exceptSupplierId, long? inn) =>
+        public Guid CreateSupplier(SupplierVm model, Guid ownerId)
+        {
+            if (HasSameSupplierInn(ownerId, null, model.Inn))
+            {
+                throw new SameInnException();
+            }
+
+            var entry = _db.Suppliers.Add(new Supplier
+            {
+                Name = model.Name,
+                OwnershipType = model.OwnershipType,
+                Inn = model.Inn,
+                ErpCode = model.ErpCode,
+                Website = model.Website,
+                LegalAddressStreet = model.LegalAddressStreet,
+                LegalAddressCity = model.LegalAddressCity,
+                LegalAddressCountry = model.LegalAddressCountry,
+                ActualAddressStreet = model.ActualAddressStreet,
+                ActualAddressCity = model.ActualAddressCity,
+                ActualAddressCountry = model.ActualAddressCountry,
+                WarehouseAddressStreet = model.WarehouseAddressStreet,
+                WarehouseAddressCity = model.WarehouseAddressCity,
+                WarehouseAddressCountry = model.WarehouseAddressCountry
+            });
+            _db.SaveChanges();
+            return entry.Entity.Id;
+        }
+
+        private bool HasSameSupplierInn(Guid ownerId, Guid? exceptSupplierId, long? inn) =>
             inn.HasValue &&
             _db.Suppliers.Any(_ => _.OwnerId == ownerId && _.Id != exceptSupplierId && _.Inn == inn.Value);
 
