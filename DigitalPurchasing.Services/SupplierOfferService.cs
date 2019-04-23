@@ -203,7 +203,7 @@ namespace DigitalPurchasing.Services
 
                 var factor = offerItem.CommonFactor > 0 ? offerItem.CommonFactor : offerItem.NomenclatureFactor;
 
-                item.Mass.MassOf1 = requestItem.Nomenclature.MassUomValue * factor; //todo: try to get from nom alt first
+                item.Mass.MassOf1 = requestItem.Nomenclature.MassUomValue; //todo: try to get from nom alt first
                 item.Mass.MassUom = requestItem.Nomenclature.MassUom.Name;
 
                 item.ImportAndDelivery.DeliveryTerms = supplierOffer.DeliveryTerms;
@@ -216,8 +216,6 @@ namespace DigitalPurchasing.Services
                 item.ResourceConversion.ResourceBatchUom = requestItem.Nomenclature.ResourceBatchUom.Name;
                 item.ResourceConversion.RequestResource = requestItem.Nomenclature.ResourceUomValue;
                 item.ResourceConversion.OfferResource = requestItem.Nomenclature.ResourceUomValue; //TODO
-                
-                
             }
 
             return result;
