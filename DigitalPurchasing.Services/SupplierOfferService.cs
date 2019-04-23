@@ -164,12 +164,23 @@ namespace DigitalPurchasing.Services
                 .Include(q => q.Nomenclature.MassUom)
                 .Include(q => q.Nomenclature.ResourceUom)
                 .Include(q => q.Nomenclature.ResourceBatchUom)
-                .Where(q => q.PurchaseRequestId == purchaseRequestId).ToList();
+                .Where(q => q.PurchaseRequestId == purchaseRequestId)
+                .ToList();
+
             var offerItems = _db.SupplierOfferItems
                 .Include(q => q.RawUom)
                 .Include(q => q.Nomenclature)
                     .ThenInclude(q => q.BatchUom)
                 .Where(q => q.SupplierOfferId == id)
+                .ToList();
+
+            var nomIds = requestItems
+                .Select(q => q.Nomenclature.Id)
+                .ToList();
+
+            var nomAlts = _db.NomenclatureAlternatives
+                .Include(q => q.Link)
+                .Where(q => q.Link.SupplierId == supplierOffer.SupplierId && nomIds.Contains(q.NomenclatureId))
                 .ToList();
 
             var result = new SupplierOfferDetailsVm
@@ -203,7 +214,13 @@ namespace DigitalPurchasing.Services
 
                 var factor = offerItem.CommonFactor > 0 ? offerItem.CommonFactor : offerItem.NomenclatureFactor;
 
-                item.Mass.MassOf1 = requestItem.Nomenclature.MassUomValue; //todo: try to get from nom alt first
+                var nomAlt = nomAlts.FirstOrDefault(q => q.NomenclatureId == requestItem.Nomenclature.Id);
+
+                var offerMassOf1 = nomAlt?.MassUomValue > 0
+                    ? nomAlt.MassUomValue
+                    : requestItem.Nomenclature.MassUomValue;
+
+                item.Mass.MassOf1 = offerMassOf1;
                 item.Mass.MassUom = requestItem.Nomenclature.MassUom.Name;
 
                 item.ImportAndDelivery.DeliveryTerms = supplierOffer.DeliveryTerms;
@@ -215,7 +232,12 @@ namespace DigitalPurchasing.Services
                 item.ResourceConversion.ResourceUom = requestItem.Nomenclature.ResourceUom.Name;
                 item.ResourceConversion.ResourceBatchUom = requestItem.Nomenclature.ResourceBatchUom.Name;
                 item.ResourceConversion.RequestResource = requestItem.Nomenclature.ResourceUomValue;
-                item.ResourceConversion.OfferResource = requestItem.Nomenclature.ResourceUomValue; //TODO
+                
+                var offerResource = nomAlt?.ResourceUomValue > 0
+                    ? nomAlt.ResourceUomValue
+                    : requestItem.Nomenclature.ResourceUomValue;
+
+                item.ResourceConversion.OfferResource = offerResource;
             }
 
             return result;
