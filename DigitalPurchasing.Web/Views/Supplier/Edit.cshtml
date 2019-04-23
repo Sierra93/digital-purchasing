@@ -17,49 +17,96 @@
     </div>
 </form>
 
-<h3 class="with-button">Контакты сотрудников</h3>
-<div class="btn-group">
-    <a class="btn btn-default" asp-action="AddContactPerson" asp-route-supplierId="@Model.Supplier.Id">Добавить</a>
-</div>
-@if (Model.ContactPersons.Any())
+<hr />
+
+@if (Model.NomenclatureCategoies.Any())
 {
-    <div class="row" id="table-persons">
-        <div class="col-md-12">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Должность</th>
-                        <th>Фамилия</th>
-                        <th>Имя</th>
-                        <th>Отчество</th>
-                        <th>E-mail</th>
-                        <th>Моб. телефон</th>
-                        <th>Использовать для<br />отправки запросов и<br />получения КП?</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var person in Model.ContactPersons)
-                    {
-                        <tr data-fullname="@person.FullName" data-id="@person.Id">
-                            <td>@person.JobTitle</td>
-                            <td>@person.LastName</td>
-                            <td>@person.FirstName</td>
-                            <td>@person.Patronymic</td>
-                            <td>@person.Email</td>
-                            <td>@person.PhoneNumber.FormatPhoneNumber()</td>
-                            <td>@(person.UseForRequests ? "Да" : "Нет")</td>
-                            <td>
-                                <a asp-action="EditContactPerson" asp-route-personId="@person.Id"><i class="far fa-edit"></i></a>
-                                <button type="button" class="btn btn-link" data-delete-person><i class="far fa-trash-alt"></i></button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <form asp-action="SaveSupplierCategories" asp-route-supplierId="@Model.Supplier.Id">
+
+        <h3>Категории закупок</h3>
+        <table class="table table-striped">
+            <tr>
+                <th>Категория</th>
+                <th style="width: 250px">Контакт 1</th>
+                <th style="width: 250px">Контакт 2</th>
+            </tr>
+            @for (int i = 0; i < Model.NomenclatureCategoies.Count; i++)
+            {
+                var nc = Model.NomenclatureCategoies[i];
+                <tr>
+                    <td>
+                        @nc.NomenclatureCategoryFullName
+                        <input type="hidden" asp-for="NomenclatureCategoies[i].NomenclatureCategoryId" />
+                    </td>
+                    <td>
+                        <select asp-for="NomenclatureCategoies[i].NomenclatureCategoryPrimaryContactId"
+                                asp-items="Model.ContactPersons.OrderBy(cp => cp.FullName).Select(cp => new SelectListItem() { Value = cp.Id.ToString(), Text = cp.FullName, Selected = cp.Id == nc.NomenclatureCategoryPrimaryContactId })"
+                                class="form-control">
+                            <option value="">-- Не выбран --</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select asp-for="NomenclatureCategoies[i].NomenclatureCategorySecondaryContactId"
+                                asp-items="Model.ContactPersons.OrderBy(cp => cp.FullName).Select(cp => new SelectListItem() { Value = cp.Id.ToString(), Text = cp.FullName, Selected = cp.Id == nc.NomenclatureCategorySecondaryContactId })"
+                                class="form-control">
+                            <option value="">-- Не выбран --</option>
+                        </select>
+                    </td>
+                </tr>
+            }
+        </table>
+        <input type="submit" class="btn btn-primary" value="Сохранить" />
+        <a asp-action="Index" class="btn btn-default">Отмена</a>
+    </form>
+
+    <hr />
 }
+
+<div>
+    <h3 class="with-button">Контакты сотрудников</h3>
+    <div class="btn-group">
+        <a class="btn btn-default" asp-action="AddContactPerson" asp-route-supplierId="@Model.Supplier.Id">Добавить</a>
+    </div>
+    @if (Model.ContactPersons.Any())
+    {
+        <div class="row" id="table-persons">
+            <div class="col-md-12">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Должность</th>
+                            <th>Фамилия</th>
+                            <th>Имя</th>
+                            <th>Отчество</th>
+                            <th>E-mail</th>
+                            <th>Моб. телефон</th>
+                            <th>Использовать для<br />отправки запросов и<br />получения КП?</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var person in Model.ContactPersons)
+                        {
+                            <tr data-fullname="@person.FullName" data-id="@person.Id">
+                                <td>@person.JobTitle</td>
+                                <td>@person.LastName</td>
+                                <td>@person.FirstName</td>
+                                <td>@person.Patronymic</td>
+                                <td>@person.Email</td>
+                                <td>@person.PhoneNumber.FormatPhoneNumber()</td>
+                                <td>@(person.UseForRequests ? "Да" : "Нет")</td>
+                                <td>
+                                    <a asp-action="EditContactPerson" asp-route-personId="@person.Id"><i class="far fa-edit"></i></a>
+                                    <button type="button" class="btn btn-link" data-delete-person><i class="far fa-trash-alt"></i></button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
 
 <div class="modal fade" tabindex="-1" role="dialog" id="modal-delete-person">
     <div class="modal-dialog" role="document">

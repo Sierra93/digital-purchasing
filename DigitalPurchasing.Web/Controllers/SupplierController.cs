@@ -9,6 +9,7 @@ using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
+using System.Linq;
 
 namespace DigitalPurchasing.Web.Controllers
 {
@@ -71,8 +72,11 @@ namespace DigitalPurchasing.Web.Controllers
             return View(vm);
         }
 
-        private void LoadRelatedData(SupplierEditVm vm, Guid supplierId) =>
+        private void LoadRelatedData(SupplierEditVm vm, Guid supplierId)
+        {
             vm.ContactPersons = _supplierService.GetContactPersonsBySupplier(supplierId);
+            vm.NomenclatureCategoies = _supplierService.GetSupplierNomenclatureCategories(supplierId);
+        }
 
         [HttpPost]
         public IActionResult Edit(SupplierEditVm vm)
@@ -92,6 +96,20 @@ namespace DigitalPurchasing.Web.Controllers
 
             LoadRelatedData(vm, vm.Supplier.Id);
             return View(vm);
+        }
+
+        [HttpPost]
+        public IActionResult SaveSupplierCategories(SupplierEditVm vm, Guid supplierId)
+        {
+            if (ModelState.IsValid)
+            {
+                _supplierService.SaveSupplierNomenclatureCategoryContacts(
+                    supplierId,
+                    vm.NomenclatureCategoies.Select(nc => (nc.NomenclatureCategoryId, nc.NomenclatureCategoryPrimaryContactId, nc.NomenclatureCategorySecondaryContactId)));
+                return RedirectToAction(nameof(Index));
+            }
+
+            return RedirectToAction(nameof(Edit), new { id = supplierId });
         }
 
         [HttpGet, Route("/contactpersons/add/{supplierId}")]

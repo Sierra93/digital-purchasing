@@ -60,5 +60,6 @@ namespace DigitalPurchasing.Web.ViewModels.Supplier
 
         public SupplierEditVm.SupplierVm Supplier { get; set; }
         public List<SupplierContactPersonVm> ContactPersons { get; set; }
+        public List<SupplierNomenclatureCategory> NomenclatureCategoies { get; set; } = new List<SupplierNomenclatureCategory>();
     }
 }

@@ -16,8 +16,15 @@ namespace DigitalPurchasing.Services
     {
         private readonly ApplicationDbContext _db;
         private const StringComparison StrComparison = StringComparison.InvariantCultureIgnoreCase;
+        private readonly INomenclatureCategoryService _categoryService;
 
-        public SupplierService(ApplicationDbContext db) => _db = db;
+        public SupplierService(
+            ApplicationDbContext db,
+            INomenclatureCategoryService categoryService)
+        {
+            _db = db;
+            _categoryService = categoryService;
+        }
 
         public SupplierAutocomplete Autocomplete(AutocompleteBaseOptions options)
         {
@@ -176,5 +183,61 @@ namespace DigitalPurchasing.Services
         private bool HasSameSupplierInn(Guid ownerId, Guid exceptSupplierId, long? inn) =>
             inn.HasValue &&
             _db.Suppliers.Any(_ => _.OwnerId == ownerId && _.Id != exceptSupplierId && _.Inn == inn.Value);
+
+        public List<SupplierNomenclatureCategory> GetSupplierNomenclatureCategories(Guid supplierId)
+        {
+            var qry = from n in _db.Nomenclatures.Where(q => !q.IsDeleted)
+                      join na in _db.NomenclatureAlternatives on n.Id equals na.NomenclatureId
+                      join nal in _db.NomenclatureAlternativeLinks on na.Id equals nal.AlternativeId
+                      where nal.SupplierId == supplierId &&
+                            !n.Category.IsDeleted
+                      select n.CategoryId;
+
+            return qry.Distinct().ToList().Select(ncId =>
+            {
+                var mappings = _db.SupplierContactPersonToNomenclatureCategories.Where(_ =>
+                    _.NomenclatureCategoryId == ncId &&
+                    _.SupplierContactPerson.SupplierId == supplierId).ToList();
+                return new SupplierNomenclatureCategory()
+                {
+                    NomenclatureCategoryId = ncId,
+                    NomenclatureCategoryFullName = _categoryService.FullCategoryName(ncId),
+                    NomenclatureCategoryPrimaryContactId = mappings.FirstOrDefault(m => m.IsPrimaryContact)?.SupplierContactPersonId,
+                    NomenclatureCategorySecondaryContactId = mappings.FirstOrDefault(m => !m.IsPrimaryContact)?.SupplierContactPersonId
+                };
+            }).ToList();
+        }
+
+        public void SaveSupplierNomenclatureCategoryContacts(Guid supplierId,
+            IEnumerable<(Guid nomenclatureCategoryId, Guid? primarySupplierContactId, Guid? secondarySupplierContactId)> nomenclatureCategories2Contacts)
+        {
+            foreach (var mapping in nomenclatureCategories2Contacts)
+            {
+                _db.SupplierContactPersonToNomenclatureCategories.RemoveRange(
+                    _db.SupplierContactPersonToNomenclatureCategories.Where(_ => _.NomenclatureCategoryId == mapping.nomenclatureCategoryId));
+
+                if (mapping.primarySupplierContactId.HasValue)
+                {
+                    _db.SupplierContactPersonToNomenclatureCategories.Add(new SupplierContactPersonToNomenclatureCategory()
+                    {
+                        NomenclatureCategoryId = mapping.nomenclatureCategoryId,
+                        SupplierContactPersonId = mapping.primarySupplierContactId.Value,
+                        IsPrimaryContact = true
+                    });
+                }
+
+                if (mapping.secondarySupplierContactId.HasValue)
+                {
+                    _db.SupplierContactPersonToNomenclatureCategories.Add(new SupplierContactPersonToNomenclatureCategory()
+                    {
+                        NomenclatureCategoryId = mapping.nomenclatureCategoryId,
+                        SupplierContactPersonId = mapping.secondarySupplierContactId.Value,
+                        IsPrimaryContact = false
+                    });
+                }
+            }
+
+            _db.SaveChanges();
+        }
     }
 }

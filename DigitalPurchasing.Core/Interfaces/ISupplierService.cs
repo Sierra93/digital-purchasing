@@ -20,6 +20,9 @@ namespace DigitalPurchasing.Core.Interfaces
         void DeleteContactPerson(Guid personId);
         SupplierContactPersonVm GetContactPersonBySupplier(Guid supplierId);
         Guid GetSupplierByEmail(string email);
+        List<SupplierNomenclatureCategory> GetSupplierNomenclatureCategories(Guid supplierId);
+        void SaveSupplierNomenclatureCategoryContacts(Guid supplierId,
+            IEnumerable<(Guid nomenclatureCategoryId, Guid? primarySupplierContactId, Guid? secondarySupplierContactId)> nomenclatureCategories2Contacts);
     }
 
     public class SupplierAutocomplete
@@ -80,5 +83,13 @@ namespace DigitalPurchasing.Core.Interfaces
         public bool UseForRequests { get; set; }
 
         public string FullName => $"{LastName??""} {FirstName??""} {Patronymic??""}".Trim();
+    }
+
+    public class SupplierNomenclatureCategory
+    {
+        public Guid NomenclatureCategoryId { get; set; }
+        public string NomenclatureCategoryFullName { get; set; }
+        public Guid? NomenclatureCategoryPrimaryContactId { get; set; }
+        public Guid? NomenclatureCategorySecondaryContactId { get; set; }
     }
 }
