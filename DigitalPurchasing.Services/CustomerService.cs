@@ -43,7 +43,7 @@ namespace DigitalPurchasing.Services
 
         public string GetNameById(Guid id) => _db.Customers.Find(id).Name;
 
-        public CustomerVm GetById(Guid id) => _db.Suppliers.Find(id)?.Adapt<CustomerVm>();
+        public CustomerVm GetById(Guid id) => _db.Customers.Find(id)?.Adapt<CustomerVm>();
 
         public CustomerIndexData GetData(int page, int perPage, string sortField, bool sortAsc, string search)
         {

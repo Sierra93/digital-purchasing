@@ -3,6 +3,7 @@ using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels.Customer;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 
 namespace DigitalPurchasing.Web.Controllers
@@ -34,10 +35,19 @@ namespace DigitalPurchasing.Web.Controllers
             var dataItems = result.Data.Adapt<List<CustomerIndexDataItemEdit>>();
             foreach (var dataItem in dataItems)
             {
-                //dataItem.EditUrl = Url.Action(nameof(Edit), new { id = dataItem.Id });
+                dataItem.EditUrl = Url.Action(nameof(Edit), new { id = dataItem.Id });
             }
 
             return Json(new VueTableResponse<CustomerIndexDataItemEdit, VueTableRequest>(dataItems, request, result.Total, nextUrl, prevUrl));
+        }
+
+        [HttpGet]
+        public IActionResult Edit(Guid id)
+        {
+            var vm = _customerService.GetById(id);
+            if (vm == null) return NotFound();
+
+            return View(new CustomerEditVm { Customer = vm });
         }
     }
 }
