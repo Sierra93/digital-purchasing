@@ -41,6 +41,7 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
+        public string MainCategoriesCsv { get; set; }
     }
 
     public class SupplierIndexData : BaseDataResponse<SupplierIndexDataItem>

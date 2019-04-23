@@ -12,14 +12,11 @@ namespace DigitalPurchasing.Core.Interfaces
         string FullCategoryName(Guid categoryId);
         void Delete(Guid id);
         NomenclatureCategoryVm Update(Guid id, string name, Guid? parentId);
+        NomenclatureCategoryBasicInfo GetParentCategory(Guid categoryId);
     }
 
-    public class NomenclatureCategoryVm
+    public class NomenclatureCategoryVm : NomenclatureCategoryBasicInfo
     {
-        public Guid Id { get; set; }
-
-        public string Name { get; set; }
-
         public Guid? ParentId { get; set; }
 
         public string ParentName { get; set; }
@@ -33,5 +30,11 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class NomenclatureCategoryIndexData : BaseDataResponse<NomenclatureCategoryIndexDataItem>
     {
+    }
+
+    public class NomenclatureCategoryBasicInfo
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
     }
 }
