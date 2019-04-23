@@ -248,7 +248,7 @@ namespace DigitalPurchasing.Services
 
             return qry.Distinct().ToList().Select(ncId =>
             {
-                var mappings = _db.SupplierContactPersonToNomenclatureCategories.Where(_ =>
+                var mappings = _db.SupplierCategories.Where(_ =>
                     _.NomenclatureCategoryId == ncId &&
                     _.SupplierContactPerson.SupplierId == supplierId).ToList();
                 return new SupplierNomenclatureCategory()
@@ -266,12 +266,12 @@ namespace DigitalPurchasing.Services
         {
             foreach (var mapping in nomenclatureCategories2Contacts)
             {
-                _db.SupplierContactPersonToNomenclatureCategories.RemoveRange(
-                    _db.SupplierContactPersonToNomenclatureCategories.Where(_ => _.NomenclatureCategoryId == mapping.nomenclatureCategoryId));
+                _db.SupplierCategories.RemoveRange(
+                    _db.SupplierCategories.Where(_ => _.NomenclatureCategoryId == mapping.nomenclatureCategoryId));
 
                 if (mapping.primarySupplierContactId.HasValue)
                 {
-                    _db.SupplierContactPersonToNomenclatureCategories.Add(new SupplierContactPersonToNomenclatureCategory()
+                    _db.SupplierCategories.Add(new SupplierCategory()
                     {
                         NomenclatureCategoryId = mapping.nomenclatureCategoryId,
                         SupplierContactPersonId = mapping.primarySupplierContactId.Value,
@@ -281,7 +281,7 @@ namespace DigitalPurchasing.Services
 
                 if (mapping.secondarySupplierContactId.HasValue)
                 {
-                    _db.SupplierContactPersonToNomenclatureCategories.Add(new SupplierContactPersonToNomenclatureCategory()
+                    _db.SupplierCategories.Add(new SupplierCategory()
                     {
                         NomenclatureCategoryId = mapping.nomenclatureCategoryId,
                         SupplierContactPersonId = mapping.secondarySupplierContactId.Value,

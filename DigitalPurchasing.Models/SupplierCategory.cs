@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DigitalPurchasing.Models
 {
-    public class SupplierContactPersonToNomenclatureCategory
+    public class SupplierCategory
     {
         public Guid Id { get; set; } = Guid.NewGuid();
 

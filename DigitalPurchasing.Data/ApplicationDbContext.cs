@@ -46,7 +46,7 @@ namespace DigitalPurchasing.Data
         public DbSet<AnalysisVariant> AnalysisVariants { get; set; }
         public DbSet<AnalysisResultItem> AnalysisResultItems { get; set; }
 
-        public DbSet<SupplierContactPersonToNomenclatureCategory> SupplierContactPersonToNomenclatureCategories { get; set; }
+        public DbSet<SupplierCategory> SupplierCategories { get; set; }
 
         #region Counters
 
@@ -131,9 +131,9 @@ namespace DigitalPurchasing.Data
             builder.Entity<NomenclatureAlternative>().HasOne(q => q.ResourceUom).WithMany(q => q.ResourceNomenclatureAlternatives).HasForeignKey(q => q.ResourceUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<NomenclatureAlternative>().HasOne(q => q.ResourceBatchUom).WithMany(q => q.ResourceBatchNomenclatureAlternatives).HasForeignKey(q => q.ResourceBatchUomId).OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<SupplierContactPersonToNomenclatureCategory>()
+            builder.Entity<SupplierCategory>()
                 .HasOne(q => q.NomenclatureCategory).WithMany().HasForeignKey(q => q.NomenclatureCategoryId).OnDelete(DeleteBehavior.Restrict);
-            builder.Entity<SupplierContactPersonToNomenclatureCategory>()
+            builder.Entity<SupplierCategory>()
                 .HasOne(q => q.SupplierContactPerson).WithMany().HasForeignKey(q => q.SupplierContactPersonId).OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Customer>(e =>
