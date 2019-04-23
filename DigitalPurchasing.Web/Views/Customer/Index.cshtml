@@ -5,6 +5,9 @@
 }
 
 <h2 class="with-button">@ViewBag.Title</h2>
+<div class="btn-group">
+    <a asp-action="Create" class="btn btn-default">Создать</a>
+</div>
 
 <div id="app">
     <div class="row" style="margin-bottom: 10px">
@@ -103,7 +106,7 @@
                     onChangePage: function (page) {
                         this.$refs.vuetable.changePage(page);
                     },
-                    getQueryParams (sortOrder, currentPage, perPage) {
+                    getQueryParams(sortOrder, currentPage, perPage) {
                         return {
                             'sort': sortOrder[0].field + '|' + sortOrder[0].direction,
                             'page': currentPage,
@@ -111,7 +114,7 @@
                             's': this.search
                         };
                     },
-                    resetSearch: function() {
+                    resetSearch: function () {
                         this.search = null;
                     }
                 }

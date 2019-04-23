@@ -63,5 +63,23 @@ namespace DigitalPurchasing.Web.Controllers
 
             return View(vm);
         }
+
+        public IActionResult Create()
+        {
+            var vm = new CustomerEditVm();
+            return View(vm);
+        }
+
+        [HttpPost]
+        public IActionResult Create(CustomerEditVm vm)
+        {
+            if (ModelState.IsValid)
+            {
+                _customerService.CreateCustomer(vm.Name);
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(vm);
+        }
     }
 }
