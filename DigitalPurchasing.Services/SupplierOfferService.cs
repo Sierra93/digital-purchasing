@@ -231,12 +231,18 @@ namespace DigitalPurchasing.Services
 
                 item.ResourceConversion.ResourceUom = requestItem.Nomenclature.ResourceUom.Name;
                 item.ResourceConversion.ResourceBatchUom = requestItem.Nomenclature.ResourceBatchUom.Name;
-                item.ResourceConversion.RequestResource = requestItem.Nomenclature.ResourceUomValue;
-                
+
+                var requestResource = requestItem.Nomenclature.ResourceUomValue > 0
+                    ? requestItem.Nomenclature.ResourceUomValue
+                    : 1;
+
                 var offerResource = nomAlt?.ResourceUomValue > 0
                     ? nomAlt.ResourceUomValue
-                    : requestItem.Nomenclature.ResourceUomValue;
+                    : (requestItem.Nomenclature.ResourceUomValue > 0
+                        ? requestItem.Nomenclature.ResourceUomValue
+                        : 1);
 
+                item.ResourceConversion.RequestResource = requestResource;
                 item.ResourceConversion.OfferResource = offerResource;
             }
 
