@@ -267,7 +267,8 @@ namespace DigitalPurchasing.Services
             foreach (var mapping in nomenclatureCategories2Contacts)
             {
                 _db.SupplierCategories.RemoveRange(
-                    _db.SupplierCategories.Where(_ => _.NomenclatureCategoryId == mapping.nomenclatureCategoryId));
+                    _db.SupplierCategories.Where(_ => _.NomenclatureCategoryId == mapping.nomenclatureCategoryId &&
+                        (_.PrimaryContactPerson.SupplierId == supplierId || _.SecondaryContactPerson.SupplierId == supplierId)));
 
                 if (mapping.primarySupplierContactId.HasValue ||
                     mapping.secondarySupplierContactId.HasValue)
