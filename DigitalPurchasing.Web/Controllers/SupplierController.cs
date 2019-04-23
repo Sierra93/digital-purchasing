@@ -56,7 +56,23 @@ namespace DigitalPurchasing.Web.Controllers
 
             var contactPersons = _supplierService.GetContactPersonsBySupplier(id);
 
-            return View(new SupplierEditVm { Supplier = vm, ContactPersons = contactPersons });
+            return View(new SupplierEditVm
+            {
+                Supplier = vm.Adapt<SupplierEditVm.SupplierVm>(),
+                ContactPersons = contactPersons
+            });
+        }
+
+        [HttpPost]
+        public IActionResult Edit(SupplierEditVm.SupplierVm vm)
+        {
+            if (ModelState.IsValid)
+            {
+                _supplierService.Update(vm.Adapt<SupplierVm>());
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(vm);
         }
 
         [HttpGet, Route("/contactpersons/add/{supplierId}")]

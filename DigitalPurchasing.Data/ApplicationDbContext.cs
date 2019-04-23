@@ -155,6 +155,7 @@ namespace DigitalPurchasing.Data
             {
                 e.HasMany(q => q.Offers).WithOne(q => q.Supplier).HasForeignKey(q => q.SupplierId).OnDelete(DeleteBehavior.Restrict);
                 e.HasMany(q => q.ContactPersons).WithOne(q => q.Supplier).HasForeignKey(q => q.SupplierId).OnDelete(DeleteBehavior.Restrict);
+                e.HasIndex(q => new { q.OwnerId, q.Inn }).IsUnique().HasFilter($"{nameof(Supplier.Name)} IS NOT NULL AND {nameof(Supplier.Inn)} IS NOT NULL");
             });
 
             builder.Entity<SupplierOffer>(e =>

@@ -11,6 +11,7 @@ namespace DigitalPurchasing.Core.Interfaces
         SupplierIndexData GetData(int page, int perPage, string sortField, bool sortAsc, string search);
         SupplierVm GetById(Guid id);
         SupplierVm GetById(Guid id, bool globalSearch);
+        void Update(SupplierVm model);
 
         List<SupplierContactPersonVm> GetContactPersonsBySupplier(Guid supplierId);
         Guid AddContactPerson(SupplierContactPersonVm vm);
@@ -46,6 +47,21 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
+        public string OwnershipType { get; set; }
+        public string Inn { get; set; }
+        public string ErpCode { get; set; }
+        public string Code { get; set; }
+        public string Website { get; set; }
+        public string LegalAddressStreet { get; set; }
+        public string LegalAddressCity { get; set; }
+        public string LegalAddressCountry { get; set; }
+        public string ActualAddressStreet { get; set; }
+        public string ActualAddressCity { get; set; }
+        public string ActualAddressCountry { get; set; }
+        public string WarehouseAddressStreet { get; set; }
+        public string WarehouseAddressCity { get; set; }
+        public string WarehouseAddressCountry { get; set; }
+
     }
 
     public class SupplierContactPersonVm

@@ -1,0 +1,139 @@
+@model DigitalPurchasing.Web.ViewModels.Supplier.SupplierEditVm.SupplierVm
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="Name" class="control-label"></label>
+            <input asp-for="Name" class="form-control" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="OwnershipType" class="control-label"></label>
+            <input asp-for="OwnershipType" class="form-control" />
+            <span asp-validation-for="OwnershipType" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="Code" class="control-label"></label>
+            <input asp-for="Code" class="form-control" />
+            <span asp-validation-for="Code" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="ErpCode" class="control-label"></label>
+            <input asp-for="ErpCode" class="form-control" />
+            <span asp-validation-for="ErpCode" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="Inn" class="control-label"></label>
+            <input asp-for="Inn" class="form-control" />
+            <span asp-validation-for="Inn" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+
+<div>
+    <h3>Контакты</h3>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="form-group">
+                <label asp-for="Website" class="control-label"></label>
+                <input asp-for="Website" class="form-control" />
+                <span asp-validation-for="Website" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <h4>Юридический адрес</h4>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label asp-for="LegalAddressStreet" class="control-label"></label>
+                    <input asp-for="LegalAddressStreet" class="form-control" />
+                    <span asp-validation-for="LegalAddressStreet" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="LegalAddressCity" class="control-label"></label>
+                    <input asp-for="LegalAddressCity" class="form-control" />
+                    <span asp-validation-for="LegalAddressCity" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="LegalAddressCountry" class="control-label"></label>
+                    <input asp-for="LegalAddressCountry" class="form-control" />
+                    <span asp-validation-for="LegalAddressCountry" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <h4>Фактический адрес</h4>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label asp-for="ActualAddressStreet" class="control-label"></label>
+                    <input asp-for="ActualAddressStreet" class="form-control" />
+                    <span asp-validation-for="ActualAddressStreet" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="ActualAddressCity" class="control-label"></label>
+                    <input asp-for="ActualAddressCity" class="form-control" />
+                    <span asp-validation-for="ActualAddressCity" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="ActualAddressCountry" class="control-label"></label>
+                    <input asp-for="ActualAddressCountry" class="form-control" />
+                    <span asp-validation-for="ActualAddressCountry" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <h4>Адрес склада</h4>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label asp-for="WarehouseAddressStreet" class="control-label"></label>
+                    <input asp-for="WarehouseAddressStreet" class="form-control" />
+                    <span asp-validation-for="WarehouseAddressStreet" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="WarehouseAddressCity" class="control-label"></label>
+                    <input asp-for="WarehouseAddressCity" class="form-control" />
+                    <span asp-validation-for="WarehouseAddressCity" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="WarehouseAddressCountry" class="control-label"></label>
+                    <input asp-for="WarehouseAddressCountry" class="form-control" />
+                    <span asp-validation-for="WarehouseAddressCountry" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

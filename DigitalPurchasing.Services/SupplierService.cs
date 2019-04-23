@@ -140,5 +140,31 @@ namespace DigitalPurchasing.Services
 
             return supplierContactPerson?.SupplierId ?? Guid.Empty;
         }
+
+        public void Update(SupplierVm model)
+        {
+            var entity = _db.Suppliers.Find(model.Id);
+
+            if (entity != null)
+            {
+                entity.Name = model.Name;
+                entity.OwnershipType = model.OwnershipType;
+                entity.Inn = model.Inn;
+                entity.ErpCode = model.ErpCode;
+                entity.Code = model.Code;
+                entity.Website = model.Website;
+                entity.LegalAddressStreet = model.LegalAddressStreet;
+                entity.LegalAddressCity = model.LegalAddressCity;
+                entity.LegalAddressCountry = model.LegalAddressCountry;
+                entity.ActualAddressStreet = model.ActualAddressStreet;
+                entity.ActualAddressCity = model.ActualAddressCity;
+                entity.ActualAddressCountry = model.ActualAddressCountry;
+                entity.WarehouseAddressStreet = model.WarehouseAddressStreet;
+                entity.WarehouseAddressCity = model.WarehouseAddressCity;
+                entity.WarehouseAddressCountry = model.WarehouseAddressCountry;
+
+                _db.SaveChanges();
+            }
+        }
     }
 }
