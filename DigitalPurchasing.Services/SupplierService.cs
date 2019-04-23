@@ -174,6 +174,8 @@ namespace DigitalPurchasing.Services
                 entity.WarehouseAddressStreet = model.WarehouseAddressStreet;
                 entity.WarehouseAddressCity = model.WarehouseAddressCity;
                 entity.WarehouseAddressCountry = model.WarehouseAddressCountry;
+                entity.PriceWithVat = model.PriceWithVat;
+                entity.SumWithVat = model.SumWithVat;
 
                 _db.SaveChanges();
             }
@@ -201,7 +203,9 @@ namespace DigitalPurchasing.Services
                 ActualAddressCountry = model.ActualAddressCountry,
                 WarehouseAddressStreet = model.WarehouseAddressStreet,
                 WarehouseAddressCity = model.WarehouseAddressCity,
-                WarehouseAddressCountry = model.WarehouseAddressCountry
+                WarehouseAddressCountry = model.WarehouseAddressCountry,
+                PriceWithVat = model.PriceWithVat,
+                SumWithVat = model.SumWithVat
             });
             _db.SaveChanges();
             return entry.Entity.Id;

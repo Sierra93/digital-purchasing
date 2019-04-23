@@ -37,6 +37,23 @@
     </div>
 </div>
 
+<div class="form-group">
+    <div class="checkbox">
+        <label asp-for="Supplier.PriceWithVat">
+            <input asp-for="Supplier.PriceWithVat" />
+            @Html.DisplayNameFor(m => m.Supplier.PriceWithVat)
+        </label>
+    </div>
+</div>
+<div class="form-group">
+    <div class="checkbox">
+        <label asp-for="Supplier.SumWithVat">
+            <input asp-for="Supplier.SumWithVat" />
+            @Html.DisplayNameFor(m => m.Supplier.SumWithVat)
+        </label>
+    </div>
+</div>
+
 <div>
     <h3>Контакты</h3>
     <div class="row">

@@ -21,6 +21,12 @@ namespace DigitalPurchasing.Web.ViewModels.Supplier
             [Display(Name = "ИНН")]
             public long? Inn { get; set; }
 
+            [Display(Name = "Цены с НДС")]
+            public bool PriceWithVat { get; set; }
+
+            [Display(Name = "Сумма с НДС")]
+            public bool SumWithVat { get; set; }
+
             [Display(Name = "Код во внутренней ERP")]
             public string ErpCode { get; set; }
 

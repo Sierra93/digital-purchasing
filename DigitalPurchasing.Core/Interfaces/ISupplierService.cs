@@ -64,7 +64,8 @@ namespace DigitalPurchasing.Core.Interfaces
         public string WarehouseAddressStreet { get; set; }
         public string WarehouseAddressCity { get; set; }
         public string WarehouseAddressCountry { get; set; }
-
+        public bool PriceWithVat { get; set; }
+        public bool SumWithVat { get; set; }
     }
 
     public class SupplierContactPersonVm
