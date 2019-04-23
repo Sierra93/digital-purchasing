@@ -64,11 +64,11 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         [HttpPost]
-        public IActionResult Edit(SupplierEditVm.SupplierVm vm)
+        public IActionResult Edit(SupplierEditVm vm)
         {
             if (ModelState.IsValid)
             {
-                _supplierService.Update(vm.Adapt<SupplierVm>());
+                _supplierService.Update(vm.Supplier.Adapt<SupplierVm>());
                 return RedirectToAction(nameof(Index));
             }
 

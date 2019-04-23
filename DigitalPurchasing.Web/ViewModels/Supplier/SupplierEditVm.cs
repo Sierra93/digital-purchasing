@@ -19,7 +19,7 @@ namespace DigitalPurchasing.Web.ViewModels.Supplier
             public string OwnershipType { get; set; }
 
             [Display(Name = "ИНН")]
-            public string Inn { get; set; }
+            public long? Inn { get; set; }
 
             [Display(Name = "Код во внутренней ERP")]
             public string ErpCode { get; set; }

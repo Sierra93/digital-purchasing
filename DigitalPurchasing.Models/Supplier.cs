@@ -8,7 +8,7 @@ namespace DigitalPurchasing.Models
     {
         public string Name { get; set; }
         public string OwnershipType { get; set; }
-        public string Inn { get; set; }
+        public long? Inn { get; set; }
         public string ErpCode { get; set; }
         public string Code { get; set; }
         public string Website { get; set; }
