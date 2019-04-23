@@ -122,8 +122,7 @@ namespace DigitalPurchasing.Services
 
             var cacheKey = Consts.CacheKeys.UomAutocomplete(ownerId, s);
 
-            if (!_cache.TryGetValue(cacheKey, out List<UomAutocompleteResponse.AutocompleteItem> items)
-            )
+            if (!_cache.TryGetValue(cacheKey, out List<UomAutocompleteResponse.AutocompleteItem> items))
             {
                 var normalizedName = s.CustomNormalize();
 
@@ -134,7 +133,11 @@ namespace DigitalPurchasing.Services
 
                 var autocompleteItems = qry
                     .Where(q => (q.Name == s || q.NormalizedName == normalizedName || q.Name.Contains(s)) && !q.IsDeleted)
-                    .Select(q => new { q.Id, q.Name, q.NormalizedName, IsFullMatch = q.Name == s || q.NormalizedName == s})
+                    .Select(q => new
+                    {
+                        q.Id, q.Name, q.NormalizedName,
+                        IsFullMatch = q.Name == s || q.NormalizedName == normalizedName
+                    })
                     .OrderByDescending(q => q.IsFullMatch)
                     .ToList();
 
