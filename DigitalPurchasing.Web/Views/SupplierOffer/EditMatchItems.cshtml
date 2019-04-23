@@ -38,11 +38,14 @@
                     <th>Наименование</th>
                     <th style="width: 10%">ЕИ</th>
                     <th style="width: 10%">Коэф.</th>
+                    <th style="width: 10%"></th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr v-for="item in items">
-                    <td class="text-center">{{getRowIndex(item)}}</td>
+                    <td class="text-center">
+                        {{getRowIndex(item)}}
+                    </td>
                     <td>{{item.rawCode}}</td>
                     <td>{{item.rawName}}</td>
                     <td>{{item.rawUomStr}}</td>
@@ -50,7 +53,10 @@
                     <td v-if="isMatched(item)">{{item.nomenclatureName}}</td>
                     <td v-if="isMatched(item)">{{item.nomenclatureUom}}</td>
                     <td v-if="isMatched(item)">{{item.nomenclatureFactor > 0 ? item.nomenclatureFactor : item.commonFactor}}</td>
-                    <td v-if="!isMatched(item)" class="border-left text-center" colspan="4">
+                    <td v-if="isMatched(item)">
+                        <button type="button" class="btn btn-link" v-on:click="openMatch(item)">Изменить</button>
+                    </td>
+                    <td v-if="!isMatched(item)" class="border-left text-center" colspan="5">
                         <button type="button" class="btn btn-link" v-on:click="openMatch(item)">Сопоставить</button>
                     </td>
                 </tr>

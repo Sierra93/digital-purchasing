@@ -155,7 +155,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
             public decimal RequestResource { get; set; } = 1;
             public decimal OfferResource { get; set; } = 1;
-            public decimal ResourceRatio => OfferResource / RequestResource;
+            public decimal ResourceRatio => RequestResource / OfferResource;
             public decimal OfferPrice => _item.Conversion.OfferPrice * ResourceRatio;
             public decimal OfferTotalPrice => _item.Conversion.OfferTotalPrice * ResourceRatio;
         }
