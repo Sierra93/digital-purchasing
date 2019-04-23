@@ -6,6 +6,7 @@ using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
+using DigitalPurchasing.Services.Exceptions;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 
@@ -147,6 +148,11 @@ namespace DigitalPurchasing.Services
 
             if (entity != null)
             {
+                if (HasSameSupplierInn(entity.OwnerId, model.Id, model.Inn))
+                {
+                    throw new SameInnException();
+                }
+
                 entity.Name = model.Name;
                 entity.OwnershipType = model.OwnershipType;
                 entity.Inn = model.Inn;
@@ -166,5 +172,9 @@ namespace DigitalPurchasing.Services
                 _db.SaveChanges();
             }
         }
+
+        private bool HasSameSupplierInn(Guid ownerId, Guid exceptSupplierId, long? inn) =>
+            inn.HasValue &&
+            _db.Suppliers.Any(_ => _.OwnerId == ownerId && _.Id != exceptSupplierId && _.Inn == inn.Value);
     }
 }

@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using DigitalPurchasing.Core.Interfaces;
+using DigitalPurchasing.Services.Exceptions;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.Supplier;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
 
 namespace DigitalPurchasing.Web.Controllers
@@ -18,8 +20,13 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         private readonly ISupplierService _supplierService;
+        private readonly IHtmlHelper _htmlHelper;
 
-        public SupplierController(ISupplierService supplierService) => _supplierService = supplierService;
+        public SupplierController(ISupplierService supplierService, IHtmlHelper htmlHelper)
+        {
+            _supplierService = supplierService;
+            _htmlHelper = htmlHelper;
+        }
 
         public IActionResult Index() => View();
 
@@ -51,27 +58,39 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpGet]
         public IActionResult Edit(Guid id)
         {
-            var vm = _supplierService.GetById(id);
-            if (vm == null) return NotFound();
+            var data = _supplierService.GetById(id);
+            if (data == null) return NotFound();
 
-            var contactPersons = _supplierService.GetContactPersonsBySupplier(id);
-
-            return View(new SupplierEditVm
+            var vm = new SupplierEditVm
             {
-                Supplier = vm.Adapt<SupplierEditVm.SupplierVm>(),
-                ContactPersons = contactPersons
-            });
+                Supplier = data.Adapt<SupplierEditVm.SupplierVm>()
+            };
+
+            LoadRelatedData(vm, id);
+
+            return View(vm);
         }
+
+        private void LoadRelatedData(SupplierEditVm vm, Guid supplierId) =>
+            vm.ContactPersons = _supplierService.GetContactPersonsBySupplier(supplierId);
 
         [HttpPost]
         public IActionResult Edit(SupplierEditVm vm)
         {
             if (ModelState.IsValid)
             {
-                _supplierService.Update(vm.Supplier.Adapt<SupplierVm>());
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    _supplierService.Update(vm.Supplier.Adapt<SupplierVm>());
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (SameInnException e)
+                {
+                    ModelState.AddModelError(string.Empty, "Поставщик с таким же ИНН уже зарегистрирован в системе");
+                }
             }
 
+            LoadRelatedData(vm, vm.Supplier.Id);
             return View(vm);
         }
 
