@@ -9,6 +9,7 @@ namespace DigitalPurchasing.Core.Interfaces
         Guid CreateCustomer(string name);
         string GetNameById(Guid id);
         CustomerVm GetById(Guid id);
+        CustomerIndexData GetData(int page, int perPage, string sortField, bool sortAsc, string search);
     }
 
     public class CustomerAutocomplete
@@ -23,6 +24,16 @@ namespace DigitalPurchasing.Core.Interfaces
     }
 
     public class CustomerVm
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+    }
+
+    public class CustomerIndexData : BaseDataResponse<CustomerIndexDataItem>
+    {
+    }
+
+    public class CustomerIndexDataItem
     {
         public Guid Id { get; set; }
         public string Name { get; set; }

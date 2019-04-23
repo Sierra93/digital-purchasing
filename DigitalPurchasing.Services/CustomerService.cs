@@ -4,6 +4,7 @@ using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
 using Mapster;
+using System.Linq.Dynamic.Core;
 
 namespace DigitalPurchasing.Services
 {
@@ -43,5 +44,31 @@ namespace DigitalPurchasing.Services
         public string GetNameById(Guid id) => _db.Customers.Find(id).Name;
 
         public CustomerVm GetById(Guid id) => _db.Suppliers.Find(id)?.Adapt<CustomerVm>();
+
+        public CustomerIndexData GetData(int page, int perPage, string sortField, bool sortAsc, string search)
+        {
+            if (string.IsNullOrEmpty(sortField))
+            {
+                sortField = "Name";
+            }
+
+            var qry = _db.Customers.AsQueryable();
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                qry = qry.Where(q =>
+                    !string.IsNullOrEmpty(q.Name) && q.Name.Contains(search));
+            }
+
+            var total = qry.Count();
+            var orderedResults = qry.OrderBy($"{sortField}{(sortAsc ? "" : " DESC")}");
+            var result = orderedResults.Skip((page - 1) * perPage).Take(perPage).ProjectToType<CustomerIndexDataItem>().ToList();
+
+            return new CustomerIndexData
+            {
+                Total = total,
+                Data = result
+            };
+        }
     }
 }
