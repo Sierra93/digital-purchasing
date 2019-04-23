@@ -44,10 +44,24 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpGet]
         public IActionResult Edit(Guid id)
         {
-            var vm = _customerService.GetById(id);
-            if (vm == null) return NotFound();
+            var data = _customerService.GetById(id);
+            if (data == null) return NotFound();
 
-            return View(new CustomerEditVm { Customer = vm });
+            var vm = data.Adapt<CustomerEditVm>();
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        public IActionResult Edit(CustomerEditVm vm)
+        {
+            if (ModelState.IsValid)
+            {
+                _customerService.Update(vm.Adapt<CustomerVm>());
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(vm);
         }
     }
 }

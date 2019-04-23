@@ -70,5 +70,15 @@ namespace DigitalPurchasing.Services
                 Data = result
             };
         }
+
+        public void Update(CustomerVm model)
+        {
+            var entity = _db.Customers.Find(model.Id);
+            if (entity != null)
+            {
+                entity.Name = model.Name;
+                _db.SaveChanges();
+            }
+        }
     }
 }

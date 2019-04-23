@@ -10,6 +10,7 @@ namespace DigitalPurchasing.Core.Interfaces
         string GetNameById(Guid id);
         CustomerVm GetById(Guid id);
         CustomerIndexData GetData(int page, int perPage, string sortField, bool sortAsc, string search);
+        void Update(CustomerVm model);
     }
 
     public class CustomerAutocomplete

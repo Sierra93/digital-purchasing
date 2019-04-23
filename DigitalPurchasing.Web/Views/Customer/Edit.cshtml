@@ -1,11 +1,21 @@
 @model DigitalPurchasing.Web.ViewModels.Customer.CustomerEditVm
 
 @{
-    ViewData["Title"] = Model.Customer.Name + " - Клиенты" ;
+    ViewData["Title"] = $"Редактирование клиента \"{Model.Name}\"";
 }
 
-<h2 class="with-button">@Model.Customer.Name</h2>
-<div class="btn-group">
-    <a asp-action="Index" class="btn btn-default">Назад к списку</a>
+<h2 class="with-button">@ViewData["Title"]</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <partial name="_FormFields" model="Model" />
+            <div class="form-group">
+                <input type="submit" class="btn btn-primary" value="Сохранить" />
+                <a asp-action="Index" class="btn btn-default">Отмена</a>
+            </div>
+        </form>
+    </div>
 </div>
-
