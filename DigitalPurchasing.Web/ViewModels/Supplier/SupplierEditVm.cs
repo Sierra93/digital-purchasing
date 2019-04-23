@@ -24,9 +24,6 @@ namespace DigitalPurchasing.Web.ViewModels.Supplier
             [Display(Name = "Код во внутренней ERP")]
             public string ErpCode { get; set; }
 
-            [Display(Name = "Код в системе")]
-            public string Code { get; set; }
-
             [Display(Name = "Веб-сайт")]
             public string Website { get; set; }
 

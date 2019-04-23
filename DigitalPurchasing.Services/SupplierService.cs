@@ -164,7 +164,6 @@ namespace DigitalPurchasing.Services
                 entity.OwnershipType = model.OwnershipType;
                 entity.Inn = model.Inn;
                 entity.ErpCode = model.ErpCode;
-                entity.Code = model.Code;
                 entity.Website = model.Website;
                 entity.LegalAddressStreet = model.LegalAddressStreet;
                 entity.LegalAddressCity = model.LegalAddressCity;
