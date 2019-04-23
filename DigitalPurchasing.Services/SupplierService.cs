@@ -248,15 +248,15 @@ namespace DigitalPurchasing.Services
 
             return qry.Distinct().ToList().Select(ncId =>
             {
-                var mappings = _db.SupplierCategories.Where(_ =>
+                var mapping = _db.SupplierCategories.Where(_ =>
                     _.NomenclatureCategoryId == ncId &&
-                    _.SupplierContactPerson.SupplierId == supplierId).ToList();
+                    (_.PrimaryContactPerson.SupplierId == supplierId || _.SecondaryContactPerson.SupplierId == supplierId)).FirstOrDefault();
                 return new SupplierNomenclatureCategory()
                 {
                     NomenclatureCategoryId = ncId,
                     NomenclatureCategoryFullName = _categoryService.FullCategoryName(ncId),
-                    NomenclatureCategoryPrimaryContactId = mappings.FirstOrDefault(m => m.IsPrimaryContact)?.SupplierContactPersonId,
-                    NomenclatureCategorySecondaryContactId = mappings.FirstOrDefault(m => !m.IsPrimaryContact)?.SupplierContactPersonId
+                    NomenclatureCategoryPrimaryContactId = mapping?.PrimaryContactPersonId,
+                    NomenclatureCategorySecondaryContactId = mapping?.SecondaryContactPersonId
                 };
             }).ToList();
         }
@@ -269,23 +269,14 @@ namespace DigitalPurchasing.Services
                 _db.SupplierCategories.RemoveRange(
                     _db.SupplierCategories.Where(_ => _.NomenclatureCategoryId == mapping.nomenclatureCategoryId));
 
-                if (mapping.primarySupplierContactId.HasValue)
+                if (mapping.primarySupplierContactId.HasValue ||
+                    mapping.secondarySupplierContactId.HasValue)
                 {
                     _db.SupplierCategories.Add(new SupplierCategory()
                     {
                         NomenclatureCategoryId = mapping.nomenclatureCategoryId,
-                        SupplierContactPersonId = mapping.primarySupplierContactId.Value,
-                        IsPrimaryContact = true
-                    });
-                }
-
-                if (mapping.secondarySupplierContactId.HasValue)
-                {
-                    _db.SupplierCategories.Add(new SupplierCategory()
-                    {
-                        NomenclatureCategoryId = mapping.nomenclatureCategoryId,
-                        SupplierContactPersonId = mapping.secondarySupplierContactId.Value,
-                        IsPrimaryContact = false
+                        PrimaryContactPersonId = mapping.primarySupplierContactId,
+                        SecondaryContactPersonId = mapping.secondarySupplierContactId
                     });
                 }
             }

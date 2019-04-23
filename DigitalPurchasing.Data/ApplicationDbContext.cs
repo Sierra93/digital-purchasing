@@ -134,7 +134,9 @@ namespace DigitalPurchasing.Data
             builder.Entity<SupplierCategory>()
                 .HasOne(q => q.NomenclatureCategory).WithMany().HasForeignKey(q => q.NomenclatureCategoryId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<SupplierCategory>()
-                .HasOne(q => q.SupplierContactPerson).WithMany().HasForeignKey(q => q.SupplierContactPersonId).OnDelete(DeleteBehavior.Restrict);
+                .HasOne(q => q.PrimaryContactPerson).WithMany().HasForeignKey(q => q.PrimaryContactPersonId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<SupplierCategory>()
+                .HasOne(q => q.SecondaryContactPerson).WithMany().HasForeignKey(q => q.SecondaryContactPersonId).OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Customer>(e =>
             {

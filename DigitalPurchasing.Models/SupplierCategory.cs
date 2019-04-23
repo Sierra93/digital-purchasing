@@ -11,9 +11,10 @@ namespace DigitalPurchasing.Models
         public NomenclatureCategory NomenclatureCategory { get; set; }
         public Guid NomenclatureCategoryId { get; set; }
 
-        public SupplierContactPerson SupplierContactPerson { get; set; }
-        public Guid SupplierContactPersonId { get; set; }
+        public SupplierContactPerson PrimaryContactPerson { get; set; }
+        public Guid? PrimaryContactPersonId { get; set; }
 
-        public bool IsPrimaryContact { get; set; }
+        public SupplierContactPerson SecondaryContactPerson { get; set; }
+        public Guid? SecondaryContactPersonId { get; set; }
     }
 }
