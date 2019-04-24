@@ -88,13 +88,15 @@ namespace DigitalPurchasing.ExcelReader
                     UomMass = q.UomMass,
                     ResourceUom = q.ResourceUom,
                     ResourceBatchUom = q.ResourceBatchUom,
-                    UomMassValue = decimal.Parse(q.UomMassValue.Replace(".", ",")),
-                    ResourceUomValue = decimal.Parse(q.ResourceUomValue.Replace(".", ","))
+                    UomMassValue = ToNullableDecimal(q.UomMassValue?.Replace(".", ",")) ?? 0,
+                    ResourceUomValue = ToNullableDecimal(q.ResourceUomValue?.Replace(".", ",")) ?? 0
                 }).ToList(); 
 
                 return result;
             }
         }
+
+        private static decimal? ToNullableDecimal(string s) => decimal.TryParse(s, out var i) ? (decimal?)i : null;
     }
 
     public class TemplateData
