@@ -1,5 +1,6 @@
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Web.Core;
+using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.Customer;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
@@ -80,6 +81,21 @@ namespace DigitalPurchasing.Web.Controllers
             }
 
             return View(vm);
+        }
+
+        [HttpPost]
+        public IActionResult Delete([FromBody]DeleteVm vm)
+        {
+            try
+            {
+                _customerService.Delete(vm.Id);
+            }
+            catch (Services.Exceptions.CustomerInUseException)
+            {
+                return BadRequest(new { reason = "CUSTOMER_IN_USE" });
+            }
+
+            return Ok();
         }
     }
 }

@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190423055647_Supplier_Inn_ChangeType")]
+    partial class Supplier_Inn_ChangeType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -863,6 +865,8 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<string>("ActualAddressStreet");
 
+                    b.Property<string>("Code");
+
                     b.Property<DateTime>("CreatedOn");
 
                     b.Property<string>("ErpCode");
@@ -881,10 +885,6 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<string>("OwnershipType");
 
-                    b.Property<bool>("PriceWithVat");
-
-                    b.Property<bool>("SumWithVat");
-
                     b.Property<string>("WarehouseAddressCity");
 
                     b.Property<string>("WarehouseAddressCountry");
@@ -900,28 +900,6 @@ namespace DigitalPurchasing.Data.Migrations
                         .HasFilter("Name IS NOT NULL AND Inn IS NOT NULL");
 
                     b.ToTable("Suppliers");
-                });
-
-            modelBuilder.Entity("DigitalPurchasing.Models.SupplierCategory", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<Guid>("NomenclatureCategoryId");
-
-                    b.Property<Guid?>("PrimaryContactPersonId");
-
-                    b.Property<Guid?>("SecondaryContactPersonId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NomenclatureCategoryId");
-
-                    b.HasIndex("PrimaryContactPersonId");
-
-                    b.HasIndex("SecondaryContactPersonId");
-
-                    b.ToTable("SupplierCategories");
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.SupplierContactPerson", b =>
@@ -1537,24 +1515,6 @@ namespace DigitalPurchasing.Data.Migrations
                         .WithMany()
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("DigitalPurchasing.Models.SupplierCategory", b =>
-                {
-                    b.HasOne("DigitalPurchasing.Models.NomenclatureCategory", "NomenclatureCategory")
-                        .WithMany()
-                        .HasForeignKey("NomenclatureCategoryId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("DigitalPurchasing.Models.SupplierContactPerson", "PrimaryContactPerson")
-                        .WithMany()
-                        .HasForeignKey("PrimaryContactPersonId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("DigitalPurchasing.Models.SupplierContactPerson", "SecondaryContactPerson")
-                        .WithMany()
-                        .HasForeignKey("SecondaryContactPersonId")
-                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.SupplierContactPerson", b =>

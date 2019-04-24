@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
 using DigitalPurchasing.Core.Interfaces;
+using DigitalPurchasing.Services.Exceptions;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.Supplier;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
+using System.Linq;
+using DigitalPurchasing.Core.Extensions;
 
 namespace DigitalPurchasing.Web.Controllers
 {
@@ -18,8 +22,14 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         private readonly ISupplierService _supplierService;
+        private readonly IHtmlHelper _htmlHelper;
+        private const string SameInnErrorMessage = "Контрагент с таким ИНН уже есть в системе";
 
-        public SupplierController(ISupplierService supplierService) => _supplierService = supplierService;
+        public SupplierController(ISupplierService supplierService, IHtmlHelper htmlHelper)
+        {
+            _supplierService = supplierService;
+            _htmlHelper = htmlHelper;
+        }
 
         public IActionResult Index() => View();
 
@@ -51,12 +61,57 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpGet]
         public IActionResult Edit(Guid id)
         {
-            var vm = _supplierService.GetById(id);
-            if (vm == null) return NotFound();
+            var data = _supplierService.GetById(id);
+            if (data == null) return NotFound();
 
-            var contactPersons = _supplierService.GetContactPersonsBySupplier(id);
+            var vm = new SupplierEditVm
+            {
+                Supplier = data.Adapt<SupplierEditVm.SupplierVm>()
+            };
 
-            return View(new SupplierEditVm { Supplier = vm, ContactPersons = contactPersons });
+            LoadRelatedData(vm, id);
+
+            return View(vm);
+        }
+
+        private void LoadRelatedData(SupplierEditVm vm, Guid supplierId)
+        {
+            vm.ContactPersons = _supplierService.GetContactPersonsBySupplier(supplierId);
+            vm.NomenclatureCategoies = _supplierService.GetSupplierNomenclatureCategories(supplierId);
+        }
+
+        [HttpPost]
+        public IActionResult Edit(SupplierEditVm vm)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _supplierService.Update(vm.Supplier.Adapt<SupplierVm>());
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (SameInnException)
+                {
+                    ModelState.AddModelError(string.Empty, SameInnErrorMessage);
+                }
+            }
+
+            LoadRelatedData(vm, vm.Supplier.Id);
+            return View(vm);
+        }
+
+        [HttpPost]
+        public IActionResult SaveSupplierCategories(SupplierEditVm vm, Guid supplierId)
+        {
+            if (ModelState.IsValid)
+            {
+                _supplierService.SaveSupplierNomenclatureCategoryContacts(
+                    supplierId,
+                    vm.NomenclatureCategoies.Select(nc => (nc.NomenclatureCategoryId, nc.NomenclatureCategoryPrimaryContactId, nc.NomenclatureCategorySecondaryContactId)));
+                return RedirectToAction(nameof(Index));
+            }
+
+            return RedirectToAction(nameof(Edit), new { id = supplierId });
         }
 
         [HttpGet, Route("/contactpersons/add/{supplierId}")]
@@ -119,6 +174,31 @@ namespace DigitalPurchasing.Web.Controllers
             }
 
             return Ok();
+        }
+
+        public IActionResult Create()
+        {
+            var vm = new SupplierEditVm();
+            return View(vm);
+        }
+
+        [HttpPost]
+        public IActionResult Create(SupplierEditVm vm)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _supplierService.CreateSupplier(vm.Supplier.Adapt<SupplierVm>(), User.CompanyId());
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (SameInnException)
+                {
+                    ModelState.AddModelError(string.Empty, SameInnErrorMessage);
+                }                
+            }
+
+            return View(vm);
         }
     }
 }
