@@ -18,4 +18,12 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        (function () {
+            $(document).ready(function () {
+                $('[data-phone]').inputmask("(999) 999 99 99");  //static mask
+            });
+        })();
+    </script>
 }

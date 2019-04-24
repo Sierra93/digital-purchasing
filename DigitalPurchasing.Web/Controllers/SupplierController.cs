@@ -254,7 +254,13 @@ namespace DigitalPurchasing.Web.Controllers
                         LegalAddressStreet = item.LegalAddressStreet,
                         WarehouseAddressCity = item.WarehouseAddressCity,
                         WarehouseAddressCountry = item.WarehouseAddressCountry,
-                        WarehouseAddressStreet = item.WarehouseAddressStreet                        
+                        WarehouseAddressStreet = item.WarehouseAddressStreet,
+                        DeliveryTerms = item.DeliveryTerms,
+                        Note = item.Note,
+                        OfferCurrency = item.OfferCurrency,
+                        PaymentDeferredDays = item.PaymentDeferredDays,
+                        Phone = item.SupplierPhone,
+                        SupplierType = item.SupplierType
                     }, User.CompanyId());
 
                     Guid? mainContactId = item.ContactSpecified

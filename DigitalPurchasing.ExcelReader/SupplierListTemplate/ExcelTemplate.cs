@@ -164,7 +164,8 @@ namespace DigitalPurchasing.ExcelReader.SupplierListTemplate
                 var config = new TypeAdapterConfig();
                 config.ForType<TemplateDataInternal, TemplateData>()
                     .Map(dest => dest.PriceWithVat, src => src.PriceWithVat != null && src.PriceWithVat.Equals("да", StringComparison.InvariantCultureIgnoreCase))
-                    .Map(dest => dest.Inn, src => ToNullableLong(src.Inn));
+                    .Map(dest => dest.Inn, src => ToNullableLong(src.Inn))
+                    .Map(dest => dest.PaymentDeferredDays, src => ToNullableInt(src.PaymentDeferredDays));
                 var result = items.Select(q => q.Adapt<TemplateData>(config)).ToList();
 
                 return result;
@@ -173,5 +174,6 @@ namespace DigitalPurchasing.ExcelReader.SupplierListTemplate
 
         private static decimal? ToNullableDecimal(string s) => decimal.TryParse(s, out var i) ? (decimal?)i : null;
         private static long? ToNullableLong(string s) => long.TryParse(s, out var i) ? (long?)i : null;
+        private static int? ToNullableInt(string s) => int.TryParse(s, out var i) ? (int?)i : null;
     }
 }

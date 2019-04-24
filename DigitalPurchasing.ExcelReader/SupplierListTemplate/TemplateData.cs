@@ -14,7 +14,7 @@ namespace DigitalPurchasing.ExcelReader.SupplierListTemplate
         public long? Inn { get; set; }
         public string ErpCode { get; set; }
         public string SupplierType { get; set; }
-        public string PaymentDeferredDays { get; set; }
+        public int? PaymentDeferredDays { get; set; }
         public string DeliveryTerms { get; set; }
         public string OfferCurrency { get; set; }
         public bool PriceWithVat { get; set; }

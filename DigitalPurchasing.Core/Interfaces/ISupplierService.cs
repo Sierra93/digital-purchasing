@@ -67,6 +67,12 @@ namespace DigitalPurchasing.Core.Interfaces
         public string WarehouseAddressCountry { get; set; }
         public bool PriceWithVat { get; set; }
         public bool SumWithVat { get; set; }
+        public string SupplierType { get; set; }
+        public int? PaymentDeferredDays { get; set; }
+        public string DeliveryTerms { get; set; }
+        public string OfferCurrency { get; set; }
+        public string Phone { get; set; }
+        public string Note { get; set; }
     }
 
     public class SupplierContactPersonVm

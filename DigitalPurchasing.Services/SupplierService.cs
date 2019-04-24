@@ -198,6 +198,12 @@ namespace DigitalPurchasing.Services
                 entity.WarehouseAddressCountry = model.WarehouseAddressCountry;
                 entity.PriceWithVat = model.PriceWithVat;
                 entity.SumWithVat = model.SumWithVat;
+                entity.DeliveryTerms = model.DeliveryTerms;
+                entity.Note = model.Note;
+                entity.OfferCurrency = model.OfferCurrency;
+                entity.PaymentDeferredDays = model.PaymentDeferredDays;
+                entity.Phone = model.Phone;
+                entity.SupplierType = model.SupplierType;
 
                 _db.SaveChanges();
             }
@@ -227,7 +233,13 @@ namespace DigitalPurchasing.Services
                 WarehouseAddressCity = model.WarehouseAddressCity,
                 WarehouseAddressCountry = model.WarehouseAddressCountry,
                 PriceWithVat = model.PriceWithVat,
-                SumWithVat = model.SumWithVat
+                SumWithVat = model.SumWithVat,
+                DeliveryTerms = model.DeliveryTerms,
+                Note = model.Note,
+                OfferCurrency = model.OfferCurrency,
+                PaymentDeferredDays = model.PaymentDeferredDays,
+                Phone = model.Phone,
+                SupplierType = model.SupplierType
             });
             _db.SaveChanges();
             return entry.Entity.Id;
