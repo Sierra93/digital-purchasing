@@ -11,6 +11,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
 using System.Linq;
 using DigitalPurchasing.Core.Extensions;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using System.IO;
 
 namespace DigitalPurchasing.Web.Controllers
 {
@@ -195,10 +198,75 @@ namespace DigitalPurchasing.Web.Controllers
                 catch (SameInnException)
                 {
                     ModelState.AddModelError(string.Empty, SameInnErrorMessage);
-                }                
+                }
             }
 
             return View(vm);
+        }
+
+        [HttpGet]
+        public IActionResult Template()
+        {
+            var excelTemplate = new ExcelReader.SupplierListTemplate.ExcelTemplate();
+            return File(excelTemplate.Build(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "template.xlsx");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UploadTemplate(IFormFile file)
+        {
+            if (file == null)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            var fileName = file.FileName;
+            var fileExt = Path.GetExtension(fileName);
+            var filePath = Path.GetTempFileName() + fileExt;
+
+            using (var output = System.IO.File.Create(filePath))
+                await file.CopyToAsync(output);
+
+            var excelTemplate = new ExcelReader.SupplierListTemplate.ExcelTemplate();
+
+            var datas = excelTemplate.Read(filePath);
+
+            bool supplierWithSameInnExist = false;
+
+            foreach (var item in datas.Where(_ => !string.IsNullOrWhiteSpace(_.SupplierName)))
+            {
+                try
+                {
+                    _supplierService.CreateSupplier(new SupplierVm()
+                    {
+                        Inn = item.Inn,
+                        ErpCode = item.ErpCode,
+                        Name = item.SupplierName,
+                        OwnershipType = item.OwnershipType,
+                        PriceWithVat = item.PriceWithVat,
+                        Website = item.Website,
+                        ActualAddressCity = item.ActualAddressCity,
+                        ActualAddressCountry = item.ActualAddressCountry,
+                        ActualAddressStreet = item.ActualAddressStreet,
+                        LegalAddressCity = item.LegalAddressCity,
+                        LegalAddressCountry = item.LegalAddressCountry,
+                        LegalAddressStreet = item.LegalAddressStreet,
+                        WarehouseAddressCity = item.WarehouseAddressCity,
+                        WarehouseAddressCountry = item.WarehouseAddressCountry,
+                        WarehouseAddressStreet = item.WarehouseAddressStreet                        
+                    }, User.CompanyId());
+                }
+                catch (SameInnException)
+                {
+                    supplierWithSameInnExist = true;
+                }                
+            }
+
+            if (supplierWithSameInnExist)
+            {
+                TempData["ErrorMessage"] = "Некоторые поставщики не могут быть добавлены, так как поставщики с таким же ИНН уже есть в справочнике";
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }

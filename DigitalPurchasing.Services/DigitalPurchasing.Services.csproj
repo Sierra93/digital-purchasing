@@ -9,7 +9,7 @@
     <PackageReference Include="EFCore.BulkExtensions" Version="2.4.3" />
     <PackageReference Include="MailKit" Version="2.1.3" />
     <PackageReference Include="Mandrill.net" Version="6.0.0" />
-    <PackageReference Include="Mapster" Version="3.3.2" />
+    <PackageReference Include="Mapster" Version="4.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="MimeTypes" Version="1.1.0">
       <PrivateAssets>all</PrivateAssets>

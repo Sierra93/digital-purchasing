@@ -9,6 +9,7 @@
     <PackageReference Include="EPPlus" Version="4.5.3.1" />
     <PackageReference Include="EPPlus.Core.Extensions" Version="2.3.0" />
     <PackageReference Include="FreeSpire.XLS" Version="9.2.1" />
+    <PackageReference Include="Mapster" Version="4.0.0" />
   </ItemGroup>
 
   <ItemGroup>
