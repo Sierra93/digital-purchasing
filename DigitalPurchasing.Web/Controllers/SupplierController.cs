@@ -25,13 +25,15 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         private readonly ISupplierService _supplierService;
-        private readonly IHtmlHelper _htmlHelper;
+        private readonly INomenclatureCategoryService _nomenclatureCategoryService;
         private const string SameInnErrorMessage = "Контрагент с таким ИНН уже есть в системе";
 
-        public SupplierController(ISupplierService supplierService, IHtmlHelper htmlHelper)
+        public SupplierController(
+            ISupplierService supplierService,
+            INomenclatureCategoryService nomenclatureCategoryService)
         {
             _supplierService = supplierService;
-            _htmlHelper = htmlHelper;
+            _nomenclatureCategoryService = nomenclatureCategoryService;
         }
 
         public IActionResult Index() => View();
@@ -255,15 +257,39 @@ namespace DigitalPurchasing.Web.Controllers
                         WarehouseAddressStreet = item.WarehouseAddressStreet                        
                     }, User.CompanyId());
 
-                    Guid mainContactId = _supplierService.AddContactPerson(new SupplierContactPersonVm()
+                    Guid? mainContactId = item.ContactSpecified
+                        ? (Guid?)_supplierService.AddContactPerson(new SupplierContactPersonVm()
+                        {
+                            SupplierId = supplierId,
+                            Email = item.ContactEmail,
+                            FirstName = item.ContactFirstName,
+                            LastName = item.ContactLastName,
+                            JobTitle = item.ContactJobTitle,
+                            PhoneNumber = item.ContactMobilePhone,
+                        })
+                    : null;
+
+                    if (!string.IsNullOrWhiteSpace(item.MainCategory))
                     {
-                        SupplierId = supplierId,
-                        Email = item.ContactEmail,
-                        FirstName = item.ContactFirstName,
-                        LastName = item.ContactLastName,
-                        JobTitle = item.ContactJobTitle,
-                        PhoneNumber = item.ContactMobilePhone,                        
-                    });
+                        var category = _nomenclatureCategoryService.CreateOrUpdate(item.MainCategory, null);
+                        if (!string.IsNullOrWhiteSpace(item.SubCategory1))
+                        {
+                            category = _nomenclatureCategoryService.CreateOrUpdate(item.SubCategory1, category.Id);
+                            if (!string.IsNullOrWhiteSpace(item.SubCategory2))
+                            {
+                                category = _nomenclatureCategoryService.CreateOrUpdate(item.SubCategory2, category.Id);
+                            }
+                        }
+
+                        if (mainContactId.HasValue)
+                        {
+                            _supplierService.SaveSupplierNomenclatureCategoryContacts(supplierId,
+                                new List<(Guid nomenclatureCategoryId, Guid? primarySupplierContactId, Guid? secondarySupplierContactId)>()
+                                {
+                                    (category.Id, mainContactId.Value, null)
+                                });
+                        }
+                    }
                 }
                 catch (SameInnException)
                 {

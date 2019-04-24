@@ -20,12 +20,17 @@ namespace DigitalPurchasing.ExcelReader.SupplierListTemplate
         public bool PriceWithVat { get; set; }
         public string Website { get; set; }
         public string SupplierPhone { get; set; }
+
         public string ContactFirstName { get; set; }
         public string ContactLastName { get; set; }
         public string ContactJobTitle { get; set; }
         public string ContactEmail { get; set; }
         public string ContactPhone { get; set; }
         public string ContactMobilePhone { get; set; }
+        public bool ContactSpecified => !string.IsNullOrWhiteSpace(ContactFirstName) || !string.IsNullOrWhiteSpace(ContactLastName) ||
+            !string.IsNullOrWhiteSpace(ContactJobTitle) || !string.IsNullOrWhiteSpace(ContactEmail) ||
+            !string.IsNullOrWhiteSpace(ContactMobilePhone);
+
         public string Note { get; set; }
         public string LegalAddressStreet { get; set; }
         public string LegalAddressCity { get; set; }
