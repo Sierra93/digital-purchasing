@@ -236,7 +236,7 @@ namespace DigitalPurchasing.Web.Controllers
             {
                 try
                 {
-                    _supplierService.CreateSupplier(new SupplierVm()
+                    Guid supplierId = _supplierService.CreateSupplier(new SupplierVm()
                     {
                         Inn = item.Inn,
                         ErpCode = item.ErpCode,
@@ -254,6 +254,16 @@ namespace DigitalPurchasing.Web.Controllers
                         WarehouseAddressCountry = item.WarehouseAddressCountry,
                         WarehouseAddressStreet = item.WarehouseAddressStreet                        
                     }, User.CompanyId());
+
+                    Guid mainContactId = _supplierService.AddContactPerson(new SupplierContactPersonVm()
+                    {
+                        SupplierId = supplierId,
+                        Email = item.ContactEmail,
+                        FirstName = item.ContactFirstName,
+                        LastName = item.ContactLastName,
+                        JobTitle = item.ContactJobTitle,
+                        PhoneNumber = item.ContactMobilePhone,                        
+                    });
                 }
                 catch (SameInnException)
                 {
