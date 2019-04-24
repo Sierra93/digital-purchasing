@@ -88,8 +88,8 @@ namespace DigitalPurchasing.ExcelReader
                     UomMass = q.UomMass,
                     ResourceUom = q.ResourceUom,
                     ResourceBatchUom = q.ResourceBatchUom,
-                    UomMassValue = ToNullableDecimal(q.UomMassValue?.Replace(".", ",")) ?? 0,
-                    ResourceUomValue = ToNullableDecimal(q.ResourceUomValue?.Replace(".", ",")) ?? 0
+                    UomMassValue = ToNullableDecimal(q.UomMassValue) ?? 0,
+                    ResourceUomValue = ToNullableDecimal(q.ResourceUomValue) ?? 0
                 }).ToList(); 
 
                 return result;
