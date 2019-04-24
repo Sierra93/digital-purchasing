@@ -92,7 +92,7 @@
                         <td>@so.Items.Where(q => q != null).Sum(q => q.RawQty).ToString(Consts.Format.Qty)</td>
                         <td></td>
                         <td></td>
-                        <td>@so.Items.Where(q => q != null).Sum(q => q.TotalPrice).ToString(Consts.Format.Money)</td>
+                        <td>@so.Items.Where(q => q != null).Sum(q => q.TotalPrice).ToString(Consts.Format.Money2)</td>
                     </tr>
                     <tr>
                         <td colspan="7">
@@ -110,9 +110,9 @@
                                 <td>@item.RawName</td>
                                 <td>@item.RawUom</td>
                                 <td>@item.RawQty.ToString(Consts.Format.Qty)</td>
-                                <td>@item.RawPrice.ToString(Consts.Format.Money)</td>
+                                <td>@item.RawPrice.ToString(Consts.Format.Money2)</td>
                                 <td>@so.Currency.Name</td>
-                                <td>@item.TotalPrice.ToString(Consts.Format.Money)</td>
+                                <td>@item.TotalPrice.ToString(Consts.Format.Money2)</td>
                             </tr>
                         }
                         else

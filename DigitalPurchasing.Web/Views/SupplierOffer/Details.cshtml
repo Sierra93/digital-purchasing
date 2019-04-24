@@ -78,24 +78,24 @@
                         <th colspan="4"></th>
                         <th class="align-right">@Model.Items.Sum(q => q.Offer.Qty).ToString(Consts.Format.Qty)</th>
                         <th></th>
-                        <th class="align-right">@Model.Items.Sum(q => q.Offer.TotalPrice).ToString(Consts.Format.Money)</th>
+                        <th class="align-right">@Model.Items.Sum(q => q.Offer.TotalPrice).ToString(Consts.Format.Money2)</th>
 
                         <th class="align-right">@Model.Items.Sum(q => q.Mass.TotalPricePerc).ToString("P1")</th>
                         <th colspan="2"></th>
-                        <th class="align-right">@Model.Items.Sum(q => q.Mass.TotalMass).ToString(Consts.Format.Money)</th>
+                        <th class="align-right">@Model.Items.Sum(q => q.Mass.TotalMass).ToString(Consts.Format.Money2)</th>
                         <th class="align-right">@Model.Items.Sum(q => q.Mass.TotalMassPerc).ToString("P1")</th>
 
                         @*<th colspan="2"></th>
                         <th>@Model.Items.Sum(q => q.ImportAndDelivery.CustomsDuty).ToString(Consts.Format.Money)</th>*@
-                        <th class="align-right">@Model.Items.Sum(q => q.ImportAndDelivery.DeliveryCost).ToString(Consts.Format.Money)</th>
-                        <th class="align-right">@Model.Items.Sum(q => q.ImportAndDelivery.FinalCost).ToString(Consts.Format.Money)</th>
+                        <th class="align-right">@Model.Items.Sum(q => q.ImportAndDelivery.DeliveryCost).ToString(Consts.Format.Money2)</th>
+                        <th class="align-right">@Model.Items.Sum(q => q.ImportAndDelivery.FinalCost).ToString(Consts.Format.Money2)</th>
                         <th></th>
 
                         <th colspan="8"></th>
-                        <th class="align-right">@Model.Items.Sum(q => q.Conversion.OfferTotalPrice).ToString(Consts.Format.Money)</th>
+                        <th class="align-right">@Model.Items.Sum(q => q.Conversion.OfferTotalPrice).ToString(Consts.Format.Money2)</th>
 
                         <th colspan="6"></th>
-                        <th class="align-right">@Model.Items.Sum(q => q.ResourceConversion.OfferTotalPrice).ToString(Consts.Format.Money)</th>
+                        <th class="align-right">@Model.Items.Sum(q => q.ResourceConversion.OfferTotalPrice).ToString(Consts.Format.Money2)</th>
                     </tr>
                 </tfoot>
                 <tbody>
@@ -113,21 +113,21 @@
                             <td>@item.Offer.Currency</td>
                             <td>@item.Offer.Uom</td>
                             <td class="align-right">@item.Offer.Qty.ToString(Consts.Format.Qty)</td>
-                            <td class="align-right">@item.Offer.Price.ToString(Consts.Format.Money)</td>
-                            <td class="align-right">@item.Offer.TotalPrice.ToString(Consts.Format.Money)</td>
+                            <td class="align-right">@item.Offer.Price.ToString(Consts.Format.Money2)</td>
+                            <td class="align-right">@item.Offer.TotalPrice.ToString(Consts.Format.Money2)</td>
 
                             <td class="align-right">@item.Mass.TotalPricePerc.ToString("P1")</td>
-                            <td class="align-right">@item.Mass.MassOf1BatchUom.ToString(Consts.Format.Money)</td>
+                            <td class="align-right">@item.Mass.MassOf1BatchUom.ToString(Consts.Format.Money2)</td>
                             <td class="align-right">@item.Mass.MassUom</td>
-                            <td class="align-right">@item.Mass.TotalMass.ToString(Consts.Format.Money)</td>
+                            <td class="align-right">@item.Mass.TotalMass.ToString(Consts.Format.Money2)</td>
                             <td class="align-right">@item.Mass.TotalMassPerc.ToString("P1")</td>
 
                             @*<td>@item.ImportAndDelivery.CustomsDutyPerc.ToString("P1")</td>
                             <td>@item.ImportAndDelivery.MinCustomsDuty.ToString(Consts.Format.Money)</td>
                             <td>@item.ImportAndDelivery.CustomsDuty.ToString(Consts.Format.Money)</td>*@
-                            <td class="align-right">@item.ImportAndDelivery.DeliveryCost.ToString(Consts.Format.Money)</td>
-                            <td class="align-right">@item.ImportAndDelivery.FinalCost.ToString(Consts.Format.Money)</td>
-                            <td class="align-right">@item.ImportAndDelivery.FinalCostCostPer1.ToString(Consts.Format.Money)</td>
+                            <td class="align-right">@item.ImportAndDelivery.DeliveryCost.ToString(Consts.Format.Money2)</td>
+                            <td class="align-right">@item.ImportAndDelivery.FinalCost.ToString(Consts.Format.Money2)</td>
+                            <td class="align-right">@item.ImportAndDelivery.FinalCostCostPer1.ToString(Consts.Format.Money2)</td>
 
                             <td>@item.Request.Uom</td>
                             <td>@item.Offer.Uom</td>
@@ -136,16 +136,16 @@
                             <td class="align-right">@item.Conversion.UomRatio.ToString(Consts.Format.Qty)</td>
                             <td class="align-right">@item.Conversion.CurrencyExchangeRate.ToString(Consts.Format.Qty)</td>
                             <td class="align-right">@item.Conversion.OfferQty.ToString(Consts.Format.Qty)</td>
-                            <td class="align-right">@item.Conversion.OfferPrice.ToString(Consts.Format.Money)</td>
-                            <td class="align-right">@item.Conversion.OfferTotalPrice.ToString(Consts.Format.Money)</td>
+                            <td class="align-right">@item.Conversion.OfferPrice.ToString(Consts.Format.Money2)</td>
+                            <td class="align-right">@item.Conversion.OfferTotalPrice.ToString(Consts.Format.Money2)</td>
 
                             <td>@item.ResourceConversion.ResourceUom</td>
                             <td>@item.ResourceConversion.ResourceBatchUom</td>
-                            <td>@item.ResourceConversion.OfferResource.ToString(Consts.Format.Money)</td>
-                            <td>@item.ResourceConversion.RequestResource.ToString(Consts.Format.Money)</td>
+                            <td>@item.ResourceConversion.OfferResource.ToString(Consts.Format.Money2)</td>
+                            <td>@item.ResourceConversion.RequestResource.ToString(Consts.Format.Money2)</td>
                             <td class="align-right">@item.ResourceConversion.ResourceRatio.ToString(Consts.Format.Qty)</td>
-                            <td class="align-right">@item.ResourceConversion.OfferPrice.ToString(Consts.Format.Money)</td>
-                            <td class="align-right">@item.ResourceConversion.OfferTotalPrice.ToString(Consts.Format.Money)</td>
+                            <td class="align-right">@item.ResourceConversion.OfferPrice.ToString(Consts.Format.Money2)</td>
+                            <td class="align-right">@item.ResourceConversion.OfferTotalPrice.ToString(Consts.Format.Money2)</td>
                         </tr>
                     }
                 </tbody>
