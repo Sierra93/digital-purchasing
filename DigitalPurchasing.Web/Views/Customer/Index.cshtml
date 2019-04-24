@@ -125,7 +125,6 @@
                         this.search = null;
                     },
                     deleteRow: function (rowData, rowIndex) {
-                        console.log(rowData)
                         this.modalData.name = rowData.name;
                         this.modalData.id = rowData.id;
                         this.modalDelete = true;
@@ -135,8 +134,12 @@
                         this.$http.post('@Url.Action(nameof(DigitalPurchasing.Web.Controllers.CustomerController.Delete))', { id: $this.modalData.id }).then(function(res) {
                             $this.$refs.vuetable.refresh();
                             $this.modalDelete = false;
-                        }, function(res) {
-                            alert('Ошибка удаления');
+                        }, function (res) {
+                            if (res.body && res.body.reason == 'CUSTOMER_IN_USE') {
+                                alert('Этого контрагента нельзя удалить');
+                            } else {
+                                alert('Ошибка удаления');
+                            }
                         });
                     },
                     deleteCancel: function() {

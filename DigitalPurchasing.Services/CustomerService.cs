@@ -5,6 +5,7 @@ using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
 using Mapster;
 using System.Linq.Dynamic.Core;
+using DigitalPurchasing.Services.Exceptions;
 
 namespace DigitalPurchasing.Services
 {
@@ -86,9 +87,16 @@ namespace DigitalPurchasing.Services
             var entity = _db.Customers.Find(id);
             if (entity != null)
             {
+                if (IsCustomerInUse(id))
+                {
+                    throw new CustomerInUseException();
+                }
+
                 _db.Customers.Remove(entity);
                 _db.SaveChanges();
             }            
         }
+
+        public bool IsCustomerInUse(Guid id) => _db.PurchaseRequests.Any(pr => pr.CustomerId == id);
     }
 }

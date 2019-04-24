@@ -86,7 +86,15 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpPost]
         public IActionResult Delete([FromBody]DeleteVm vm)
         {
-            _customerService.Delete(vm.Id);
+            try
+            {
+                _customerService.Delete(vm.Id);
+            }
+            catch (Services.Exceptions.CustomerInUseException)
+            {
+                return BadRequest(new { reason = "CUSTOMER_IN_USE" });
+            }
+
             return Ok();
         }
     }
