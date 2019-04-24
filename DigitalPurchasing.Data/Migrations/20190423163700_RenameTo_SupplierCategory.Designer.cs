@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190423163700_RenameTo_SupplierCategory")]
+    partial class RenameTo_SupplierCategory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -907,19 +909,17 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<bool>("IsPrimaryContact");
+
                     b.Property<Guid>("NomenclatureCategoryId");
 
-                    b.Property<Guid?>("PrimaryContactPersonId");
-
-                    b.Property<Guid?>("SecondaryContactPersonId");
+                    b.Property<Guid>("SupplierContactPersonId");
 
                     b.HasKey("Id");
 
                     b.HasIndex("NomenclatureCategoryId");
 
-                    b.HasIndex("PrimaryContactPersonId");
-
-                    b.HasIndex("SecondaryContactPersonId");
+                    b.HasIndex("SupplierContactPersonId");
 
                     b.ToTable("SupplierCategories");
                 });
@@ -1546,14 +1546,9 @@ namespace DigitalPurchasing.Data.Migrations
                         .HasForeignKey("NomenclatureCategoryId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("DigitalPurchasing.Models.SupplierContactPerson", "PrimaryContactPerson")
+                    b.HasOne("DigitalPurchasing.Models.SupplierContactPerson", "SupplierContactPerson")
                         .WithMany()
-                        .HasForeignKey("PrimaryContactPersonId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("DigitalPurchasing.Models.SupplierContactPerson", "SecondaryContactPerson")
-                        .WithMany()
-                        .HasForeignKey("SecondaryContactPersonId")
+                        .HasForeignKey("SupplierContactPersonId")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 

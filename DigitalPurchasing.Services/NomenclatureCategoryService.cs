@@ -56,6 +56,18 @@ namespace DigitalPurchasing.Services
             return name;
         }
 
+        public NomenclatureCategoryBasicInfo GetParentCategory(Guid categoryId)
+        {
+            var category = _db.NomenclatureCategories.Find(categoryId);
+
+            while (category.ParentId.HasValue)
+            {
+                category = _db.NomenclatureCategories.Find(category.ParentId);
+            }
+
+            return category.Adapt<NomenclatureCategoryBasicInfo>();
+        }
+
         public void Delete(Guid id)
         {
             var entity = _db.NomenclatureCategories.Find(id);

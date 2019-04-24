@@ -1,0 +1,149 @@
+@model DigitalPurchasing.Web.ViewModels.Supplier.SupplierEditVm
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="Supplier.Name" class="control-label"></label>
+            <input asp-for="Supplier.Name" class="form-control" />
+            <span asp-validation-for="Supplier.Name" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="Supplier.OwnershipType" class="control-label"></label>
+            <input asp-for="Supplier.OwnershipType" class="form-control" />
+            <span asp-validation-for="Supplier.OwnershipType" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="Supplier.ErpCode" class="control-label"></label>
+            <input asp-for="Supplier.ErpCode" class="form-control" />
+            <span asp-validation-for="Supplier.ErpCode" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="Supplier.Inn" class="control-label"></label>
+            <input asp-for="Supplier.Inn" type="number" min="0" maxlength="12" class="form-control" />
+            <span asp-validation-for="Supplier.Inn" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+
+<div class="form-group">
+    <div class="checkbox">
+        <label asp-for="Supplier.PriceWithVat">
+            <input asp-for="Supplier.PriceWithVat" />
+            @Html.DisplayNameFor(m => m.Supplier.PriceWithVat)
+        </label>
+    </div>
+</div>
+<div class="form-group">
+    <div class="checkbox">
+        <label asp-for="Supplier.SumWithVat">
+            <input asp-for="Supplier.SumWithVat" />
+            @Html.DisplayNameFor(m => m.Supplier.SumWithVat)
+        </label>
+    </div>
+</div>
+
+<div>
+    <h3>Контакты</h3>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="form-group">
+                <label asp-for="Supplier.Website" class="control-label"></label>
+                <input asp-for="Supplier.Website" class="form-control" />
+                <span asp-validation-for="Supplier.Website" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <h4>Юридический адрес</h4>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label asp-for="Supplier.LegalAddressStreet" class="control-label"></label>
+                    <input asp-for="Supplier.LegalAddressStreet" class="form-control" />
+                    <span asp-validation-for="Supplier.LegalAddressStreet" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="Supplier.LegalAddressCity" class="control-label"></label>
+                    <input asp-for="Supplier.LegalAddressCity" class="form-control" />
+                    <span asp-validation-for="Supplier.LegalAddressCity" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="Supplier.LegalAddressCountry" class="control-label"></label>
+                    <input asp-for="Supplier.LegalAddressCountry" class="form-control" />
+                    <span asp-validation-for="Supplier.LegalAddressCountry" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <h4>Фактический адрес</h4>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label asp-for="Supplier.ActualAddressStreet" class="control-label"></label>
+                    <input asp-for="Supplier.ActualAddressStreet" class="form-control" />
+                    <span asp-validation-for="Supplier.ActualAddressStreet" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="Supplier.ActualAddressCity" class="control-label"></label>
+                    <input asp-for="Supplier.ActualAddressCity" class="form-control" />
+                    <span asp-validation-for="Supplier.ActualAddressCity" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="Supplier.ActualAddressCountry" class="control-label"></label>
+                    <input asp-for="Supplier.ActualAddressCountry" class="form-control" />
+                    <span asp-validation-for="Supplier.ActualAddressCountry" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <h4>Адрес склада</h4>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label asp-for="Supplier.WarehouseAddressStreet" class="control-label"></label>
+                    <input asp-for="Supplier.WarehouseAddressStreet" class="form-control" />
+                    <span asp-validation-for="Supplier.WarehouseAddressStreet" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="Supplier.WarehouseAddressCity" class="control-label"></label>
+                    <input asp-for="Supplier.WarehouseAddressCity" class="form-control" />
+                    <span asp-validation-for="Supplier.WarehouseAddressCity" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="Supplier.WarehouseAddressCountry" class="control-label"></label>
+                    <input asp-for="Supplier.WarehouseAddressCountry" class="form-control" />
+                    <span asp-validation-for="Supplier.WarehouseAddressCountry" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
