@@ -27,6 +27,10 @@ namespace DigitalPurchasing.Core.Extensions
             {
                 return $"+7 ({str.Substring(0,3)}) {str.Substring(3,3)} {str.Substring(6,2)} {str.Substring(8,2)}";
             }
+            else if (str.Length == 11)
+            {
+                return $"+7 ({str.Substring(1, 3)}) {str.Substring(4, 3)} {str.Substring(7, 2)} {str.Substring(9, 2)}";
+            }
 
             return str;
         }
