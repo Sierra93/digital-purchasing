@@ -121,7 +121,7 @@ namespace DigitalPurchasing.Services
         public Guid AddContactPerson(SupplierContactPersonVm vm)
         {
             var contactPerson = vm.Adapt<SupplierContactPerson>();
-            contactPerson.PhoneNumber = contactPerson.PhoneNumber.CleanPhoneNumber();
+            contactPerson.PhoneNumber = contactPerson.PhoneNumber.CleanPhoneNumber()?.Substring(contactPerson.PhoneNumber.Length - 10);
             var entry = _db.SupplierContactPersons.Add(contactPerson);
             _db.SaveChanges();
             return entry.Entity.Id;
@@ -136,7 +136,7 @@ namespace DigitalPurchasing.Services
             entity.Patronymic = vm.Patronymic;
             entity.UseForRequests = vm.UseForRequests;
             entity.JobTitle = vm.JobTitle;
-            entity.PhoneNumber = vm.PhoneNumber.CleanPhoneNumber();
+            entity.PhoneNumber = vm.PhoneNumber.CleanPhoneNumber()?.Substring(vm.PhoneNumber.Length - 10);
             _db.SaveChanges();
             return entity.Id;
         }
@@ -198,6 +198,12 @@ namespace DigitalPurchasing.Services
                 entity.WarehouseAddressCountry = model.WarehouseAddressCountry;
                 entity.PriceWithVat = model.PriceWithVat;
                 entity.SumWithVat = model.SumWithVat;
+                entity.DeliveryTerms = model.DeliveryTerms;
+                entity.Note = model.Note;
+                entity.OfferCurrency = model.OfferCurrency;
+                entity.PaymentDeferredDays = model.PaymentDeferredDays;
+                entity.Phone = model.Phone.CleanPhoneNumber()?.Substring(model.Phone.Length - 10);
+                entity.SupplierType = model.SupplierType;
 
                 _db.SaveChanges();
             }
@@ -227,7 +233,13 @@ namespace DigitalPurchasing.Services
                 WarehouseAddressCity = model.WarehouseAddressCity,
                 WarehouseAddressCountry = model.WarehouseAddressCountry,
                 PriceWithVat = model.PriceWithVat,
-                SumWithVat = model.SumWithVat
+                SumWithVat = model.SumWithVat,
+                DeliveryTerms = model.DeliveryTerms,
+                Note = model.Note,
+                OfferCurrency = model.OfferCurrency,
+                PaymentDeferredDays = model.PaymentDeferredDays,
+                Phone = model.Phone.CleanPhoneNumber()?.Substring(model.Phone.Length - 10),
+                SupplierType = model.SupplierType
             });
             _db.SaveChanges();
             return entry.Entity.Id;

@@ -15,6 +15,13 @@
             <span asp-validation-for="Supplier.OwnershipType" class="text-danger"></span>
         </div>
     </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="Supplier.SupplierType" class="control-label"></label>
+            <input asp-for="Supplier.SupplierType" class="form-control" />
+            <span asp-validation-for="Supplier.SupplierType" class="text-danger"></span>
+        </div>
+    </div>
 </div>
 
 <div class="row">
@@ -37,6 +44,30 @@
     </div>
 </div>
 
+<div class="row">
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="Supplier.PaymentDeferredDays" class="control-label"></label>
+            <input asp-for="Supplier.PaymentDeferredDays" class="form-control" />
+            <span asp-validation-for="Supplier.PaymentDeferredDays" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="Supplier.DeliveryTerms" class="control-label"></label>
+            <input asp-for="Supplier.DeliveryTerms" class="form-control" />
+            <span asp-validation-for="Supplier.DeliveryTerms" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="Supplier.OfferCurrency" class="control-label"></label>
+            <input asp-for="Supplier.OfferCurrency" class="form-control" />
+            <span asp-validation-for="Supplier.OfferCurrency" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+
 <div class="form-group">
     <div class="checkbox">
         <label asp-for="Supplier.PriceWithVat">
@@ -54,6 +85,17 @@
     </div>
 </div>
 
+<div class="row">
+    <div class="col-md-9">
+        <div class="form-group">
+            <label asp-for="Supplier.Note" class="control-label"></label>
+            <textarea asp-for="Supplier.Note" class="form-control"></textarea>
+            <span asp-validation-for="Supplier.Note" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+
+
 <div>
     <h3>Контакты</h3>
     <div class="row">
@@ -62,6 +104,16 @@
                 <label asp-for="Supplier.Website" class="control-label"></label>
                 <input asp-for="Supplier.Website" class="form-control" />
                 <span asp-validation-for="Supplier.Website" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                <label asp-for="Supplier.Phone" class="control-label"></label>
+                <div class="input-group">
+                    <div class="input-group-addon">+7</div>
+                    <input asp-for="Supplier.Phone" class="form-control" data-phone="" />
+                </div>
+                <span asp-validation-for="Supplier.Phone" class="text-danger"></span>
             </div>
         </div>
     </div>

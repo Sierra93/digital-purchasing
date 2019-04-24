@@ -59,6 +59,24 @@ namespace DigitalPurchasing.Web.ViewModels.Supplier
 
             [Display(Name = "Страна")]
             public string WarehouseAddressCountry { get; set; }
+
+            [Display(Name = "Тип поставщика")]
+            public string SupplierType { get; set; }
+
+            [Display(Name = "Отсрочка платежа, дней")]
+            public int? PaymentDeferredDays { get; set; }
+
+            [Display(Name = "Условия поставки (incoterms)")]
+            public string DeliveryTerms { get; set; }
+
+            [Display(Name = "Валюта выставления предложений")]
+            public string OfferCurrency { get; set; }
+
+            [Display(Name = "Телефон общий")]
+            public string Phone { get; set; }
+
+            [Display(Name = "Комментарии")]
+            public string Note { get; set; }
         }
 
         public SupplierEditVm.SupplierVm Supplier { get; set; }
