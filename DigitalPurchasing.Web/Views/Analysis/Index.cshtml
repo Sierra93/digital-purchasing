@@ -65,7 +65,7 @@
                         <tbody>
                             <tr>
                                 <td style="padding-right: 16px">
-                                    <input type="radio" :id="(selectedVariant+index)" :value="variant.id" v-model="selectedVariant">
+                                    <input type="radio" :id="('selected-variant-'+index)" :value="variant.id" v-model="currentSelectedVariant">
                                 </td>
                                 <td>
                                     <p><span>Вариант {{(index+1)}}</span></p>
@@ -95,6 +95,7 @@
     </table>
     <div style="margin-bottom: 20px;" v-if="orderedVariants.length>0">
         <button type="button" class="btn btn-primary" v-on:click="variantAdded">Добавить вариант</button>
+        <button type="button" class="btn btn-primary" v-on:click="saveSelectedVariant" :disabled="!notSavedVariant">Подтвердить выбор варианта</button>
     </div>
     <div class="long-table-wrap" v-if="orderedVariants.length>0">
         <div class="long-table">
@@ -123,6 +124,7 @@
                         variants: [],
                         customerDeliveryDate: null,
                         selectedVariant: null,
+                        currentSelectedVariant: null,
                         loading: false
                     };
                 },
@@ -140,6 +142,9 @@
                     },
                     isLoading: function() {
                         return this.orderedVariants.length === 0 && this.loading;
+                    },
+                    notSavedVariant: function() {
+                        return this.currentSelectedVariant !== this.selectedVariant;
                     }
                 },
                 created: function() {
@@ -150,9 +155,6 @@
                         if (val.length === 0) {
                             this.loadData();
                         }
-                    },
-                    selectedVariant: function(id) {
-                        this.saveSelectedVariant(id);
                     }
                 },
                 filters: {
@@ -215,6 +217,7 @@
                             vm.variants = data.variants;
                             vm.customerDeliveryDate = data.customerDeliveryDate;
                             vm.selectedVariant = data.selectedVariant;
+                            vm.currentSelectedVariant = data.selectedVariant;
                             vm.loading = false;
                         },
                         function(response) {
@@ -223,7 +226,6 @@
                         });
                     },
                     variantAdded: function() {
-                        console.info('added');
                         var vm = this;
                         this.$http.post('@Url.Action("AddVariant", "Analysis", new {clId = Model.ClId})').then(function(response) {
                             var data = response.body;
@@ -233,24 +235,22 @@
                         });
                     },
                     variantChanged: function(id) {
-                        console.info('changed'+id);
                         this.loadData();
                     },
                     variantDeleted: function(id) {
-                        console.info('deleted'+id);
                         this.variants = _.remove(this.variants, function(v) {
                             return v.id !== id;
                         });
                     },
-                    saveSelectedVariant: function(id) {
-                        console.info('saveSelectedVariant, id', id);
-                        var vm = this;
-                        this.$http.post('@Url.Action("SaveSelectedVariant", "Analysis")', { id: id })
-                        .then(function(response) {
-                        }, function(response) {
-                            alert('Ошибка');
-                        });
-                    }
+					saveSelectedVariant: function() {
+						var vm = this;
+						this.$http.post('@Url.Action("SaveSelectedVariant", "Analysis")', { id: vm.currentSelectedVariant })
+						.then(function (response) {
+							vm.selectedVariant = vm.currentSelectedVariant;
+						}, function(response) {
+							alert('Ошибка');
+						});
+					}
                 }
             });
         })();

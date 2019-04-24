@@ -198,9 +198,13 @@ namespace DigitalPurchasing.Services
                 item.Request.Code = requestItem.RawCode;
                 item.Request.Name = requestItem.RawName;
                 item.Request.Qty = requestItem.RawQty;
+
+                var qtyMod = requestItem.Nomenclature.BatchUom.Quantity ?? 1;
+
+                item.Request.QtyMod = qtyMod;
                 item.Request.Currency = "RUB"; //TODO
                 item.Request.Uom = requestItem.Nomenclature.BatchUom.Name;
-
+                
                 var offerItem = offerItems
                     .FirstOrDefault(q => q.NomenclatureId.HasValue && q.NomenclatureId == requestItem.NomenclatureId);
                 if (offerItem == null) continue;
@@ -220,7 +224,7 @@ namespace DigitalPurchasing.Services
                     ? nomAlt.MassUomValue
                     : requestItem.Nomenclature.MassUomValue;
 
-                item.Mass.MassOf1 = offerMassOf1;
+                item.Mass.MassOf1BatchUom = offerMassOf1;
                 item.Mass.MassUom = requestItem.Nomenclature.MassUom.Name;
 
                 item.ImportAndDelivery.DeliveryTerms = supplierOffer.DeliveryTerms;

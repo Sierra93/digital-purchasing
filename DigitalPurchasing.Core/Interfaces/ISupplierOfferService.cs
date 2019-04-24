@@ -48,6 +48,8 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public class RequestData : BaseData
         {
+            public decimal QtyMod { get; set; } = 1;
+            public decimal QtyInPsc => Qty * QtyMod;
         }
 
         public class OfferData : BaseData
@@ -72,10 +74,10 @@ namespace DigitalPurchasing.Core.Interfaces
                 }
             }
 
-            public decimal MassOf1 { get; set; }
+            public decimal MassOf1BatchUom { get; set; }
             public string MassUom { get; set; }
 
-            public decimal TotalMass => _item.Offer.Qty * MassOf1;
+            public decimal TotalMass => _item.Request.Qty * MassOf1BatchUom;
 
             public decimal TotalMassPerc
             {
