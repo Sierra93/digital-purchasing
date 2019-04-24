@@ -45,7 +45,9 @@ namespace DigitalPurchasing.Data
 
         public DbSet<AnalysisVariant> AnalysisVariants { get; set; }
         public DbSet<AnalysisResultItem> AnalysisResultItems { get; set; }
-        
+
+        public DbSet<SupplierCategory> SupplierCategories { get; set; }
+
         #region Counters
 
         public DbSet<PRCounter> PRCounters { get; set; }
@@ -129,6 +131,13 @@ namespace DigitalPurchasing.Data
             builder.Entity<NomenclatureAlternative>().HasOne(q => q.ResourceUom).WithMany(q => q.ResourceNomenclatureAlternatives).HasForeignKey(q => q.ResourceUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<NomenclatureAlternative>().HasOne(q => q.ResourceBatchUom).WithMany(q => q.ResourceBatchNomenclatureAlternatives).HasForeignKey(q => q.ResourceBatchUomId).OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<SupplierCategory>()
+                .HasOne(q => q.NomenclatureCategory).WithMany().HasForeignKey(q => q.NomenclatureCategoryId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<SupplierCategory>()
+                .HasOne(q => q.PrimaryContactPerson).WithMany().HasForeignKey(q => q.PrimaryContactPersonId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<SupplierCategory>()
+                .HasOne(q => q.SecondaryContactPerson).WithMany().HasForeignKey(q => q.SecondaryContactPersonId).OnDelete(DeleteBehavior.Restrict);
+
             builder.Entity<Customer>(e =>
             {
                 e.HasMany(q => q.Requests).WithOne(q => q.Customer).HasForeignKey(q => q.CustomerId).OnDelete(DeleteBehavior.Restrict);
@@ -155,6 +164,7 @@ namespace DigitalPurchasing.Data
             {
                 e.HasMany(q => q.Offers).WithOne(q => q.Supplier).HasForeignKey(q => q.SupplierId).OnDelete(DeleteBehavior.Restrict);
                 e.HasMany(q => q.ContactPersons).WithOne(q => q.Supplier).HasForeignKey(q => q.SupplierId).OnDelete(DeleteBehavior.Restrict);
+                e.HasIndex(q => new { q.OwnerId, q.Inn }).IsUnique().HasFilter($"{nameof(Supplier.Name)} IS NOT NULL AND {nameof(Supplier.Inn)} IS NOT NULL");
             });
 
             builder.Entity<SupplierOffer>(e =>
