@@ -74,10 +74,10 @@ namespace DigitalPurchasing.Core.Interfaces
                 }
             }
 
-            public decimal MassOf1 { get; set; }
+            public decimal MassOf1BatchUom { get; set; }
             public string MassUom { get; set; }
 
-            public decimal TotalMass => _item.Request.QtyInPsc * MassOf1;
+            public decimal TotalMass => _item.Request.Qty * MassOf1BatchUom;
 
             public decimal TotalMassPerc
             {

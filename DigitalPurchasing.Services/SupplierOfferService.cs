@@ -224,7 +224,7 @@ namespace DigitalPurchasing.Services
                     ? nomAlt.MassUomValue
                     : requestItem.Nomenclature.MassUomValue;
 
-                item.Mass.MassOf1 = offerMassOf1;
+                item.Mass.MassOf1BatchUom = offerMassOf1;
                 item.Mass.MassUom = requestItem.Nomenclature.MassUom.Name;
 
                 item.ImportAndDelivery.DeliveryTerms = supplierOffer.DeliveryTerms;
