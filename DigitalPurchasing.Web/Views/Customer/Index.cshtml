@@ -34,7 +34,7 @@
                 <div slot="slot-actions" slot-scope="props">
                     <div class="btn-group" role="group" aria-label="...">
                         <a class="btn btn-default" :href="props.rowData.editUrl"><i class="far fa-edit"></i></a>
-                        @*<button type="button" class="btn btn-default" @@click="deleteRow(props.rowData, props.rowIndex)"><i class="far fa-trash-alt"></i></button>*@
+                        <button type="button" class="btn btn-default" @@click="deleteRow(props.rowData, props.rowIndex)"><i class="far fa-trash-alt"></i></button>
                     </div>
                 </div>
             </vuetable>
@@ -54,6 +54,13 @@
             </vuetable-pagination>
         </div>
     </div>
+    <modal v-model="modalDelete" title="Удаление">
+        <p>Вы уверены что хотите удалить "<b>{{modalData.name}}</b>"?<br />Это действие нельзя отменить.</p>
+        <div slot="footer">
+            <button v-on:click="deleteOk" class="btn btn-danger">Удалить</button>
+            <button v-on:click="deleteCancel" class="btn btn-default">Отмена</button>
+        </div>
+    </modal>
 </div>
 
 @section Scripts {
@@ -116,6 +123,24 @@
                     },
                     resetSearch: function () {
                         this.search = null;
+                    },
+                    deleteRow: function (rowData, rowIndex) {
+                        console.log(rowData)
+                        this.modalData.name = rowData.name;
+                        this.modalData.id = rowData.id;
+                        this.modalDelete = true;
+                    },
+                    deleteOk: function() {
+                        var $this = this;
+                        this.$http.post('@Url.Action(nameof(DigitalPurchasing.Web.Controllers.CustomerController.Delete))', { id: $this.modalData.id }).then(function(res) {
+                            $this.$refs.vuetable.refresh();
+                            $this.modalDelete = false;
+                        }, function(res) {
+                            alert('Ошибка удаления');
+                        });
+                    },
+                    deleteCancel: function() {
+                        this.modalDelete = false;
                     }
                 }
             });

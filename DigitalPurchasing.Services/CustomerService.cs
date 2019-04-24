@@ -80,5 +80,15 @@ namespace DigitalPurchasing.Services
                 _db.SaveChanges();
             }
         }
+
+        public void Delete(Guid id)
+        {
+            var entity = _db.Customers.Find(id);
+            if (entity != null)
+            {
+                _db.Customers.Remove(entity);
+                _db.SaveChanges();
+            }            
+        }
     }
 }

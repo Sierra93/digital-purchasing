@@ -11,6 +11,7 @@ namespace DigitalPurchasing.Core.Interfaces
         CustomerVm GetById(Guid id);
         CustomerIndexData GetData(int page, int perPage, string sortField, bool sortAsc, string search);
         void Update(CustomerVm model);
+        void Delete(Guid id);
     }
 
     public class CustomerAutocomplete
