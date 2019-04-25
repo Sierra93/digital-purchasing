@@ -95,5 +95,12 @@ namespace DigitalPurchasing.Web.Controllers
             _nomenclatureCategoryService.Delete(vm.Id);
             return Ok();
         }
+
+        [HttpGet]
+        public IActionResult Template()
+        {
+            var excelTemplate = new ExcelReader.NomenclatureCategoryListTemplate.ExcelTemplate();
+            return File(excelTemplate.Build(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "template.xlsx");
+        }
     }
 }
