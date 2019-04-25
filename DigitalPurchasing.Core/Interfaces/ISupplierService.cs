@@ -24,6 +24,7 @@ namespace DigitalPurchasing.Core.Interfaces
         List<SupplierNomenclatureCategory> GetSupplierNomenclatureCategories(Guid supplierId);
         void SaveSupplierNomenclatureCategoryContacts(Guid supplierId,
             IEnumerable<(Guid nomenclatureCategoryId, Guid? primarySupplierContactId, Guid? secondarySupplierContactId)> nomenclatureCategories2Contacts);
+        void RemoveSupplierNomenclatureCategoryContacts(Guid supplierId, Guid nomenclatureCategoryId);
     }
 
     public class SupplierAutocomplete
@@ -73,6 +74,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public string OfferCurrency { get; set; }
         public string Phone { get; set; }
         public string Note { get; set; }
+        public Guid? CategoryId { get; set; }
     }
 
     public class SupplierContactPersonVm
@@ -100,5 +102,6 @@ namespace DigitalPurchasing.Core.Interfaces
         public string NomenclatureCategoryFullName { get; set; }
         public Guid? NomenclatureCategoryPrimaryContactId { get; set; }
         public Guid? NomenclatureCategorySecondaryContactId { get; set; }
+        public bool IsDefaultSupplierCategory { get; set; }
     }
 }

@@ -1,8 +1,23 @@
 @using DigitalPurchasing.Core.Extensions
+@using DigitalPurchasing.Core.Interfaces
 @model DigitalPurchasing.Web.ViewModels.Supplier.SupplierEditVm
 
 @{
     ViewData["Title"] = Model.Supplier.Name + " - Поставщики";
+
+    Func<NomenclatureCategoryVm, string> getCatNameInHierarchy = null;
+    getCatNameInHierarchy = (category) =>
+    {
+        if (category.ParentId.HasValue)
+        {
+            var parentCategory = Model.AvailableCategories.First(_ => _.Id == category.ParentId.Value);
+            return $"{getCatNameInHierarchy(parentCategory)} > {category.Name}";
+        }
+        else
+        {
+            return category.Name;
+        }
+    };
 }
 
 <h2 class="with-button">@ViewData["Title"]</h2>
@@ -35,8 +50,27 @@
                 var nc = Model.NomenclatureCategoies[i];
                 <tr>
                     <td>
-                        @nc.NomenclatureCategoryFullName
-                        <input type="hidden" asp-for="NomenclatureCategoies[i].NomenclatureCategoryId" />
+                        @if (nc.IsDefaultSupplierCategory)
+                        {
+                            <span>Основная:</span>
+                            <select asp-for="NomenclatureCategoies[i].NomenclatureCategoryId"
+                                    asp-items="Model.AvailableCategories.Select(cp => new SelectListItem()
+                                                {
+                                                    Value = cp.Id.ToString(),
+                                                    Text = getCatNameInHierarchy(cp),
+                                                    Selected = cp.Id == nc.NomenclatureCategoryId
+                                                }).OrderBy(_ => _.Text)"
+                                    class="form-control"
+                                    style="max-width:500px; display: inline-block">
+                                <option value="">-- Не выбрана --</option>
+                            </select>
+                        }
+                        else
+                        {
+                            @nc.NomenclatureCategoryFullName
+                            <input type="hidden" asp-for="NomenclatureCategoies[i].NomenclatureCategoryId" />
+                        }
+                        <input type="hidden" asp-for="NomenclatureCategoies[i].IsDefaultSupplierCategory" />
                     </td>
                     <td>
                         <select asp-for="NomenclatureCategoies[i].NomenclatureCategoryPrimaryContactId"
