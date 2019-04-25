@@ -14,7 +14,7 @@ namespace DigitalPurchasing.Models
         public string RawUomStr { get; set; }
         [Column(TypeName = "decimal(18, 4)")]
         public decimal RawQty { get; set; }
-        [Column(TypeName = "decimal(18, 4)")] 
+        [Column(TypeName = "decimal(38, 17)")] 
         public decimal RawPrice { get; set; }
 
         public Guid? RawUomId { get; set; }
