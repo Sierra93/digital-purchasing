@@ -290,14 +290,20 @@ namespace DigitalPurchasing.Services
             }).ToList();
         }
 
+        public void RemoveSupplierNomenclatureCategoryContacts(Guid supplierId, Guid nomenclatureCategoryId)
+        {
+            _db.SupplierCategories.RemoveRange(
+                _db.SupplierCategories.Where(_ => _.NomenclatureCategoryId == nomenclatureCategoryId &&
+                    (_.PrimaryContactPerson.SupplierId == supplierId || _.SecondaryContactPerson.SupplierId == supplierId)));
+            _db.SaveChanges();
+        }
+
         public void SaveSupplierNomenclatureCategoryContacts(Guid supplierId,
             IEnumerable<(Guid nomenclatureCategoryId, Guid? primarySupplierContactId, Guid? secondarySupplierContactId)> nomenclatureCategories2Contacts)
         {
             foreach (var mapping in nomenclatureCategories2Contacts)
             {
-                _db.SupplierCategories.RemoveRange(
-                    _db.SupplierCategories.Where(_ => _.NomenclatureCategoryId == mapping.nomenclatureCategoryId &&
-                        (_.PrimaryContactPerson.SupplierId == supplierId || _.SecondaryContactPerson.SupplierId == supplierId)));
+                RemoveSupplierNomenclatureCategoryContacts(supplierId, mapping.nomenclatureCategoryId);
 
                 if (mapping.primarySupplierContactId.HasValue ||
                     mapping.secondarySupplierContactId.HasValue)

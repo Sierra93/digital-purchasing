@@ -83,6 +83,7 @@ namespace DigitalPurchasing.Web.Controllers
         {
             vm.ContactPersons = _supplierService.GetContactPersonsBySupplier(supplierId);
             vm.NomenclatureCategoies = _supplierService.GetSupplierNomenclatureCategories(supplierId);
+            vm.AvailableCategories = _nomenclatureCategoryService.GetAll().ToList();
         }
 
         [HttpPost]
@@ -110,6 +111,21 @@ namespace DigitalPurchasing.Web.Controllers
         {
             if (ModelState.IsValid)
             {
+                var defaultCategory = vm.NomenclatureCategoies.FirstOrDefault(_ => _.IsDefaultSupplierCategory);
+                if (defaultCategory != null)
+                {
+                    var supplier = _supplierService.GetById(supplierId);
+                    if (supplier.CategoryId != defaultCategory.NomenclatureCategoryId)
+                    {
+                        if (supplier.CategoryId.HasValue)
+                        {
+                            _supplierService.RemoveSupplierNomenclatureCategoryContacts(supplierId, supplier.CategoryId.Value);
+                        }
+                        supplier.CategoryId = defaultCategory.NomenclatureCategoryId;
+                        _supplierService.Update(supplier);
+                    }
+                }
+
                 _supplierService.SaveSupplierNomenclatureCategoryContacts(
                     supplierId,
                     vm.NomenclatureCategoies.Select(nc => (nc.NomenclatureCategoryId, nc.NomenclatureCategoryPrimaryContactId, nc.NomenclatureCategorySecondaryContactId)));
