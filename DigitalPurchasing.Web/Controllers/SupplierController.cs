@@ -238,6 +238,21 @@ namespace DigitalPurchasing.Web.Controllers
             {
                 try
                 {
+                    NomenclatureCategoryVm category = null;
+
+                    if (!string.IsNullOrWhiteSpace(item.MainCategory))
+                    {
+                        category = _nomenclatureCategoryService.CreateOrUpdate(item.MainCategory, null);
+                        if (!string.IsNullOrWhiteSpace(item.SubCategory1))
+                        {
+                            category = _nomenclatureCategoryService.CreateOrUpdate(item.SubCategory1, category.Id);
+                            if (!string.IsNullOrWhiteSpace(item.SubCategory2))
+                            {
+                                category = _nomenclatureCategoryService.CreateOrUpdate(item.SubCategory2, category.Id);
+                            }
+                        }
+                    }
+
                     Guid supplierId = _supplierService.CreateSupplier(new SupplierVm()
                     {
                         Inn = item.Inn,
@@ -260,7 +275,8 @@ namespace DigitalPurchasing.Web.Controllers
                         OfferCurrency = item.OfferCurrency,
                         PaymentDeferredDays = item.PaymentDeferredDays,
                         Phone = item.SupplierPhone,
-                        SupplierType = item.SupplierType
+                        SupplierType = item.SupplierType,
+                        CategoryId = category?.Id
                     }, User.CompanyId());
 
                     Guid? mainContactId = item.ContactSpecified
@@ -276,26 +292,13 @@ namespace DigitalPurchasing.Web.Controllers
                         })
                     : null;
 
-                    if (!string.IsNullOrWhiteSpace(item.MainCategory))
+                    if (mainContactId.HasValue && category != null)
                     {
-                        var category = _nomenclatureCategoryService.CreateOrUpdate(item.MainCategory, null);
-                        if (!string.IsNullOrWhiteSpace(item.SubCategory1))
-                        {
-                            category = _nomenclatureCategoryService.CreateOrUpdate(item.SubCategory1, category.Id);
-                            if (!string.IsNullOrWhiteSpace(item.SubCategory2))
+                        _supplierService.SaveSupplierNomenclatureCategoryContacts(supplierId,
+                            new List<(Guid nomenclatureCategoryId, Guid? primarySupplierContactId, Guid? secondarySupplierContactId)>()
                             {
-                                category = _nomenclatureCategoryService.CreateOrUpdate(item.SubCategory2, category.Id);
-                            }
-                        }
-
-                        if (mainContactId.HasValue)
-                        {
-                            _supplierService.SaveSupplierNomenclatureCategoryContacts(supplierId,
-                                new List<(Guid nomenclatureCategoryId, Guid? primarySupplierContactId, Guid? secondarySupplierContactId)>()
-                                {
-                                    (category.Id, mainContactId.Value, null)
-                                });
-                        }
+                                (category.Id, mainContactId.Value, null)
+                            });
                     }
                 }
                 catch (SameInnException)

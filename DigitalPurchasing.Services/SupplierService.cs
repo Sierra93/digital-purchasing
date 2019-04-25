@@ -206,6 +206,7 @@ namespace DigitalPurchasing.Services
                 entity.PaymentDeferredDays = model.PaymentDeferredDays;
                 entity.Phone = model.Phone.CleanPhoneNumber();
                 entity.SupplierType = model.SupplierType;
+                entity.CategoryId = model.CategoryId;
 
                 _db.SaveChanges();
             }
@@ -241,7 +242,8 @@ namespace DigitalPurchasing.Services
                 OfferCurrency = model.OfferCurrency,
                 PaymentDeferredDays = model.PaymentDeferredDays,
                 Phone = model.Phone.CleanPhoneNumber(),
-                SupplierType = model.SupplierType
+                SupplierType = model.SupplierType,
+                CategoryId = model.CategoryId
             });
             _db.SaveChanges();
             return entry.Entity.Id;

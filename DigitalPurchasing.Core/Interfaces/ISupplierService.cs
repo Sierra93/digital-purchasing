@@ -73,6 +73,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public string OfferCurrency { get; set; }
         public string Phone { get; set; }
         public string Note { get; set; }
+        public Guid? CategoryId { get; set; }
     }
 
     public class SupplierContactPersonVm
