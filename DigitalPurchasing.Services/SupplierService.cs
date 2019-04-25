@@ -262,7 +262,19 @@ namespace DigitalPurchasing.Services
                             !n.Category.IsDeleted
                       select n.CategoryId;
 
-            return qry.Distinct().ToList().Select(ncId =>
+            var categoryIds = qry.Distinct().ToList();
+
+            var defaultCategoryId = _db.Suppliers
+                .Where(_ => _.Id == supplierId)
+                .Select(_ => _.CategoryId)
+                .FirstOrDefault();
+
+            if (defaultCategoryId.HasValue && !categoryIds.Contains(defaultCategoryId.Value))
+            {
+                categoryIds.Add(defaultCategoryId.Value);
+            }
+
+            return categoryIds.Select(ncId =>
             {
                 var mapping = _db.SupplierCategories.Where(_ =>
                     _.NomenclatureCategoryId == ncId &&
@@ -272,7 +284,8 @@ namespace DigitalPurchasing.Services
                     NomenclatureCategoryId = ncId,
                     NomenclatureCategoryFullName = _categoryService.FullCategoryName(ncId),
                     NomenclatureCategoryPrimaryContactId = mapping?.PrimaryContactPersonId,
-                    NomenclatureCategorySecondaryContactId = mapping?.SecondaryContactPersonId
+                    NomenclatureCategorySecondaryContactId = mapping?.SecondaryContactPersonId,
+                    IsDefaultSupplierCategory = defaultCategoryId == ncId
                 };
             }).ToList();
         }

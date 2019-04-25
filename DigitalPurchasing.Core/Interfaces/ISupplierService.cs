@@ -101,5 +101,6 @@ namespace DigitalPurchasing.Core.Interfaces
         public string NomenclatureCategoryFullName { get; set; }
         public Guid? NomenclatureCategoryPrimaryContactId { get; set; }
         public Guid? NomenclatureCategorySecondaryContactId { get; set; }
+        public bool IsDefaultSupplierCategory { get; set; }
     }
 }
