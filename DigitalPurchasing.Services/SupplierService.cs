@@ -206,6 +206,7 @@ namespace DigitalPurchasing.Services
                 entity.PaymentDeferredDays = model.PaymentDeferredDays;
                 entity.Phone = model.Phone.CleanPhoneNumber();
                 entity.SupplierType = model.SupplierType;
+                entity.CategoryId = model.CategoryId;
 
                 _db.SaveChanges();
             }
@@ -241,7 +242,8 @@ namespace DigitalPurchasing.Services
                 OfferCurrency = model.OfferCurrency,
                 PaymentDeferredDays = model.PaymentDeferredDays,
                 Phone = model.Phone.CleanPhoneNumber(),
-                SupplierType = model.SupplierType
+                SupplierType = model.SupplierType,
+                CategoryId = model.CategoryId
             });
             _db.SaveChanges();
             return entry.Entity.Id;
@@ -260,7 +262,19 @@ namespace DigitalPurchasing.Services
                             !n.Category.IsDeleted
                       select n.CategoryId;
 
-            return qry.Distinct().ToList().Select(ncId =>
+            var categoryIds = qry.Distinct().ToList();
+
+            var defaultCategoryId = _db.Suppliers
+                .Where(_ => _.Id == supplierId)
+                .Select(_ => _.CategoryId)
+                .FirstOrDefault();
+
+            if (defaultCategoryId.HasValue && !categoryIds.Contains(defaultCategoryId.Value))
+            {
+                categoryIds.Add(defaultCategoryId.Value);
+            }
+
+            return categoryIds.Select(ncId =>
             {
                 var mapping = _db.SupplierCategories.Where(_ =>
                     _.NomenclatureCategoryId == ncId &&
@@ -270,9 +284,18 @@ namespace DigitalPurchasing.Services
                     NomenclatureCategoryId = ncId,
                     NomenclatureCategoryFullName = _categoryService.FullCategoryName(ncId),
                     NomenclatureCategoryPrimaryContactId = mapping?.PrimaryContactPersonId,
-                    NomenclatureCategorySecondaryContactId = mapping?.SecondaryContactPersonId
+                    NomenclatureCategorySecondaryContactId = mapping?.SecondaryContactPersonId,
+                    IsDefaultSupplierCategory = defaultCategoryId == ncId
                 };
             }).ToList();
+        }
+
+        public void RemoveSupplierNomenclatureCategoryContacts(Guid supplierId, Guid nomenclatureCategoryId)
+        {
+            _db.SupplierCategories.RemoveRange(
+                _db.SupplierCategories.Where(_ => _.NomenclatureCategoryId == nomenclatureCategoryId &&
+                    (_.PrimaryContactPerson.SupplierId == supplierId || _.SecondaryContactPerson.SupplierId == supplierId)));
+            _db.SaveChanges();
         }
 
         public void SaveSupplierNomenclatureCategoryContacts(Guid supplierId,
@@ -280,9 +303,7 @@ namespace DigitalPurchasing.Services
         {
             foreach (var mapping in nomenclatureCategories2Contacts)
             {
-                _db.SupplierCategories.RemoveRange(
-                    _db.SupplierCategories.Where(_ => _.NomenclatureCategoryId == mapping.nomenclatureCategoryId &&
-                        (_.PrimaryContactPerson.SupplierId == supplierId || _.SecondaryContactPerson.SupplierId == supplierId)));
+                RemoveSupplierNomenclatureCategoryContacts(supplierId, mapping.nomenclatureCategoryId);
 
                 if (mapping.primarySupplierContactId.HasValue ||
                     mapping.secondarySupplierContactId.HasValue)

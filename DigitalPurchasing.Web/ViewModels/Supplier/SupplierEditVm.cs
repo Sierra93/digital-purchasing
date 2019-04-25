@@ -77,10 +77,13 @@ namespace DigitalPurchasing.Web.ViewModels.Supplier
 
             [Display(Name = "Комментарии")]
             public string Note { get; set; }
+
+            public Guid? CategoryId { get; set; }
         }
 
         public SupplierEditVm.SupplierVm Supplier { get; set; }
         public List<SupplierContactPersonVm> ContactPersons { get; set; }
         public List<SupplierNomenclatureCategory> NomenclatureCategoies { get; set; } = new List<SupplierNomenclatureCategory>();
+        public List<NomenclatureCategoryVm> AvailableCategories { get; set; } = new List<NomenclatureCategoryVm>();
     }
 }
