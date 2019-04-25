@@ -272,6 +272,7 @@ namespace DigitalPurchasing.Web.Controllers
                             LastName = item.ContactLastName,
                             JobTitle = item.ContactJobTitle,
                             MobilePhoneNumber = item.ContactMobilePhone,
+                            PhoneNumber = item.ContactPhone
                         })
                     : null;
 

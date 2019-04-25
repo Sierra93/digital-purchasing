@@ -79,6 +79,7 @@
                             <th>Имя</th>
                             <th>Отчество</th>
                             <th>E-mail</th>
+                            <th>Телефон</th>
                             <th>Моб. телефон</th>
                             <th>Использовать для<br />отправки запросов и<br />получения КП?</th>
                             <th></th>
@@ -93,6 +94,7 @@
                                 <td>@person.FirstName</td>
                                 <td>@person.Patronymic</td>
                                 <td>@person.Email</td>
+                                <td>@person.PhoneNumber.FormatPhoneNumber()</td>
                                 <td>@person.MobilePhoneNumber.FormatPhoneNumber()</td>
                                 <td>@(person.UseForRequests ? "Да" : "Нет")</td>
                                 <td>
