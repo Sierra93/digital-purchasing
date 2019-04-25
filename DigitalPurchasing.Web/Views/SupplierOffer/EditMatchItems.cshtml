@@ -178,19 +178,15 @@
                     });
                 },
                 watch: {
-                    selectedNomenclature: function(val) {
+                    selectedNomenclature: function (val) {
                         if (val) {
                             this.nomenclatureAutocomplete = val.name;
-                        } else {
-                            this.nomenclatureAutocomplete = '';
                         }
                         this.loadFactor();
                     },
                     selectedUom: function (val) {
                         if (val) {
                             this.uomAutocomplete = val.name;
-                        } else {
-                            this.uomAutocomplete = '';
                         }
                         this.loadFactor();
                     }
@@ -258,7 +254,7 @@
                         this.currentItem = null;
                         this.matchModal = false;
                     },
-                    loadMatch: function() {
+                    loadMatch: function () {
                         if (this.currentItem.nomenclatureId) {
                             this.loadNomenclature(this.currentItem.nomenclatureId);
                         } else {
