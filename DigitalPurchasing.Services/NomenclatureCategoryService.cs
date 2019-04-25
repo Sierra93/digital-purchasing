@@ -40,16 +40,36 @@ namespace DigitalPurchasing.Services
                                           {
                                               supplierId = s.Id,
                                               supplierName = s.Name,
-                                              n.CategoryId
+                                              categoryId = n.CategoryId
                                           } by new { s.Id, n.CategoryId } into g
                                           select g.FirstOrDefault()).ToList();
+
+            var suppliersWithDefaultCategory = (from ncat in qry
+                                                join s in _db.Suppliers on ncat.Id equals s.CategoryId
+                                                where !ncat.IsDeleted
+                                                group new
+                                                {
+                                                    supplierId = s.Id,
+                                                    supplierName = s.Name,
+                                                    categoryId = ncat.Id
+                                                } by new { s.Id, catId = ncat.Id } into g
+                                                select g.FirstOrDefault()).ToList();
+
+            supplier2nomCategories = (from item in supplier2nomCategories.Union(suppliersWithDefaultCategory)
+                                      group new
+                                      {
+                                          item.supplierId,
+                                          item.supplierName,
+                                          item.categoryId
+                                      } by new { item.supplierId, item.categoryId } into g
+                                      select g.FirstOrDefault()).ToList();
 
             foreach (var categoryResult in result)
             {
                 categoryResult.FullName = FullCategoryName(categoryResult.Id);
 
                 categoryResult.Suppliers = supplier2nomCategories
-                    .Where(_ => _.CategoryId == categoryResult.Id)
+                    .Where(_ => _.categoryId == categoryResult.Id)
                     .OrderBy(_ => _.supplierName)
                     .Select(_ => new NomenclatureCategoryIndexDataItem.SupplierInfo()
                     {
