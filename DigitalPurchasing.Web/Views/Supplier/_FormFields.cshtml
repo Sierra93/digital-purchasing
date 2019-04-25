@@ -109,10 +109,7 @@
         <div class="col-md-3">
             <div class="form-group">
                 <label asp-for="Supplier.Phone" class="control-label"></label>
-                <div class="input-group">
-                    <div class="input-group-addon">+7</div>
-                    <input asp-for="Supplier.Phone" class="form-control" data-phone="" />
-                </div>
+                <input asp-for="Supplier.Phone" class="form-control" />
                 <span asp-validation-for="Supplier.Phone" class="text-danger"></span>
             </div>
         </div>

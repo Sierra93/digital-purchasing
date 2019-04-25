@@ -202,7 +202,7 @@ namespace DigitalPurchasing.Services
                 entity.Note = model.Note;
                 entity.OfferCurrency = model.OfferCurrency;
                 entity.PaymentDeferredDays = model.PaymentDeferredDays;
-                entity.Phone = model.Phone.CleanPhoneNumber()?.Substring(model.Phone.Length - 10);
+                entity.Phone = model.Phone.CleanPhoneNumber();
                 entity.SupplierType = model.SupplierType;
 
                 _db.SaveChanges();
@@ -238,7 +238,7 @@ namespace DigitalPurchasing.Services
                 Note = model.Note,
                 OfferCurrency = model.OfferCurrency,
                 PaymentDeferredDays = model.PaymentDeferredDays,
-                Phone = model.Phone.CleanPhoneNumber()?.LastSymbols(10),
+                Phone = model.Phone.CleanPhoneNumber(),
                 SupplierType = model.SupplierType
             });
             _db.SaveChanges();
