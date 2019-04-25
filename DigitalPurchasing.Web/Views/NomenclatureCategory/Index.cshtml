@@ -8,6 +8,12 @@
 <div class="btn-group">
     <a asp-action="Create" class="btn btn-default">Создать</a>
     <a asp-action="Template" class="btn btn-default">Скачать шаблон</a>
+    <form method="post" enctype="multipart/form-data" asp-action="UploadTemplate" class="btn btn-default btn-file">
+        <label>
+            Загрузить заполненный шаблон
+            <input type="file" style="display: none;" name="file">
+        </label>
+    </form>
 </div>
 
 <div id="app">
