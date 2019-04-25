@@ -131,7 +131,7 @@
                         for (var i = 0; i < data.length; i++) {
                             supplierColumnsCount = Math.max(supplierColumnsCount, data[i].suppliers.length);
                             for (var j = 0; j < data[i].suppliers.length; j++) {
-                                data[i]['_supplierCol_' + j] = data[i].suppliers[j];
+                                data[i]['_supplierCol_' + j] = data[i].suppliers[j].name;
                             }
                         }
 

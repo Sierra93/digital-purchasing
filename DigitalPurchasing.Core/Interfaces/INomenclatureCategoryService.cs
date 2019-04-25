@@ -26,7 +26,13 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class NomenclatureCategoryIndexDataItem : NomenclatureCategoryVm
     {
-        public List<string> Suppliers = new List<string>();
+        public class SupplierInfo
+        {
+            public Guid Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        public List<SupplierInfo> Suppliers = new List<SupplierInfo>();
     }
 
     public class NomenclatureCategoryIndexData : BaseDataResponse<NomenclatureCategoryIndexDataItem>

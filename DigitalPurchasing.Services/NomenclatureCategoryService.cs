@@ -25,14 +25,38 @@ namespace DigitalPurchasing.Services
 
             var qry =  _db.NomenclatureCategories.Where(q => !q.IsDeleted).Include(q => q.Parent).AsNoTracking();
             var total = qry.Count();
-            var orderedResults = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}");
-            var result = orderedResults.Skip((page-1)*perPage).Take(perPage).ProjectToType<NomenclatureCategoryIndexDataItem>().ToList();
+            qry = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}")
+                .Skip((page - 1) * perPage)
+                .Take(perPage);
+            var result = qry.ProjectToType<NomenclatureCategoryIndexDataItem>().ToList();
+
+            var supplier2nomCategories = (from ncat in qry
+                                          join n in _db.Nomenclatures on ncat.Id equals n.CategoryId
+                                          join na in _db.NomenclatureAlternatives on n.Id equals na.NomenclatureId
+                                          join nal in _db.NomenclatureAlternativeLinks on na.Id equals nal.AlternativeId
+                                          join s in _db.Suppliers on nal.SupplierId equals s.Id                                          
+                                          where !n.IsDeleted
+                                          group new
+                                          {
+                                              supplierId = s.Id,
+                                              supplierName = s.Name,
+                                              n.CategoryId
+                                          } by new { s.Id, n.CategoryId } into g
+                                          select g.FirstOrDefault()).ToList();
 
             foreach (var categoryResult in result)
             {
                 categoryResult.FullName = FullCategoryName(categoryResult.Id);
 
-                categoryResult.Suppliers = Enumerable.Repeat("", 50).Select(_ => "Поставщик 9").ToList();// new List<string>() { "Подшипник ООО", "Поставщик 9", "Поставщик 11" };
+                categoryResult.Suppliers = supplier2nomCategories
+                    .Where(_ => _.CategoryId == categoryResult.Id)
+                    .OrderBy(_ => _.supplierName)
+                    .Select(_ => new NomenclatureCategoryIndexDataItem.SupplierInfo()
+                    {
+                        Id = _.supplierId,
+                        Name = _.supplierName
+                    })                    
+                    .ToList();
             }
 
             return new NomenclatureCategoryIndexData
