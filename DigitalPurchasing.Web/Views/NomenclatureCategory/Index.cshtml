@@ -17,6 +17,7 @@
               pagination-path=""
               no-data-template="Нет данных"
               :css="css"
+              @@vuetable:load-success="loadSuccess"
               @@vuetable:pagination-data="onPaginationData">
         <div slot="slot-actions" slot-scope="props">
             <div class="btn-group" role="group" aria-label="...">
@@ -58,27 +59,7 @@
                     return {
                         css: cssTable,
                         fields: [
-                            {
-                                title: 'Название',
-                                name: 'name',
-                                sortField: 'Name'
-                            },
-                            {
-                                title: 'Родитель',
-                                name: 'parentName',
-                                sortField: 'ParentName'
-                            },
-                            {
-                                title: 'Полное название',
-                                name: 'fullName',
-                                sortField: 'FullName'
-                            },
-                            {
-                                name: 'slot-actions',
-                                title: 'Действия',
-                                titleClass: 'text-center',
-                                dataClass: 'text-center'
-                            }
+                            // All fields will be added dynamically
                         ],
                         sortOrder: [
                             {
@@ -117,6 +98,51 @@
                     },
                     deleteCancel: function() {
                         this.modalDelete = false;
+                    },
+                    loadSuccess: function (serverData) {
+                        this.fields = [
+                            {
+                                title: 'Название',
+                                name: 'name',
+                                sortField: 'Name'
+                            },
+                            {
+                                title: 'Родитель',
+                                name: 'parentName',
+                                sortField: 'ParentName'
+                            },
+                            {
+                                title: 'Полное название',
+                                name: 'fullName',
+                                sortField: 'FullName',
+                                dataClass: 'text-nowrap'
+                            },
+                            {
+                                name: 'slot-actions',
+                                title: 'Действия',
+                                titleClass: 'text-center',
+                                dataClass: 'text-center'
+                            }
+                        ];
+
+                        var supplierColumnsCount = 0;
+
+                        var data = serverData.data.data;
+                        for (var i = 0; i < data.length; i++) {
+                            supplierColumnsCount = Math.max(supplierColumnsCount, data[i].suppliers.length);
+                            for (var j = 0; j < data[i].suppliers.length; j++) {
+                                data[i]['_supplierCol_' + j] = data[i].suppliers[j];
+                            }
+                        }
+
+                        for (var i = 0; i < supplierColumnsCount; i++) {
+                            this.fields.push({
+                                title: 'Поставщик ' + (i + 1),
+                                name: '_supplierCol_' + i,
+                                titleClass: 'text-nowrap',
+                                dataClass: 'text-nowrap'
+                            });
+                        }
                     }
                 }
             });

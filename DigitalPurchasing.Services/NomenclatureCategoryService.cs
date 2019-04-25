@@ -31,6 +31,8 @@ namespace DigitalPurchasing.Services
             foreach (var categoryResult in result)
             {
                 categoryResult.FullName = FullCategoryName(categoryResult.Id);
+
+                categoryResult.Suppliers = Enumerable.Repeat("", 50).Select(_ => "Поставщик 9").ToList();// new List<string>() { "Подшипник ООО", "Поставщик 9", "Поставщик 11" };
             }
 
             return new NomenclatureCategoryIndexData
