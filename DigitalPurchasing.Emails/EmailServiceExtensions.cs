@@ -48,6 +48,19 @@ namespace DigitalPurchasing.Emails
 
             var until = DateTime.UtcNow.AddDays(3).ToRussianStandardTime();
 
+            string toName = supplierContact.FirstName;
+
+            if (string.IsNullOrWhiteSpace(toName))
+            {
+                toName = supplierContact.LastName;
+            }
+            else
+            {
+                toName += string.IsNullOrWhiteSpace(supplierContact.Patronymic)
+                    ? string.Empty
+                    : supplierContact.Patronymic;
+            }
+
             var model = new RFQEmail
             {
                 From =
@@ -57,7 +70,7 @@ namespace DigitalPurchasing.Emails
                     Company = userInfo.Company,
                 },
                 Until = until,
-                ToName = supplierContact.LastName
+                ToName = toName
             };
 
             var htmlResult = await GetHtmlString(model);
