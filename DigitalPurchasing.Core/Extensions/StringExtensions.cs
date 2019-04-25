@@ -20,6 +20,9 @@ namespace DigitalPurchasing.Core.Extensions
             return new string(str.Where(char.IsDigit).ToArray());
         }
 
+        public static string LastSymbols(this string str, int symbolsNumber) =>
+            str?.Substring(Math.Max(0, str.Length - symbolsNumber));
+
         public static string FormatPhoneNumber(this string str)
         {
             if (string.IsNullOrEmpty(str)) return string.Empty;
