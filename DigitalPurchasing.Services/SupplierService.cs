@@ -121,7 +121,7 @@ namespace DigitalPurchasing.Services
         public Guid AddContactPerson(SupplierContactPersonVm vm)
         {
             var contactPerson = vm.Adapt<SupplierContactPerson>();
-            contactPerson.PhoneNumber = contactPerson.PhoneNumber.CleanPhoneNumber()?.LastSymbols(10);
+            contactPerson.MobilePhoneNumber = contactPerson.MobilePhoneNumber.CleanPhoneNumber()?.LastSymbols(10);
             var entry = _db.SupplierContactPersons.Add(contactPerson);
             _db.SaveChanges();
             return entry.Entity.Id;
@@ -136,7 +136,7 @@ namespace DigitalPurchasing.Services
             entity.Patronymic = vm.Patronymic;
             entity.UseForRequests = vm.UseForRequests;
             entity.JobTitle = vm.JobTitle;
-            entity.PhoneNumber = vm.PhoneNumber.CleanPhoneNumber()?.LastSymbols(10);
+            entity.MobilePhoneNumber = vm.MobilePhoneNumber.CleanPhoneNumber()?.LastSymbols(10);
             _db.SaveChanges();
             return entity.Id;
         }

@@ -271,7 +271,7 @@ namespace DigitalPurchasing.Web.Controllers
                             FirstName = item.ContactFirstName,
                             LastName = item.ContactLastName,
                             JobTitle = item.ContactJobTitle,
-                            PhoneNumber = item.ContactMobilePhone,
+                            MobilePhoneNumber = item.ContactMobilePhone,
                         })
                     : null;
 

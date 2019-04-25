@@ -28,7 +28,7 @@ namespace DigitalPurchasing.Web.ViewModels.Supplier
         public string Patronymic { get; set; }
 
         [DisplayName("Моб. телефон")]
-        public string PhoneNumber { get; set; }
+        public string MobilePhoneNumber { get; set; }
 
         [DisplayName("Использовать для отправки запросов и получения КП?")]
         public bool UseForRequests { get; set; }

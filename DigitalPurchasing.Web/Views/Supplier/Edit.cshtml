@@ -93,7 +93,7 @@
                                 <td>@person.FirstName</td>
                                 <td>@person.Patronymic</td>
                                 <td>@person.Email</td>
-                                <td>@person.PhoneNumber.FormatPhoneNumber()</td>
+                                <td>@person.MobilePhoneNumber.FormatPhoneNumber()</td>
                                 <td>@(person.UseForRequests ? "Да" : "Нет")</td>
                                 <td>
                                     <a asp-action="EditContactPerson" asp-route-personId="@person.Id"><i class="far fa-edit"></i></a>

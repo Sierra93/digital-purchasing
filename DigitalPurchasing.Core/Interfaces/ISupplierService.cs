@@ -84,7 +84,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public string JobTitle { get; set; }
         public string Patronymic { get; set; }
-        public string PhoneNumber { get; set; }
+        public string MobilePhoneNumber { get; set; }
 
         public Guid SupplierId { get; set; }
 

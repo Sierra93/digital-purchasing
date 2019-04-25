@@ -1,4 +1,5 @@
-@model DigitalPurchasing.Web.ViewModels.Supplier.SupplierContactPersonEditVm
+@using DigitalPurchasing.Web.ViewModels.Supplier
+@model SupplierContactPersonEditVm
 
 @{
     var isEdit = Model.Id != Guid.Empty;
@@ -49,12 +50,12 @@
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="PhoneNumber" class="control-label"></label>
+                <label asp-for="MobilePhoneNumber" class="control-label"></label>
                 <div class="input-group">
                     <div class="input-group-addon">+7</div>
-                    <input asp-for="PhoneNumber" class="form-control" />
+                    <input asp-for="MobilePhoneNumber" class="form-control" />
                 </div>
-                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                <span asp-validation-for="MobilePhoneNumber" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <div class="checkbox">
@@ -77,7 +78,7 @@
     <script>
         (function() {
             $(document).ready(function() {
-                $('#PhoneNumber').inputmask("(999) 999 99 99");  //static mask
+                $('#@(nameof(SupplierContactPersonEditVm.MobilePhoneNumber))').inputmask("(999) 999 99 99");  //static mask
             });
         })()
     </script>
