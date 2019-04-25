@@ -189,16 +189,18 @@ namespace DigitalPurchasing.Web.Controllers
             var uomsMass = datas.Select(q => q.UomMass);
             var uomsResource = datas.Select(q => q.ResourceUom);
             var uomsResourceBatch = datas.Select(q => q.ResourceBatchUom);
-            var allUoms = uoms.Union(uomsMass).Union(uomsResource).Union(uomsResourceBatch).Distinct().ToList();
+            var packUoms = datas.Select(q => q.PackUom);
+            var allUoms = uoms.Union(uomsMass).Union(uomsResource).Union(uomsResourceBatch).Union(packUoms)
+                .Where(q => !string.IsNullOrWhiteSpace(q)).Distinct().ToList();
 
-            var dbUoms = new Dictionary<string, Guid>();
+            var dbUoms = new List<Tuple<string, Guid>>();
 
             foreach (var uom in allUoms)
             {
                 var result = _uomService.CreateOrUpdate(uom);
-                if (!dbUoms.ContainsValue(result.Id))
+                if (!dbUoms.Any(_ => _.Item2 == result.Id))
                 {
-                    dbUoms.Add(uom, result.Id);
+                    dbUoms.Add(new Tuple<string, Guid>(uom, result.Id));
                 }
             }
 
@@ -219,19 +221,23 @@ namespace DigitalPurchasing.Web.Controllers
                 }
             }
 
+            var el = new Tuple<string, Guid>("", Guid.NewGuid())?.Item2;
+
             var nomenclatures = datas.Select(data => new NomenclatureVm
             {
                 Name = data.Name,
                 NameEng =  data.NameEng,
                 Code = data.Code,
-                BatchUomId = dbUoms.First(q => q.Key.Equals(data.Uom, StringComparison.InvariantCultureIgnoreCase)).Value,
-                MassUomId = dbUoms.First(q => q.Key.Equals(data.UomMass, StringComparison.InvariantCultureIgnoreCase)).Value,
-                ResourceUomId = dbUoms.First(q => q.Key.Equals(data.ResourceUom, StringComparison.InvariantCultureIgnoreCase)).Value,
-                ResourceBatchUomId = dbUoms.First(q => q.Key.Equals(data.ResourceBatchUom, StringComparison.InvariantCultureIgnoreCase)).Value,
+                BatchUomId = dbUoms.First(q => q.Item1.Equals(data.Uom, StringComparison.InvariantCultureIgnoreCase)).Item2,
+                MassUomId = dbUoms.First(q => q.Item1.Equals(data.UomMass, StringComparison.InvariantCultureIgnoreCase)).Item2,
+                ResourceUomId = dbUoms.First(q => q.Item1.Equals(data.ResourceUom, StringComparison.InvariantCultureIgnoreCase)).Item2,
+                ResourceBatchUomId = dbUoms.First(q => q.Item1.Equals(data.ResourceBatchUom, StringComparison.InvariantCultureIgnoreCase)).Item2,
                 CategoryId = dbCategories.First(q => q.Value.Equals(
                     data.Category.Split('>', StringSplitOptions.RemoveEmptyEntries).Last(), StringComparison.InvariantCultureIgnoreCase)).Key,
                 MassUomValue = data.UomMassValue,
-                ResourceUomValue = data.ResourceUomValue
+                ResourceUomValue = data.ResourceUomValue,
+                PackUomId = dbUoms.FirstOrDefault(q => q.Item1.Equals(data.PackUom, StringComparison.InvariantCultureIgnoreCase))?.Item2,
+                PackUomValue = data.PackUomValue ?? 0
             }).GroupBy(q => q.Name).Select(q => q.First()).ToList();
 
             var companyId = User.CompanyId();

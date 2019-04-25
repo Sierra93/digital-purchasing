@@ -25,19 +25,22 @@ using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.ExcelReader;
 using DigitalPurchasing.Web.Jobs;
 using Hangfire;
-using Microsoft.AspNetCore.Localization;
-using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
+using DigitalPurchasing.Web.Core.ModelBinders;
+using Microsoft.Extensions.Logging;
 
 namespace DigitalPurchasing.Web
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration, IHostingEnvironment environment)
+        private readonly ILoggerFactory _loggerFactory;
+
+        public Startup(IConfiguration configuration, IHostingEnvironment environment, ILoggerFactory loggerFactory)
         {
             Configuration = configuration;
             Environment = environment;
+            _loggerFactory = loggerFactory;
         }
 
         public IHostingEnvironment Environment { get; }
@@ -76,7 +79,10 @@ namespace DigitalPurchasing.Web
 
             services.AddMemoryCache();
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2).AddRazorPagesOptions(options =>
+            services.AddMvc(config =>
+            {
+                config.ModelBinderProviders.Insert(0, new InvariantDecimalModelBinderProvider(_loggerFactory));
+            }).SetCompatibilityVersion(CompatibilityVersion.Version_2_2).AddRazorPagesOptions(options =>
             {
                 options.AllowAreas = true;
                 options.Conventions.AuthorizeAreaFolder("Identity", "/Account/Manage");
