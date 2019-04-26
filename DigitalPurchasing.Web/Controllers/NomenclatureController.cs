@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
-using DigitalPurchasing.ExcelReader;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.Nomenclature;
@@ -21,17 +21,20 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly INomenclatureCategoryService _nomenclatureCategoryService;
         private readonly IDictionaryService _dictionaryService;
         private readonly IUomService _uomService;
+        private readonly ICompanyService _companyService;
 
         public NomenclatureController(
             INomenclatureService nomenclatureService,
             INomenclatureCategoryService nomenclatureCategoryService,
             IDictionaryService dictionaryService,
-            IUomService uomService)
+            IUomService uomService,
+            ICompanyService companyService)
         {
             _nomenclatureService = nomenclatureService;
             _nomenclatureCategoryService = nomenclatureCategoryService;
             _dictionaryService = dictionaryService;
             _uomService = uomService;
+            _companyService = companyService;
         }
 
         public IActionResult Index() => View();
@@ -162,8 +165,71 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpGet]
         public IActionResult Template()
         {
-            var excelTemplate = new ExcelTemplate();
+            var excelTemplate = new ExcelReader.ExcelTemplate();
             return File(excelTemplate.Build(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "template.xlsx");
+        }
+
+        [HttpGet]
+        public IActionResult TemplateWithAlternatives()
+        {
+            var nomenclature = _nomenclatureService.GetWholeNomenclature();
+
+            var excelTemplate = new ExcelReader.NomenclatureWithAlternativesTemplate.ExcelTemplate();
+            var data = new List<object[]>();
+
+            var companyData = _companyService.GetByUser(User.Id());
+
+            foreach (var nom in nomenclature.Nomenclatures)
+            {
+                data.Add(new object[]
+                {
+                    "Базовая номенклатура",
+                    string.Empty,
+                    companyData.Name,
+                    nom.Key.CategoryName,
+                    nom.Key.Code,
+                    nom.Key.Name,
+                    nom.Key.NameEng,
+                    string.Empty,
+                    string.Empty,
+                    nom.Key.BatchUomName,
+                    nom.Key.MassUomName,
+                    nom.Key.MassUomValue,
+                    "TODO",
+                    "TODO",
+                    nom.Key.ResourceUomName,
+                    nom.Key.ResourceUomValue,
+                    nom.Key.ResourceBatchUomName
+                });
+
+                foreach (var alt in nom.Value.Data)
+                {
+                    var isCustomer = alt.ClientType == (int)ClientType.Customer;
+
+                    data.Add(new object[]
+                    {
+                        isCustomer ? "Клиент" : "Поставщик",
+                        alt.ClientPublicId,
+                        alt.ClientName,
+                        nom.Key.CategoryName,
+                        nom.Key.Code,
+                        nom.Key.Name,
+                        nom.Key.NameEng,
+                        alt.Code,
+                        alt.Name,
+                        alt.BatchUomName,
+                        alt.MassUomName,
+                        alt.MassUomValue,
+                        "TODO",
+                        "TODO",
+                        alt.ResourceUomName,
+                        alt.ResourceUomValue,
+                        nom.Key.ResourceBatchUomName
+                    });
+                }
+            }
+
+            return File(excelTemplate.Build(data.ToArray()), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "template.xlsx");
         }
 
         [HttpPost]
@@ -181,7 +247,7 @@ namespace DigitalPurchasing.Web.Controllers
             using (var output = System.IO.File.Create(filePath))
                 await file.CopyToAsync(output);
 
-            var excelTemplate = new ExcelTemplate();
+            var excelTemplate = new ExcelReader.ExcelTemplate();
 
             var datas = excelTemplate.Read(filePath);
 

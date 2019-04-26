@@ -71,6 +71,103 @@ namespace DigitalPurchasing.Services
             };
         }
 
+        public NomenclatureWholeData GetWholeNomenclature()
+        {
+            var qry = from n in _db.Nomenclatures.Where(q => !q.IsDeleted)
+                      join na in _db.NomenclatureAlternatives on n.Id equals na.NomenclatureId into g
+                      from possibleNa in g.DefaultIfEmpty()
+                      join nal in _db.NomenclatureAlternativeLinks on possibleNa.Id equals nal.AlternativeId into g2
+                      from possibleNal in g2.DefaultIfEmpty()
+                      select new
+                      {
+                          nomId = n.Id,
+                          nomName = n.Name,
+                          nomNameEng = n.NameEng,
+                          nomCode = n.Code,
+                          nomCatName = n.Category.Name,
+                          batchUomName = n.BatchUom.Name,
+                          n.MassUomValue,
+                          massUomName = n.MassUom.Name,
+                          packUomName = n.PackUom.Name,
+                          n.PackUomValue,
+                          resourceUomName = n.ResourceUom.Name,
+                          n.ResourceUomValue,
+                          resourceBatchUomName = n.ResourceBatchUom.Name,
+                          alt = possibleNa == null
+                              ? null
+                              : new
+                              {
+                                  code = possibleNa.Code,
+                                  name = possibleNa.Name,
+                                  batchUomName = possibleNa.BatchUom.Name,
+                                  possibleNa.MassUomValue,
+                                  massUomName = possibleNa.MassUom.Name,
+                                  resourceUomName = possibleNa.ResourceUom.Name,
+                                  possibleNa.ResourceUomValue,
+                                  resourceBatchUomName = possibleNa.ResourceBatchUom.Name,
+                              },
+                          customer = possibleNal == null
+                              ? null
+                              : new
+                              {
+                                  name = possibleNal.Customer.Name,
+                                  id = possibleNal.CustomerId,
+                                  publicId = possibleNal.Customer != null ? possibleNal.Customer.PublicId : 0,
+                              },
+                          supplier = possibleNal == null
+                              ? null
+                              : new
+                              {
+                                  name = possibleNal.Supplier.Name,
+                                  id = possibleNal.SupplierId,
+                                  publicId = possibleNal.Supplier != null ? possibleNal.Supplier.PublicId : 0
+                              }
+                      };
+
+            var qryResult = qry.ToList();
+
+            var result = new NomenclatureWholeData();
+
+            foreach (var item in qryResult.GroupBy(_ => _.nomId))
+            {
+                var nom = item.First(_ => _.nomId == item.Key);
+                var nomenclature = new NomenclatureIndexDataItem()
+                {
+                    CategoryName = nom.nomCatName,
+                    Id = nom.nomId,
+                    Code = nom.nomCode,
+                    Name = nom.nomName,
+                    NameEng = nom.nomNameEng,
+                    BatchUomName = nom.batchUomName,
+                    MassUomName = nom.massUomName,
+                    MassUomValue = nom.MassUomValue,
+                    ResourceUomName = nom.resourceUomName,
+                    ResourceUomValue = nom.ResourceUomValue,
+                    ResourceBatchUomName = nom.resourceBatchUomName,
+                };
+                var alternatives = new NomenclatureDetailsData()
+                {
+                    Data = item.Where(_ => _.alt != null && (_.customer != null || _.supplier != null)).Select(_ => new NomenclatureDetailsDataItem()
+                    {
+                        Name = _.alt.name,
+                        Code = _.alt.code,
+                        BatchUomName = _.alt.batchUomName,
+                        MassUomName = _.alt.massUomName,
+                        MassUomValue = _.alt.MassUomValue,
+                        ResourceUomName = _.alt.resourceUomName,
+                        ResourceUomValue = _.alt.ResourceUomValue,
+                        ResourceBatchUomName = _.alt.resourceBatchUomName,
+                        ClientName = _.customer?.id != null ? _.customer?.name : _.supplier?.name,
+                        ClientType = (int)(_.customer?.id != null ? ClientType.Customer : ClientType.Supplier),
+                        ClientPublicId = _.customer?.id != null ? _.customer?.publicId : _.supplier?.publicId
+                    }).ToList()
+                };
+                result.Nomenclatures.Add(nomenclature, alternatives);
+            }
+
+            return result;
+        }
+
         public NomenclatureDetailsData GetDetailsData(Guid nomId, int page, int perPage, string sortField, bool sortAsc)
         {
             if (string.IsNullOrEmpty(sortField))

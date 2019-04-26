@@ -16,6 +16,7 @@ namespace DigitalPurchasing.Core.Interfaces
         void Delete(Guid id);
         NomenclatureAlternativeVm GetAlternativeById(Guid id);
         void UpdateAlternative(NomenclatureAlternativeVm model);
+        NomenclatureWholeData GetWholeNomenclature();
 
         void AddNomenclatureForCustomer(Guid prItemId);
         void AddNomenclatureForSupplier(Guid soItemId);
@@ -27,12 +28,19 @@ namespace DigitalPurchasing.Core.Interfaces
             List<(Guid NomenclatureId, string Name, string Code, Guid? Uom)> alts);
     }
 
+    public class NomenclatureWholeData
+    {
+        public IDictionary<NomenclatureIndexDataItem, NomenclatureDetailsData> Nomenclatures { get; set; } =
+            new Dictionary<NomenclatureIndexDataItem, NomenclatureDetailsData>();
+    }
+
     public class NomenclatureDetailsDataItem
     {
         public Guid Id { get; set; }
 
         public int ClientType { get; set; }
         public string ClientName { get; set; }
+        public int? ClientPublicId { get; set; }
 
         public string Code { get; set; }
         public string Name { get; set; }
