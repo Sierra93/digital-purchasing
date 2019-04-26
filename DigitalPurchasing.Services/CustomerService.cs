@@ -13,8 +13,13 @@ namespace DigitalPurchasing.Services
     {
         private readonly ApplicationDbContext _db;
         private const StringComparison StrComparison = StringComparison.InvariantCultureIgnoreCase;
+        private readonly ICounterService _counterService;
 
-        public CustomerService(ApplicationDbContext db) => _db = db;
+        public CustomerService(ApplicationDbContext db, ICounterService counterService)
+        {
+            _db = db;
+            _counterService = counterService;
+        }
 
         public CustomerAutocomplete Autocomplete(AutocompleteBaseOptions options)
         {
@@ -35,9 +40,13 @@ namespace DigitalPurchasing.Services
             return result;
         }
 
-        public Guid CreateCustomer(string name)
+        public Guid CreateCustomer(string name, Guid ownerId)
         {
-            var entry = _db.Customers.Add(new Customer { Name = name });
+            var entry = _db.Customers.Add(new Customer
+            {
+                Name = name,
+                PublicId = _counterService.GetCustomerNextId(ownerId)
+            });
             _db.SaveChanges();
             return entry.Entity.Id;
         }

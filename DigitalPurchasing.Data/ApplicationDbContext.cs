@@ -54,6 +54,7 @@ namespace DigitalPurchasing.Data
         public DbSet<QRCounter> QRCounters { get; set; }
         public DbSet<CLCounter> CLCounters { get; set; }
         public DbSet<SOCounter> SOCounters { get; set; }
+        public DbSet<CustomerCounter> CustomerCounters { get; set; }
 
         #endregion
 
@@ -141,6 +142,7 @@ namespace DigitalPurchasing.Data
             builder.Entity<Customer>(e =>
             {
                 e.HasMany(q => q.Requests).WithOne(q => q.Customer).HasForeignKey(q => q.CustomerId).OnDelete(DeleteBehavior.Restrict);
+                e.HasIndex(q => new { q.OwnerId, q.PublicId }).IsUnique();
             });
 
             builder.Entity<PurchaseRequest>(e =>
@@ -199,6 +201,8 @@ namespace DigitalPurchasing.Data
                 e.HasOne(q => q.Variant).WithMany().HasForeignKey(q => q.VariantId).OnDelete(DeleteBehavior.Restrict);
                 e.HasOne(q => q.Supplier).WithMany().HasForeignKey(q => q.SupplierId).OnDelete(DeleteBehavior.Restrict);
             });
+
+            builder.Entity<CustomerCounter>().HasIndex(q => q.OwnerId).IsUnique();
 
             builder.Entity<Currency>(e =>
             {

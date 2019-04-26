@@ -201,7 +201,7 @@ namespace DigitalPurchasing.Services
 
             if (!pr.CustomerId.HasValue)
             {
-                pr.CustomerId = _customerService.CreateCustomer(pr.CustomerName);
+                pr.CustomerId = _customerService.CreateCustomer(pr.CustomerName, pr.OwnerId);
             }
 
             _db.PurchaseRequestItems.Where(q => q.PurchaseRequestId == id).BatchDelete();

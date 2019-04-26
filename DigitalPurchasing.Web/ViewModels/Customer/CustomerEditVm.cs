@@ -10,6 +10,9 @@ namespace DigitalPurchasing.Web.ViewModels.Customer
     {
         public Guid Id { get; set; }
 
+        [Display(Name = "Код клиента в Системе")]
+        public int PublicId { get; set; }
+
         [Required]
         [Display(Name = "Название")]
         public string Name { get; set; }

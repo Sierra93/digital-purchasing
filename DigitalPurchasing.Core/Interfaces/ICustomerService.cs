@@ -6,7 +6,7 @@ namespace DigitalPurchasing.Core.Interfaces
     public interface ICustomerService
     {
         CustomerAutocomplete Autocomplete(AutocompleteBaseOptions options);
-        Guid CreateCustomer(string name);
+        Guid CreateCustomer(string name, Guid ownerId);
         string GetNameById(Guid id);
         CustomerVm GetById(Guid id);
         CustomerIndexData GetData(int page, int perPage, string sortField, bool sortAsc, string search);
@@ -29,6 +29,7 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
+        public int PublicId { get; set; }
     }
 
     public class CustomerIndexData : BaseDataResponse<CustomerIndexDataItem>

@@ -84,5 +84,7 @@ namespace DigitalPurchasing.Services
         public int GetCLNextId(Guid? ownerId = null) => GetNextId<CLCounter>(ownerId);
 
         public int GetSONextId(Guid? ownerId = null) => GetNextId<SOCounter>(ownerId);
+
+        public int GetCustomerNextId(Guid ownerId) => GetNextId<CustomerCounter>(ownerId);
     }
 }
