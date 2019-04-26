@@ -20,7 +20,6 @@
     <vuetable ref="vuetable"
               api-url="@Url.Action("Data")"
               :fields="fields"
-              :sort-order="sortOrder"
               pagination-path=""
               no-data-template="Нет данных"
               :css="css"
@@ -54,6 +53,22 @@
     </modal>
 </div>
 
+@section Styles {
+    <style type="text/css">
+        .w-100px {
+            width: 100px;
+        }
+        .minw-15px {
+            min-width: 15px;
+        }
+        .bg-white {
+            background-color: white;
+        }
+        .border-0 {
+            border: 0 !important;
+        }
+    </style>
+}
 
 @section Scripts {
     <script>
@@ -67,12 +82,6 @@
                         css: cssTable,
                         fields: [
                             // All fields will be added dynamically
-                        ],
-                        sortOrder: [
-                            {
-                                field: 'Name',
-                                direction: 'asc'
-                            }
                         ],
                         modalDelete: false,
                         modalData: {
@@ -107,49 +116,63 @@
                         this.modalDelete = false;
                     },
                     loadSuccess: function (serverData) {
-                        this.fields = [
-                            {
-                                title: 'Название',
-                                name: 'name',
-                                sortField: 'Name'
-                            },
-                            {
-                                title: 'Родитель',
-                                name: 'parentName',
-                                sortField: 'ParentName'
-                            },
-                            {
-                                title: 'Полное название',
-                                name: 'fullName',
-                                sortField: 'FullName',
-                                dataClass: 'text-nowrap'
-                            },
-                            {
-                                name: 'slot-actions',
-                                title: 'Действия',
-                                titleClass: 'text-center',
-                                dataClass: 'text-center'
-                            }
-                        ];
-
-                        var supplierColumnsCount = 0;
+                        this.fields = [{
+                            name: 'slot-actions',
+                            title: 'Действия',
+                            titleClass: 'text-center w-100px',
+                            dataClass: 'text-center'
+                        }];
 
                         var data = serverData.data.data;
-                        for (var i = 0; i < data.length; i++) {
-                            supplierColumnsCount = Math.max(supplierColumnsCount, data[i].suppliers.length);
-                            for (var j = 0; j < data[i].suppliers.length; j++) {
-                                data[i]['_supplierCol_' + j] = data[i].suppliers[j].name;
-                            }
-                        }
 
-                        for (var i = 0; i < supplierColumnsCount; i++) {
-                            this.fields.push({
-                                title: 'Поставщик ' + (i + 1),
-                                name: '_supplierCol_' + i,
-                                titleClass: 'text-nowrap',
-                                dataClass: 'text-nowrap'
-                            });
-                        }
+                        (function ($this) {
+                            var categoryColumnsCount = 0;
+
+                            for (var i = 0; i < data.length; i++) {
+                                categoryColumnsCount = Math.max(categoryColumnsCount, data[i].categoriyHiearchy.length);
+                                for (var j = 0; j < data[i].categoriyHiearchy.length; j++) {
+                                    data[i]['_categoryCol_' + j] = data[i].categoriyHiearchy[j].name;
+                                }
+                            }
+
+                            for (var i = 0; i < categoryColumnsCount; i++) {
+                                $this.fields.push({
+                                    title: i == 0 ? 'Основная категория' : 'Подкатегория ' + i,
+                                    name: '_categoryCol_' + i,
+                                    titleClass: 'text-nowrap',
+                                    dataClass: 'text-nowrap'
+                                });
+                            }
+                        })(this);
+
+                        (function ($this) {
+                            var supplierColumnsCount = 0;
+
+                            for (var i = 0; i < data.length; i++) {
+                                supplierColumnsCount = Math.max(supplierColumnsCount, data[i].suppliers.length);
+                                for (var j = 0; j < data[i].suppliers.length; j++) {
+                                    data[i]['_supplierCol_' + j] = data[i].suppliers[j].name;
+                                }
+                            }
+
+                            if (supplierColumnsCount > 0) {
+                                $this.fields.push({
+                                    title: '',
+                                    name: 'separator',
+                                    titleClass: 'minw-15px',
+                                    dataClass: 'bg-white border-0'
+                                });
+                            }
+
+                            for (var i = 0; i < supplierColumnsCount; i++) {
+                                $this.fields.push({
+                                    title: 'Поставщик ' + (i + 1),
+                                    name: '_supplierCol_' + i,
+                                    titleClass: 'text-nowrap',
+                                    dataClass: 'text-nowrap'
+                                });
+                            }
+                        })(this);
                     }
                 }
             });

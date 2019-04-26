@@ -66,8 +66,6 @@ namespace DigitalPurchasing.Services
 
             foreach (var categoryResult in result)
             {
-                categoryResult.FullName = FullCategoryName(categoryResult.Id);
-
                 categoryResult.Suppliers = supplier2nomCategories
                     .Where(_ => _.categoryId == categoryResult.Id)
                     .OrderBy(_ => _.supplierName)
@@ -77,6 +75,8 @@ namespace DigitalPurchasing.Services
                         Name = _.supplierName
                     })                    
                     .ToList();
+
+                categoryResult.CategoriyHiearchy = GetCategoryHierarchy(categoryResult.Id).ToList();
             }
 
             return new NomenclatureCategoryIndexData
@@ -90,16 +90,8 @@ namespace DigitalPurchasing.Services
 
         public string FullCategoryName(Guid categoryId)
         {
-            var category = _db.NomenclatureCategories.Find(categoryId);
-            var name = category.Name;
-
-            while (category.ParentId.HasValue)
-            {
-                category = _db.NomenclatureCategories.Find(category.ParentId);
-                name = category.Name + " > " + name;
-            }
-
-            return name;
+            var hierarchy = GetCategoryHierarchy(categoryId).ToList();
+            return string.Join(" > ", hierarchy.Select(_ => _.Name));
         }
 
         public NomenclatureCategoryBasicInfo GetParentCategory(Guid categoryId)
@@ -112,6 +104,21 @@ namespace DigitalPurchasing.Services
             }
 
             return category.Adapt<NomenclatureCategoryBasicInfo>();
+        }
+
+        private IEnumerable<NomenclatureCategoryBasicInfo> GetCategoryHierarchy(Guid categoryId)
+        {
+            var category = _db.NomenclatureCategories.Find(categoryId);
+
+            if (category.ParentId.HasValue)
+            {
+                foreach (var parent in GetCategoryHierarchy(category.ParentId.Value))
+                {
+                    yield return parent;
+                }
+            }
+
+            yield return category.Adapt<NomenclatureCategoryBasicInfo>();
         }
 
         public void Delete(Guid id)
@@ -162,10 +169,5 @@ namespace DigitalPurchasing.Services
             var result = _db.NomenclatureCategories.Where(q => !q.IsDeleted).Include(q => q.Parent).ProjectToType<NomenclatureCategoryVm>().ToList();
             return result;
         }
-    }
-
-    public class NomenclatureCategoryMappings : IRegister
-    {
-        public void Register(TypeAdapterConfig config) => config.NewConfig<NomenclatureCategory, NomenclatureCategoryVm>().Map(d => d.ParentName, s => s.Parent != null ? s.Parent.Name : null);
     }
 }

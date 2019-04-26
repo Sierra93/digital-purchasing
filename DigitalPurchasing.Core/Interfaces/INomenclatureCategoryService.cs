@@ -17,14 +17,10 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class NomenclatureCategoryVm : NomenclatureCategoryBasicInfo
     {
-        public Guid? ParentId { get; set; }
-
-        public string ParentName { get; set; }
-
         public string FullName { get; set; }
     }
 
-    public class NomenclatureCategoryIndexDataItem : NomenclatureCategoryVm
+    public class NomenclatureCategoryIndexDataItem : NomenclatureCategoryBasicInfo
     {
         public class SupplierInfo
         {
@@ -33,6 +29,7 @@ namespace DigitalPurchasing.Core.Interfaces
         }
 
         public List<SupplierInfo> Suppliers = new List<SupplierInfo>();
+        public List<NomenclatureCategoryBasicInfo> CategoriyHiearchy = new List<NomenclatureCategoryBasicInfo>();
     }
 
     public class NomenclatureCategoryIndexData : BaseDataResponse<NomenclatureCategoryIndexDataItem>
@@ -43,5 +40,6 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
+        public Guid? ParentId { get; set; }
     }
 }
