@@ -33,6 +33,7 @@
         <div class="col-xs-12">
             <vuetable ref="vuetable"
                       api-url="@Url.Action("Data")"
+                      :per-page="20"
                       :fields="fields"
                       :sort-order="sortOrder"
                       :query-params="getQueryParams"

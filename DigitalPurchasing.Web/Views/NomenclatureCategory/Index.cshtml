@@ -19,6 +19,7 @@
 <div id="app">
     <vuetable ref="vuetable"
               api-url="@Url.Action("Data")"
+              :per-page="20"
               :fields="fields"
               pagination-path=""
               no-data-template="Нет данных"
