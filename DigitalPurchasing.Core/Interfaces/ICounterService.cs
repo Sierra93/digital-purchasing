@@ -9,5 +9,6 @@ namespace DigitalPurchasing.Core.Interfaces
         int GetCLNextId(Guid? ownerId = null);
         int GetSONextId(Guid? ownerId = null);
         int GetCustomerNextId(Guid ownerId);
+        int GetSupplierNextId(Guid ownerId);
     }
 }

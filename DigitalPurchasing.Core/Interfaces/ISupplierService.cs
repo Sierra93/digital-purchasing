@@ -75,6 +75,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public string Phone { get; set; }
         public string Note { get; set; }
         public Guid? CategoryId { get; set; }
+        public int PublicId { get; set; }
     }
 
     public class SupplierContactPersonVm

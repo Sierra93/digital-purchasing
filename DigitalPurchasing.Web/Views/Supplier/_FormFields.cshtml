@@ -27,6 +27,16 @@
 </div>
 
 <div class="row">
+    @if (Model.Supplier != null && Model.Supplier.Id != default(Guid))
+    {
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="Supplier.PublicId" class="control-label"></label>
+            <input asp-for="Supplier.PublicId" class="form-control" readonly="readonly" />
+            <span asp-validation-for="Supplier.PublicId" class="text-danger"></span>
+        </div>
+    </div>
+    }
     <div class="col-md-3">
         <div class="form-group">
             <label asp-for="Supplier.ErpCode" class="control-label"></label>

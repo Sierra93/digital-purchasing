@@ -55,6 +55,7 @@ namespace DigitalPurchasing.Data
         public DbSet<CLCounter> CLCounters { get; set; }
         public DbSet<SOCounter> SOCounters { get; set; }
         public DbSet<CustomerCounter> CustomerCounters { get; set; }
+        public DbSet<SupplierCounter> SupplierCounters { get; set; }
 
         #endregion
 
@@ -167,6 +168,7 @@ namespace DigitalPurchasing.Data
                 e.HasMany(q => q.Offers).WithOne(q => q.Supplier).HasForeignKey(q => q.SupplierId).OnDelete(DeleteBehavior.Restrict);
                 e.HasMany(q => q.ContactPersons).WithOne(q => q.Supplier).HasForeignKey(q => q.SupplierId).OnDelete(DeleteBehavior.Restrict);
                 e.HasIndex(q => new { q.OwnerId, q.Inn }).IsUnique().HasFilter($"{nameof(Supplier.Name)} IS NOT NULL AND {nameof(Supplier.Inn)} IS NOT NULL");
+                e.HasIndex(q => new { q.OwnerId, q.PublicId }).IsUnique();
             });
 
             builder.Entity<SupplierOffer>(e =>
@@ -203,6 +205,7 @@ namespace DigitalPurchasing.Data
             });
 
             builder.Entity<CustomerCounter>().HasIndex(q => q.OwnerId).IsUnique();
+            builder.Entity<SupplierCounter>().HasIndex(q => q.OwnerId).IsUnique();
 
             builder.Entity<Currency>(e =>
             {
