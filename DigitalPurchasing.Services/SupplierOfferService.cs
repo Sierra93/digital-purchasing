@@ -195,6 +195,7 @@ namespace DigitalPurchasing.Services
                 var item = new SupplierOfferDetailsVm.Item(result.Items);
                 result.Items.Add(item);
 
+                item.Position = requestItem.Position;
                 item.Request.Code = requestItem.RawCode;
                 item.Request.Name = requestItem.RawName;
                 item.Request.Qty = requestItem.RawQty;

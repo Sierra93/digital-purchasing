@@ -99,7 +99,7 @@
                     </tr>
                 </tfoot>
                 <tbody>
-                    @foreach (var item in Model.Items)
+                    @foreach (var item in Model.Items.OrderBy(q => q.Position))
                     {
                         <tr>
                             <td>@item.Request.Code</td>
