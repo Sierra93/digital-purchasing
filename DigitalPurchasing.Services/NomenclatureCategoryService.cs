@@ -94,16 +94,10 @@ namespace DigitalPurchasing.Services
             return string.Join(" > ", hierarchy.Select(_ => _.Name));
         }
 
-        public NomenclatureCategoryBasicInfo GetParentCategory(Guid categoryId)
+        public NomenclatureCategoryBasicInfo GetTopParentCategory(Guid categoryId)
         {
-            var category = _db.NomenclatureCategories.Find(categoryId);
-
-            while (category.ParentId.HasValue)
-            {
-                category = _db.NomenclatureCategories.Find(category.ParentId);
-            }
-
-            return category.Adapt<NomenclatureCategoryBasicInfo>();
+            var hierarchy = GetCategoryHierarchy(categoryId).ToList();
+            return hierarchy.FirstOrDefault()?.Adapt<NomenclatureCategoryBasicInfo>();
         }
 
         private IEnumerable<NomenclatureCategoryBasicInfo> GetCategoryHierarchy(Guid categoryId)

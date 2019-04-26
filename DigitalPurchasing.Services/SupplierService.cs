@@ -92,7 +92,7 @@ namespace DigitalPurchasing.Services
                 var supplierCategoryIds = supplier2nomCategories
                     .Where(_ => _.supplierId == item.Id)
                     .Select(_ => _.CategoryId);
-                item.MainCategoriesCsv = string.Join(", ", supplierCategoryIds.Select(cId => _categoryService.GetParentCategory(cId).Name));
+                item.MainCategoriesCsv = string.Join(", ", supplierCategoryIds.Select(cId => _categoryService.GetTopParentCategory(cId).Name));
             }
 
             return new SupplierIndexData
