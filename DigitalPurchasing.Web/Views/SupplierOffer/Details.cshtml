@@ -116,11 +116,11 @@
                             <td class="align-right">@item.Offer.Price.ToString(Consts.Format.Money3)</td>
                             <td class="align-right">@item.Offer.TotalPrice.ToString(Consts.Format.Money2)</td>
 
-                            <td class="align-right">@item.Mass.TotalPricePerc.ToString("P1")</td>
+                            <td class="align-right">@item.Mass.TotalPricePerc.ToString("P0")</td>
                             <td class="align-right">@item.Mass.MassOf1BatchUom.ToString(Consts.Format.Money2)</td>
                             <td class="align-right">@item.Mass.MassUom</td>
                             <td class="align-right">@item.Mass.TotalMass.ToString(Consts.Format.Money2)</td>
-                            <td class="align-right">@item.Mass.TotalMassPerc.ToString("P1")</td>
+                            <td class="align-right">@item.Mass.TotalMassPerc.ToString("P0")</td>
 
                             @*<td>@item.ImportAndDelivery.CustomsDutyPerc.ToString("P1")</td>
                             <td>@item.ImportAndDelivery.MinCustomsDuty.ToString(Consts.Format.Money)</td>
@@ -133,9 +133,9 @@
                             <td>@item.Offer.Uom</td>
                             <td>@item.Request.Currency</td>
                             <td>@item.Offer.Currency</td>
-                            <td class="align-right">@item.Conversion.UomRatio.ToString(Consts.Format.Qty)</td>
-                            <td class="align-right">@item.Conversion.CurrencyExchangeRate.ToString(Consts.Format.Qty)</td>
-                            <td class="align-right">@item.Conversion.OfferQty.ToString(Consts.Format.Qty)</td>
+                            <td class="align-right">@item.Conversion.UomRatio.ToString(Consts.Format.Money3)</td>
+                            <td class="align-right">@item.Conversion.CurrencyExchangeRate.ToString(Consts.Format.Money2)</td>
+                            <td class="align-right">@item.Conversion.OfferQty.ToString(Consts.Format.Money2)</td>
                             <td class="align-right">@item.Conversion.OfferPrice.ToString(Consts.Format.Money2)</td>
                             <td class="align-right">@item.Conversion.OfferTotalPrice.ToString(Consts.Format.Money2)</td>
 
