@@ -232,6 +232,32 @@ namespace DigitalPurchasing.Web.Controllers
             return File(excelTemplate.Build(data.ToArray()), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "template.xlsx");
         }
 
+        public async Task<IActionResult> UploadTemplateWithAlternatives(IFormFile file)
+        {
+            if (file == null)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            var fileName = file.FileName;
+            var fileExt = Path.GetExtension(fileName);
+            var filePath = Path.GetTempFileName() + fileExt;
+
+            using (var output = System.IO.File.Create(filePath))
+                await file.CopyToAsync(output);
+
+            var excelTemplate = new ExcelReader.NomenclatureWithAlternativesTemplate.ExcelTemplate();
+
+            var datas = excelTemplate.Read(filePath);
+
+            foreach (var item in datas)
+            {
+                //_nomenclatureService.AddNomenclatureForSupplier
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
         [HttpPost]
         public async Task<IActionResult> UploadTemplate(IFormFile file)
         {

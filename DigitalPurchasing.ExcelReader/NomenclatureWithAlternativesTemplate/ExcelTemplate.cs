@@ -20,37 +20,37 @@ namespace DigitalPurchasing.ExcelReader.NomenclatureWithAlternativesTemplate
             public string AlternativesRowType { get; set; }
 
             [ExcelTableColumn(2)]
-            public string MainCategory { get; set; }
+            public string InternalCode { get; set; }
 
             [ExcelTableColumn(3)]
-            public string SubCategory1 { get; set; }
+            public string ClientName { get; set; }
 
             [ExcelTableColumn(4)]
-            public string SubCategory2 { get; set; }
+            public string CategoryName { get; set; }
 
             [ExcelTableColumn(5)]
-            public string OwnershipType { get; set; }
+            public string NomenclatureCode { get; set; }
 
             [ExcelTableColumn(6)]
-            public string Inn { get; set; }
+            public string NomenclatureName { get; set; }
 
             [ExcelTableColumn(7)]
-            public string ErpCode { get; set; }
+            public string NomenclatureEngName { get; set; }
 
             [ExcelTableColumn(8)]
-            public string SupplierType { get; set; }
+            public string AlternativeCode { get; set; }
 
             [ExcelTableColumn(9)]
-            public string PaymentDeferredDays { get; set; }
+            public string AlternativeName { get; set; }
 
             [ExcelTableColumn(10)]
-            public string DeliveryTerms { get; set; }
+            public string BatchUomName { get; set; }
 
             [ExcelTableColumn(11)]
-            public string OfferCurrency { get; set; }
+            public string MassUomName { get; set; }
 
             [ExcelTableColumn(12)]
-            public string PriceWithVat { get; set; }
+            public string MassUomValue { get; set; }
 
             [ExcelTableColumn(13)]
             public string Website { get; set; }
@@ -59,52 +59,13 @@ namespace DigitalPurchasing.ExcelReader.NomenclatureWithAlternativesTemplate
             public string SupplierPhone { get; set; }
 
             [ExcelTableColumn(15)]
-            public string ContactFirstName { get; set; }
+            public string ResourceUomName { get; set; }
 
             [ExcelTableColumn(16)]
-            public string ContactLastName { get; set; }
+            public string ResourceUomValue { get; set; }
 
             [ExcelTableColumn(17)]
-            public string ContactJobTitle { get; set; }
-
-            [ExcelTableColumn(18)]
-            public string ContactEmail { get; set; }
-
-            [ExcelTableColumn(19)]
-            public string ContactPhone { get; set; }
-
-            [ExcelTableColumn(20)]
-            public string ContactMobilePhone { get; set; }
-
-            [ExcelTableColumn(21)]
-            public string Note { get; set; }
-
-            [ExcelTableColumn(22)]
-            public string LegalAddressStreet { get; set; }
-
-            [ExcelTableColumn(23)]
-            public string LegalAddressCity { get; set; }
-
-            [ExcelTableColumn(24)]
-            public string LegalAddressCountry { get; set; }
-
-            [ExcelTableColumn(25)]
-            public string ActualAddressStreet { get; set; }
-
-            [ExcelTableColumn(26)]
-            public string ActualAddressCity { get; set; }
-
-            [ExcelTableColumn(27)]
-            public string ActualAddressCountry { get; set; }
-
-            [ExcelTableColumn(28)]
-            public string WarehouseAddressStreet { get; set; }
-
-            [ExcelTableColumn(29)]
-            public string WarehouseAddressCity { get; set; }
-
-            [ExcelTableColumn(30)]
-            public string WarehouseAddressCountry { get; set; }
+            public string ResourceBatchUomName { get; set; }
         }
 
         public byte[] Build(object[][] data)
@@ -159,11 +120,10 @@ namespace DigitalPurchasing.ExcelReader.NomenclatureWithAlternativesTemplate
             {
                 var items = excel.ToList<TemplateDataInternal>();
 
-                //var config = new TypeAdapterConfig();
-                //config.ForType<TemplateDataInternal, TemplateData>()
-                //    .Map(dest => dest.PriceWithVat, src => src.PriceWithVat != null && src.PriceWithVat.Equals("да", StringComparison.InvariantCultureIgnoreCase))
-                //    .Map(dest => dest.Inn, src => ToNullableLong(src.Inn))
-                //    .Map(dest => dest.PaymentDeferredDays, src => ToNullableInt(src.PaymentDeferredDays));
+                var config = new TypeAdapterConfig();
+                config.ForType<TemplateDataInternal, TemplateData>()
+                    .Map(dest => dest.MassUomValue, src => ToNullableDecimal(src.MassUomValue))
+                    .Map(dest => dest.ResourceUomValue, src => ToNullableDecimal(src.ResourceUomValue));
                 var result = items.Select(q => q.Adapt<TemplateData>()).ToList();
 
                 return result;
@@ -171,7 +131,5 @@ namespace DigitalPurchasing.ExcelReader.NomenclatureWithAlternativesTemplate
         }
 
         private static decimal? ToNullableDecimal(string s) => decimal.TryParse(s, out var i) ? (decimal?)i : null;
-        private static long? ToNullableLong(string s) => long.TryParse(s, out var i) ? (long?)i : null;
-        private static int? ToNullableInt(string s) => int.TryParse(s, out var i) ? (int?)i : null;
     }
 }
