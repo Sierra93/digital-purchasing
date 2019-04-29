@@ -195,6 +195,7 @@ namespace DigitalPurchasing.Services
                 var item = new SupplierOfferDetailsVm.Item(result.Items);
                 result.Items.Add(item);
 
+                item.Position = requestItem.Position;
                 item.Request.Code = requestItem.RawCode;
                 item.Request.Name = requestItem.RawName;
                 item.Request.Qty = requestItem.RawQty;
@@ -216,20 +217,29 @@ namespace DigitalPurchasing.Services
                 item.Offer.Currency = supplierOffer.Currency.Name;
                 item.Offer.Uom = offerItem.RawUomId.HasValue ? offerItem.RawUom.Name : string.Empty;
 
-                var factor = offerItem.CommonFactor > 0 ? offerItem.CommonFactor : offerItem.NomenclatureFactor;
-
                 var nomAlt = nomAlts.FirstOrDefault(q => q.NomenclatureId == requestItem.Nomenclature.Id);
 
-                var offerMassOf1 = nomAlt?.MassUomValue > 0
-                    ? nomAlt.MassUomValue
-                    : requestItem.Nomenclature.MassUomValue;
+                decimal offerMassOf1;
+
+                var factor = offerItem.CommonFactor > 0 ? offerItem.CommonFactor : offerItem.NomenclatureFactor;
+
+                if (offerItem.RawUomId.HasValue && requestItem.Nomenclature.MassUomId == offerItem.RawUomId.Value)
+                {
+                    offerMassOf1 = 1;
+                }
+                else
+                {
+                    offerMassOf1 = (nomAlt?.MassUomValue > 0
+                        ? nomAlt.MassUomValue
+                        : requestItem.Nomenclature.MassUomValue) * factor;
+                }
 
                 item.Mass.MassOf1BatchUom = offerMassOf1;
                 item.Mass.MassUom = requestItem.Nomenclature.MassUom.Name;
 
                 item.ImportAndDelivery.DeliveryTerms = supplierOffer.DeliveryTerms;
                 item.ImportAndDelivery.TotalDeliveryCost = supplierOffer.DeliveryCost;
-
+                
                 item.Conversion.CurrencyExchangeRate = 1; //TODO
                 item.Conversion.UomRatio = factor;
 

@@ -55,7 +55,17 @@ namespace DigitalPurchasing.Core.Interfaces
         public class OfferData : BaseData
         {
             public decimal Price { get; set; }
-            public decimal TotalPrice => Qty * Price;
+            public decimal TotalPrice => Round(Qty * Price, 0);
+
+            public static decimal Round(decimal value, int decimals)
+            {
+                if (decimals < 0)
+                {
+                    var factor = (decimal)Math.Pow(10, -decimals);
+                    return Round(value / factor, 0) * factor;
+                }
+                return Math.Round(value, decimals, MidpointRounding.AwayFromZero);
+            }
         }
 
         public class MassData
@@ -77,7 +87,7 @@ namespace DigitalPurchasing.Core.Interfaces
             public decimal MassOf1BatchUom { get; set; }
             public string MassUom { get; set; }
 
-            public decimal TotalMass => _item.Request.Qty * MassOf1BatchUom;
+            public decimal TotalMass => _item.Offer.Qty * MassOf1BatchUom;
 
             public decimal TotalMassPerc
             {
@@ -165,6 +175,8 @@ namespace DigitalPurchasing.Core.Interfaces
         public class Item
         {
             internal List<Item> Items { get; }
+
+            public int Position { get; set; }
 
             public Item(List<Item> items)
             {
