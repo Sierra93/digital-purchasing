@@ -83,7 +83,7 @@ namespace DigitalPurchasing.Web.Controllers
         {
             vm.ContactPersons = _supplierService.GetContactPersonsBySupplier(supplierId);
             vm.NomenclatureCategoies = _supplierService.GetSupplierNomenclatureCategories(supplierId);
-            vm.AvailableCategories = _nomenclatureCategoryService.GetAll().ToList();
+            vm.AvailableCategories = _nomenclatureCategoryService.GetAll(true).ToList();
         }
 
         [HttpPost]
