@@ -28,6 +28,7 @@ namespace DigitalPurchasing.Data
         public DbSet<NomenclatureCategory> NomenclatureCategories { get; set; }
         public DbSet<UnitsOfMeasurement> UnitsOfMeasurements { get; set; }
         public DbSet<UomConversionRate> UomConversionRates { get; set; }
+        public DbSet<DefaultUom> DefaultUoms { get; set; }
 
         public DbSet<QuotationRequest> QuotationRequests { get; set; }
         public DbSet<QuotationRequestEmail> QuotationRequestEmails { get; set; }

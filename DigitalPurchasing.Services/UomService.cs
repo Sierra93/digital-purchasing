@@ -229,5 +229,29 @@ namespace DigitalPurchasing.Services
             _db.Remove(_db.UomConversionRates.Find(id));
             _db.SaveChanges();
         }
+
+        public async Task SetPackagingUom(Guid ownerId, Guid uomId)
+        {
+            var settings = await GetDefaultUomSettings(ownerId);
+            settings.PackagingUomId = uomId;
+            await _db.SaveChangesAsync();
+        }
+
+        private async Task<DefaultUom> GetDefaultUomSettings(Guid ownerId)
+        {
+            var settings = await _db.DefaultUoms
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(q => q.OwnerId == ownerId);
+
+            if (settings == null) settings = await CreateDefaultUomSettings(ownerId);
+            return settings;
+        }
+
+        private async Task<DefaultUom> CreateDefaultUomSettings(Guid ownerId)
+        {
+            var entry = await _db.DefaultUoms.AddAsync(new DefaultUom { OwnerId = ownerId });
+            await _db.SaveChangesAsync();
+            return entry.Entity;
+        }
     }
 }

@@ -19,9 +19,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public Guid MassUom { get; set; }
     }
-
-
-
+    
     public interface IUomService
     {
         UomIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
@@ -36,6 +34,8 @@ namespace DigitalPurchasing.Core.Interfaces
         UomDto GetById(Guid id);
         UomDto Update(Guid id, string name);
         void DeleteConversionRate(Guid id);
+
+        Task SetPackagingUom(Guid ownerId, Guid uomId);
     }
 
     public class UomDto
