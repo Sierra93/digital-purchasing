@@ -75,23 +75,36 @@ namespace DigitalPurchasing.Services
                 .Take(perPage);
             var result = qry.ProjectToType<SupplierIndexDataItem>().ToList();
 
-            var supplier2nomCategories = (from s in qry
-                                          join nal in _db.NomenclatureAlternativeLinks on s.Id equals nal.SupplierId
-                                          join na in _db.NomenclatureAlternatives on nal.AlternativeId equals na.Id
-                                          join n in _db.Nomenclatures on na.NomenclatureId equals n.Id
-                                          where !n.IsDeleted
-                                          group new
+            var supplier2altNomCategories = (from s in qry
+                                             join nal in _db.NomenclatureAlternativeLinks on s.Id equals nal.SupplierId
+                                             join na in _db.NomenclatureAlternatives on nal.AlternativeId equals na.Id
+                                             join n in _db.Nomenclatures on na.NomenclatureId equals n.Id
+                                             where !n.IsDeleted
+                                             group new
+                                             {
+                                                 supplierId = s.Id,
+                                                 altCategoryId = n.CategoryId
+                                             } by new { s.Id, altCategoryId = n.CategoryId } into g
+                                             select g.FirstOrDefault()).ToList();
+            var supplier2NomCategories = (from s in qry
+                                          select new
                                           {
                                               supplierId = s.Id,
-                                              n.CategoryId
-                                          } by new { s.Id, n.CategoryId } into g
-                                          select g.FirstOrDefault()).ToList();
+                                              defaultCategoryId = s.CategoryId
+                                          }).ToList();
 
             foreach (var item in result)
-            {
-                var supplierCategoryIds = supplier2nomCategories
+            {                
+                var supplierCategoryIds = supplier2altNomCategories
                     .Where(_ => _.supplierId == item.Id)
-                    .Select(_ => _.CategoryId);
+                    .Select(_ => _.altCategoryId)
+                    .ToList();
+                Guid? defaultCategoryId = supplier2NomCategories
+                    .FirstOrDefault(_ => _.supplierId == item.Id)?.defaultCategoryId;
+                if (defaultCategoryId.HasValue)
+                {
+                    supplierCategoryIds.Add(defaultCategoryId.Value);
+                }
                 item.MainCategoriesCsv = string.Join(", ", supplierCategoryIds.Select(cId => _categoryService.GetTopParentCategory(cId).Name));
             }
 
