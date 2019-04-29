@@ -24,6 +24,7 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly ICompanyService _companyService;
         private readonly ISupplierService _supplierService;
         private readonly ICustomerService _customerService;
+        private readonly INomenclatureAlternativeService _nomenclatureAlternativeService;
 
         public NomenclatureController(
             INomenclatureService nomenclatureService,
@@ -32,7 +33,8 @@ namespace DigitalPurchasing.Web.Controllers
             IUomService uomService,
             ICompanyService companyService,
             ISupplierService supplierService,
-            ICustomerService customerService)
+            ICustomerService customerService,
+            INomenclatureAlternativeService nomenclatureAlternativeService)
         {
             _nomenclatureService = nomenclatureService;
             _nomenclatureCategoryService = nomenclatureCategoryService;
@@ -41,6 +43,7 @@ namespace DigitalPurchasing.Web.Controllers
             _companyService = companyService;
             _supplierService = supplierService;
             _customerService = customerService;
+            _nomenclatureAlternativeService = nomenclatureAlternativeService;
         }
 
         public IActionResult Index() => View();
@@ -141,7 +144,7 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult DetailsEdit(Guid id)
         {
             if (id == Guid.Empty) return NotFound();
-            var alt = _nomenclatureService.GetAlternativeById(id);
+            var alt = _nomenclatureAlternativeService.GetAlternativeById(id);
             if (alt == null) return NotFound();
             var vm = alt.Adapt<NomenclatureAlternativeEditVm>();
             vm.BatchUoms = vm.ResourceBatchUoms = vm.MassUoms = vm.ResourceUoms = _dictionaryService.GetUoms().AddEmpty();
@@ -153,7 +156,7 @@ namespace DigitalPurchasing.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                _nomenclatureService.UpdateAlternative(vm.Adapt<NomenclatureAlternativeVm>());
+                _nomenclatureAlternativeService.UpdateAlternative(vm.Adapt<NomenclatureAlternativeVm>());
                 return RedirectToAction(nameof(Index));
             }
 
@@ -265,12 +268,14 @@ namespace DigitalPurchasing.Web.Controllers
             var supplierRows = datas.Where(_ => isSupplier(_)).Select(_ => _);
             var customerRows = datas.Where(_ => isCustomer(_)).Select(_ => _);
 
-            var suppliers = _supplierService.GetByPublicIds(supplierRows.Select(_ => _.ClientPublicId.Value).ToArray());
-            var customers = _customerService.GetByPublicIds(customerRows.Select(_ => _.ClientPublicId.Value).ToArray());
+            var suppliers = _supplierService.GetByPublicIds(supplierRows.Select(_ => _.ClientPublicId.Value).Distinct().ToArray());
+            var customers = _customerService.GetByPublicIds(customerRows.Select(_ => _.ClientPublicId.Value).Distinct().ToArray());
             var nomNames = datas.Where(_ => !string.IsNullOrWhiteSpace(_.NomenclatureName)).Select(_ => _.NomenclatureName).Distinct();
 
             var nomenclatures = _nomenclatureService.GetByNames(nomNames.ToArray());
             var uoms = _uomService.GetByNames(datas.Select(q => q.BatchUomName).Distinct().ToArray());
+
+            var preparedData = new List<(Guid clientId, ClientType clientType, List<(Guid nomId, string altName, string altCode, Guid? uomId)> noms)>();
 
             foreach (var item in datas.GroupBy(_ => _.NomenclatureName))
             {
@@ -294,11 +299,24 @@ namespace DigitalPurchasing.Web.Controllers
                         if (clientId.HasValue)
                         {
                             var uom = uoms.FirstOrDefault(u => u.Name.Equals(el.BatchUomName, StringComparison.InvariantCultureIgnoreCase));
-                            _nomenclatureService.AddOrUpdateNomenclatureAlts(User.CompanyId(), clientId.Value, clientType.Value,
-                                    nom.Id, el.AlternativeName, el.AlternativeCode, uom?.Id);
+                            var prepDataItem = preparedData.FirstOrDefault(_ => _.clientId == clientId.Value);
+                            if (prepDataItem.clientId == default)
+                            {
+                                prepDataItem = (clientId.Value, clientType.Value,
+                                    new List<(Guid nomId, string altName, string altCode, Guid? uomId)>());
+                                preparedData.Add(prepDataItem);
+                            }
+
+                            prepDataItem.noms.Add((nom.Id, el.AlternativeName, el.AlternativeCode, uom?.Id));
                         }
                     }
                 }
+            }
+
+            foreach (var item in preparedData)
+            {
+                _nomenclatureAlternativeService.AddOrUpdateNomenclatureAlts(User.CompanyId(),
+                    item.clientId, item.clientType, item.noms);
             }
 
             return RedirectToAction(nameof(Index));

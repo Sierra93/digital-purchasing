@@ -29,6 +29,7 @@ namespace DigitalPurchasing.Services
         private readonly ISupplierService _supplierService;
         private readonly IConversionRateService _conversionRateService;
         private readonly IRootService _rootService;
+        private readonly INomenclatureAlternativeService _nomenclatureAlternativeService;
 
         public SupplierOfferService(
             ApplicationDbContext db,
@@ -41,7 +42,8 @@ namespace DigitalPurchasing.Services
             IUomService uomService,
             ISupplierService supplierService,
             IConversionRateService conversionRateService,
-            IRootService rootService)
+            IRootService rootService,
+            INomenclatureAlternativeService nomenclatureAlternativeService)
         {
             _db = db;
             _excelRequestReader = excelRequestReader;
@@ -54,6 +56,7 @@ namespace DigitalPurchasing.Services
             _supplierService = supplierService;
             _conversionRateService = conversionRateService;
             _rootService = rootService;
+            _nomenclatureAlternativeService = nomenclatureAlternativeService;
         }
 
         public void UpdateStatus(Guid id, SupplierOfferStatus status, bool globalSearch = false)
@@ -344,7 +347,7 @@ namespace DigitalPurchasing.Services
             _db.BulkInsert(rawItems);
 
             // todo: move to background job?
-            _nomenclatureService.AddOrUpdateNomenclatureAlts(
+            _nomenclatureAlternativeService.AddOrUpdateNomenclatureAlts(
                 supplierOffer.OwnerId, supplierOffer.SupplierId.Value, ClientType.Supplier,
                 rawItems
                     .Where(q => q.NomenclatureId.HasValue)
