@@ -133,7 +133,6 @@ namespace DigitalPurchasing.Data
             builder.Entity<NomenclatureAlternative>().HasOne(q => q.ResourceUom).WithMany(q => q.ResourceNomenclatureAlternatives).HasForeignKey(q => q.ResourceUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<NomenclatureAlternative>().HasOne(q => q.ResourceBatchUom).WithMany(q => q.ResourceBatchNomenclatureAlternatives).HasForeignKey(q => q.ResourceBatchUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<NomenclatureAlternative>().Property(q => q.Name).IsRequired();
-            builder.Entity<NomenclatureAlternative>().HasIndex(q => new { q.OwnerId, q.NomenclatureId, q.Name }).IsUnique();
 
             builder.Entity<SupplierCategory>()
                 .HasOne(q => q.NomenclatureCategory).WithMany().HasForeignKey(q => q.NomenclatureCategoryId).OnDelete(DeleteBehavior.Restrict);
