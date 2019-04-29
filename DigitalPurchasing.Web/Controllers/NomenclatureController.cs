@@ -22,19 +22,22 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly IDictionaryService _dictionaryService;
         private readonly IUomService _uomService;
         private readonly ICompanyService _companyService;
+        private readonly ISupplierService _supplierService;
 
         public NomenclatureController(
             INomenclatureService nomenclatureService,
             INomenclatureCategoryService nomenclatureCategoryService,
             IDictionaryService dictionaryService,
             IUomService uomService,
-            ICompanyService companyService)
+            ICompanyService companyService,
+            ISupplierService supplierService)
         {
             _nomenclatureService = nomenclatureService;
             _nomenclatureCategoryService = nomenclatureCategoryService;
             _dictionaryService = dictionaryService;
             _uomService = uomService;
             _companyService = companyService;
+            _supplierService = supplierService;
         }
 
         public IActionResult Index() => View();
@@ -248,11 +251,36 @@ namespace DigitalPurchasing.Web.Controllers
 
             var excelTemplate = new ExcelReader.NomenclatureWithAlternativesTemplate.ExcelTemplate();
 
-            var datas = excelTemplate.Read(filePath);
+            var datas = excelTemplate.Read(filePath).Where(_ => _.ClientPublicId.HasValue);
 
-            foreach (var item in datas)
+            var supplierRows = datas
+                .Where(_ => _.AlternativesRowType?.Equals("Поставщик", StringComparison.InvariantCultureIgnoreCase) == true)
+                .Select(_ => _);
+            var suppliers = _supplierService.GetByPublicIds(supplierRows.Select(_ => _.ClientPublicId.Value).ToArray());
+            var customerRows = datas
+                .Where(_ => _.AlternativesRowType?.Equals("Клиент", StringComparison.InvariantCultureIgnoreCase) == true)
+                .Select(_ => _);
+            var nomNames = datas.Where(_ => !string.IsNullOrWhiteSpace(_.NomenclatureName)).Select(_ => _.NomenclatureName).Distinct();
+
+            var nomenclatures = _nomenclatureService.GetByNames(nomNames.ToArray());
+            var uoms = _uomService.GetByNames(datas.Select(q => q.BatchUomName).Distinct().ToArray());
+
+            foreach (var item in supplierRows.GroupBy(_ => _.NomenclatureName))
             {
-                //_nomenclatureService.AddNomenclatureForSupplier
+                var nom = nomenclatures.FirstOrDefault(_ => _.Name == item.Key);
+                if (nom != null)
+                {
+                    foreach (var el in item)
+                    {
+                        var sup = suppliers.FirstOrDefault(_ => _.PublicId == el.ClientPublicId);
+                        var uom = uoms.FirstOrDefault(u => u.Name.Equals(el.BatchUomName, StringComparison.InvariantCultureIgnoreCase));
+                        if (sup != null)
+                        {
+                            _nomenclatureService.AddOrUpdateNomenclatureAlts(User.CompanyId(), sup.Id, ClientType.Supplier,
+                                nom.Id, el.AlternativeName, el.AlternativeCode, uom?.Id);
+                        }
+                    }
+                }
             }
 
             return RedirectToAction(nameof(Index));

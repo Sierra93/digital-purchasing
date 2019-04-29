@@ -29,6 +29,7 @@ namespace DigitalPurchasing.Core.Interfaces
         Task<UomDto> Create(Guid ownerId, string name, decimal? quantity = null);
         UomDto CreateOrUpdate(string name);
         IEnumerable<UomDto> GetAll();
+        IEnumerable<UomDto> GetByNames(params string[] uomNames);
         UomAutocompleteResponse Autocomplete(string s, Guid ownerId);
         BaseResult<UomAutocompleteResponse.AutocompleteItem> AutocompleteSingle(Guid id);
         void SaveConversionRate(Guid ownerId, Guid fromUomId, Guid toUomId, Guid? nomenclatureId, decimal factorC, decimal factorN);

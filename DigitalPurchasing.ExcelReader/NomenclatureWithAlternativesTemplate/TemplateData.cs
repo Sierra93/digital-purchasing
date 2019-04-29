@@ -7,7 +7,7 @@ namespace DigitalPurchasing.ExcelReader.NomenclatureWithAlternativesTemplate
     public sealed class TemplateData
     {
         public string AlternativesRowType { get; set; }
-        public string InternalCode { get; set; }
+        public int? ClientPublicId { get; set; }
         public string ClientName { get; set; }
         public string CategoryName { get; set; }
         public string NomenclatureCode { get; set; }

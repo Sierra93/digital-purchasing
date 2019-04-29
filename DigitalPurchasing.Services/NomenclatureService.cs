@@ -210,7 +210,7 @@ namespace DigitalPurchasing.Services
             var oldEntity = _db.Nomenclatures.FirstOrDefault(q => q.Name.Equals(vm.Name, StringComparison.InvariantCultureIgnoreCase));
             if (oldEntity != null)
             {
-                oldEntity.Code = vm.Code;
+                oldEntity.Code = vm.Code?.Trim();
                 oldEntity.BatchUomId = vm.BatchUomId;
                 oldEntity.MassUomId = vm.MassUomId;
                 oldEntity.ResourceUomId = vm.ResourceUomId;
@@ -263,8 +263,8 @@ namespace DigitalPurchasing.Services
             if (entity == null) return false;
 
             entity.CategoryId = model.CategoryId;
-            entity.Code = model.Code;
-            entity.Name = model.Name;
+            entity.Code = model.Code?.Trim();
+            entity.Name = model.Name?.Trim();
             entity.NameEng = model.NameEng;
 
             entity.ResourceUomId = model.ResourceUomId;
@@ -483,7 +483,6 @@ namespace DigitalPurchasing.Services
             List<(Guid NomenclatureId, string Name, string Code, Guid? Uom)> alts)
         {
             var altNomenclaturesQry = _db.NomenclatureAlternatives
-                .Include(q => q.Link)
                 .IgnoreQueryFilters()
                 .Where(q => q.OwnerId == ownerId);
 
@@ -499,34 +498,35 @@ namespace DigitalPurchasing.Services
             
             foreach (var alt in alts)
             {
-                var altName = altNomenclatures.FirstOrDefault(q =>
+                string altNomName = alt.Name?.Trim();
+                var altByName = altNomenclatures.FirstOrDefault(q =>
                     q.NomenclatureId == alt.NomenclatureId &&
-                    q.Name.Equals(alt.Name, StringComparison.InvariantCultureIgnoreCase));
+                    q.Name.Equals(altNomName, StringComparison.InvariantCultureIgnoreCase));
 
-                if (altName != null)
+                if (altByName != null)
                 {
-                    if (!string.IsNullOrEmpty(altName.Code) && altName.BatchUomId.HasValue) continue;
+                    if (!string.IsNullOrEmpty(altByName.Code) && altByName.BatchUomId.HasValue) continue;
 
-                    if (string.IsNullOrEmpty(altName.Code))
+                    if (string.IsNullOrEmpty(altByName.Code))
                     {
-                        altName.Code = alt.Code;
+                        altByName.Code = alt.Code?.Trim();
                     }
 
-                    if (!altName.BatchUomId.HasValue)
+                    if (!altByName.BatchUomId.HasValue)
                     {
-                        altName.BatchUomId = alt.Uom;
+                        altByName.BatchUomId = alt.Uom;
                     }
 
-                    forBulkUpdateNA.Add(altName);
+                    forBulkUpdateNA.Add(altByName);
                 }
                 else
                 {
                     var naId = Guid.NewGuid();
-                    altName = new NomenclatureAlternative
+                    altByName = new NomenclatureAlternative
                     {
                         Id = naId,
-                        Name = alt.Name,
-                        Code = alt.Code,
+                        Name = altNomName,
+                        Code = alt.Code?.Trim(),
                         BatchUomId = alt.Uom,
                         NomenclatureId = alt.NomenclatureId,
                         OwnerId = ownerId
@@ -540,7 +540,7 @@ namespace DigitalPurchasing.Services
                         AlternativeId = naId
                     };
 
-                    forBulkInsertNA.Add(altName);
+                    forBulkInsertNA.Add(altByName);
                     forBulkInsertLink.Add(link);
                 }
             }
@@ -598,6 +598,21 @@ namespace DigitalPurchasing.Services
             }
 
             _db.SaveChanges();
+        }
+
+        public IEnumerable<NomenclatureVm> GetByNames(params string[] nomenclatureNames)
+        {
+            if (!nomenclatureNames.Any())
+            {
+                return Enumerable.Empty<NomenclatureVm>();
+            }
+
+            var nomenclatures = (from item in _db.Nomenclatures
+                                 where !item.IsDeleted &&
+                                     nomenclatureNames.Contains(item.Name)
+                                 select item).ToList();
+
+            return nomenclatures.Select(_ => _.Adapt<NomenclatureVm>());
         }
     }
 }

@@ -20,7 +20,7 @@ namespace DigitalPurchasing.ExcelReader.NomenclatureWithAlternativesTemplate
             public string AlternativesRowType { get; set; }
 
             [ExcelTableColumn(2)]
-            public string InternalCode { get; set; }
+            public string ClientPublicId { get; set; }
 
             [ExcelTableColumn(3)]
             public string ClientName { get; set; }
@@ -123,13 +123,15 @@ namespace DigitalPurchasing.ExcelReader.NomenclatureWithAlternativesTemplate
                 var config = new TypeAdapterConfig();
                 config.ForType<TemplateDataInternal, TemplateData>()
                     .Map(dest => dest.MassUomValue, src => ToNullableDecimal(src.MassUomValue))
+                    .Map(dest => dest.ClientPublicId, src => ToNullableInt(src.ClientPublicId))
                     .Map(dest => dest.ResourceUomValue, src => ToNullableDecimal(src.ResourceUomValue));
-                var result = items.Select(q => q.Adapt<TemplateData>()).ToList();
+                var result = items.Select(q => q.Adapt<TemplateData>(config)).ToList();
 
                 return result;
             }
         }
 
         private static decimal? ToNullableDecimal(string s) => decimal.TryParse(s, out var i) ? (decimal?)i : null;
+        private static int? ToNullableInt(string s) => int.TryParse(s, out var i) ? (int?)i : null;
     }
 }
