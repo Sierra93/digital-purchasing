@@ -108,91 +108,17 @@ namespace DigitalPurchasing.Services
            Guid ownerId,
            Guid clientId,
            ClientType clientType,
-           List<(Guid NomenclatureId, string Name, string Code, Guid? Uom)> alts)
+           List<(Guid NomenclatureId, string Name, string Code, Guid? BatchUomId)> alts)
         {
-            if (alts.Any())
-            {
-                return;
-            }
-
-            var altNomenclaturesQry = _db.NomenclatureAlternatives
-                .IgnoreQueryFilters()
-                .Where(q => q.OwnerId == ownerId);
-
-            altNomenclaturesQry = clientType == ClientType.Customer
-                ? altNomenclaturesQry.Where(q => q.Link.CustomerId == clientId)
-                : altNomenclaturesQry.Where(q => q.Link.SupplierId == clientId);
-
-            var altNomenclatures = altNomenclaturesQry.ToList();
-
-            var forBulkInsertNA = new List<NomenclatureAlternative>();
-            var forBulkUpdateNA = new List<NomenclatureAlternative>();
-            var forBulkInsertLink = new List<NomenclatureAlternativeLink>();
-
-            foreach (var alt in alts)
-            {
-                string altNomName = alt.Name?.Trim();
-                var altByName = altNomenclatures.FirstOrDefault(q =>
-                    q.NomenclatureId == alt.NomenclatureId &&
-                    q.Name.Equals(altNomName, StringComparison.InvariantCultureIgnoreCase));
-
-                if (altByName != null)
-                {
-                    bool changed = false;
-
-                    if (string.IsNullOrEmpty(altByName.Code) &&
-                        altByName.Code != alt.Code?.Trim())
-                    {
-                        altByName.Code = alt.Code?.Trim();
-                        changed = true;
-                    }
-
-                    if (!altByName.BatchUomId.HasValue &&
-                        altByName.BatchUomId != alt.Uom)
-                    {
-                        altByName.BatchUomId = alt.Uom;
-                        changed = true;
-                    }
-
-                    if (changed)
-                    {
-                        forBulkUpdateNA.Add(altByName);
-                    }
-                }
-                else
-                {
-                    var naId = Guid.NewGuid();
-                    altByName = new NomenclatureAlternative
-                    {
-                        Id = naId,
-                        Name = altNomName,
-                        Code = alt.Code?.Trim(),
-                        BatchUomId = alt.Uom,
-                        NomenclatureId = alt.NomenclatureId,
-                        OwnerId = ownerId
-                    };
-
-                    var link = new NomenclatureAlternativeLink
-                    {
-                        Id = Guid.NewGuid(),
-                        CustomerId = clientType == ClientType.Customer ? clientId : (Guid?)null,
-                        SupplierId = clientType == ClientType.Supplier ? clientId : (Guid?)null,
-                        AlternativeId = naId
-                    };
-
-                    forBulkInsertNA.Add(altByName);
-                    forBulkInsertLink.Add(link);
-                }
-            }
-
-            if (forBulkInsertNA.Any())
-            {
-                _db.BulkInsert(forBulkInsertNA);
-                _db.BulkInsert(forBulkInsertLink);
-            }
-
-            if (forBulkUpdateNA.Any())
-                _db.BulkUpdate(forBulkUpdateNA);
+            AddOrUpdateNomenclatureAlts(ownerId, clientId, clientType,
+                alts.Select(_ => (
+                _.NomenclatureId,
+                _.Name,
+                _.Code,
+                _.BatchUomId,
+                MassUomId: (Guid?)null,
+                ResourceBatchUomId: (Guid?)null,
+                ResourceUomId: (Guid?)null)).ToList());
         }
 
         // todo: add owner id?
@@ -238,6 +164,118 @@ namespace DigitalPurchasing.Services
             }
 
             _db.SaveChanges();
+        }
+
+        public void AddOrUpdateNomenclatureAlts(Guid ownerId, Guid clientId, ClientType clientType,
+            List<(Guid NomenclatureId, string Name, string Code, Guid? BatchUomId, Guid? MassUomId, Guid? ResourceBatchUomId, Guid? ResourceUomId)> alts)
+        {
+            if (!alts.Any())
+            {
+                return;
+            }
+
+            var altNomenclaturesQry = _db.NomenclatureAlternatives
+                .IgnoreQueryFilters()
+                .Where(q => q.OwnerId == ownerId);
+
+            altNomenclaturesQry = clientType == ClientType.Customer
+                ? altNomenclaturesQry.Where(q => q.Link.CustomerId == clientId)
+                : altNomenclaturesQry.Where(q => q.Link.SupplierId == clientId);
+
+            var altNomenclatures = altNomenclaturesQry.ToList();
+
+            var forBulkInsertNA = new List<NomenclatureAlternative>();
+            var forBulkUpdateNA = new List<NomenclatureAlternative>();
+            var forBulkInsertLink = new List<NomenclatureAlternativeLink>();
+
+            foreach (var alt in alts)
+            {
+                string altNomName = alt.Name?.Trim();
+                var altByName = altNomenclatures.FirstOrDefault(q =>
+                    q.NomenclatureId == alt.NomenclatureId &&
+                    q.Name.Equals(altNomName, StringComparison.InvariantCultureIgnoreCase));
+
+                if (altByName != null)
+                {
+                    bool changed = false;
+
+                    if (string.IsNullOrEmpty(altByName.Code) &&
+                        altByName.Code != alt.Code?.Trim())
+                    {
+                        altByName.Code = alt.Code?.Trim();
+                        changed = true;
+                    }
+
+                    if (!altByName.BatchUomId.HasValue &&
+                        altByName.BatchUomId != alt.BatchUomId)
+                    {
+                        altByName.BatchUomId = alt.BatchUomId;
+                        changed = true;
+                    }
+
+                    if (!altByName.MassUomId.HasValue &&
+                        altByName.MassUomId != alt.MassUomId)
+                    {
+                        altByName.MassUomId = alt.MassUomId;
+                        changed = true;
+                    }
+
+                    if (!altByName.ResourceBatchUomId.HasValue &&
+                        altByName.ResourceBatchUomId != alt.ResourceBatchUomId)
+                    {
+                        altByName.ResourceBatchUomId = alt.ResourceBatchUomId;
+                        changed = true;
+                    }
+
+                    if (!altByName.ResourceUomId.HasValue &&
+                        altByName.ResourceUomId != alt.ResourceUomId)
+                    {
+                        altByName.ResourceUomId = alt.ResourceUomId;
+                        changed = true;
+                    }
+
+                    if (changed)
+                    {
+                        forBulkUpdateNA.Add(altByName);
+                    }
+                }
+                else
+                {
+                    var naId = Guid.NewGuid();
+                    altByName = new NomenclatureAlternative
+                    {
+                        Id = naId,
+                        Name = altNomName,
+                        Code = alt.Code?.Trim(),
+                        BatchUomId = alt.BatchUomId,
+                        MassUomId = alt.MassUomId,
+                        ResourceBatchUomId = alt.ResourceBatchUomId,
+                        ResourceUomId = alt.ResourceUomId,
+                        NomenclatureId = alt.NomenclatureId,
+                        OwnerId = ownerId
+                    };
+
+                    var link = new NomenclatureAlternativeLink
+                    {
+                        Id = Guid.NewGuid(),
+                        CustomerId = clientType == ClientType.Customer ? clientId : (Guid?)null,
+                        SupplierId = clientType == ClientType.Supplier ? clientId : (Guid?)null,
+                        AlternativeId = naId
+                    };
+
+                    forBulkInsertNA.Add(altByName);
+                    forBulkInsertLink.Add(link);
+                }
+            }
+
+            if (forBulkInsertNA.Any())
+            {
+                _db.BulkInsert(forBulkInsertNA);
+                _db.BulkInsert(forBulkInsertLink);
+            }
+
+            if (forBulkUpdateNA.Any())
+                _db.BulkUpdate(forBulkUpdateNA);
         }
     }
 }

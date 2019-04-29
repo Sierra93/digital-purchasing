@@ -13,10 +13,13 @@ namespace DigitalPurchasing.Core.Interfaces
         void AddNomenclatureForSupplier(Guid soItemId);
 
         void AddOrUpdateNomenclatureAlts(Guid ownerId, Guid clientId, ClientType clientType,
-            Guid nomenclatureId, string name, string code, Guid? uom);
+            Guid nomenclatureId, string name, string code, Guid? batchUomId);
 
         void AddOrUpdateNomenclatureAlts(Guid ownerId, Guid clientId, ClientType clientType,
-            List<(Guid NomenclatureId, string Name, string Code, Guid? Uom)> alts);
+            List<(Guid NomenclatureId, string Name, string Code, Guid? BatchUomId, Guid? MassUomId, Guid? ResourceBatchUomId, Guid? ResourceUomId)> alts);
+
+        void AddOrUpdateNomenclatureAlts(Guid ownerId, Guid clientId, ClientType clientType,
+            List<(Guid NomenclatureId, string Name, string Code, Guid? BatchUomId)> alts);
     }
 
     public class NomenclatureAlternativeVm
