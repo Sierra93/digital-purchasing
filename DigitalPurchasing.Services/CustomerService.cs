@@ -6,6 +6,7 @@ using DigitalPurchasing.Models;
 using Mapster;
 using System.Linq.Dynamic.Core;
 using DigitalPurchasing.Services.Exceptions;
+using System.Collections.Generic;
 
 namespace DigitalPurchasing.Services
 {
@@ -107,5 +108,17 @@ namespace DigitalPurchasing.Services
         }
 
         public bool IsCustomerInUse(Guid id) => _db.PurchaseRequests.Any(pr => pr.CustomerId == id);
+
+        public IEnumerable<CustomerVm> GetByPublicIds(params int[] publicIds)
+        {
+            if (!publicIds.Any())
+            {
+                return Enumerable.Empty<CustomerVm>();
+            }
+
+            return (from item in _db.Customers
+                    where publicIds.Contains(item.PublicId)
+                    select item).ToList().Select(_ => _.Adapt<CustomerVm>());
+        }
     }
 }

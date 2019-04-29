@@ -23,6 +23,7 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly IUomService _uomService;
         private readonly ICompanyService _companyService;
         private readonly ISupplierService _supplierService;
+        private readonly ICustomerService _customerService;
 
         public NomenclatureController(
             INomenclatureService nomenclatureService,
@@ -30,7 +31,8 @@ namespace DigitalPurchasing.Web.Controllers
             IDictionaryService dictionaryService,
             IUomService uomService,
             ICompanyService companyService,
-            ISupplierService supplierService)
+            ISupplierService supplierService,
+            ICustomerService customerService)
         {
             _nomenclatureService = nomenclatureService;
             _nomenclatureCategoryService = nomenclatureCategoryService;
@@ -38,6 +40,7 @@ namespace DigitalPurchasing.Web.Controllers
             _uomService = uomService;
             _companyService = companyService;
             _supplierService = supplierService;
+            _customerService = customerService;
         }
 
         public IActionResult Index() => View();
@@ -253,31 +256,46 @@ namespace DigitalPurchasing.Web.Controllers
 
             var datas = excelTemplate.Read(filePath).Where(_ => _.ClientPublicId.HasValue);
 
-            var supplierRows = datas
-                .Where(_ => _.AlternativesRowType?.Equals("Поставщик", StringComparison.InvariantCultureIgnoreCase) == true)
-                .Select(_ => _);
+            Func<ExcelReader.NomenclatureWithAlternativesTemplate.TemplateData, bool> isSupplier = (tmplData) =>
+                tmplData.AlternativesRowType?.Equals("Поставщик", StringComparison.InvariantCultureIgnoreCase) == true;
+
+            Func<ExcelReader.NomenclatureWithAlternativesTemplate.TemplateData, bool> isCustomer = (tmplData) =>
+                tmplData.AlternativesRowType?.Equals("Клиент", StringComparison.InvariantCultureIgnoreCase) == true;
+
+            var supplierRows = datas.Where(_ => isSupplier(_)).Select(_ => _);
+            var customerRows = datas.Where(_ => isCustomer(_)).Select(_ => _);
+
             var suppliers = _supplierService.GetByPublicIds(supplierRows.Select(_ => _.ClientPublicId.Value).ToArray());
-            var customerRows = datas
-                .Where(_ => _.AlternativesRowType?.Equals("Клиент", StringComparison.InvariantCultureIgnoreCase) == true)
-                .Select(_ => _);
+            var customers = _customerService.GetByPublicIds(customerRows.Select(_ => _.ClientPublicId.Value).ToArray());
             var nomNames = datas.Where(_ => !string.IsNullOrWhiteSpace(_.NomenclatureName)).Select(_ => _.NomenclatureName).Distinct();
 
             var nomenclatures = _nomenclatureService.GetByNames(nomNames.ToArray());
             var uoms = _uomService.GetByNames(datas.Select(q => q.BatchUomName).Distinct().ToArray());
 
-            foreach (var item in supplierRows.GroupBy(_ => _.NomenclatureName))
+            foreach (var item in datas.GroupBy(_ => _.NomenclatureName))
             {
                 var nom = nomenclatures.FirstOrDefault(_ => _.Name == item.Key);
                 if (nom != null)
                 {
                     foreach (var el in item)
                     {
-                        var sup = suppliers.FirstOrDefault(_ => _.PublicId == el.ClientPublicId);
-                        var uom = uoms.FirstOrDefault(u => u.Name.Equals(el.BatchUomName, StringComparison.InvariantCultureIgnoreCase));
-                        if (sup != null)
+                        ClientType? clientType = null;
+                        Guid? clientId = null;
+                        if (isSupplier(el))
                         {
-                            _nomenclatureService.AddOrUpdateNomenclatureAlts(User.CompanyId(), sup.Id, ClientType.Supplier,
-                                nom.Id, el.AlternativeName, el.AlternativeCode, uom?.Id);
+                            clientId = suppliers.FirstOrDefault(_ => _.PublicId == el.ClientPublicId)?.Id;
+                            clientType = ClientType.Supplier;
+                        }
+                        else if (isCustomer(el))
+                        {
+                            clientId = customers.FirstOrDefault(_ => _.PublicId == el.ClientPublicId)?.Id;
+                            clientType = ClientType.Customer;
+                        }
+                        if (clientId.HasValue)
+                        {
+                            var uom = uoms.FirstOrDefault(u => u.Name.Equals(el.BatchUomName, StringComparison.InvariantCultureIgnoreCase));
+                            _nomenclatureService.AddOrUpdateNomenclatureAlts(User.CompanyId(), clientId.Value, clientType.Value,
+                                    nom.Id, el.AlternativeName, el.AlternativeCode, uom?.Id);
                         }
                     }
                 }

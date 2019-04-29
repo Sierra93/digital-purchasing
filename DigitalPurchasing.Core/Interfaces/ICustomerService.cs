@@ -12,6 +12,7 @@ namespace DigitalPurchasing.Core.Interfaces
         CustomerIndexData GetData(int page, int perPage, string sortField, bool sortAsc, string search);
         void Update(CustomerVm model);
         void Delete(Guid id);
+        IEnumerable<CustomerVm> GetByPublicIds(params int[] publicIds);
     }
 
     public class CustomerAutocomplete
