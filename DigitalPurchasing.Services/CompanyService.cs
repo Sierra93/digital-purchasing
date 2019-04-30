@@ -18,7 +18,6 @@ namespace DigitalPurchasing.Services
         private readonly ApplicationDbContext _db;
         private readonly UserManager<User> _userManager;
         private readonly IUomService _uomService;
-        
 
         public CompanyService(
             ApplicationDbContext db,
@@ -138,12 +137,21 @@ namespace DigitalPurchasing.Services
         {
             var psc1 = await _uomService.Create(companyId, "шт", 1);
             var psc1000 = await _uomService.Create(companyId, "тыс. шт", 1000);
+
             var kilogram = await _uomService.Create(companyId, "кг");
+            var ton = await _uomService.Create(companyId, "т");
+
             var hour = await _uomService.Create(companyId, "час");
+            var month = await _uomService.Create(companyId, "мес");
+
             var durability = await _uomService.Create(companyId, "стойкость");
-            var pack = await _uomService.Create(companyId, "упаковка");
+
+            var packaging = await _uomService.Create(companyId, "упаковка");
 
             _uomService.SaveConversionRate(companyId, psc1000.Id, psc1.Id, null, 1000, 0);
+            _uomService.SaveConversionRate(companyId, ton.Id, kilogram.Id, null, 1000, 0);
+
+            await _uomService.SetPackagingUom(companyId, packaging.Id);
         }
     }
 }

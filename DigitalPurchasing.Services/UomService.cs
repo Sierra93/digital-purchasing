@@ -177,12 +177,6 @@ namespace DigitalPurchasing.Services
             return new BaseResult<UomAutocompleteResponse.AutocompleteItem>(data);
         }
 
-        public void SaveConversionRate(Guid fromUomId, Guid toUomId, Guid? nomenclatureId,
-            decimal factorC, decimal factorN)
-        {
-
-        }
-
         public void SaveConversionRate(Guid ownerId, Guid fromUomId, Guid toUomId, Guid? nomenclatureId, decimal factorC, decimal factorN)
         {
             if (fromUomId == toUomId) return; // don't store in database, factor = 1
@@ -240,6 +234,36 @@ namespace DigitalPurchasing.Services
         {
             _db.Remove(_db.UomConversionRates.Find(id));
             _db.SaveChanges();
+        }
+
+        public async Task SetPackagingUom(Guid ownerId, Guid uomId)
+        {
+            var settings = await GetDefaultUomSettings(ownerId);
+            settings.PackagingUomId = uomId;
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task<Guid> GetPackagingUom(Guid ownerId)
+        {
+            var settings = await GetDefaultUomSettings(ownerId);
+            return settings.PackagingUomId;
+        }
+
+        private async Task<DefaultUom> GetDefaultUomSettings(Guid ownerId)
+        {
+            var settings = await _db.DefaultUoms
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(q => q.OwnerId == ownerId);
+
+            if (settings == null) settings = await CreateDefaultUomSettings(ownerId);
+            return settings;
+        }
+
+        private async Task<DefaultUom> CreateDefaultUomSettings(Guid ownerId)
+        {
+            var entry = await _db.DefaultUoms.AddAsync(new DefaultUom { OwnerId = ownerId });
+            await _db.SaveChangesAsync();
+            return entry.Entity;
         }
     }
 }

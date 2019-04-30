@@ -256,7 +256,7 @@ namespace DigitalPurchasing.Services
 
             if (prItem.NomenclatureId != null && prItem.RawUomMatchId != null)
             {
-                var rate = _conversionRateService.GetRate(prItem.RawUomMatchId.Value, prItem.NomenclatureId.Value);
+                var rate = _conversionRateService.GetRate(prItem.RawUomMatchId.Value, prItem.NomenclatureId.Value).Result;
                 prItem.CommonFactor = rate.CommonFactor;
                 prItem.NomenclatureFactor = rate.NomenclatureFactor;
             }
