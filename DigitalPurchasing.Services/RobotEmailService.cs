@@ -175,7 +175,10 @@ namespace DigitalPurchasing.Services
                         // set supplier name
                         var soId = createOfferResult.Id;
                         var supplier = _supplierService.GetById(supplierId, true);
-                        _supplierOfferService.UpdateSupplierName(soId, supplier.Name, supplier.Id, true);
+                        if (supplier.OwnerId == qr.OwnerId)
+                        {
+                            _supplierOfferService.UpdateSupplierName(soId, supplier.Name, supplier.Id, true);
+                        }
 
                         // detect columns
                         var columns = _supplierOfferService.GetColumnsData(soId, true);
