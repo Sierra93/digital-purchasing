@@ -12,6 +12,7 @@ namespace DigitalPurchasing.Core.Interfaces
         SupplierIndexData GetData(int page, int perPage, string sortField, bool sortAsc, string search);
         SupplierVm GetById(Guid id);
         SupplierVm GetById(Guid id, bool globalSearch);
+        IEnumerable<SupplierVm> GetByPublicIds(params int[] publicIds);
         void Update(SupplierVm model);
 
         List<SupplierContactPersonVm> GetContactPersonsBySupplier(Guid supplierId);
@@ -75,6 +76,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public string Phone { get; set; }
         public string Note { get; set; }
         public Guid? CategoryId { get; set; }
+        public int PublicId { get; set; }
     }
 
     public class SupplierContactPersonVm

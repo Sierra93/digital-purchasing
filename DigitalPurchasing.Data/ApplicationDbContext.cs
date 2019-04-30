@@ -54,6 +54,8 @@ namespace DigitalPurchasing.Data
         public DbSet<QRCounter> QRCounters { get; set; }
         public DbSet<CLCounter> CLCounters { get; set; }
         public DbSet<SOCounter> SOCounters { get; set; }
+        public DbSet<CustomerCounter> CustomerCounters { get; set; }
+        public DbSet<SupplierCounter> SupplierCounters { get; set; }
 
         #endregion
 
@@ -144,6 +146,7 @@ namespace DigitalPurchasing.Data
             builder.Entity<Customer>(e =>
             {
                 e.HasMany(q => q.Requests).WithOne(q => q.Customer).HasForeignKey(q => q.CustomerId).OnDelete(DeleteBehavior.Restrict);
+                e.HasIndex(q => new { q.OwnerId, q.PublicId }).IsUnique();
             });
 
             builder.Entity<PurchaseRequest>(e =>
@@ -168,6 +171,7 @@ namespace DigitalPurchasing.Data
                 e.HasMany(q => q.Offers).WithOne(q => q.Supplier).HasForeignKey(q => q.SupplierId).OnDelete(DeleteBehavior.Restrict);
                 e.HasMany(q => q.ContactPersons).WithOne(q => q.Supplier).HasForeignKey(q => q.SupplierId).OnDelete(DeleteBehavior.Restrict);
                 e.HasIndex(q => new { q.OwnerId, q.Inn }).IsUnique().HasFilter($"{nameof(Supplier.Name)} IS NOT NULL AND {nameof(Supplier.Inn)} IS NOT NULL");
+                e.HasIndex(q => new { q.OwnerId, q.PublicId }).IsUnique();
             });
 
             builder.Entity<SupplierOffer>(e =>
@@ -202,6 +206,9 @@ namespace DigitalPurchasing.Data
                 e.HasOne(q => q.Variant).WithMany().HasForeignKey(q => q.VariantId).OnDelete(DeleteBehavior.Restrict);
                 e.HasOne(q => q.Supplier).WithMany().HasForeignKey(q => q.SupplierId).OnDelete(DeleteBehavior.Restrict);
             });
+
+            builder.Entity<CustomerCounter>().HasIndex(q => q.OwnerId).IsUnique();
+            builder.Entity<SupplierCounter>().HasIndex(q => q.OwnerId).IsUnique();
 
             builder.Entity<Currency>(e =>
             {

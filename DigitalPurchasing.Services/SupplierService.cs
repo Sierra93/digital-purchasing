@@ -17,13 +17,16 @@ namespace DigitalPurchasing.Services
         private readonly ApplicationDbContext _db;
         private const StringComparison StrComparison = StringComparison.InvariantCultureIgnoreCase;
         private readonly INomenclatureCategoryService _categoryService;
+        private readonly ICounterService _counterService;
 
         public SupplierService(
             ApplicationDbContext db,
-            INomenclatureCategoryService categoryService)
+            INomenclatureCategoryService categoryService,
+            ICounterService counterService)
         {
             _db = db;
             _categoryService = categoryService;
+            _counterService = counterService;
         }
 
         public SupplierAutocomplete Autocomplete(AutocompleteBaseOptions options)
@@ -256,7 +259,8 @@ namespace DigitalPurchasing.Services
                 PaymentDeferredDays = model.PaymentDeferredDays,
                 Phone = model.Phone.CleanPhoneNumber(),
                 SupplierType = model.SupplierType,
-                CategoryId = model.CategoryId
+                CategoryId = model.CategoryId,
+                PublicId = _counterService.GetSupplierNextId(ownerId)
             });
             _db.SaveChanges();
             return entry.Entity.Id;
@@ -331,6 +335,18 @@ namespace DigitalPurchasing.Services
             }
 
             _db.SaveChanges();
+        }
+
+        public IEnumerable<SupplierVm> GetByPublicIds(params int[] publicIds)
+        {
+            if (!publicIds.Any())
+            {
+                return Enumerable.Empty<SupplierVm>();
+            }
+
+            return (from item in _db.Suppliers
+                    where publicIds.Contains(item.PublicId)
+                    select item).ToList().Select(_ => _.Adapt<SupplierVm>());
         }
     }
 }

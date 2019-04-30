@@ -23,19 +23,22 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly ICompanyService _companyService;
         private readonly UserManager<User> _userManager;
         private readonly IUomService _uomService;
+        private readonly INomenclatureAlternativeService _nomenclatureAlternativeService;
 
         public PurchaseRequestController(
             IPurchaseRequestService purchasingRequestService,
             INomenclatureService nomenclatureService,
             ICompanyService companyService,
             UserManager<User> userManager,  
-            IUomService uomService)
+            IUomService uomService,
+            INomenclatureAlternativeService nomenclatureAlternativeService)
         {
             _purchasingRequestService = purchasingRequestService;
             _nomenclatureService = nomenclatureService;
             _companyService = companyService;
             _userManager = userManager;
             _uomService = uomService;
+            _nomenclatureAlternativeService = nomenclatureAlternativeService;
         }
 
         public IActionResult Edit(Guid id)

@@ -72,6 +72,109 @@ namespace DigitalPurchasing.Services
             };
         }
 
+        public NomenclatureWholeData GetWholeNomenclature()
+        {
+            var qry = from n in _db.Nomenclatures.Where(q => !q.IsDeleted)
+                      join na in _db.NomenclatureAlternatives on n.Id equals na.NomenclatureId into g
+                      from possibleNa in g.DefaultIfEmpty()
+                      join nal in _db.NomenclatureAlternativeLinks on possibleNa.Id equals nal.AlternativeId into g2
+                      from possibleNal in g2.DefaultIfEmpty()
+                      select new
+                      {
+                          nomId = n.Id,
+                          nomName = n.Name,
+                          nomNameEng = n.NameEng,
+                          nomCode = n.Code,
+                          nomCatName = n.Category.Name,
+                          batchUomName = n.BatchUom.Name,
+                          n.MassUomValue,
+                          massUomName = n.MassUom.Name,
+                          packUomName = n.PackUom.Name,
+                          n.PackUomValue,
+                          resourceUomName = n.ResourceUom.Name,
+                          n.ResourceUomValue,
+                          resourceBatchUomName = n.ResourceBatchUom.Name,
+                          alt = possibleNa == null
+                              ? null
+                              : new
+                              {
+                                  code = possibleNa.Code,
+                                  name = possibleNa.Name,
+                                  batchUomName = possibleNa.BatchUom.Name,
+                                  possibleNa.MassUomValue,
+                                  massUomName = possibleNa.MassUom.Name,
+                                  resourceUomName = possibleNa.ResourceUom.Name,
+                                  possibleNa.ResourceUomValue,
+                                  resourceBatchUomName = possibleNa.ResourceBatchUom.Name,
+                                  packUomName = possibleNa.PackUom.Name,
+                                  possibleNa.PackUomValue,
+                              },
+                          customer = possibleNal == null
+                              ? null
+                              : new
+                              {
+                                  name = possibleNal.Customer.Name,
+                                  id = possibleNal.CustomerId,
+                                  publicId = possibleNal.Customer != null ? possibleNal.Customer.PublicId : 0,
+                              },
+                          supplier = possibleNal == null
+                              ? null
+                              : new
+                              {
+                                  name = possibleNal.Supplier.Name,
+                                  id = possibleNal.SupplierId,
+                                  publicId = possibleNal.Supplier != null ? possibleNal.Supplier.PublicId : 0
+                              }
+                      };
+
+            var qryResult = qry.ToList();
+
+            var result = new NomenclatureWholeData();
+
+            foreach (var item in qryResult.GroupBy(_ => _.nomId))
+            {
+                var nom = item.First(_ => _.nomId == item.Key);
+                var nomenclature = new NomenclatureIndexDataItem()
+                {
+                    CategoryName = nom.nomCatName,
+                    Id = nom.nomId,
+                    Code = nom.nomCode,
+                    Name = nom.nomName,
+                    NameEng = nom.nomNameEng,
+                    BatchUomName = nom.batchUomName,
+                    MassUomName = nom.massUomName,
+                    MassUomValue = nom.MassUomValue,
+                    ResourceUomName = nom.resourceUomName,
+                    ResourceUomValue = nom.ResourceUomValue,
+                    ResourceBatchUomName = nom.resourceBatchUomName,
+                    PackUomName = nom.packUomName,
+                    PackUomValue = nom.PackUomValue
+                };
+                var alternatives = new NomenclatureDetailsData()
+                {
+                    Data = item.Where(_ => _.alt != null && (_.customer != null || _.supplier != null)).Select(_ => new NomenclatureDetailsDataItem()
+                    {
+                        Name = _.alt.name,
+                        Code = _.alt.code,
+                        BatchUomName = _.alt.batchUomName,
+                        MassUomName = _.alt.massUomName,
+                        MassUomValue = _.alt.MassUomValue,
+                        ResourceUomName = _.alt.resourceUomName,
+                        ResourceUomValue = _.alt.ResourceUomValue,
+                        ResourceBatchUomName = _.alt.resourceBatchUomName,
+                        PackUomName = _.alt.packUomName,
+                        PackUomValue = _.alt.PackUomValue,
+                        ClientName = _.customer?.id != null ? _.customer?.name : _.supplier?.name,
+                        ClientType = (int)(_.customer?.id != null ? ClientType.Customer : ClientType.Supplier),
+                        ClientPublicId = _.customer?.id != null ? _.customer?.publicId : _.supplier?.publicId
+                    }).ToList()
+                };
+                result.Nomenclatures.Add(nomenclature, alternatives);
+            }
+
+            return result;
+        }
+
         public NomenclatureDetailsData GetDetailsData(Guid nomId, int page, int perPage, string sortField, bool sortAsc)
         {
             if (string.IsNullOrEmpty(sortField))
@@ -288,210 +391,19 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
         }
 
-        public void AddNomenclatureForCustomer(Guid prItemId)
+        public IEnumerable<NomenclatureVm> GetByNames(params string[] nomenclatureNames)
         {
-            var prItem = _db.PurchaseRequestItems.Include(q => q.PurchaseRequest).First(q => q.Id == prItemId);
-            if (prItem.NomenclatureId.HasValue && prItem.PurchaseRequest.CustomerId.HasValue)
+            if (!nomenclatureNames.Any())
             {
-                AddOrUpdateNomenclatureAlts(
-                    prItem.PurchaseRequest.OwnerId,
-                    prItem.PurchaseRequest.CustomerId.Value,
-                    ClientType.Customer,
-                    prItem.NomenclatureId.Value,
-                    prItem.RawName,
-                    prItem.RawCode,
-                    prItem.RawUomMatchId);
-            }
-        }
-
-        public void AddNomenclatureForSupplier(Guid soItemId)
-        {
-            var soItem = _db.SupplierOfferItems.IgnoreQueryFilters().Include(q => q.SupplierOffer).First(q => q.Id == soItemId);
-            if (soItem.NomenclatureId.HasValue && soItem.SupplierOffer.SupplierId.HasValue)
-            {
-                AddOrUpdateNomenclatureAlts(
-                    soItem.SupplierOffer.OwnerId,
-                    soItem.SupplierOffer.SupplierId.Value,
-                    ClientType.Supplier,
-                    soItem.NomenclatureId.Value,
-                    soItem.RawName,
-                    soItem.RawCode,
-                    soItem.RawUomId);
-            }
-        }
-
-        public NomenclatureAlternativeVm GetAlternativeById(Guid id)
-        {
-            var entity = _db.NomenclatureAlternatives.Find(id);
-            var result = entity.Adapt<NomenclatureAlternativeVm>();
-            var link = _db.NomenclatureAlternativeLinks
-                .Include(q => q.Supplier)
-                .Include(q => q.Customer)
-                .FirstOrDefault(q => q.AlternativeId == id);
-            if (link != null)
-            {
-                result.ClientName = link.CustomerId.HasValue
-                    ? link.Customer.Name
-                    : link.Supplier.Name;
-                result.ClientType = link.CustomerId.HasValue
-                    ? ClientType.Customer
-                    : ClientType.Supplier;
+                return Enumerable.Empty<NomenclatureVm>();
             }
 
-            return result;
-        }
+            var nomenclatures = (from item in _db.Nomenclatures
+                                 where !item.IsDeleted &&
+                                     nomenclatureNames.Contains(item.Name)
+                                 select item).ToList();
 
-        public void UpdateAlternative(NomenclatureAlternativeVm model)
-        {
-            var entity = _db.NomenclatureAlternatives.Find(model.Id);
-
-            //entity.ClientName = model.ClientName;
-            //entity.ClientType = model.ClientType;
-            entity.Name = model.Name;
-            entity.Code = model.Code;
-
-            entity.ResourceUomId = model.ResourceUomId;
-            entity.ResourceUomValue = model.ResourceUomValue;
-
-            entity.BatchUomId = model.BatchUomId;
-            entity.ResourceBatchUomId = model.ResourceBatchUomId;
-
-            entity.MassUomId = model.MassUomId;
-            entity.MassUomValue = model.MassUomValue;
-
-            _db.SaveChanges();
-        }
-
-        public void AddOrUpdateNomenclatureAlts(Guid ownerId, Guid clientId, ClientType clientType,
-            Guid nomenclatureId, string name, string code, Guid? uom)
-            => AddOrUpdateNomenclatureAlts(ownerId, clientId, clientType,
-                new List<(Guid NomenclatureId, string Name, string Code, Guid? Uom)>
-                {
-                    (NomenclatureId:nomenclatureId, Name:name, Code:code, Uom: uom)
-                });
-
-        public void AddOrUpdateNomenclatureAlts(
-            Guid ownerId,
-            Guid clientId,
-            ClientType clientType,
-            List<(Guid NomenclatureId, string Name, string Code, Guid? Uom)> alts)
-        {
-            var altNomenclaturesQry = _db.NomenclatureAlternatives
-                .Include(q => q.Link)
-                .IgnoreQueryFilters()
-                .Where(q => q.OwnerId == ownerId);
-
-            altNomenclaturesQry = clientType == ClientType.Customer
-                ? altNomenclaturesQry.Where(q => q.Link.CustomerId == clientId)
-                : altNomenclaturesQry.Where(q => q.Link.SupplierId == clientId);
-
-            var altNomenclatures = altNomenclaturesQry.ToList();
-
-            var forBulkInsertNA = new List<NomenclatureAlternative>();
-            var forBulkUpdateNA = new List<NomenclatureAlternative>();
-            var forBulkInsertLink = new List<NomenclatureAlternativeLink>();
-            
-            foreach (var alt in alts)
-            {
-                var altName = altNomenclatures.FirstOrDefault(q =>
-                    q.NomenclatureId == alt.NomenclatureId &&
-                    q.Name.Equals(alt.Name, StringComparison.InvariantCultureIgnoreCase));
-
-                if (altName != null)
-                {
-                    if (!string.IsNullOrEmpty(altName.Code) && altName.BatchUomId.HasValue) continue;
-
-                    if (string.IsNullOrEmpty(altName.Code))
-                    {
-                        altName.Code = alt.Code;
-                    }
-
-                    if (!altName.BatchUomId.HasValue)
-                    {
-                        altName.BatchUomId = alt.Uom;
-                    }
-
-                    forBulkUpdateNA.Add(altName);
-                }
-                else
-                {
-                    var naId = Guid.NewGuid();
-                    altName = new NomenclatureAlternative
-                    {
-                        Id = naId,
-                        Name = alt.Name,
-                        Code = alt.Code,
-                        BatchUomId = alt.Uom,
-                        NomenclatureId = alt.NomenclatureId,
-                        OwnerId = ownerId
-                    };
-
-                    var link = new NomenclatureAlternativeLink
-                    {
-                        Id = Guid.NewGuid(),
-                        CustomerId = clientType == ClientType.Customer ? clientId : (Guid?) null,
-                        SupplierId = clientType == ClientType.Supplier ? clientId : (Guid?) null,
-                        AlternativeId = naId
-                    };
-
-                    forBulkInsertNA.Add(altName);
-                    forBulkInsertLink.Add(link);
-                }
-            }
-
-            if (forBulkInsertNA.Any())
-            {
-                _db.BulkInsert(forBulkInsertNA);
-                _db.BulkInsert(forBulkInsertLink);
-            }
-
-            if (forBulkUpdateNA.Any())
-                _db.BulkUpdate(forBulkUpdateNA);
-        }
-
-        // todo: add owner id?
-        private void AddAlternative(Guid nomenclatureId, Guid clientId, ClientType clientType, string name, string code, Guid? uom)
-        {
-            name = name.Trim();
-            code = code.Trim();
-
-            var altNamesQry = _db.NomenclatureAlternatives
-                .Include(q => q.Link)
-                .AsQueryable();
-
-            altNamesQry = clientType == ClientType.Customer
-                ? altNamesQry.Where(q => q.Link.CustomerId == clientId)
-                : altNamesQry.Where(q => q.Link.SupplierId == clientId);
-
-            var altName = altNamesQry.FirstOrDefault(q =>
-                q.NomenclatureId == nomenclatureId && q.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
-
-            if (altName != null)
-            {
-                if (string.IsNullOrEmpty(altName.Code))
-                    altName.Code = code;
-                if (!altName.BatchUomId.HasValue)
-                {
-                    altName.BatchUomId = uom;
-                }
-            }
-            else
-            {
-                _db.NomenclatureAlternatives.Add(new NomenclatureAlternative
-                {
-                    Name = name,
-                    Code = code,
-                    BatchUomId = uom,
-                    NomenclatureId = nomenclatureId,
-                    Link = new NomenclatureAlternativeLink
-                    {
-                        CustomerId = clientType == ClientType.Customer ? clientId : (Guid?)null,
-                        SupplierId = clientType == ClientType.Supplier ? clientId : (Guid?)null
-                    }
-                });
-            }
-
-            _db.SaveChanges();
+            return nomenclatures.Select(_ => _.Adapt<NomenclatureVm>());
         }
     }
 }

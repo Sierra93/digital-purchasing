@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190426115522_Supplier_PublicId")]
+    partial class Supplier_PublicId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -562,8 +564,7 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<decimal>("MassUomValue")
                         .HasColumnType("decimal(18, 4)");
 
-                    b.Property<string>("Name")
-                        .IsRequired();
+                    b.Property<string>("Name");
 
                     b.Property<string>("NameEng");
 
@@ -589,15 +590,13 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.HasIndex("MassUomId");
 
+                    b.HasIndex("OwnerId");
+
                     b.HasIndex("PackUomId");
 
                     b.HasIndex("ResourceBatchUomId");
 
                     b.HasIndex("ResourceUomId");
-
-                    b.HasIndex("OwnerId", "Name")
-                        .IsUnique()
-                        .HasFilter("IsDeleted = 0");
 
                     b.ToTable("Nomenclatures");
                 });
@@ -618,17 +617,11 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<decimal>("MassUomValue")
                         .HasColumnType("decimal(18, 4)");
 
-                    b.Property<string>("Name")
-                        .IsRequired();
+                    b.Property<string>("Name");
 
                     b.Property<Guid>("NomenclatureId");
 
                     b.Property<Guid>("OwnerId");
-
-                    b.Property<Guid?>("PackUomId");
-
-                    b.Property<decimal?>("PackUomValue")
-                        .HasColumnType("decimal(18, 4)");
 
                     b.Property<Guid?>("ResourceBatchUomId");
 
@@ -646,8 +639,6 @@ namespace DigitalPurchasing.Data.Migrations
                     b.HasIndex("NomenclatureId");
 
                     b.HasIndex("OwnerId");
-
-                    b.HasIndex("PackUomId");
 
                     b.HasIndex("ResourceBatchUomId");
 
@@ -1467,10 +1458,6 @@ namespace DigitalPurchasing.Data.Migrations
                         .WithMany()
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("DigitalPurchasing.Models.UnitsOfMeasurement", "PackUom")
-                        .WithMany()
-                        .HasForeignKey("PackUomId");
 
                     b.HasOne("DigitalPurchasing.Models.UnitsOfMeasurement", "ResourceBatchUom")
                         .WithMany("ResourceBatchNomenclatureAlternatives")
