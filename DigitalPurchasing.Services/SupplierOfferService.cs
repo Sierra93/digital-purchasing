@@ -395,7 +395,7 @@ namespace DigitalPurchasing.Services
 
             if (soItem.NomenclatureId != null && soItem.RawUomId != null)
             {
-                var rate = _conversionRateService.GetRate(soItem.RawUomId.Value, soItem.NomenclatureId.Value);
+                var rate = _conversionRateService.GetRate(soItem.RawUomId.Value, soItem.NomenclatureId.Value).Result;
                 soItem.CommonFactor = rate.CommonFactor;
                 soItem.NomenclatureFactor = rate.NomenclatureFactor;
             }

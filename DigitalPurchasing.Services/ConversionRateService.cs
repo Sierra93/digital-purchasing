@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
@@ -23,7 +24,7 @@ namespace DigitalPurchasing.Services
             _nomenclatureService = nomenclatureService;
         }
 
-        private UomConversionRateResponse GetConversionRate(Guid fromUomId, NomenclatureVm nomenclature)
+        private async Task<UomConversionRateResponse> GetConversionRate(Guid fromUomId, NomenclatureVm nomenclature)
         {
             var result = new UomConversionRateResponse { CommonFactor = 0, NomenclatureFactor = 0 };
 
@@ -36,6 +37,19 @@ namespace DigitalPurchasing.Services
                 if (toUom.Quantity.HasValue)
                 {
                     result.CommonFactor = nomenclature.MassUomValue / toUom.Quantity.Value;
+                }
+            }
+
+            var calcFromPack = fromUomId == await _uomService.GetPackagingUom(nomenclature.OwnerId)
+                               && nomenclature.PackUomId.HasValue
+                               && nomenclature.PackUomValue > 0;
+            if (calcFromPack)
+            {
+                var packUom = _uomService.GetById(nomenclature.PackUomId.Value);
+                var toUom = _uomService.GetById(toUomId);
+                if (toUom.Quantity.HasValue && packUom.Quantity.HasValue)
+                {
+                    result.CommonFactor = toUom.Quantity.Value / (nomenclature.PackUomValue * packUom.Quantity.Value);
                 }
             }
 
@@ -75,7 +89,7 @@ namespace DigitalPurchasing.Services
             return result;
         }
 
-        public UomConversionRateResponse GetRate(Guid fromUomId, Guid nomenclatureId)
+        public async Task<UomConversionRateResponse> GetRate(Guid fromUomId, Guid nomenclatureId)
         {
             var nomenclature = _nomenclatureService.GetById(nomenclatureId);
 
@@ -85,7 +99,7 @@ namespace DigitalPurchasing.Services
                 return new UomConversionRateResponse { CommonFactor = 1, NomenclatureFactor = 0 };
             }
 
-            return GetConversionRate(fromUomId, nomenclature);
+            return await GetConversionRate(fromUomId, nomenclature);
         }
     }
 }

@@ -177,12 +177,6 @@ namespace DigitalPurchasing.Services
             return new BaseResult<UomAutocompleteResponse.AutocompleteItem>(data);
         }
 
-        public void SaveConversionRate(Guid fromUomId, Guid toUomId, Guid? nomenclatureId,
-            decimal factorC, decimal factorN)
-        {
-
-        }
-
         public void SaveConversionRate(Guid ownerId, Guid fromUomId, Guid toUomId, Guid? nomenclatureId, decimal factorC, decimal factorN)
         {
             if (fromUomId == toUomId) return; // don't store in database, factor = 1
@@ -247,6 +241,12 @@ namespace DigitalPurchasing.Services
             var settings = await GetDefaultUomSettings(ownerId);
             settings.PackagingUomId = uomId;
             await _db.SaveChangesAsync();
+        }
+
+        public async Task<Guid> GetPackagingUom(Guid ownerId)
+        {
+            var settings = await GetDefaultUomSettings(ownerId);
+            return settings.PackagingUomId;
         }
 
         private async Task<DefaultUom> GetDefaultUomSettings(Guid ownerId)

@@ -7,7 +7,7 @@ namespace DigitalPurchasing.Core.Interfaces
 {
     public interface IConversionRateService
     {
-        UomConversionRateResponse GetRate(Guid fromUomId, Guid nomenclatureId);
+        Task<UomConversionRateResponse> GetRate(Guid fromUomId, Guid nomenclatureId);
     }
 
     public class GetRateOptions
@@ -37,6 +37,7 @@ namespace DigitalPurchasing.Core.Interfaces
         void DeleteConversionRate(Guid id);
 
         Task SetPackagingUom(Guid ownerId, Guid uomId);
+        Task<Guid> GetPackagingUom(Guid ownerId);
     }
 
     public class UomDto
