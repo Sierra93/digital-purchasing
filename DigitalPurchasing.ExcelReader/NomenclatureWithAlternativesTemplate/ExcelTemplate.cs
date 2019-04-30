@@ -109,6 +109,7 @@ namespace DigitalPurchasing.ExcelReader.NomenclatureWithAlternativesTemplate
                 }
 
                 ws.Cells[ws.Dimension.Address].AutoFitColumns();
+                ws.View.FreezePanes(2, 1);
 
                 return excel.GetAsByteArray();
             }
