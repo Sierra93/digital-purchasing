@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.ExcelReader;
+using DigitalPurchasing.Services.Exceptions;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.Nomenclature;
@@ -21,17 +23,30 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly INomenclatureCategoryService _nomenclatureCategoryService;
         private readonly IDictionaryService _dictionaryService;
         private readonly IUomService _uomService;
+        private readonly ICompanyService _companyService;
+        private readonly ISupplierService _supplierService;
+        private readonly ICustomerService _customerService;
+        private readonly INomenclatureAlternativeService _nomenclatureAlternativeService;
+        private const string SameNomenclatureNameErrorMessage = "Номенклатура с таким наименованием уже есть в системе";
 
         public NomenclatureController(
             INomenclatureService nomenclatureService,
             INomenclatureCategoryService nomenclatureCategoryService,
             IDictionaryService dictionaryService,
-            IUomService uomService)
+            IUomService uomService,
+            ICompanyService companyService,
+            ISupplierService supplierService,
+            ICustomerService customerService,
+            INomenclatureAlternativeService nomenclatureAlternativeService)
         {
             _nomenclatureService = nomenclatureService;
             _nomenclatureCategoryService = nomenclatureCategoryService;
             _dictionaryService = dictionaryService;
             _uomService = uomService;
+            _companyService = companyService;
+            _supplierService = supplierService;
+            _customerService = customerService;
+            _nomenclatureAlternativeService = nomenclatureAlternativeService;
         }
 
         public IActionResult Index() => View();
@@ -80,20 +95,6 @@ namespace DigitalPurchasing.Web.Controllers
             return View(nameof(Edit), vm);
         }
 
-        [HttpPost]
-        public IActionResult Create(NomenclatureEditVm vm)
-        {
-            if (ModelState.IsValid)
-            {
-                _nomenclatureService.CreateOrUpdate(vm.Adapt<NomenclatureVm>());
-                return RedirectToAction(nameof(Index));
-            }
-
-            LoadDictionaries(vm);
-
-            return View(nameof(Edit), vm);
-        }
-
         public IActionResult Edit(Guid id)
         {
             if (id == Guid.Empty) return NotFound();
@@ -109,12 +110,19 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         [HttpPost]
-        public IActionResult Edit(NomenclatureEditVm vm)
+        public IActionResult Modify(NomenclatureEditVm vm)
         {
             if (ModelState.IsValid)
             {
-                _nomenclatureService.Update(vm.Adapt<NomenclatureVm>());
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    _nomenclatureService.CreateOrUpdate(vm.Adapt<NomenclatureVm>());
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (SameNomenclatureNameException)
+                {
+                    ModelState.AddModelError(string.Empty, SameNomenclatureNameErrorMessage);
+                }
             }
 
             LoadDictionaries(vm);
@@ -132,10 +140,10 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult DetailsEdit(Guid id)
         {
             if (id == Guid.Empty) return NotFound();
-            var alt = _nomenclatureService.GetAlternativeById(id);
+            var alt = _nomenclatureAlternativeService.GetAlternativeById(id);
             if (alt == null) return NotFound();
             var vm = alt.Adapt<NomenclatureAlternativeEditVm>();
-            vm.BatchUoms = vm.ResourceBatchUoms = vm.MassUoms = vm.ResourceUoms = _dictionaryService.GetUoms().AddEmpty();
+            vm.BatchUoms = vm.ResourceBatchUoms = vm.MassUoms = vm.ResourceUoms = vm.PackUoms = _dictionaryService.GetUoms().AddEmpty();
             return View(vm);
         }
 
@@ -144,11 +152,11 @@ namespace DigitalPurchasing.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                _nomenclatureService.UpdateAlternative(vm.Adapt<NomenclatureAlternativeVm>());
+                _nomenclatureAlternativeService.UpdateAlternative(vm.Adapt<NomenclatureAlternativeVm>());
                 return RedirectToAction(nameof(Index));
             }
 
-            vm.BatchUoms = vm.ResourceBatchUoms = vm.MassUoms = vm.ResourceUoms = _dictionaryService.GetUoms().AddEmpty();
+            vm.BatchUoms = vm.ResourceBatchUoms = vm.MassUoms = vm.ResourceUoms = vm.PackUoms = _dictionaryService.GetUoms().AddEmpty();
             return View(vm);
         }
 
@@ -162,8 +170,179 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpGet]
         public IActionResult Template()
         {
-            var excelTemplate = new ExcelTemplate();
+            var excelTemplate = new ExcelReader.ExcelTemplate();
             return File(excelTemplate.Build(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "template.xlsx");
+        }
+
+        [HttpGet]
+        public IActionResult TemplateWithAlternatives()
+        {
+            var nomenclature = _nomenclatureService.GetWholeNomenclature();
+
+            var excelTemplate = new ExcelReader.NomenclatureWithAlternativesTemplate.ExcelTemplate();
+            var data = new List<object[]>();
+
+            var companyData = _companyService.GetByUser(User.Id());
+
+            foreach (var nom in nomenclature.Nomenclatures)
+            {
+                data.Add(new object[]
+                {
+                    "Базовая номенклатура",
+                    string.Empty,
+                    companyData.Name,
+                    nom.Key.CategoryName,
+                    nom.Key.Code,
+                    nom.Key.Name,
+                    nom.Key.NameEng,
+                    string.Empty,
+                    string.Empty,
+                    nom.Key.BatchUomName,
+                    nom.Key.MassUomName,
+                    nom.Key.MassUomValue,
+                    nom.Key.PackUomValue,
+                    nom.Key.PackUomName,
+                    nom.Key.ResourceUomName,
+                    nom.Key.ResourceUomValue,
+                    nom.Key.ResourceBatchUomName
+                });
+
+                foreach (var alt in nom.Value.Data)
+                {
+                    var isCustomer = alt.ClientType == (int)ClientType.Customer;
+
+                    data.Add(new object[]
+                    {
+                        isCustomer ? "Клиент" : "Поставщик",
+                        alt.ClientPublicId,
+                        alt.ClientName,
+                        nom.Key.CategoryName,
+                        nom.Key.Code,
+                        nom.Key.Name,
+                        nom.Key.NameEng,
+                        alt.Code,
+                        alt.Name,
+                        alt.BatchUomName,
+                        alt.MassUomName,
+                        alt.MassUomValue,
+                        alt.PackUomValue,
+                        alt.PackUomName,
+                        alt.ResourceUomName,
+                        alt.ResourceUomValue,
+                        alt.ResourceBatchUomName
+                    });
+                }
+            }
+
+            return File(excelTemplate.Build(data.ToArray()), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "template.xlsx");
+        }
+
+        public async Task<IActionResult> UploadTemplateWithAlternatives(IFormFile file)
+        {
+            if (file == null)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            var fileName = file.FileName;
+            var fileExt = Path.GetExtension(fileName);
+            var filePath = Path.GetTempFileName() + fileExt;
+
+            using (var output = System.IO.File.Create(filePath))
+                await file.CopyToAsync(output);
+
+            var excelTemplate = new ExcelReader.NomenclatureWithAlternativesTemplate.ExcelTemplate();
+
+            var datas = excelTemplate.Read(filePath).Where(_ => _.ClientPublicId.HasValue);
+
+            Func<ExcelReader.NomenclatureWithAlternativesTemplate.TemplateData, bool> isSupplier = (tmplData) =>
+                tmplData.AlternativesRowType?.Equals("Поставщик", StringComparison.InvariantCultureIgnoreCase) == true;
+
+            Func<ExcelReader.NomenclatureWithAlternativesTemplate.TemplateData, bool> isCustomer = (tmplData) =>
+                tmplData.AlternativesRowType?.Equals("Клиент", StringComparison.InvariantCultureIgnoreCase) == true;
+
+            var supplierRows = datas.Where(_ => isSupplier(_)).Select(_ => _);
+            var customerRows = datas.Where(_ => isCustomer(_)).Select(_ => _);
+
+            var suppliers = _supplierService.GetByPublicIds(supplierRows.Select(_ => _.ClientPublicId.Value).Distinct().ToArray());
+            var customers = _customerService.GetByPublicIds(customerRows.Select(_ => _.ClientPublicId.Value).Distinct().ToArray());
+            var nomNames = datas.Where(_ => !string.IsNullOrWhiteSpace(_.NomenclatureName)).Select(_ => _.NomenclatureName).Distinct();
+
+            var nomenclatures = _nomenclatureService.GetByNames(nomNames.ToArray());
+            var uomNames = datas.Select(q => q.BatchUomName)
+                .Union(datas.Select(q => q.MassUomName))
+                .Union(datas.Select(q => q.ResourceBatchUomName))
+                .Union(datas.Select(q => q.ResourceUomName))
+                .Union(datas.Select(q => q.PackUomName))
+                .Where(_ => !string.IsNullOrWhiteSpace(_))
+                .Distinct()
+                .ToList();
+            var uoms = _uomService.GetByNames(uomNames.ToArray());
+
+            var preparedData = new List<(Guid clientId, ClientType clientType,
+                List<AddOrUpdateAltDto> noms)>();
+
+            foreach (var item in datas.GroupBy(_ => _.NomenclatureName))
+            {
+                var nom = nomenclatures.FirstOrDefault(_ => _.Name == item.Key);
+                if (nom != null)
+                {
+                    foreach (var el in item)
+                    {
+                        ClientType? clientType = null;
+                        Guid? clientId = null;
+                        if (isSupplier(el))
+                        {
+                            clientId = suppliers.FirstOrDefault(_ => _.PublicId == el.ClientPublicId)?.Id;
+                            clientType = ClientType.Supplier;
+                        }
+                        else if (isCustomer(el))
+                        {
+                            clientId = customers.FirstOrDefault(_ => _.PublicId == el.ClientPublicId)?.Id;
+                            clientType = ClientType.Customer;
+                        }
+                        if (clientId.HasValue)
+                        {
+                            var batchUom = uoms.FirstOrDefault(u => u.Name.Equals(el.BatchUomName, StringComparison.InvariantCultureIgnoreCase));
+                            var massUom = uoms.FirstOrDefault(u => u.Name.Equals(el.MassUomName, StringComparison.InvariantCultureIgnoreCase));
+                            var resourceBatchUom = uoms.FirstOrDefault(u => u.Name.Equals(el.ResourceBatchUomName, StringComparison.InvariantCultureIgnoreCase));
+                            var resourceUom = uoms.FirstOrDefault(u => u.Name.Equals(el.ResourceUomName, StringComparison.InvariantCultureIgnoreCase));
+                            var packUom = uoms.FirstOrDefault(u => u.Name.Equals(el.PackUomName, StringComparison.InvariantCultureIgnoreCase));
+
+                            var prepDataItem = preparedData.FirstOrDefault(_ => _.clientId == clientId.Value);
+                            if (prepDataItem.clientId == default)
+                            {
+                                prepDataItem = (clientId.Value, clientType.Value,
+                                    new List<AddOrUpdateAltDto>());
+                                preparedData.Add(prepDataItem);
+                            }
+
+                            prepDataItem.noms.Add(new AddOrUpdateAltDto
+                            {
+                                NomenclatureId = nom.Id,
+                                Name = el.AlternativeName,
+                                Code = el.AlternativeCode,
+                                BatchUomId = batchUom?.Id,
+                                MassUomId = massUom?.Id,
+                                MassUomValue = el.MassUomValue ?? 0,
+                                ResourceBatchUomId = resourceBatchUom?.Id,
+                                ResourceUomId = resourceUom?.Id,
+                                ResourceUomValue = el.ResourceUomValue ?? 0,
+                                PackUomId = packUom?.Id,
+                                PackUomValue = el.PackUomValue
+                            });
+                        }
+                    }
+                }
+            }
+
+            foreach (var item in preparedData)
+            {
+                _nomenclatureAlternativeService.AddOrUpdateNomenclatureAlts(User.CompanyId(),
+                    item.clientId, item.clientType, item.noms);
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
@@ -181,7 +360,7 @@ namespace DigitalPurchasing.Web.Controllers
             using (var output = System.IO.File.Create(filePath))
                 await file.CopyToAsync(output);
 
-            var excelTemplate = new ExcelTemplate();
+            var excelTemplate = new ExcelReader.ExcelTemplate();
 
             var datas = excelTemplate.Read(filePath);
 

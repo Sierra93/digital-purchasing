@@ -14,6 +14,13 @@
             <input type="file" style="display: none;" name="file">
         </label>
     </form>
+    <a asp-action="TemplateWithAlternatives" class="btn btn-default">Выгрузить аналоги</a>
+    <form method="post" enctype="multipart/form-data" asp-action="UploadTemplateWithAlternatives" asp-controller="Nomenclature" class="btn btn-default btn-file">
+        <label>
+            Загрузить аналоги
+            <input type="file" style="display: none;" name="file">
+        </label>
+    </form>
 </div>
 
 <div id="app">
@@ -195,6 +202,16 @@
                                 title: 'ЕИ ресурса',
                                 name: 'resourceBatchUomName',
                                 sortField: 'ResourceBatchUom.Name'
+                            },
+                            {
+                                title: 'Количество товара в упаковке, ЕИ товара в упаковке',
+                                name: 'packUomValue',
+                                sortField: 'PackUomValue'
+                            },
+                            {
+                                title: 'ЕИ товара в упаковке',
+                                name: 'packUomName',
+                                sortField: 'PackUom.Name'
                             },
                             {
                                 name: 'slot-actions',

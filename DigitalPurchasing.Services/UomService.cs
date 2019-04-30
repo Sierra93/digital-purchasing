@@ -111,6 +111,18 @@ namespace DigitalPurchasing.Services
 
         public IEnumerable<UomDto> GetAll() => _db.UnitsOfMeasurements.Where(q => !q.IsDeleted).ProjectToType<UomDto>().ToList();
 
+        public IEnumerable<UomDto> GetByNames(params string[] uomNames)
+        {
+            if (!uomNames.Any())
+            {
+                return Enumerable.Empty<UomDto>();
+            }
+
+            return (from item in _db.UnitsOfMeasurements
+                    where !item.IsDeleted && uomNames.Contains(item.Name)
+                    select item).ProjectToType<UomDto>().ToList();
+        }
+
         public UomAutocompleteResponse Autocomplete(string s, Guid ownerId)
         {
             var response = new UomAutocompleteResponse

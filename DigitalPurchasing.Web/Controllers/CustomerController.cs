@@ -1,3 +1,4 @@
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
@@ -76,7 +77,7 @@ namespace DigitalPurchasing.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                _customerService.CreateCustomer(vm.Name);
+                _customerService.CreateCustomer(vm.Name, User.CompanyId());
                 return RedirectToAction(nameof(Index));
             }
 

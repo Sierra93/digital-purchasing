@@ -141,6 +141,7 @@ namespace DigitalPurchasing.Web
             services.AddScoped<IRootService, RootService>();
             services.AddScoped<ISelectedSupplierService, SelectedSupplierService>();
             services.AddScoped<IConversionRateService, ConversionRateService>();
+            services.AddScoped<INomenclatureAlternativeService, NomenclatureAlternativeService>();
             services.AddMandrill();
 
             services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();

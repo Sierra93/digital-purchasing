@@ -36,17 +36,20 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly INomenclatureService _nomenclatureService;
         private readonly IUomService _uomService;
         private readonly IRootService _rootService;
+        private readonly INomenclatureAlternativeService _nomenclatureAlternativeService;
 
         public SupplierOfferController(
             ISupplierOfferService supplierOfferService,
             INomenclatureService nomenclatureService,
             IUomService uomService,
-            IRootService rootService)
+            IRootService rootService,
+            INomenclatureAlternativeService nomenclatureAlternativeService)
         {
             _supplierOfferService = supplierOfferService;
             _nomenclatureService = nomenclatureService;
             _uomService = uomService;
             _rootService = rootService;
+            _nomenclatureAlternativeService = nomenclatureAlternativeService;
         }
 
         public IActionResult Edit(Guid id)
@@ -115,7 +118,7 @@ namespace DigitalPurchasing.Web.Controllers
             var nomenclature = _nomenclatureService.AutocompleteSingle(model.NomenclatureId);
             _uomService.SaveConversionRate(companyId, model.UomId, nomenclature.Data.BatchUomId, nomenclature.Data.Id, model.FactorC, model.FactorN);
             _supplierOfferService.SaveMatch(model.ItemId, model.NomenclatureId, model.UomId, model.FactorC, model.FactorN);
-            _nomenclatureService.AddNomenclatureForSupplier(model.ItemId);
+            _nomenclatureAlternativeService.AddNomenclatureForSupplier(model.ItemId);
 
             var clId = await _supplierOfferService.GetCLIdBySoItem(model.ItemId);
 

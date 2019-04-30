@@ -10,8 +10,9 @@
     {
         if (category.ParentId.HasValue)
         {
+            string categoryName = category.IsDeleted ? "[Удалена]" : category.Name;
             var parentCategory = Model.AvailableCategories.First(_ => _.Id == category.ParentId.Value);
-            return $"{getCatNameInHierarchy(parentCategory)} > {category.Name}";
+            return $"{getCatNameInHierarchy(parentCategory)} > {categoryName}";
         }
         else
         {

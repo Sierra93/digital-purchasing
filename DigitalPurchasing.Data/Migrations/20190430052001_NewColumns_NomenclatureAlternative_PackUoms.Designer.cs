@@ -4,18 +4,20 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190430052001_NewColumns_NomenclatureAlternative_PackUoms")]
+    partial class NewColumns_NomenclatureAlternative_PackUoms
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.2.3-servicing-35854")
+                .HasAnnotation("ProductVersion", "2.2.4-servicing-10062")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
@@ -316,24 +318,6 @@ namespace DigitalPurchasing.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("Customers");
-                });
-
-            modelBuilder.Entity("DigitalPurchasing.Models.DefaultUom", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<DateTime>("CreatedOn");
-
-                    b.Property<Guid>("OwnerId");
-
-                    b.Property<Guid>("PackagingUomId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OwnerId");
-
-                    b.ToTable("DefaultUoms");
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.Delivery", b =>
@@ -1358,14 +1342,6 @@ namespace DigitalPurchasing.Data.Migrations
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.Customer", b =>
-                {
-                    b.HasOne("DigitalPurchasing.Models.Company", "Owner")
-                        .WithMany()
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("DigitalPurchasing.Models.DefaultUom", b =>
                 {
                     b.HasOne("DigitalPurchasing.Models.Company", "Owner")
                         .WithMany()
