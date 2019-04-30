@@ -30,16 +30,14 @@ namespace DigitalPurchasing.Services
 
             var toUomId = nomenclature.BatchUomId;
 
+            // kg -> ...
             var calcFromUom = fromUomId == nomenclature.MassUomId && nomenclature.MassUomValue > 0;
             if (calcFromUom)
             {
-                var toUom = _uomService.GetById(toUomId);
-                if (toUom.Quantity.HasValue)
-                {
-                    result.CommonFactor = nomenclature.MassUomValue / toUom.Quantity.Value;
-                }
+                result.CommonFactor = 1 / nomenclature.MassUomValue;
             }
 
+            // packaging -> ...
             var calcFromPack = fromUomId == await _uomService.GetPackagingUom(nomenclature.OwnerId)
                                && nomenclature.PackUomId.HasValue
                                && nomenclature.PackUomValue > 0;
