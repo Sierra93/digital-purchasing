@@ -77,7 +77,7 @@ namespace DigitalPurchasing.Services
             var qry = from n in _db.Nomenclatures.Where(q => !q.IsDeleted)
                       join na in _db.NomenclatureAlternatives on n.Id equals na.NomenclatureId into g
                       from possibleNa in g.DefaultIfEmpty()
-                      join nal in _db.NomenclatureAlternativeLinks on possibleNa.Id equals nal.AlternativeId into g2
+                      join nal in _db.NomenclatureAlternativeLinks.Include(nal1 => nal1.Supplier).Include(na1 => na1.Customer) on possibleNa.Id equals nal.AlternativeId into g2
                       from possibleNal in g2.DefaultIfEmpty()
                       select new
                       {
@@ -109,22 +109,8 @@ namespace DigitalPurchasing.Services
                                   packUomName = possibleNa.PackUom.Name,
                                   possibleNa.PackUomValue,
                               },
-                          customer = possibleNal == null
-                              ? null
-                              : new
-                              {
-                                  name = possibleNal.Customer.Name,
-                                  id = possibleNal.CustomerId,
-                                  publicId = possibleNal.Customer != null ? possibleNal.Customer.PublicId : 0,
-                              },
-                          supplier = possibleNal == null
-                              ? null
-                              : new
-                              {
-                                  name = possibleNal.Supplier.Name,
-                                  id = possibleNal.SupplierId,
-                                  publicId = possibleNal.Supplier != null ? possibleNal.Supplier.PublicId : 0
-                              }
+                          customer = possibleNal.Customer,
+                          supplier = possibleNal.Supplier
                       };
 
             var qryResult = qry.ToList();
@@ -164,9 +150,9 @@ namespace DigitalPurchasing.Services
                         ResourceBatchUomName = _.alt.resourceBatchUomName,
                         PackUomName = _.alt.packUomName,
                         PackUomValue = _.alt.PackUomValue,
-                        ClientName = _.customer?.id != null ? _.customer?.name : _.supplier?.name,
-                        ClientType = (int)(_.customer?.id != null ? ClientType.Customer : ClientType.Supplier),
-                        ClientPublicId = _.customer?.id != null ? _.customer?.publicId : _.supplier?.publicId
+                        ClientName = _.customer?.Id != null ? _.customer?.Name : _.supplier?.Name,
+                        ClientType = (int)(_.customer?.Id != null ? ClientType.Customer : ClientType.Supplier),
+                        ClientPublicId = _.customer?.Id != null ? _.customer?.PublicId : _.supplier?.PublicId
                     }).ToList()
                 };
                 result.Nomenclatures.Add(nomenclature, alternatives);
