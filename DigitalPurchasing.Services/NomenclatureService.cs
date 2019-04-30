@@ -6,6 +6,7 @@ using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
+using DigitalPurchasing.Services.Exceptions;
 using EFCore.BulkExtensions;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
@@ -209,27 +210,39 @@ namespace DigitalPurchasing.Services
 
         public NomenclatureVm CreateOrUpdate(NomenclatureVm vm)
         {
-            var oldEntity = _db.Nomenclatures.FirstOrDefault(q => q.Name.Equals(vm.Name, StringComparison.InvariantCultureIgnoreCase));
-            if (oldEntity != null)
+            if (HasSameNomenclatureName(vm.Id == default ? (Guid?)null : vm.Id, vm.Name?.Trim()))
             {
-                oldEntity.Code = vm.Code?.Trim();
-                oldEntity.BatchUomId = vm.BatchUomId;
-                oldEntity.MassUomId = vm.MassUomId;
-                oldEntity.ResourceUomId = vm.ResourceUomId;
-                oldEntity.ResourceBatchUomId = vm.ResourceBatchUomId;
-                oldEntity.ResourceUomValue = vm.ResourceUomValue;
-                oldEntity.MassUomValue = vm.MassUomValue;
-                oldEntity.PackUomId = vm.PackUomId;
-                oldEntity.PackUomValue = vm.PackUomValue;
-                _db.SaveChanges();
-                return oldEntity.Adapt<NomenclatureVm>();
+                throw new SameNomenclatureNameException();
             }
 
-            var entity = vm.Adapt<Nomenclature>();
-            var entry = _db.Nomenclatures.Add(entity);
+            var entity = _db.Nomenclatures.FirstOrDefault(q => q.Id == vm.Id);
+
+            if (entity == null)
+            {
+                entity = new Nomenclature();
+                _db.Nomenclatures.Add(entity);
+            }
+
+            entity.CategoryId = vm.CategoryId;
+            entity.Code = vm.Code?.Trim();
+            entity.Name = vm.Name?.Trim();
+            entity.NameEng = vm.NameEng?.Trim();
+
+            entity.ResourceUomId = vm.ResourceUomId;
+            entity.ResourceUomValue = vm.ResourceUomValue;
+            entity.ResourceBatchUomId = vm.ResourceBatchUomId;
+
+            entity.BatchUomId = vm.BatchUomId;
+
+            entity.MassUomId = vm.MassUomId;
+            entity.MassUomValue = vm.MassUomValue;
+
+            entity.PackUomId = vm.PackUomId;
+            entity.PackUomValue = vm.PackUomValue;
+
             _db.SaveChanges();
-            var result = entry.Entity.Adapt<NomenclatureVm>();
-            return result;
+
+            return entity.Adapt<NomenclatureVm>();
         }
 
         public void CreateOrUpdate(List<NomenclatureVm> nomenclatures, Guid ownerId)
@@ -259,31 +272,9 @@ namespace DigitalPurchasing.Services
             return result;
         }
 
-        public bool Update(NomenclatureVm model)
-        {
-            var entity = _db.Nomenclatures.Find(model.Id);
-            if (entity == null) return false;
-
-            entity.CategoryId = model.CategoryId;
-            entity.Code = model.Code?.Trim();
-            entity.Name = model.Name?.Trim();
-            entity.NameEng = model.NameEng;
-
-            entity.ResourceUomId = model.ResourceUomId;
-            entity.ResourceUomValue = model.ResourceUomValue;
-            entity.ResourceBatchUomId = model.ResourceBatchUomId;
-
-            entity.BatchUomId = model.BatchUomId;
-
-            entity.MassUomId = model.MassUomId;
-            entity.MassUomValue = model.MassUomValue;
-
-            entity.PackUomId = model.PackUomId;
-            entity.PackUomValue = model.PackUomValue;
-
-            _db.SaveChanges();
-            return true;
-        }
+        private bool HasSameNomenclatureName(Guid? exceptNomenclatureId, string name) =>
+            !string.IsNullOrWhiteSpace(name) &&
+            _db.Nomenclatures.Any(_ => _.Id != exceptNomenclatureId && _.Name == name);
 
         public NomenclatureAutocompleteResult Autocomplete(AutocompleteOptions options)
         {

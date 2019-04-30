@@ -11,7 +11,6 @@ namespace DigitalPurchasing.Core.Interfaces
         void CreateOrUpdate(List<NomenclatureVm> models, Guid ownerId);
         NomenclatureVm GetById(Guid id);
         IEnumerable<NomenclatureVm> GetByNames(params string[] nomenclatureNames);
-        bool Update(NomenclatureVm model);
         NomenclatureAutocompleteResult Autocomplete(AutocompleteOptions options);
         BaseResult<NomenclatureAutocompleteResult.AutocompleteResultItem> AutocompleteSingle(Guid id);
         void Delete(Guid id);
