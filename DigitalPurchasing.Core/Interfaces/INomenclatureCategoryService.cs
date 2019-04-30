@@ -7,7 +7,7 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         NomenclatureCategoryIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
         NomenclatureCategoryVm CreateOrUpdate(string name, Guid? parentId);
-        IEnumerable<NomenclatureCategoryVm> GetAll();
+        IEnumerable<NomenclatureCategoryVm> GetAll(bool includeDeleted = false);
         NomenclatureCategoryVm GetById(Guid id);
         string FullCategoryName(Guid categoryId);
         void Delete(Guid id);
@@ -18,6 +18,7 @@ namespace DigitalPurchasing.Core.Interfaces
     public class NomenclatureCategoryVm : NomenclatureCategoryBasicInfo
     {
         public string FullName { get; set; }
+        public bool IsDeleted { get; set; }
     }
 
     public class NomenclatureCategoryIndexDataItem : NomenclatureCategoryBasicInfo

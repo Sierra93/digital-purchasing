@@ -158,9 +158,17 @@ namespace DigitalPurchasing.Services
             return entry.Entity.Adapt<NomenclatureCategoryVm>();
         }
 
-        public IEnumerable<NomenclatureCategoryVm> GetAll()
+        public IEnumerable<NomenclatureCategoryVm> GetAll(bool includeDeleted = false)
         {
-            var result = _db.NomenclatureCategories.Where(q => !q.IsDeleted).Include(q => q.Parent).ProjectToType<NomenclatureCategoryVm>().ToList();
+            IQueryable<NomenclatureCategory> query = _db.NomenclatureCategories.Include(q => q.Parent);
+            
+            if (!includeDeleted)
+            {
+                query = query.Where(q => !q.IsDeleted);
+            }
+
+            var result = query.ProjectToType<NomenclatureCategoryVm>().ToList();
+
             return result;
         }
     }
