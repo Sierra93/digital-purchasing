@@ -1,4 +1,5 @@
 @using DigitalPurchasing.Core
+@using DigitalPurchasing.Core.Extensions
 @model DigitalPurchasing.Core.Interfaces.SupplierOfferDetailsVm
 
 @{
@@ -114,7 +115,7 @@
                             <td>@item.Offer.Uom</td>
                             <td class="align-right">@item.Offer.Qty.ToString(Consts.Format.Qty)</td>
                             <td class="align-right">@item.Offer.Price.ToString(Consts.Format.Money3)</td>
-                            <td class="align-right">@item.Offer.TotalPrice.ToString(Consts.Format.Money2)</td>
+                            <td class="align-right">@item.Offer.TotalPrice.ToExcelRound(0).ToString(Consts.Format.Money2)</td>
 
                             <td class="align-right">@item.Mass.TotalPricePerc.ToString("P0")</td>
                             <td class="align-right">@item.Mass.MassOf1BatchUom.ToString(Consts.Format.Money2)</td>
