@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Services;
@@ -97,7 +98,7 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult AutocompleteSingle([FromQuery] Guid id) => Json(_uomService.AutocompleteSingle(id));
 
         [HttpPost]
-        public IActionResult Factor([FromBody]UomFactorVm vm) => Json(_conversionRateService.GetRate(vm.FromId, vm.NomenclatureId));
+        public async Task<IActionResult> Factor([FromBody]UomFactorVm vm) => Json(await _conversionRateService.GetRate(vm.FromId, vm.NomenclatureId));
 
         [HttpPost]
         public IActionResult SaveFactor([FromBody]UomSaveFactorVm vm)
