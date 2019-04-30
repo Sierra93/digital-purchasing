@@ -269,7 +269,7 @@ namespace DigitalPurchasing.Web.Controllers
             var nomNames = datas.Where(_ => !string.IsNullOrWhiteSpace(_.NomenclatureName)).Select(_ => _.NomenclatureName).Distinct();
 
             var nomenclatures = _nomenclatureService.GetByNames(nomNames.ToArray());
-            var uomNames = datas.Select(q => q.BatchUomName)
+            var allUoms = datas.Select(q => q.BatchUomName)
                 .Union(datas.Select(q => q.MassUomName))
                 .Union(datas.Select(q => q.ResourceBatchUomName))
                 .Union(datas.Select(q => q.ResourceUomName))
@@ -277,7 +277,16 @@ namespace DigitalPurchasing.Web.Controllers
                 .Where(_ => !string.IsNullOrWhiteSpace(_))
                 .Distinct()
                 .ToList();
-            var uoms = _uomService.GetByNames(uomNames.ToArray());
+
+            var dbUoms = new List<Tuple<string, Guid>>();
+            foreach (var uom in allUoms)
+            {
+                var result = _uomService.CreateOrUpdate(uom);
+                if (!dbUoms.Any(_ => _.Item2 == result.Id))
+                {
+                    dbUoms.Add(new Tuple<string, Guid>(uom, result.Id));
+                }
+            }
 
             var preparedData = new List<(Guid clientId, ClientType clientType,
                 List<AddOrUpdateAltDto> noms)>();
@@ -303,11 +312,11 @@ namespace DigitalPurchasing.Web.Controllers
                         }
                         if (clientId.HasValue)
                         {
-                            var batchUom = uoms.FirstOrDefault(u => u.Name.Equals(el.BatchUomName, StringComparison.InvariantCultureIgnoreCase));
-                            var massUom = uoms.FirstOrDefault(u => u.Name.Equals(el.MassUomName, StringComparison.InvariantCultureIgnoreCase));
-                            var resourceBatchUom = uoms.FirstOrDefault(u => u.Name.Equals(el.ResourceBatchUomName, StringComparison.InvariantCultureIgnoreCase));
-                            var resourceUom = uoms.FirstOrDefault(u => u.Name.Equals(el.ResourceUomName, StringComparison.InvariantCultureIgnoreCase));
-                            var packUom = uoms.FirstOrDefault(u => u.Name.Equals(el.PackUomName, StringComparison.InvariantCultureIgnoreCase));
+                            var batchUom = dbUoms.FirstOrDefault(u => u.Item1.Equals(el.BatchUomName, StringComparison.InvariantCultureIgnoreCase));
+                            var massUom = dbUoms.FirstOrDefault(u => u.Item1.Equals(el.MassUomName, StringComparison.InvariantCultureIgnoreCase));
+                            var resourceBatchUom = dbUoms.FirstOrDefault(u => u.Item1.Equals(el.ResourceBatchUomName, StringComparison.InvariantCultureIgnoreCase));
+                            var resourceUom = dbUoms.FirstOrDefault(u => u.Item1.Equals(el.ResourceUomName, StringComparison.InvariantCultureIgnoreCase));
+                            var packUom = dbUoms.FirstOrDefault(u => u.Item1.Equals(el.PackUomName, StringComparison.InvariantCultureIgnoreCase));
 
                             var prepDataItem = preparedData.FirstOrDefault(_ => _.clientId == clientId.Value);
                             if (prepDataItem.clientId == default)
@@ -322,13 +331,13 @@ namespace DigitalPurchasing.Web.Controllers
                                 NomenclatureId = nom.Id,
                                 Name = el.AlternativeName,
                                 Code = el.AlternativeCode,
-                                BatchUomId = batchUom?.Id,
-                                MassUomId = massUom?.Id,
+                                BatchUomId = batchUom?.Item2,
+                                MassUomId = massUom?.Item2,
                                 MassUomValue = el.MassUomValue ?? 0,
-                                ResourceBatchUomId = resourceBatchUom?.Id,
-                                ResourceUomId = resourceUom?.Id,
+                                ResourceBatchUomId = resourceBatchUom?.Item2,
+                                ResourceUomId = resourceUom?.Item2,
                                 ResourceUomValue = el.ResourceUomValue ?? 0,
-                                PackUomId = packUom?.Id,
+                                PackUomId = packUom?.Item2,
                                 PackUomValue = el.PackUomValue
                             });
                         }
