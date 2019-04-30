@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.ExcelReader;
+using DigitalPurchasing.Services.Exceptions;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.Nomenclature;
@@ -21,6 +22,7 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly INomenclatureCategoryService _nomenclatureCategoryService;
         private readonly IDictionaryService _dictionaryService;
         private readonly IUomService _uomService;
+        private const string SameNomenclatureNameErrorMessage = "Номенклатура с таким наименованием уже есть в системе";
 
         public NomenclatureController(
             INomenclatureService nomenclatureService,
@@ -80,20 +82,6 @@ namespace DigitalPurchasing.Web.Controllers
             return View(nameof(Edit), vm);
         }
 
-        [HttpPost]
-        public IActionResult Create(NomenclatureEditVm vm)
-        {
-            if (ModelState.IsValid)
-            {
-                _nomenclatureService.CreateOrUpdate(vm.Adapt<NomenclatureVm>());
-                return RedirectToAction(nameof(Index));
-            }
-
-            LoadDictionaries(vm);
-
-            return View(nameof(Edit), vm);
-        }
-
         public IActionResult Edit(Guid id)
         {
             if (id == Guid.Empty) return NotFound();
@@ -109,12 +97,19 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         [HttpPost]
-        public IActionResult Edit(NomenclatureEditVm vm)
+        public IActionResult Modify(NomenclatureEditVm vm)
         {
             if (ModelState.IsValid)
             {
-                _nomenclatureService.Update(vm.Adapt<NomenclatureVm>());
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    _nomenclatureService.CreateOrUpdate(vm.Adapt<NomenclatureVm>());
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (SameNomenclatureNameException)
+                {
+                    ModelState.AddModelError(string.Empty, SameNomenclatureNameErrorMessage);
+                }
             }
 
             LoadDictionaries(vm);
