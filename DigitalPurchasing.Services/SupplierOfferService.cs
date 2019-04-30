@@ -351,11 +351,13 @@ namespace DigitalPurchasing.Services
                 supplierOffer.OwnerId, supplierOffer.SupplierId.Value, ClientType.Supplier,
                 rawItems
                     .Where(q => q.NomenclatureId.HasValue)
-                    .Select(q => (
-                        NomenclatureId: q.NomenclatureId.Value,
-                        Name: q.RawName,
-                        Code: q.RawCode,
-                        Uom: q.RawUomId)
+                    .Select(q => new AddOrUpdateAltDto
+                    {
+                        NomenclatureId = q.NomenclatureId.Value,
+                        Name = q.RawName,
+                        Code = q.RawCode,
+                        BatchUomId = q.RawUomId
+                    }
                     ).ToList());
         }
 

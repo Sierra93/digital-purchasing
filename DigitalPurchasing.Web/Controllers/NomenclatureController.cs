@@ -225,11 +225,11 @@ namespace DigitalPurchasing.Web.Controllers
                         alt.BatchUomName,
                         alt.MassUomName,
                         alt.MassUomValue,
-                        "TODO",
-                        "TODO",
+                        alt.PackUomValue,
+                        alt.PackUomName,
                         alt.ResourceUomName,
                         alt.ResourceUomValue,
-                        nom.Key.ResourceBatchUomName
+                        alt.ResourceBatchUomName
                     });
                 }
             }
@@ -273,13 +273,14 @@ namespace DigitalPurchasing.Web.Controllers
                 .Union(datas.Select(q => q.MassUomName))
                 .Union(datas.Select(q => q.ResourceBatchUomName))
                 .Union(datas.Select(q => q.ResourceUomName))
+                .Union(datas.Select(q => q.PackUomName))
                 .Where(_ => !string.IsNullOrWhiteSpace(_))
                 .Distinct()
                 .ToList();
             var uoms = _uomService.GetByNames(uomNames.ToArray());
 
             var preparedData = new List<(Guid clientId, ClientType clientType,
-                List<(Guid NomenclatureId, string Name, string Code, Guid? BatchUomId, Guid? MassUomId, Guid? ResourceBatchUomId, Guid? ResourceUomId)> noms)>();
+                List<AddOrUpdateAltDto> noms)>();
 
             foreach (var item in datas.GroupBy(_ => _.NomenclatureName))
             {
@@ -306,17 +307,30 @@ namespace DigitalPurchasing.Web.Controllers
                             var massUom = uoms.FirstOrDefault(u => u.Name.Equals(el.MassUomName, StringComparison.InvariantCultureIgnoreCase));
                             var resourceBatchUom = uoms.FirstOrDefault(u => u.Name.Equals(el.ResourceBatchUomName, StringComparison.InvariantCultureIgnoreCase));
                             var resourceUom = uoms.FirstOrDefault(u => u.Name.Equals(el.ResourceUomName, StringComparison.InvariantCultureIgnoreCase));
+                            var packUom = uoms.FirstOrDefault(u => u.Name.Equals(el.PackUomName, StringComparison.InvariantCultureIgnoreCase));
 
                             var prepDataItem = preparedData.FirstOrDefault(_ => _.clientId == clientId.Value);
                             if (prepDataItem.clientId == default)
                             {
                                 prepDataItem = (clientId.Value, clientType.Value,
-                                    new List<(Guid nomId, string altName, string altCode, Guid? batchUomId, Guid? massUomId, Guid? resourceBatchUomId, Guid? resourceUomId)>());
+                                    new List<AddOrUpdateAltDto>());
                                 preparedData.Add(prepDataItem);
                             }
 
-                            prepDataItem.noms.Add((nom.Id, el.AlternativeName, el.AlternativeCode, batchUom?.Id,
-                                massUom?.Id, resourceBatchUom?.Id, resourceUom?.Id));
+                            prepDataItem.noms.Add(new AddOrUpdateAltDto
+                            {
+                                NomenclatureId = nom.Id,
+                                Name = el.AlternativeName,
+                                Code = el.AlternativeCode,
+                                BatchUomId = batchUom?.Id,
+                                MassUomId = massUom?.Id,
+                                MassUomValue = el.MassUomValue ?? 0,
+                                ResourceBatchUomId = resourceBatchUom?.Id,
+                                ResourceUomId = resourceUom?.Id,
+                                ResourceUomValue = el.ResourceUomValue ?? 0,
+                                PackUomId = packUom?.Id,
+                                PackUomValue = el.PackUomValue
+                            });
                         }
                     }
                 }

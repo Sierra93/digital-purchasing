@@ -15,18 +15,17 @@ namespace DigitalPurchasing.ExcelReader.NomenclatureWithAlternativesTemplate
         public string NomenclatureEngName { get; set; }
         public string AlternativeCode { get; set; }
         public string AlternativeName { get; set; }
+
         public string BatchUomName { get; set; }
+
         public string MassUomName { get; set; }
         public decimal? MassUomValue { get; set; }
-
-        // TODO
-        public string Website { get; set; }
-
-        // TODO
-        public string SupplierPhone { get; set; }
 
         public string ResourceUomName { get; set; }
         public decimal? ResourceUomValue { get; set; }
         public string ResourceBatchUomName { get; set; }
+
+        public string PackUomName { get; set; }
+        public decimal? PackUomValue { get; set; }
     }
 }

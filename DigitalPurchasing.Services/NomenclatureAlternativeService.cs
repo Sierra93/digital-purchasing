@@ -97,29 +97,12 @@ namespace DigitalPurchasing.Services
         }
 
         public void AddOrUpdateNomenclatureAlts(Guid ownerId, Guid clientId, ClientType clientType,
-            Guid nomenclatureId, string name, string code, Guid? uom)
+            Guid nomenclatureId, string name, string code, Guid? batchUomId)
             => AddOrUpdateNomenclatureAlts(ownerId, clientId, clientType,
-                new List<(Guid NomenclatureId, string Name, string Code, Guid? Uom)>
+                new List<AddOrUpdateAltDto>
                 {
-                    (NomenclatureId:nomenclatureId, Name:name, Code:code, Uom: uom)
+                    new AddOrUpdateAltDto() { NomenclatureId = nomenclatureId, Name = name, Code = code, BatchUomId = batchUomId }
                 });
-
-        public void AddOrUpdateNomenclatureAlts(
-           Guid ownerId,
-           Guid clientId,
-           ClientType clientType,
-           List<(Guid NomenclatureId, string Name, string Code, Guid? BatchUomId)> alts)
-        {
-            AddOrUpdateNomenclatureAlts(ownerId, clientId, clientType,
-                alts.Select(_ => (
-                _.NomenclatureId,
-                _.Name,
-                _.Code,
-                _.BatchUomId,
-                MassUomId: (Guid?)null,
-                ResourceBatchUomId: (Guid?)null,
-                ResourceUomId: (Guid?)null)).ToList());
-        }
 
         // todo: add owner id?
         private void AddAlternative(Guid nomenclatureId, Guid clientId, ClientType clientType, string name, string code, Guid? uom)
@@ -167,7 +150,7 @@ namespace DigitalPurchasing.Services
         }
 
         public void AddOrUpdateNomenclatureAlts(Guid ownerId, Guid clientId, ClientType clientType,
-            List<(Guid NomenclatureId, string Name, string Code, Guid? BatchUomId, Guid? MassUomId, Guid? ResourceBatchUomId, Guid? ResourceUomId)> alts)
+            List<AddOrUpdateAltDto> alts)
         {
             if (!alts.Any())
             {
@@ -217,6 +200,12 @@ namespace DigitalPurchasing.Services
                         changed = true;
                     }
 
+                    if (altByName.MassUomValue != alt.MassUomValue)
+                    {
+                        altByName.MassUomValue = alt.MassUomValue;
+                        changed = true;
+                    }
+
                     if (altByName.ResourceBatchUomId != alt.ResourceBatchUomId)
                     {
                         altByName.ResourceBatchUomId = alt.ResourceBatchUomId;
@@ -226,6 +215,24 @@ namespace DigitalPurchasing.Services
                     if (altByName.ResourceUomId != alt.ResourceUomId)
                     {
                         altByName.ResourceUomId = alt.ResourceUomId;
+                        changed = true;
+                    }
+
+                    if (altByName.ResourceUomValue != alt.ResourceUomValue)
+                    {
+                        altByName.ResourceUomValue = alt.ResourceUomValue;
+                        changed = true;
+                    }
+
+                    if (altByName.PackUomId != alt.PackUomId)
+                    {
+                        altByName.PackUomId = alt.PackUomId;
+                        changed = true;
+                    }
+
+                    if (altByName.PackUomValue != alt.PackUomValue)
+                    {
+                        altByName.PackUomValue = alt.PackUomValue;
                         changed = true;
                     }
 
@@ -244,9 +251,13 @@ namespace DigitalPurchasing.Services
                         Code = alt.Code?.Trim(),
                         BatchUomId = alt.BatchUomId,
                         MassUomId = alt.MassUomId,
+                        MassUomValue = alt.MassUomValue,
                         ResourceBatchUomId = alt.ResourceBatchUomId,
                         ResourceUomId = alt.ResourceUomId,
+                        ResourceUomValue = alt.ResourceUomValue,
                         NomenclatureId = alt.NomenclatureId,
+                        PackUomId = alt.PackUomId,
+                        PackUomValue = alt.PackUomValue,
                         OwnerId = ownerId
                     };
 

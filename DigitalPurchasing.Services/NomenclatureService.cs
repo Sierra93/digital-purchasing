@@ -105,7 +105,9 @@ namespace DigitalPurchasing.Services
                                   massUomName = possibleNa.MassUom.Name,
                                   resourceUomName = possibleNa.ResourceUom.Name,
                                   possibleNa.ResourceUomValue,
-                                  resourceBatchUomName = possibleNa.ResourceBatchUom.Name
+                                  resourceBatchUomName = possibleNa.ResourceBatchUom.Name,
+                                  packUomName = possibleNa.PackUom.Name,
+                                  possibleNa.PackUomValue,
                               },
                           customer = possibleNal == null
                               ? null
@@ -160,6 +162,8 @@ namespace DigitalPurchasing.Services
                         ResourceUomName = _.alt.resourceUomName,
                         ResourceUomValue = _.alt.ResourceUomValue,
                         ResourceBatchUomName = _.alt.resourceBatchUomName,
+                        PackUomName = _.alt.packUomName,
+                        PackUomValue = _.alt.PackUomValue,
                         ClientName = _.customer?.id != null ? _.customer?.name : _.supplier?.name,
                         ClientType = (int)(_.customer?.id != null ? ClientType.Customer : ClientType.Supplier),
                         ClientPublicId = _.customer?.id != null ? _.customer?.publicId : _.supplier?.publicId

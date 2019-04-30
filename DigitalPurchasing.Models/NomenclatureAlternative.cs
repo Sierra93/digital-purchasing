@@ -31,5 +31,10 @@ namespace DigitalPurchasing.Models
 
         public Guid? ResourceBatchUomId { get; set; }
         public UnitsOfMeasurement ResourceBatchUom { get; set; }
+
+        public Guid? PackUomId { get; set; }
+        public UnitsOfMeasurement PackUom { get; set; }
+        [Column(TypeName = "decimal(18, 4)")]
+        public decimal? PackUomValue { get; set; }
     }
 }

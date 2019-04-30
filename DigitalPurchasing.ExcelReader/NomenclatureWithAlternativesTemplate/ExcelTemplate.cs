@@ -124,6 +124,7 @@ namespace DigitalPurchasing.ExcelReader.NomenclatureWithAlternativesTemplate
                 config.ForType<TemplateDataInternal, TemplateData>()
                     .Map(dest => dest.MassUomValue, src => ToNullableDecimal(src.MassUomValue))
                     .Map(dest => dest.ClientPublicId, src => ToNullableInt(src.ClientPublicId))
+                    .Map(dest => dest.PackUomValue, src => ToNullableInt(src.PackUomValue))
                     .Map(dest => dest.ResourceUomValue, src => ToNullableDecimal(src.ResourceUomValue));
                 var result = items.Select(q => q.Adapt<TemplateData>(config)).ToList();
 

@@ -47,6 +47,9 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public Guid ResourceBatchUomId { get; set; }
         public string ResourceBatchUomName { get; set; }
+
+        public string PackUomName { get; set; }
+        public decimal? PackUomValue { get; set; }
     }
 
     public class NomenclatureDetailsData : BaseDataResponse<NomenclatureDetailsDataItem>
