@@ -199,36 +199,31 @@ namespace DigitalPurchasing.Services
                 {
                     bool changed = false;
 
-                    if (string.IsNullOrEmpty(altByName.Code) &&
-                        altByName.Code != alt.Code?.Trim())
+                    if (altByName.Code != alt.Code?.Trim())
                     {
                         altByName.Code = alt.Code?.Trim();
                         changed = true;
                     }
 
-                    if (!altByName.BatchUomId.HasValue &&
-                        altByName.BatchUomId != alt.BatchUomId)
+                    if (altByName.BatchUomId != alt.BatchUomId)
                     {
                         altByName.BatchUomId = alt.BatchUomId;
                         changed = true;
                     }
 
-                    if (!altByName.MassUomId.HasValue &&
-                        altByName.MassUomId != alt.MassUomId)
+                    if (altByName.MassUomId != alt.MassUomId)
                     {
                         altByName.MassUomId = alt.MassUomId;
                         changed = true;
                     }
 
-                    if (!altByName.ResourceBatchUomId.HasValue &&
-                        altByName.ResourceBatchUomId != alt.ResourceBatchUomId)
+                    if (altByName.ResourceBatchUomId != alt.ResourceBatchUomId)
                     {
                         altByName.ResourceBatchUomId = alt.ResourceBatchUomId;
                         changed = true;
                     }
 
-                    if (!altByName.ResourceUomId.HasValue &&
-                        altByName.ResourceUomId != alt.ResourceUomId)
+                    if (altByName.ResourceUomId != alt.ResourceUomId)
                     {
                         altByName.ResourceUomId = alt.ResourceUomId;
                         changed = true;
