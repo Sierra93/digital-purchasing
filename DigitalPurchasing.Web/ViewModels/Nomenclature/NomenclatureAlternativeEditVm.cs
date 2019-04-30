@@ -48,5 +48,11 @@ namespace DigitalPurchasing.Web.ViewModels.Nomenclature
         [DisplayName("ЕИ ресурса")]
         public Guid? ResourceBatchUomId { get; set; }
         public List<SelectListItem> ResourceBatchUoms { get; set; }
+
+        [DisplayName("ЕИ товара в упаковке")]
+        public Guid? PackUomId { get; set; }
+        [DisplayName("Количество товара в упаковке")]
+        public decimal? PackUomValue { get; set; }
+        public List<SelectListItem> PackUoms { get; set; }
     }
 }

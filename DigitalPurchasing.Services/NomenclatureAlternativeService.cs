@@ -40,6 +40,9 @@ namespace DigitalPurchasing.Services
             entity.MassUomId = model.MassUomId;
             entity.MassUomValue = model.MassUomValue;
 
+            entity.PackUomId = model.PackUomId;
+            entity.PackUomValue = model.PackUomValue;
+
             _db.SaveChanges();
         }
 

@@ -61,6 +61,9 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid? ResourceBatchUomId { get; set; }
         public UomDto ResourceBatchUom { get; set; }
 
+        public Guid? PackUomId { get; set; }
+        public decimal? PackUomValue { get; set; }
+
         public Guid NomenclatureId { get; set; }
     }
 }

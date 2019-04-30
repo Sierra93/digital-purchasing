@@ -143,7 +143,7 @@ namespace DigitalPurchasing.Web.Controllers
             var alt = _nomenclatureAlternativeService.GetAlternativeById(id);
             if (alt == null) return NotFound();
             var vm = alt.Adapt<NomenclatureAlternativeEditVm>();
-            vm.BatchUoms = vm.ResourceBatchUoms = vm.MassUoms = vm.ResourceUoms = _dictionaryService.GetUoms().AddEmpty();
+            vm.BatchUoms = vm.ResourceBatchUoms = vm.MassUoms = vm.ResourceUoms = vm.PackUoms = _dictionaryService.GetUoms().AddEmpty();
             return View(vm);
         }
 
@@ -156,7 +156,7 @@ namespace DigitalPurchasing.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            vm.BatchUoms = vm.ResourceBatchUoms = vm.MassUoms = vm.ResourceUoms = _dictionaryService.GetUoms().AddEmpty();
+            vm.BatchUoms = vm.ResourceBatchUoms = vm.MassUoms = vm.ResourceUoms = vm.PackUoms = _dictionaryService.GetUoms().AddEmpty();
             return View(vm);
         }
 
