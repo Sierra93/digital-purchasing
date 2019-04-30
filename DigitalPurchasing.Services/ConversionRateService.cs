@@ -1,7 +1,9 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
+using DigitalPurchasing.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace DigitalPurchasing.Services
@@ -10,39 +12,51 @@ namespace DigitalPurchasing.Services
     {
         private readonly ApplicationDbContext _db;
         private readonly IUomService _uomService;
+        private readonly INomenclatureService _nomenclatureService;
 
         public ConversionRateService(
             ApplicationDbContext db,
-            IUomService uomService)
+            IUomService uomService,
+            INomenclatureService nomenclatureService)
         {
             _db = db;
             _uomService = uomService;
+            _nomenclatureService = nomenclatureService;
         }
 
-        private UomConversionRateResponse GetConversionRate(
-            Guid ownerId,
-            Guid fromUomId,
-            Guid toUomId,
-            Guid nomenclatureId,
-            Guid nomenclatureMassUomId,
-            decimal nomenclatureMassValue) // todo: pass nomenclature dto
+        private async Task<UomConversionRateResponse> GetConversionRate(Guid fromUomId, NomenclatureVm nomenclature)
         {
             var result = new UomConversionRateResponse { CommonFactor = 0, NomenclatureFactor = 0 };
 
-            var calcFromUom = fromUomId == nomenclatureMassUomId && nomenclatureMassValue > 0;
+            var toUomId = nomenclature.BatchUomId;
+
+            var calcFromUom = fromUomId == nomenclature.MassUomId && nomenclature.MassUomValue > 0;
             if (calcFromUom)
             {
                 var toUom = _uomService.GetById(toUomId);
                 if (toUom.Quantity.HasValue)
                 {
-                    result.CommonFactor = nomenclatureMassValue / toUom.Quantity.Value;
+                    result.CommonFactor = nomenclature.MassUomValue / toUom.Quantity.Value;
+                }
+            }
+
+            var calcFromPack = fromUomId == await _uomService.GetPackagingUom(nomenclature.OwnerId)
+                               && nomenclature.PackUomId.HasValue
+                               && nomenclature.PackUomValue > 0;
+            if (calcFromPack)
+            {
+                var packUom = _uomService.GetById(nomenclature.PackUomId.Value);
+                var toUom = _uomService.GetById(toUomId);
+                if (toUom.Quantity.HasValue && packUom.Quantity.HasValue)
+                {
+                    result.CommonFactor = toUom.Quantity.Value / (nomenclature.PackUomValue * packUom.Quantity.Value);
                 }
             }
 
             var conversionRates = _db.UomConversionRates
                 .AsNoTracking()
                 .IgnoreQueryFilters()
-                .Where(q => q.OwnerId == ownerId)
+                .Where(q => q.OwnerId == nomenclature.OwnerId)
                 .Where(q => (q.FromUomId == fromUomId && q.ToUomId == toUomId) ||
                             (q.FromUomId == toUomId && q.ToUomId == fromUomId))
                 .ToList();
@@ -64,7 +78,7 @@ namespace DigitalPurchasing.Services
                 }
             }
 
-            var nomenclatureConversionRate = conversionRates.FirstOrDefault(q => q.NomenclatureId == nomenclatureId);
+            var nomenclatureConversionRate = conversionRates.FirstOrDefault(q => q.NomenclatureId == nomenclature.Id);
             if (nomenclatureConversionRate != null)
             {
                 result.NomenclatureFactor = nomenclatureConversionRate.FromUomId == fromUomId
@@ -75,11 +89,9 @@ namespace DigitalPurchasing.Services
             return result;
         }
 
-        public UomConversionRateResponse GetRate(Guid fromUomId, Guid nomenclatureId)
+        public async Task<UomConversionRateResponse> GetRate(Guid fromUomId, Guid nomenclatureId)
         {
-            // todo: use NomenclatureService ?
-            var qryNomenclatures = _db.Nomenclatures.AsNoTracking().IgnoreQueryFilters().AsQueryable();
-            var nomenclature = qryNomenclatures.First(q => q.Id == nomenclatureId);
+            var nomenclature = _nomenclatureService.GetById(nomenclatureId);
 
             var toUomId = nomenclature.BatchUomId;
             if (fromUomId == toUomId)
@@ -87,10 +99,7 @@ namespace DigitalPurchasing.Services
                 return new UomConversionRateResponse { CommonFactor = 1, NomenclatureFactor = 0 };
             }
 
-            return GetConversionRate(
-                nomenclature.OwnerId,
-                fromUomId, nomenclature.BatchUomId,
-                nomenclatureId, nomenclature.MassUomId, nomenclature.MassUomValue);
+            return await GetConversionRate(fromUomId, nomenclature);
         }
     }
 }

@@ -87,8 +87,11 @@ namespace DigitalPurchasing.Core.Interfaces
         public string CategoryFullName { get; set; }
     }
 
+    //todo: rename to NomenclatureDto
     public class NomenclatureVm
     {
+        public Guid OwnerId { get; set; }
+
         public Guid Id { get; set; }
         public string Code { get; set; }
 
