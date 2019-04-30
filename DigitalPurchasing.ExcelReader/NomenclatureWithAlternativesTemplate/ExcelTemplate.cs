@@ -115,7 +115,7 @@ namespace DigitalPurchasing.ExcelReader.NomenclatureWithAlternativesTemplate
             }
         }
 
-        public List<TemplateData> Read(string filePath)
+        public IEnumerable<TemplateData> Read(string filePath)
         {
             using (var excel = new ExcelPackage(new FileInfo(filePath)))
             {

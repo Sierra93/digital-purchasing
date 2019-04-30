@@ -251,15 +251,19 @@ namespace DigitalPurchasing.Web.Controllers
             using (var output = System.IO.File.Create(filePath))
                 await file.CopyToAsync(output);
 
-            var excelTemplate = new ExcelReader.NomenclatureWithAlternativesTemplate.ExcelTemplate();
-
-            var datas = excelTemplate.Read(filePath).Where(_ => _.ClientPublicId.HasValue);
-
             Func<ExcelReader.NomenclatureWithAlternativesTemplate.TemplateData, bool> isSupplier = (tmplData) =>
                 tmplData.AlternativesRowType?.Equals("Поставщик", StringComparison.InvariantCultureIgnoreCase) == true;
 
             Func<ExcelReader.NomenclatureWithAlternativesTemplate.TemplateData, bool> isCustomer = (tmplData) =>
                 tmplData.AlternativesRowType?.Equals("Клиент", StringComparison.InvariantCultureIgnoreCase) == true;
+
+            var excelTemplate = new ExcelReader.NomenclatureWithAlternativesTemplate.ExcelTemplate();
+
+            var datas = excelTemplate.Read(filePath);
+
+            bool publicIdNotFoundForSomeRows = datas.Any(_ => !_.ClientPublicId.HasValue && (isSupplier(_) || isCustomer(_)));
+
+            datas = datas.Where(_ => _.ClientPublicId.HasValue);
 
             var supplierRows = datas.Where(_ => isSupplier(_)).Select(_ => _);
             var customerRows = datas.Where(_ => isCustomer(_)).Select(_ => _);
@@ -349,6 +353,11 @@ namespace DigitalPurchasing.Web.Controllers
             {
                 _nomenclatureAlternativeService.AddOrUpdateNomenclatureAlts(User.CompanyId(),
                     item.clientId, item.clientType, item.noms);
+            }
+
+            if (publicIdNotFoundForSomeRows)
+            {
+                TempData["ErrorMessage"] = "Некоторые аналоги не были загружены, поскольку в шаблоне не был указан внутренний код организации или клиента";
             }
 
             return RedirectToAction(nameof(Index));
