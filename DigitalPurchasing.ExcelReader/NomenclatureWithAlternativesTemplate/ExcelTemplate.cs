@@ -53,10 +53,10 @@ namespace DigitalPurchasing.ExcelReader.NomenclatureWithAlternativesTemplate
             public string MassUomValue { get; set; }
 
             [ExcelTableColumn(13)]
-            public string Website { get; set; }
+            public string PackUomValue { get; set; }
 
             [ExcelTableColumn(14)]
-            public string SupplierPhone { get; set; }
+            public string PackUomName { get; set; }
 
             [ExcelTableColumn(15)]
             public string ResourceUomName { get; set; }

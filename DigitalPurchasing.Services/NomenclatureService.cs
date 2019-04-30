@@ -104,7 +104,7 @@ namespace DigitalPurchasing.Services
                                   massUomName = possibleNa.MassUom.Name,
                                   resourceUomName = possibleNa.ResourceUom.Name,
                                   possibleNa.ResourceUomValue,
-                                  resourceBatchUomName = possibleNa.ResourceBatchUom.Name,
+                                  resourceBatchUomName = possibleNa.ResourceBatchUom.Name
                               },
                           customer = possibleNal == null
                               ? null
@@ -144,6 +144,8 @@ namespace DigitalPurchasing.Services
                     ResourceUomName = nom.resourceUomName,
                     ResourceUomValue = nom.ResourceUomValue,
                     ResourceBatchUomName = nom.resourceBatchUomName,
+                    PackUomName = nom.packUomName,
+                    PackUomValue = nom.PackUomValue
                 };
                 var alternatives = new NomenclatureDetailsData()
                 {

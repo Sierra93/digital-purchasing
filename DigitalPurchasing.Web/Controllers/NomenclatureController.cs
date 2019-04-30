@@ -204,8 +204,8 @@ namespace DigitalPurchasing.Web.Controllers
                     nom.Key.BatchUomName,
                     nom.Key.MassUomName,
                     nom.Key.MassUomValue,
-                    "TODO",
-                    "TODO",
+                    nom.Key.PackUomValue,
+                    nom.Key.PackUomName,
                     nom.Key.ResourceUomName,
                     nom.Key.ResourceUomValue,
                     nom.Key.ResourceBatchUomName
