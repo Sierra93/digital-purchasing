@@ -109,12 +109,13 @@ namespace DigitalPurchasing.ExcelReader.NomenclatureWithAlternativesTemplate
                 }
 
                 ws.Cells[ws.Dimension.Address].AutoFitColumns();
+                ws.View.FreezePanes(2, 1);
 
                 return excel.GetAsByteArray();
             }
         }
 
-        public List<TemplateData> Read(string filePath)
+        public IEnumerable<TemplateData> Read(string filePath)
         {
             using (var excel = new ExcelPackage(new FileInfo(filePath)))
             {
