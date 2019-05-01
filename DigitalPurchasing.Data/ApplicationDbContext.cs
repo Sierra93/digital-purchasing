@@ -45,7 +45,6 @@ namespace DigitalPurchasing.Data
         public DbSet<SupplierOfferItem> SupplierOfferItems { get; set; }
 
         public DbSet<AnalysisVariant> AnalysisVariants { get; set; }
-        public DbSet<AnalysisResultItem> AnalysisResultItems { get; set; }
 
         public DbSet<SupplierCategory> SupplierCategories { get; set; }
 
@@ -191,13 +190,6 @@ namespace DigitalPurchasing.Data
                 e.HasOne(q => q.Owner).WithMany().HasForeignKey(q => q.OwnerId).OnDelete(DeleteBehavior.Restrict);
             });
 
-            builder.Entity<AnalysisResultItem>(e =>
-            {
-                e.HasOne(q => q.Nomenclature).WithMany().HasForeignKey(q => q.NomenclatureId).OnDelete(DeleteBehavior.Restrict);
-                e.HasOne(q => q.Variant).WithMany().HasForeignKey(q => q.VariantId).OnDelete(DeleteBehavior.Restrict);
-                e.HasOne(q => q.Supplier).WithMany().HasForeignKey(q => q.SupplierId).OnDelete(DeleteBehavior.Restrict);
-            });
-
             builder.Entity<CustomerCounter>().HasIndex(q => q.OwnerId).IsUnique();
             builder.Entity<SupplierCounter>().HasIndex(q => q.OwnerId).IsUnique();
 
@@ -240,7 +232,6 @@ namespace DigitalPurchasing.Data
             builder.Entity<UomConversionRate>().HasQueryFilter(o => o.OwnerId == CompanyId());
             builder.Entity<UploadedDocument>().HasQueryFilter(o => o.OwnerId == CompanyId());
             builder.Entity<AnalysisVariant>().HasQueryFilter(o => o.OwnerId == CompanyId());
-            builder.Entity<AnalysisResultItem>().HasQueryFilter(o => o.OwnerId == CompanyId());
             builder.Entity<PRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId());
             builder.Entity<QRCounter>().HasQueryFilter(o => o.OwnerId == CompanyId());
             builder.Entity<CLCounter>().HasQueryFilter(o => o.OwnerId == CompanyId());
