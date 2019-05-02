@@ -1,9 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
-using DigitalPurchasing.Core;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models.Identity;
 using DigitalPurchasing.Services;
@@ -13,14 +8,11 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.ExcelReader;
 using DigitalPurchasing.Web.Jobs;
@@ -28,6 +20,7 @@ using Hangfire;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
 using DigitalPurchasing.Web.Core.ModelBinders;
+using Hangfire.MemoryStorage;
 using Microsoft.Extensions.Logging;
 
 namespace DigitalPurchasing.Web
@@ -73,7 +66,13 @@ namespace DigitalPurchasing.Web
                 options.AccessDeniedPath = $"/Identity/Account/AccessDenied";
             });
 
-            services.AddHangfire(x => x.UseSqlServerStorage(Configuration.GetConnectionString("HangfireConnection")));
+            // Job duplication fix https://github.com/HangfireIO/Hangfire/issues/1197
+            services.AddHangfire(x => {
+                //x.UseSqlServerStorage(Configuration.GetConnectionString("HangfireConnection"))
+                x.UseMemoryStorage(new MemoryStorageOptions { FetchNextJobTimeout = TimeSpan.FromHours(24) });
+            });
+
+            //services.AddHangfire();
             GlobalJobFilters.Filters.Add(new AutomaticRetryAttribute { Attempts = 0 });
             GlobalJobFilters.Filters.Add(new HangfireSentryAttribute());
 
