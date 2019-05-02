@@ -181,10 +181,15 @@ namespace DigitalPurchasing.Services
             return supplierContactPerson?.Adapt<SupplierContactPersonVm>();
         }
 
-        public Guid GetSupplierByEmail(string email)
+        public Guid GetSupplierByEmail(Guid ownerId, string email)
         {
-            var supplierContactPerson = _db.SupplierContactPersons.IgnoreQueryFilters()
-                .FirstOrDefault(q => q.Email.Equals(email) && q.UseForRequests);
+            var supplierContactPerson = _db.SupplierContactPersons
+                .Include(q => q.Supplier)
+                .IgnoreQueryFilters()
+                .FirstOrDefault(q =>
+                    q.Email.Equals(email) &&
+                    q.UseForRequests &&
+                    q.Supplier.OwnerId == ownerId);
 
             return supplierContactPerson?.SupplierId ?? Guid.Empty;
         }

@@ -21,7 +21,7 @@ namespace DigitalPurchasing.Core.Interfaces
         SupplierContactPersonVm GetContactPersonsById(Guid personId);
         void DeleteContactPerson(Guid personId);
         SupplierContactPersonVm GetContactPersonBySupplier(Guid supplierId);
-        Guid GetSupplierByEmail(string email);
+        Guid GetSupplierByEmail(Guid ownerId, string email);
         List<SupplierNomenclatureCategory> GetSupplierNomenclatureCategories(Guid supplierId);
         void SaveSupplierNomenclatureCategoryContacts(Guid supplierId,
             IEnumerable<(Guid nomenclatureCategoryId, Guid? primarySupplierContactId, Guid? secondarySupplierContactId)> nomenclatureCategories2Contacts);

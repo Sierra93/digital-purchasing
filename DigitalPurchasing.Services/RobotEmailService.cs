@@ -153,7 +153,7 @@ namespace DigitalPurchasing.Services
                 }
 
                 // detect supplier by contact email
-                var supplierId = _supplierService.GetSupplierByEmail(fromEmail);
+                var supplierId = _supplierService.GetSupplierByEmail(qr.OwnerId, fromEmail);
 
                 // get owner email
                 var email = _companyService.GetContactEmailByOwner(qr.OwnerId);
