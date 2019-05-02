@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using MimeKit;
 using MimeKit.Text;
 
@@ -92,6 +93,8 @@ namespace DigitalPurchasing.Services
 
     public class RFQEmailProcessor : IEmailProcessor
     {
+        private readonly ILogger _logger;
+
         private readonly IQuotationRequestService _quotationRequestService;
         private readonly ICompetitionListService _competitionListService;
         private readonly ISupplierService _supplierService;
@@ -108,6 +111,7 @@ namespace DigitalPurchasing.Services
         };
 
         public RFQEmailProcessor(
+            ILogger<RFQEmailProcessor> logger,
             IConfiguration configuration,
             IQuotationRequestService quotationRequestService,
             ICompetitionListService competitionListService,
@@ -118,6 +122,7 @@ namespace DigitalPurchasing.Services
             LinkGenerator linkGenerator,
             IRootService rootService)
         {
+            _logger = logger;
             _settings = configuration.GetSection(Consts.Settings.AppPath).Get<AppSettings>();
             _quotationRequestService = quotationRequestService;
             _supplierService = supplierService;
@@ -165,49 +170,54 @@ namespace DigitalPurchasing.Services
 
                     foreach (var attachment in attachments.Where(IsSupportedFile))
                     {
+                        var allColumns = false;
+                        var allMatched = false;
+
                         var createOfferResult = await _supplierOfferService.CreateFromFile(clId, attachment);
                         if (!createOfferResult.IsSuccess) // unable parse excel file
                         {
-                            // send email with attachment?
+                            // todo: send email with attachment?
                             return true;
                         }
 
-                        // set supplier name
-                        var soId = createOfferResult.Id;
-                        var supplier = _supplierService.GetById(supplierId, true);
-                        if (supplier.OwnerId == qr.OwnerId)
+                        try
                         {
+                            // set supplier name
+                            var soId = createOfferResult.Id;
+                            var supplier = _supplierService.GetById(supplierId, true);
                             _supplierOfferService.UpdateSupplierName(soId, supplier.Name, supplier.Id, true);
-                        }
 
-                        // detect columns
-                        var columns = _supplierOfferService.GetColumnsData(soId, true);
-                        _supplierOfferService.UpdateStatus(soId, SupplierOfferStatus.MatchColumns, true);
+                            // detect columns
+                            var columns = _supplierOfferService.GetColumnsData(soId, true);
+                            _supplierOfferService.UpdateStatus(soId, SupplierOfferStatus.MatchColumns, true);
 
-                        var allColumns = !string.IsNullOrEmpty(columns.Name) &&
+                            allColumns = !string.IsNullOrEmpty(columns.Name) &&
                                          !string.IsNullOrEmpty(columns.Uom) &&
                                          !string.IsNullOrEmpty(columns.Price) &&
                                          !string.IsNullOrEmpty(columns.Qty);
 
-                        var allMatched = true;
+                            if (allColumns)
+                            {
+                                _supplierOfferService.SaveColumns(soId, columns, true);
+                                // raw items + match
+                                _supplierOfferService.GenerateRawItems(soId, true);
+                                _supplierOfferService.UpdateStatus(soId, SupplierOfferStatus.MatchItems, true);
 
-                        if (allColumns)
+                                allMatched = _supplierOfferService.IsAllMatched(soId);
+                                var rootId = await _rootService.GetIdByQR(qrId);
+                                await _rootService.SetStatus(rootId, allMatched
+                                    ? RootStatus.EverythingMatches
+                                    : RootStatus.MatchingRequired);
+                            }
+                        }
+                        catch (Exception e)
                         {
-                            _supplierOfferService.SaveColumns(soId, columns, true);
-                            // raw items + match
-                            _supplierOfferService.GenerateRawItems(soId, true);
-                            _supplierOfferService.UpdateStatus(soId, SupplierOfferStatus.MatchItems, true);
-
-                            allMatched = _supplierOfferService.IsAllMatched(soId);
-                            var rootId = await _rootService.GetIdByQR(qrId);
-                            await _rootService.SetStatus(rootId, allMatched
-                                ? RootStatus.EverythingMatches
-                                : RootStatus.MatchingRequired);
+                            _logger.LogError(e, "Error during processing RFQ email");
                         }
 
                         if (!allColumns || !allMatched)
                         {
-                            PartiallyProcessedEmail(email, qr.PublicId, soId);
+                            PartiallyProcessedEmail(email, qr.PublicId, createOfferResult.Id /* SO Id */);
                         }
 
                         return true;
