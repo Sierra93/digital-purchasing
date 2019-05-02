@@ -9,7 +9,7 @@ namespace DigitalPurchasing.Core.Interfaces
         NomenclatureDetailsData GetDetailsData(Guid nomId, int page, int perPage, string sortField, bool sortAsc);
         NomenclatureVm CreateOrUpdate(NomenclatureVm model);
         void CreateOrUpdate(List<NomenclatureVm> models, Guid ownerId);
-        NomenclatureVm GetById(Guid id);
+        NomenclatureVm GetById(Guid id, bool globalSearch = false);
         IEnumerable<NomenclatureVm> GetByNames(params string[] nomenclatureNames);
         NomenclatureAutocompleteResult Autocomplete(AutocompleteOptions options);
         BaseResult<NomenclatureAutocompleteResult.AutocompleteResultItem> AutocompleteSingle(Guid id);

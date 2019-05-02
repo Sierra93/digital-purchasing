@@ -89,7 +89,7 @@ namespace DigitalPurchasing.Services
 
         public async Task<UomConversionRateResponse> GetRate(Guid fromUomId, Guid nomenclatureId)
         {
-            var nomenclature = _nomenclatureService.GetById(nomenclatureId);
+            var nomenclature = _nomenclatureService.GetById(nomenclatureId, true);
 
             var toUomId = nomenclature.BatchUomId;
             if (fromUomId == toUomId)

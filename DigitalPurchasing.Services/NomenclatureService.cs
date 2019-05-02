@@ -255,9 +255,15 @@ namespace DigitalPurchasing.Services
             _db.BulkInsertOrUpdate(entities);
         }
 
-        public NomenclatureVm GetById(Guid id)
+        public NomenclatureVm GetById(Guid id, bool globalSearch = false)
         {
-            var entity = _db.Nomenclatures.Find(id);
+            var qry = _db.Nomenclatures.AsQueryable();
+            if (globalSearch)
+            {
+                qry = qry.IgnoreQueryFilters();
+            }
+
+            var entity = qry.First(q => q.Id == id);
             var result = entity.Adapt<NomenclatureVm>();
             return result;
         }
