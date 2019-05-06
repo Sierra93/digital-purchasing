@@ -54,8 +54,7 @@
             <div class="form-group">
                 <label>Поставщики, кому будет отправлен запрос коммерческого предложения</label>
             </div>
-            <div v-if="suppliersLoading">Загрузка...</div>
-            <div v-else>
+            <div>
                 <div class="form-group" v-for="(supplier, index) in suppliers">
                     <div class="input-group">
                         <span class="input-group-addon">{{(index+1)}}.</span>
@@ -122,14 +121,12 @@
                         requests: [],
                         selectedCompany: '',
                         suppliers: [],
-                        suppliersLoading: true,
                         sendingInProgress: false,
                         modalSendEmails: false
                     };
                 },
                 created: function() {
                     this.load();
-                    this.loadSuppliers();
                 },
                 computed: {
                     keys: function() {
@@ -190,28 +187,20 @@
                     }
                 },
                 methods: {
-                    load: function() {
-                        this.$http.get('@Url.Action(nameof(QuotationRequestController.ViewDData))?qrId=' + this.qrId).then(function(res) {
-                            this.items = res.data.items;
-                            this.requests = res.data.sentRequests;
-                            this.selectedCompany = this.keys[0];
-                        }, function(res) {
-
-                        });
-                    },
-                    loadSuppliers: function () {
+                    load: function () {
                         var vm = this;
-                        return this.$http.get('@Url.Action(nameof(QuotationRequestController.GetApplicableQuotanationRequestSuppliers))?qrId=' + this.qrId).then(function (res) {
-                            _.each(res.data.items, function (supplier) {
+                        this.$http.get('@Url.Action(nameof(QuotationRequestController.ViewDData))?qrId=' + this.qrId).then(function(res) {
+                            vm.items = res.data.items;
+                            vm.requests = res.data.sentRequests;
+                            vm.selectedCompany = vm.keys[0];
+                            _.each(res.data.applicableSuppliers, function (supplier) {
                                 vm.suppliers.push({
                                     autocomplete: supplier,
                                     name: supplier.name
                                 });
                             });
-                        }, function (res) {
+                        }, function(res) {
 
-                        }).finally(function () {
-                            this.suppliersLoading = false;
                         });
                     },
                     fixSuppliersNames: function() {

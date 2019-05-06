@@ -136,14 +136,27 @@ namespace DigitalPurchasing.Services
 
         public QuotationRequestViewData GetViewData(Guid qrId)
         {
-            var qr = _db.QuotationRequests.Find(qrId);
-            var prId = qr.PurchaseRequestId;
-            var pr = _db.PurchaseRequests.Find(prId);
+            var pr = (from item in _db.PurchaseRequests
+                      join qr in _db.QuotationRequests on item.Id equals qr.PurchaseRequestId
+                      where qr.Id == qrId
+                      select new
+                      {
+                          id = item.Id,
+                          companyName = item.CompanyName,
+                          customerName = item.CustomerName
+                      }).First();
 
-            var data = _purchaseRequestService.MatchItemsData(prId);
-            var result = new QuotationRequestViewData(pr.CompanyName, pr.CustomerName)
+            var data = _purchaseRequestService.MatchItemsData(pr.id);
+            var uniqueCategoryIds = data.Items.Select(_ => _.NomenclatureCategoryId).Distinct();
+            var suppliersByCategories = _supplierService.GetByCategoryIds(uniqueCategoryIds.ToArray());
+            var result = new QuotationRequestViewData(pr.companyName, pr.customerName)
             {
-                SentRequests = GetSentRequests(qrId)
+                SentRequests = GetSentRequests(qrId),
+                ApplicableSuppliers = suppliersByCategories.Select(_ => new QuotationRequestApplicableSupplier
+                {
+                    Id = _.Id,
+                    Name = _.Name
+                }).ToList()
             };
 
             foreach (var dataItem in data.Items)
@@ -299,14 +312,6 @@ namespace DigitalPurchasing.Services
                     q.CreatedOn.ToString("hh:mm:ss").ToMD5().Substring(0, 4).ToUpperInvariant() == strTime);
                 return qr?.Id ?? Guid.Empty;
             }
-        }
-
-        public List<QuotationRequestApplicableSupplier> GetApplicableSuppliers(Guid qrId)
-        {
-            return new List<QuotationRequestApplicableSupplier>()
-            {
-                new QuotationRequestApplicableSupplier() { Id = Guid.NewGuid(), Name = "Sup!" }
-            };
         }
     }
 }

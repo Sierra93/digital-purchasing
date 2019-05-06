@@ -12,7 +12,6 @@ namespace DigitalPurchasing.Core.Interfaces
         Task<Guid> GetQuotationRequestId(Guid purchaseRequestId);
         QuotationRequestVm GetById(Guid id, bool globalSearch = false);
         QuotationRequestViewData GetViewData(Guid qrId);
-        List<QuotationRequestApplicableSupplier> GetApplicableSuppliers(Guid qrId);
         DeleteResultVm Delete(Guid id);
         Task SendRequests(Guid userId, Guid quotationRequestId, IReadOnlyList<Guid> suppliers);
         string QuotationRequestToUid(Guid quotationRequestId);
@@ -63,6 +62,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public QuotationRequestViewData(string company, string customer)
         {
             SentRequests = new List<SentRequest>();
+            ApplicableSuppliers = new List<QuotationRequestApplicableSupplier>();
             Items = new Dictionary<string, List<NomenclatureItem>>
             {
                 { company, new List<NomenclatureItem>() },
@@ -71,6 +71,8 @@ namespace DigitalPurchasing.Core.Interfaces
             _company = company;
             _customer = customer;
         }
+
+        public List<QuotationRequestApplicableSupplier> ApplicableSuppliers { get; set; }
 
         public List<SentRequest> SentRequests { get; set; }
 

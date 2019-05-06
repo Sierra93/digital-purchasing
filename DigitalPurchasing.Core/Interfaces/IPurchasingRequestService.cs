@@ -109,6 +109,7 @@ namespace DigitalPurchasing.Core.Interfaces
             public string NomenclatureName { get; set; }
             public string NomenclatureCode { get; set; }
             public string NomenclatureUom { get; set; }
+            public Guid NomenclatureCategoryId { get; set; }
 
             public decimal NomenclatureFactor { get; set; }
             public decimal CommonFactor { get; set; }

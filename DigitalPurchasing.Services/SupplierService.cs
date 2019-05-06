@@ -9,6 +9,7 @@ using DigitalPurchasing.Models;
 using DigitalPurchasing.Services.Exceptions;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using MoreLinq;
 
 namespace DigitalPurchasing.Services
 {
@@ -352,6 +353,30 @@ namespace DigitalPurchasing.Services
             return (from item in _db.Suppliers
                     where publicIds.Contains(item.PublicId)
                     select item).ToList().Select(_ => _.Adapt<SupplierVm>());
+        }
+
+        public IEnumerable<SupplierVm> GetByCategoryIds(params Guid[] nomenclatureCategoryIds)
+        {
+            if (!nomenclatureCategoryIds.Any())
+            {
+                return Enumerable.Empty<SupplierVm>();
+            }
+
+            var suppliersByAlternatives = from n in _db.Nomenclatures.Where(q => !q.IsDeleted)
+                                          join na in _db.NomenclatureAlternatives on n.Id equals na.NomenclatureId
+                                          join nal in _db.NomenclatureAlternativeLinks on na.Id equals nal.AlternativeId
+                                          join s in _db.Suppliers on nal.SupplierId equals s.Id
+                                          where nomenclatureCategoryIds.Contains(n.CategoryId)
+                                          select s;
+
+            var suppliersByMainCategories = from s in _db.Suppliers
+                                            where s.CategoryId.HasValue && nomenclatureCategoryIds.Contains(s.CategoryId.Value)
+                                            select s;
+
+            return suppliersByAlternatives.Union(suppliersByMainCategories).OrderBy(s => s.Name)
+                .ToList()
+                .DistinctBy(s => s.Id)
+                .Select(_ => _.Adapt<SupplierVm>());
         }
     }
 }
