@@ -1,4 +1,5 @@
 @model DigitalPurchasing.Core.Interfaces.QuotationRequestVm
+@using DigitalPurchasing.Web.Controllers
 
 @{
     ViewBag.Title = $"Запрос коммерческого предложения № {Model.PublicId} от {Model.CreatedOn:dd.MM.yyyy HH:mm}";
@@ -50,10 +51,11 @@
             <address-form v-bind:qr="qrId"></address-form>
         </div>
         <div class="col-md-6">
-            <div class="form-horizontal">
-                <div class="form-group">
-                    <label>Поставщики, кому будет отправлен запрос коммерческого предложения</label>
-                </div>
+            <div class="form-group">
+                <label>Поставщики, кому будет отправлен запрос коммерческого предложения</label>
+            </div>
+            <div v-if="suppliersLoading">Загрузка...</div>
+            <div v-else>
                 <div class="form-group" v-for="(supplier, index) in suppliers">
                     <div class="input-group">
                         <span class="input-group-addon">{{(index+1)}}.</span>
@@ -70,6 +72,8 @@
                 <div class="form-group">
                     <button class="btn btn-primary" v-on:click="sendEmailsToSupplier" :disabled="!canSendEmails">{{sendEmailsText}}</button>
                 </div>
+            </div>
+            <div>
                 <div class="form-group" v-if="orderedRequests.length > 0">
                     <label>Отправленные запросы:</label>
                 </div>
@@ -118,12 +122,14 @@
                         requests: [],
                         selectedCompany: '',
                         suppliers: [],
+                        suppliersLoading: true,
                         sendingInProgress: false,
                         modalSendEmails: false
                     };
                 },
                 created: function() {
                     this.load();
+                    this.loadSuppliers();
                 },
                 computed: {
                     keys: function() {
@@ -185,12 +191,27 @@
                 },
                 methods: {
                     load: function() {
-                        this.$http.get('@Url.Action("ViewDData")?qrId=' + this.qrId).then(function(res) {
+                        this.$http.get('@Url.Action(nameof(QuotationRequestController.ViewDData))?qrId=' + this.qrId).then(function(res) {
                             this.items = res.data.items;
                             this.requests = res.data.sentRequests;
                             this.selectedCompany = this.keys[0];
                         }, function(res) {
 
+                        });
+                    },
+                    loadSuppliers: function () {
+                        var vm = this;
+                        return this.$http.get('@Url.Action(nameof(QuotationRequestController.GetApplicableQuotanationRequestSuppliers))?qrId=' + this.qrId).then(function (res) {
+                            _.each(res.data.items, function (supplier) {
+                                vm.suppliers.push({
+                                    autocomplete: supplier,
+                                    name: supplier.name
+                                });
+                            });
+                        }, function (res) {
+
+                        }).finally(function () {
+                            this.suppliersLoading = false;
                         });
                     },
                     fixSuppliersNames: function() {
@@ -217,11 +238,10 @@
                         var vm = this;
                         vm.sendingInProgress = true;
                         vm.$http
-                            .post('@Url.Action("SentRequests")', { id: vm.qrId, suppliers: vm.suppliersIds })
+                            .post('@Url.Action(nameof(QuotationRequestController.SentRequests))', { id: vm.qrId, suppliers: vm.suppliersIds })
                             .then(function(res) {
                                 var data = res.data;
                                 vm.requests = data;
-                                //console.info(data);
                                 vm.sendingInProgress = false;
                                 vm.modalSendEmails = true;
                             }, function (res) {

@@ -65,6 +65,12 @@ namespace DigitalPurchasing.Web.Controllers
             return Ok(model);
         }
 
+        public IActionResult GetApplicableQuotanationRequestSuppliers(Guid qrId)
+        {
+            var model = _quotationRequestService.GetApplicableSuppliers(qrId);
+            return Ok(new { items = model });
+        }
+
         public IActionResult Download([FromQuery]Guid qrId)
         {
             var qr = _quotationRequestService.GetById(qrId);

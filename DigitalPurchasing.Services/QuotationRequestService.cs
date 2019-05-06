@@ -300,5 +300,13 @@ namespace DigitalPurchasing.Services
                 return qr?.Id ?? Guid.Empty;
             }
         }
+
+        public List<QuotationRequestApplicableSupplier> GetApplicableSuppliers(Guid qrId)
+        {
+            return new List<QuotationRequestApplicableSupplier>()
+            {
+                new QuotationRequestApplicableSupplier() { Id = Guid.NewGuid(), Name = "Sup!" }
+            };
+        }
     }
 }

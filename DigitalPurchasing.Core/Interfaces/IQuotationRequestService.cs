@@ -12,6 +12,7 @@ namespace DigitalPurchasing.Core.Interfaces
         Task<Guid> GetQuotationRequestId(Guid purchaseRequestId);
         QuotationRequestVm GetById(Guid id, bool globalSearch = false);
         QuotationRequestViewData GetViewData(Guid qrId);
+        List<QuotationRequestApplicableSupplier> GetApplicableSuppliers(Guid qrId);
         DeleteResultVm Delete(Guid id);
         Task SendRequests(Guid userId, Guid quotationRequestId, IReadOnlyList<Guid> suppliers);
         string QuotationRequestToUid(Guid quotationRequestId);
@@ -25,6 +26,12 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid Id { get; set; }
         public int PublicId { get; set; }
         public DateTime CreatedOn { get; set; }
+    }
+
+    public class QuotationRequestApplicableSupplier
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
     }
 
     public class QuotationRequestVm
