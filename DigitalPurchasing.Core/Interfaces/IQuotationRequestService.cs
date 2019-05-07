@@ -91,6 +91,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class SentRequest
     {
+        public Guid SupplierId { get; set; }
         public string SupplierName { get; set; }
         public string PersonFullName { get; set; }
         public string Email { get; set; }

@@ -148,10 +148,12 @@ namespace DigitalPurchasing.Services
 
             var data = _purchaseRequestService.MatchItemsData(pr.id);
             var uniqueCategoryIds = data.Items.Select(_ => _.NomenclatureCategoryId).Distinct();
-            var suppliersByCategories = _supplierService.GetByCategoryIds(uniqueCategoryIds.ToArray());
+            var sentRequests = GetSentRequests(qrId);
+            var suppliersByCategories = _supplierService.GetByCategoryIds(uniqueCategoryIds.ToArray())
+                .Where(s => !sentRequests.Any(sr => sr.SupplierId == s.Id));
             var result = new QuotationRequestViewData(pr.companyName, pr.customerName)
             {
-                SentRequests = GetSentRequests(qrId),
+                SentRequests = sentRequests,
                 ApplicableSuppliers = suppliersByCategories.Select(_ => new QuotationRequestApplicableSupplier
                 {
                     Id = _.Id,
@@ -279,6 +281,7 @@ namespace DigitalPurchasing.Services
             return entities.Select(q => new SentRequest
             {
                 CreatedOn = q.CreatedOn,
+                SupplierId = q.ContactPerson.SupplierId,
                 SupplierName = q.ContactPerson.Supplier.Name,
                 PersonFullName = q.ContactPerson.FullName,
                 Email = q.ContactPerson.Email
