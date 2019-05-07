@@ -85,6 +85,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid CategoryId { get; set; }
         public string CategoryName { get; set; }
         public string CategoryFullName { get; set; }
+        public bool HasAlternativeWithRequiredName { get; set; }
     }
 
     //todo: rename to NomenclatureDto

@@ -51,18 +51,23 @@ namespace DigitalPurchasing.Services
 
             if (!string.IsNullOrEmpty(search))
             {
-                qry = qry.Where(q =>
-                    ( q.Name.Contains(search) && !string.IsNullOrEmpty(q.Name) ) ||
-                    ( q.NameEng.Contains(search) && !string.IsNullOrEmpty(q.NameEng) ));
+                qry = from q in qry
+                      where (q.Name.Contains(search) && !string.IsNullOrEmpty(q.Name)) ||
+                            (q.NameEng.Contains(search) && !string.IsNullOrEmpty(q.NameEng)) ||
+                            q.Alternatives.Any(na => na.Name.Contains(search))
+                      select q;
             }
 
             var total = qry.Count();
             var orderedResults = qry.OrderBy($"{sortField}{(sortAsc ? "" : " DESC")}");
             var result = orderedResults.Skip((page - 1) * perPage).Take(perPage).ProjectToType<NomenclatureIndexDataItem>().ToList();
 
-            foreach (var nomenclatureResult in result)
+            foreach (var item in result)
             {
-                nomenclatureResult.CategoryFullName = _categoryService.FullCategoryName(nomenclatureResult.CategoryId);
+                item.CategoryFullName = _categoryService.FullCategoryName(item.CategoryId);
+                item.HasAlternativeWithRequiredName = !string.IsNullOrWhiteSpace(search) &&
+                    !item.Name.Contains(search) &&
+                    item.NameEng?.Contains(search) != true;
             }
 
             return new NomenclatureIndexData
