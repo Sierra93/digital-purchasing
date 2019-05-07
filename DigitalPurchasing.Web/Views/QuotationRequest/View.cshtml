@@ -58,7 +58,7 @@
                 <div class="form-group" v-for="(supplier, index) in suppliers">
                     <div class="input-group">
                         <span class="input-group-addon">{{(index+1)}}.</span>
-                        <input type="text" class="form-control" placeholder="" v-model.trim="supplier.name" v-bind:id="('supplier-'+index)">
+                        <input type="text" class="form-control" placeholder="" v-model.trim="supplier.name" v-bind:id="('supplier-'+index)" autocomplete="off" />
                         <span class="input-group-btn">
                             <button class="btn btn-default" type="button" v-on:click="removeSupplier(supplier)"><i class="far fa-trash-alt"></i></button>
                         </span>
