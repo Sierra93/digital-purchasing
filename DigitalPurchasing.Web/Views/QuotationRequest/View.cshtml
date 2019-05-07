@@ -59,11 +59,11 @@
                     <div class="input-group">
                         <span class="input-group-addon">{{(index+1)}}.</span>
                         <input type="text" class="form-control" placeholder="" v-model.trim="supplier.name" v-bind:id="('supplier-'+index)">
-                        <typeahead v-model="supplier.autocomplete" force-select force-clear v-bind:target="('#supplier-'+index)" async-src="@Url.Action("Autocomplete", "Supplier")?q=" async-key="items" item-key="name"></typeahead>
                         <span class="input-group-btn">
                             <button class="btn btn-default" type="button" v-on:click="removeSupplier(supplier)"><i class="far fa-trash-alt"></i></button>
                         </span>
                     </div>
+                    <typeahead v-model="supplier.autocomplete" force-select force-clear v-bind:target="('#supplier-'+index)" async-src="@Url.Action("Autocomplete", "Supplier")?q=" async-key="items" item-key="name"></typeahead>
                 </div>
                 <div class="form-group">
                     <button class="btn btn-default" v-on:click="addSupplier">Добавить поставщика</button>
