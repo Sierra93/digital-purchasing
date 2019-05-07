@@ -102,7 +102,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class SupplierNomenclatureCategory
     {
-        public Guid NomenclatureCategoryId { get; set; }
+        public Guid? NomenclatureCategoryId { get; set; }
         public string NomenclatureCategoryFullName { get; set; }
         public Guid? NomenclatureCategoryPrimaryContactId { get; set; }
         public Guid? NomenclatureCategorySecondaryContactId { get; set; }

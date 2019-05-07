@@ -85,7 +85,7 @@ namespace DigitalPurchasing.Web.ViewModels.Supplier
         }
 
         public SupplierEditVm.SupplierVm Supplier { get; set; }
-        public List<SupplierContactPersonVm> ContactPersons { get; set; }
+        public List<SupplierContactPersonVm> ContactPersons { get; set; } = new List<SupplierContactPersonVm>();
         public List<SupplierNomenclatureCategory> NomenclatureCategoies { get; set; } = new List<SupplierNomenclatureCategory>();
         public List<NomenclatureCategoryVm> AvailableCategories { get; set; } = new List<NomenclatureCategoryVm>();
     }

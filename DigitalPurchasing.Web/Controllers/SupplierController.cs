@@ -79,10 +79,21 @@ namespace DigitalPurchasing.Web.Controllers
             return View(vm);
         }
 
-        private void LoadRelatedData(SupplierEditVm vm, Guid supplierId)
+        private void LoadRelatedData(SupplierEditVm vm, Guid? supplierId)
         {
-            vm.ContactPersons = _supplierService.GetContactPersonsBySupplier(supplierId);
-            vm.NomenclatureCategoies = _supplierService.GetSupplierNomenclatureCategories(supplierId);
+            if (supplierId.HasValue)
+            {
+                vm.ContactPersons = _supplierService.GetContactPersonsBySupplier(supplierId.Value);
+                vm.NomenclatureCategoies = _supplierService.GetSupplierNomenclatureCategories(supplierId.Value)
+                    .OrderByDescending(_ => _.IsDefaultSupplierCategory).ToList();
+            }
+            if (!vm.NomenclatureCategoies.Any(nc => nc.IsDefaultSupplierCategory))
+            {
+                vm.NomenclatureCategoies.Insert(0, new SupplierNomenclatureCategory()
+                {
+                    IsDefaultSupplierCategory = true,                    
+                });
+            }
             vm.AvailableCategories = _nomenclatureCategoryService.GetAll(true).ToList();
         }
 
@@ -94,6 +105,7 @@ namespace DigitalPurchasing.Web.Controllers
                 try
                 {
                     _supplierService.Update(vm.Supplier.Adapt<SupplierVm>());
+                    SaveSupplierCategories(vm, vm.Supplier.Id);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (SameInnException)
@@ -106,33 +118,28 @@ namespace DigitalPurchasing.Web.Controllers
             return View(vm);
         }
 
-        [HttpPost]
-        public IActionResult SaveSupplierCategories(SupplierEditVm vm, Guid supplierId)
+        private void SaveSupplierCategories(SupplierEditVm vm, Guid supplierId)
         {
-            if (ModelState.IsValid)
+            var defaultCategory = vm.NomenclatureCategoies.FirstOrDefault(_ => _.IsDefaultSupplierCategory);
+            if (defaultCategory != null)
             {
-                var defaultCategory = vm.NomenclatureCategoies.FirstOrDefault(_ => _.IsDefaultSupplierCategory);
-                if (defaultCategory != null)
+                var supplier = _supplierService.GetById(supplierId);
+                if (supplier.CategoryId != defaultCategory.NomenclatureCategoryId)
                 {
-                    var supplier = _supplierService.GetById(supplierId);
-                    if (supplier.CategoryId != defaultCategory.NomenclatureCategoryId)
+                    if (supplier.CategoryId.HasValue)
                     {
-                        if (supplier.CategoryId.HasValue)
-                        {
-                            _supplierService.RemoveSupplierNomenclatureCategoryContacts(supplierId, supplier.CategoryId.Value);
-                        }
-                        supplier.CategoryId = defaultCategory.NomenclatureCategoryId;
-                        _supplierService.Update(supplier);
+                        _supplierService.RemoveSupplierNomenclatureCategoryContacts(supplierId, supplier.CategoryId.Value);
                     }
+                    supplier.CategoryId = defaultCategory.NomenclatureCategoryId;
+                    _supplierService.Update(supplier);
                 }
-
-                _supplierService.SaveSupplierNomenclatureCategoryContacts(
-                    supplierId,
-                    vm.NomenclatureCategoies.Select(nc => (nc.NomenclatureCategoryId, nc.NomenclatureCategoryPrimaryContactId, nc.NomenclatureCategorySecondaryContactId)));
-                return RedirectToAction(nameof(Index));
             }
 
-            return RedirectToAction(nameof(Edit), new { id = supplierId });
+            var definedCategories = vm.NomenclatureCategoies.Where(nc => nc.NomenclatureCategoryId.HasValue);
+
+            _supplierService.SaveSupplierNomenclatureCategoryContacts(
+                supplierId,
+                definedCategories.Select(nc => (nc.NomenclatureCategoryId.Value, nc.NomenclatureCategoryPrimaryContactId, nc.NomenclatureCategorySecondaryContactId)));
         }
 
         [HttpGet, Route("/contactpersons/add/{supplierId}")]
@@ -200,6 +207,7 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult Create()
         {
             var vm = new SupplierEditVm();
+            LoadRelatedData(vm, null);
             return View(vm);
         }
 
@@ -210,7 +218,8 @@ namespace DigitalPurchasing.Web.Controllers
             {
                 try
                 {
-                    _supplierService.CreateSupplier(vm.Supplier.Adapt<SupplierVm>(), User.CompanyId());
+                    Guid supplierId = _supplierService.CreateSupplier(vm.Supplier.Adapt<SupplierVm>(), User.CompanyId());
+                    SaveSupplierCategories(vm, supplierId);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (SameInnException)

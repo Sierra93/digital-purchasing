@@ -323,23 +323,26 @@ namespace DigitalPurchasing.Services
         public void SaveSupplierNomenclatureCategoryContacts(Guid supplierId,
             IEnumerable<(Guid nomenclatureCategoryId, Guid? primarySupplierContactId, Guid? secondarySupplierContactId)> nomenclatureCategories2Contacts)
         {
-            foreach (var mapping in nomenclatureCategories2Contacts)
+            if (nomenclatureCategories2Contacts.Any())
             {
-                RemoveSupplierNomenclatureCategoryContacts(supplierId, mapping.nomenclatureCategoryId);
-
-                if (mapping.primarySupplierContactId.HasValue ||
-                    mapping.secondarySupplierContactId.HasValue)
+                foreach (var mapping in nomenclatureCategories2Contacts)
                 {
-                    _db.SupplierCategories.Add(new SupplierCategory()
-                    {
-                        NomenclatureCategoryId = mapping.nomenclatureCategoryId,
-                        PrimaryContactPersonId = mapping.primarySupplierContactId,
-                        SecondaryContactPersonId = mapping.secondarySupplierContactId
-                    });
-                }
-            }
+                    RemoveSupplierNomenclatureCategoryContacts(supplierId, mapping.nomenclatureCategoryId);
 
-            _db.SaveChanges();
+                    if (mapping.primarySupplierContactId.HasValue ||
+                        mapping.secondarySupplierContactId.HasValue)
+                    {
+                        _db.SupplierCategories.Add(new SupplierCategory()
+                        {
+                            NomenclatureCategoryId = mapping.nomenclatureCategoryId,
+                            PrimaryContactPersonId = mapping.primarySupplierContactId,
+                            SecondaryContactPersonId = mapping.secondarySupplierContactId
+                        });
+                    }
+                }
+
+                _db.SaveChanges();
+            }
         }
 
         public IEnumerable<SupplierVm> GetByPublicIds(params int[] publicIds)
