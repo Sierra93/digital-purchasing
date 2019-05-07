@@ -166,12 +166,10 @@
                 },
                 watch: {
                     suppliers: {
-                        handler: function(newSuppliers) {
+                        handler: function (newSuppliers) {
                             _.forEach(newSuppliers, function(supplier) {
                                 if (supplier && supplier.autocomplete && supplier.autocomplete.name) {
                                     supplier.name = supplier.autocomplete.name;
-                                } else {
-                                    supplier.name = null;
                                 }
                             });
                         },
