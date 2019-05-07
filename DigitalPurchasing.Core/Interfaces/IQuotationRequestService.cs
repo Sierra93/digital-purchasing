@@ -27,6 +27,12 @@ namespace DigitalPurchasing.Core.Interfaces
         public DateTime CreatedOn { get; set; }
     }
 
+    public class QuotationRequestApplicableSupplier
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+    }
+
     public class QuotationRequestVm
     {
         public Guid Id { get; set; }
@@ -56,6 +62,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public QuotationRequestViewData(string company, string customer)
         {
             SentRequests = new List<SentRequest>();
+            ApplicableSuppliers = new List<QuotationRequestApplicableSupplier>();
             Items = new Dictionary<string, List<NomenclatureItem>>
             {
                 { company, new List<NomenclatureItem>() },
@@ -64,6 +71,8 @@ namespace DigitalPurchasing.Core.Interfaces
             _company = company;
             _customer = customer;
         }
+
+        public List<QuotationRequestApplicableSupplier> ApplicableSuppliers { get; set; }
 
         public List<SentRequest> SentRequests { get; set; }
 
@@ -82,6 +91,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class SentRequest
     {
+        public Guid SupplierId { get; set; }
         public string SupplierName { get; set; }
         public string PersonFullName { get; set; }
         public string Email { get; set; }
