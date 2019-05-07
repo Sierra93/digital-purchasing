@@ -1,5 +1,9 @@
 @model DigitalPurchasing.Web.ViewModels.Supplier.SupplierEditVm
 
+@{
+    bool isCreateMode = Model.Supplier?.Id == default;
+}
+
 <input type="hidden" asp-for="Supplier.CategoryId" />
 
 <div class="row">
@@ -234,8 +238,11 @@
     <table class="table table-striped">
         <tr>
             <th>Категория</th>
+            @if (!isCreateMode)
+            {
             <th style="width: 250px">Контакт 1</th>
             <th style="width: 250px">Контакт 2</th>
+            }
         </tr>
         @for (int i = 0; i < Model.NomenclatureCategoies.Count; i++)
         {
@@ -264,6 +271,8 @@
                     }
                     <input type="hidden" asp-for="NomenclatureCategoies[i].IsDefaultSupplierCategory" />
                 </td>
+                @if (!isCreateMode)
+                {
                 <td>
                     <select asp-for="NomenclatureCategoies[i].NomenclatureCategoryPrimaryContactId"
                             asp-items="Model.ContactPersons.OrderBy(cp => cp.FullName).Select(cp => new SelectListItem() { Value = cp.Id.ToString(), Text = cp.FullName, Selected = cp.Id == nc.NomenclatureCategoryPrimaryContactId })"
@@ -278,6 +287,7 @@
                         <option value="">-- Не выбран --</option>
                     </select>
                 </td>
+                }
             </tr>
         }
     </table>
