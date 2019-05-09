@@ -11,14 +11,14 @@ namespace DigitalPurchasing.Core.Interfaces
     public interface IAnalysisService
     {
         AnalysisDataVm GetData(Guid clId);
-        AnalysisDataVm GetDefaultData();
-        AnalysisVariantOptions GetVariantData(Guid vId);
         AnalysisDataVm AddVariant(Guid clId);
-        AnalysisDataVm AddDefaultVariant();
+        AnalysisVariantOptions GetVariantData(Guid vId);
+        //todo: replace result tp VariantDto
+        List<AnalysisDataVm.Variant> GetDefaultVariants();
+        AnalysisDataVm.Variant AddDefaultVariant();
         void SaveVariant(AnalysisSaveVariant variant);
         void DeleteVariant(Guid id);
         AnalysisDetails GetDetails(Guid clId);
-        List<Guid> GetDefaultVariantsIds();
         Task SelectVariant(Guid variantId);
     }
 
@@ -133,7 +133,13 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class AnalysisDataVm
     {
-        public class Supplier
+        public class CustomerData
+        {
+            public Guid Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        public class SupplierData
         {
             public Guid Id { get; set; }
             public string Name { get; set; }
@@ -152,23 +158,39 @@ namespace DigitalPurchasing.Core.Interfaces
         public class Variant
         {
             public Guid Id { get; set; } = Guid.NewGuid();
-            public List<Result> Results { get; set; } = new List<Result>();
-            public AnalysisVariantOptions Options { get; set; } = new AnalysisVariantOptions();
             public DateTime CreatedOn { get; set; }
+            public AnalysisVariantOptions Options { get; set; } = new AnalysisVariantOptions();
+
+            public List<ResultBySupplier> Results { get; set; } = new List<ResultBySupplier>();
+            public List<ResultByItem> ResultsByItem { get; set; }
         }
 
-        public class Result
+        public class ResultBySupplier
         {
             public Guid SupplierId { get; set; }
             public decimal Total { get; set; }
             public int Order { get; set; }
         }
 
+        public class ResultByItem
+        {
+            public Guid SupplierId { get; set; }
+            public Guid ItemId { get; set; }
+            public decimal Quantity { get; set; }
+            public decimal Price { get; set; }
+        }
+
         public DateTime? CustomerDeliveryDate { get; set; }
 
-        public List<Supplier> Suppliers { get; set; } = new List<Supplier>();
+        public CustomerData Customer { get; set; }
+        public List<SupplierData> Suppliers { get; set; } = new List<SupplierData>();
         public List<Variant> Variants { get; set; } = new List<Variant>();
 
         public Guid? SelectedVariant { get; set; }
+    }
+
+    public class AnalysisBaseData
+    {
+
     }
 }

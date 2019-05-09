@@ -1,10 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace DigitalPurchasing.Core.Interfaces
 {
     public interface ISelectedSupplierService
     {
+        Task GenerateReport(Guid ownerId, Guid variantId);
     }
 }

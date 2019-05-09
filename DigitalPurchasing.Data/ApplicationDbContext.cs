@@ -6,6 +6,7 @@ using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Models;
 using DigitalPurchasing.Models.Counters;
 using DigitalPurchasing.Models.Identity;
+using DigitalPurchasing.Models.SSR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -65,6 +66,18 @@ namespace DigitalPurchasing.Data
         public DbSet<UploadedDocumentHeaders> UploadedDocumentHeaders { get; set; }
 
         public DbSet<ReceivedEmail> ReceivedEmails { get; set; }
+
+        #region Selected supplier report
+
+        public DbSet<SSReport> SSReports { get; set; }
+        public DbSet<SSVariant> SSVariants { get; set; }
+        public DbSet<SSData> SSDatas { get; set; }
+        public DbSet<SSCustomer> SSCustomers { get; set; }
+        public DbSet<SSSupplier> SSSuppliers { get; set; }
+        public DbSet<SSCustomerItem> SSCustomerItems { get; set; }
+        public DbSet<SSSupplierItem> SSSupplierItems { get; set; }
+
+        #endregion
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IHttpContextAccessor httpContextAccessor) : base(options)
         {
@@ -189,6 +202,20 @@ namespace DigitalPurchasing.Data
                 e.HasOne(q => q.CompetitionList).WithMany().HasForeignKey(q => q.CompetitionListId).OnDelete(DeleteBehavior.Cascade);
                 e.HasOne(q => q.Owner).WithMany().HasForeignKey(q => q.OwnerId).OnDelete(DeleteBehavior.Restrict);
             });
+
+            #region Selected supplier report
+
+            builder.Entity<SSVariant>().HasOne(q => q.Report).WithMany().HasForeignKey(q => q.ReportId);
+            builder.Entity<SSData>(e =>
+            {
+                e.HasOne(q => q.Variant).WithMany().HasForeignKey(q => q.VariantId);
+                e.HasOne(q => q.Supplier).WithMany().HasForeignKey(q => q.SupplierId);
+                e.HasOne(q => q.Item).WithMany().HasForeignKey(q => q.ItemId);
+            });
+            builder.Entity<SSCustomerItem>().HasOne(q => q.Customer).WithMany().HasForeignKey(q => q.CustomerId);
+            builder.Entity<SSSupplierItem>().HasOne(q => q.Supplier).WithMany().HasForeignKey(q => q.SupplierId);
+
+            #endregion
 
             builder.Entity<CustomerCounter>().HasIndex(q => q.OwnerId).IsUnique();
             builder.Entity<SupplierCounter>().HasIndex(q => q.OwnerId).IsUnique();

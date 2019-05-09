@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Web.ViewModels.Analysis;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalPurchasing.Web.Controllers
 {
-    public class AnalysisController : Controller
+    public class AnalysisController : BaseController
     {
         public class SaveSelectedVariantVm
         {
@@ -21,8 +22,15 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         private readonly IAnalysisService _analysisService;
+        private readonly ISelectedSupplierService _selectedSupplierService;
 
-        public AnalysisController(IAnalysisService analysisService) => _analysisService = analysisService;
+        public AnalysisController(
+            IAnalysisService analysisService,
+            ISelectedSupplierService selectedSupplierService)
+        {
+            _analysisService = analysisService;
+            _selectedSupplierService = selectedSupplierService;
+        }
 
         [Route("competitionlist/{clId}/analysis")]
         public IActionResult Index(Guid clId)
@@ -42,7 +50,7 @@ namespace DigitalPurchasing.Web.Controllers
         [Route("competitionlist/{clId}/analysisdata")]
         public IActionResult Data(Guid clId) => Json(_analysisService.GetData(clId));
 
-        public IActionResult DefaultData() => Json(_analysisService.GetDefaultData());
+        public IActionResult DefaultVariants() => Json(_analysisService.GetDefaultVariants());
 
         public IActionResult VariantData(Guid vId) => Json(_analysisService.GetVariantData(vId));
 
@@ -62,7 +70,10 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveSelectedVariant([FromBody]SaveSelectedVariantVm vm)
         {
+            var ownerId = User.CompanyId();
+
             await _analysisService.SelectVariant(vm.Id);
+            await _selectedSupplierService.GenerateReport(ownerId, vm.Id);
             return Ok();
         }
 

@@ -102,7 +102,10 @@ namespace DigitalPurchasing.Services
             if (vm != null)
             {
                 var quotationRequest = _db.QuotationRequests.Find(competitionList.QuotationRequestId);
-                var purchaseRequest = _db.PurchaseRequests.Include(q => q.Items).First(q => q.Id == quotationRequest.PurchaseRequestId);
+                var purchaseRequest = _db.PurchaseRequests
+                    .Include(q => q.Customer)
+                    .Include(q => q.Items)
+                    .First(q => q.Id == quotationRequest.PurchaseRequestId);
 
                 var nomIds = purchaseRequest.Items.Where(q => q.NomenclatureId.HasValue).Select(q => q.NomenclatureId.Value).ToList();
 
@@ -114,7 +117,13 @@ namespace DigitalPurchasing.Services
                     requestItem.Position = ++idx;
                 }
 
-                var supplierOffers = _db.SupplierOffers.AsNoTracking().Include(q => q.Currency).Where(q => q.CompetitionListId == id).ToList();
+                var supplierOffers = _db.SupplierOffers
+                    .AsNoTracking()
+                    .Include(q => q.Supplier)
+                    .Include(q => q.Currency)
+                    .Where(q => q.CompetitionListId == id)
+                    .ToList();
+
                 foreach (var supplierOffer in supplierOffers)
                 {
                     supplierOffer.Items = _db.SupplierOfferItems.Include(q => q.RawUom)
