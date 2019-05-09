@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DigitalPurchasing.Models.SSR
 {
@@ -12,6 +13,7 @@ namespace DigitalPurchasing.Models.SSR
 
         public Guid NomenclatureId { get; set; }
 
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal Quantity { get; set; }
     }
 }

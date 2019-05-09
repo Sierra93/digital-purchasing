@@ -133,13 +133,14 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class AnalysisDataVm
     {
-        public class CustomerData
+        public class CustomerRequestData
         {
             public Guid Id { get; set; }
             public string Name { get; set; }
+            public Guid CustomerId { get; set; }
         }
 
-        public class SupplierData
+        public class SupplierOfferData
         {
             public Guid Id { get; set; }
             public string Name { get; set; }
@@ -153,6 +154,8 @@ namespace DigitalPurchasing.Core.Interfaces
 
             public string DeliveryTermsStr => DeliveryTerms.GetDescription();
             public string PaymentTermsStr => PaymentTerms.GetDescription();
+
+            public Guid SupplierId { get; set; }
         }
 
         public class Variant
@@ -174,7 +177,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public class ResultByItem
         {
-            public Guid SupplierId { get; set; }
+            public Guid SupplierId { get; set; } // so id
             public Guid ItemId { get; set; }
             public decimal Quantity { get; set; }
             public decimal Price { get; set; }
@@ -182,8 +185,8 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public DateTime? CustomerDeliveryDate { get; set; }
 
-        public CustomerData Customer { get; set; }
-        public List<SupplierData> Suppliers { get; set; } = new List<SupplierData>();
+        public CustomerRequestData CustomerRequest { get; set; }
+        public List<SupplierOfferData> SupplierOffers { get; set; } = new List<SupplierOfferData>();
         public List<Variant> Variants { get; set; } = new List<Variant>();
 
         public Guid? SelectedVariant { get; set; }

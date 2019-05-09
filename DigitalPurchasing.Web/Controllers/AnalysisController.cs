@@ -70,10 +70,11 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveSelectedVariant([FromBody]SaveSelectedVariantVm vm)
         {
+            var userId = User.Id();
             var ownerId = User.CompanyId();
 
             await _analysisService.SelectVariant(vm.Id);
-            await _selectedSupplierService.GenerateReport(ownerId, vm.Id);
+            await _selectedSupplierService.GenerateReportData(ownerId, userId, vm.Id);
             return Ok();
         }
 

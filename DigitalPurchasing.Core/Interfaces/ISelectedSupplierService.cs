@@ -1,10 +1,28 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace DigitalPurchasing.Core.Interfaces
 {
     public interface ISelectedSupplierService
     {
-        Task GenerateReport(Guid ownerId, Guid variantId);
+        Task<GenerateReportDataResult> GenerateReportData(Guid ownerId, Guid userId, Guid variantId);
+        Task<IEnumerable<SSReportSimple>> GetReports(Guid clId);
+    }
+
+    public class GenerateReportDataResult
+    {
+        public Guid ReportId { get; set; }
+        public bool IsSuccess { get; set; }
+    }
+
+    public class SSReportSimple
+    {
+        public Guid ReportId { get; set; }
+        public DateTime CreatedOn { get; set; }
+        public string UserFirstName { get; set; }
+        public string UserLastName { get; set; }
+
+        public string SelectedBy => $"{UserLastName} {UserFirstName}";
     }
 }

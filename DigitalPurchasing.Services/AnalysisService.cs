@@ -52,6 +52,12 @@ namespace DigitalPurchasing.Services
             }
 
             data.SelectedVariant = variants.FirstOrDefault(q => q.IsSelected)?.Id;
+            data.CustomerRequest = new AnalysisDataVm.CustomerRequestData
+            {
+                Id = cl.PurchaseRequest.Id,
+                Name = cl.PurchaseRequest.Customer.Name,
+                CustomerId = cl.PurchaseRequest.Customer.Id
+            };
 
             return data;
         }
@@ -80,7 +86,7 @@ namespace DigitalPurchasing.Services
                 {
                     SupplierId = q.Key,
                     Total = q.Value,
-                    Order = data.Suppliers.Find(w => w.Id == q.Key).Order
+                    Order = data.SupplierOffers.Find(w => w.Id == q.Key).Order
                 }).ToList(),
                 ResultsByItem = result.Data.Select(q => new AnalysisDataVm.ResultByItem
                 {
@@ -91,7 +97,7 @@ namespace DigitalPurchasing.Services
                 }).ToList()
             };
 
-            foreach (var supplier in data.Suppliers)
+            foreach (var supplier in data.SupplierOffers)
             {
                 if (dataVariant.Results.All(q => q.SupplierId != supplier.Id))
                 {
@@ -99,7 +105,7 @@ namespace DigitalPurchasing.Services
                     {
                         SupplierId = supplier.Id,
                         Total = 0,
-                        Order = data.Suppliers.Find(w => w.Id == supplier.Id).Order
+                        Order = data.SupplierOffers.Find(w => w.Id == supplier.Id).Order
                     });
                 }
             }
@@ -123,7 +129,7 @@ namespace DigitalPurchasing.Services
             foreach (var q in cl.SupplierOffers)
             {
                 var so = _db.SupplierOffers.Find(q.Id);
-                data.Suppliers.Add(new AnalysisDataVm.SupplierData
+                data.SupplierOffers.Add(new AnalysisDataVm.SupplierOfferData
                 {
                     Id  = q.Id,
                     Name = q.SupplierName,
@@ -131,7 +137,8 @@ namespace DigitalPurchasing.Services
                     DeliveryTerms = q.DeliveryTerms,
                     PayWithinDays = so.PayWithinDays,
                     PaymentTerms = q.PaymentTerms,
-                    DeliveryDate = so.DeliveryDate == DateTime.MinValue ? (DateTime?)null : so.DeliveryDate
+                    DeliveryDate = so.DeliveryDate == DateTime.MinValue ? (DateTime?)null : so.DeliveryDate,
+                    SupplierId = q.Supplier.Id
                 });
             }
 
@@ -147,7 +154,8 @@ namespace DigitalPurchasing.Services
                 {
                     Id = q.NomenclatureId,
                     Quantity = q.RawQty
-                }).ToList()
+                }).ToList(),
+                CustomerId = cl.PurchaseRequest.Customer.Id
             };
 
             var suppliers = cl.SupplierOffers.Select(q =>
@@ -162,7 +170,8 @@ namespace DigitalPurchasing.Services
                         Id = w.NomenclatureId,
                         Price = w.RawPrice,
                         Quantity = w.RawQty
-                    }).ToList()
+                    }).ToList(),
+                    SupplierId = q.Supplier.Id
                 };
             }).ToList();
 

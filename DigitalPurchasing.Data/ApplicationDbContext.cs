@@ -205,12 +205,17 @@ namespace DigitalPurchasing.Data
 
             #region Selected supplier report
 
+            builder.Entity<SSReport>(e =>
+            {
+                e.HasOne(q => q.Root).WithMany().HasForeignKey(q => q.RootId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(q => q.User).WithMany().HasForeignKey(q => q.UserId).OnDelete(DeleteBehavior.Restrict);
+            });
+
             builder.Entity<SSVariant>().HasOne(q => q.Report).WithMany().HasForeignKey(q => q.ReportId);
             builder.Entity<SSData>(e =>
             {
                 e.HasOne(q => q.Variant).WithMany().HasForeignKey(q => q.VariantId);
                 e.HasOne(q => q.Supplier).WithMany().HasForeignKey(q => q.SupplierId);
-                e.HasOne(q => q.Item).WithMany().HasForeignKey(q => q.ItemId);
             });
             builder.Entity<SSCustomerItem>().HasOne(q => q.Customer).WithMany().HasForeignKey(q => q.CustomerId);
             builder.Entity<SSSupplierItem>().HasOne(q => q.Supplier).WithMany().HasForeignKey(q => q.SupplierId);

@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models.SSR;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace DigitalPurchasing.Services
 {
@@ -13,18 +16,21 @@ namespace DigitalPurchasing.Services
         private readonly ApplicationDbContext _db;
         private readonly IAnalysisService _analysisService;
         private readonly ICompetitionListService _competitionListService;
+        private readonly ILogger _logger;
 
         public SelectedSupplierService(
             ApplicationDbContext db,
             IAnalysisService analysisService,
-            ICompetitionListService competitionListService)
+            ICompetitionListService competitionListService,
+            ILogger<SelectedSupplierService> logger)
         {
             _db = db;
             _analysisService = analysisService;
             _competitionListService = competitionListService;
+            _logger = logger;
         }
 
-        public async Task GenerateReport(Guid ownerId, Guid variantId)
+        public async Task<GenerateReportDataResult> GenerateReportData(Guid ownerId, Guid userId, Guid variantId)
         {
             var selectedVariant = await _db.AnalysisVariants
                 .IgnoreQueryFilters()
@@ -36,6 +42,8 @@ namespace DigitalPurchasing.Services
             }
 
             var cl = _competitionListService.GetById(selectedVariant.CompetitionListId.Value);
+
+            var root = await _db.Roots.FirstAsync(q => q.CompetitionListId == cl.Id);
             
             var variants = await _db.AnalysisVariants
                 .Where(q => q.CompetitionListId == selectedVariant.CompetitionListId)
@@ -49,12 +57,12 @@ namespace DigitalPurchasing.Services
                 try
                 {
                     // report
-                    var ssReportEntry = await _db.SSReports.AddAsync(new SSReport { OwnerId = ownerId });
+                    var ssReportEntry = await _db.SSReports.AddAsync(new SSReport { OwnerId = ownerId, UserId = userId, RootId = root.Id });
                     await _db.SaveChangesAsync();
                     var ssReport = ssReportEntry.Entity;
 
                     // customer
-                    var ssCustomerEntry = await _db.SSCustomers.AddAsync(new SSCustomer { Name = data.Customer.Name, InternalId = data.Customer.Id });
+                    var ssCustomerEntry = await _db.SSCustomers.AddAsync(new SSCustomer { Name = data.CustomerRequest.Name, InternalId = data.CustomerRequest.CustomerId });
                     await _db.SaveChangesAsync();
                     var ssCustomer = ssCustomerEntry.Entity;
 
@@ -72,7 +80,7 @@ namespace DigitalPurchasing.Services
                     await _db.SSCustomerItems.AddRangeAsync(ssCustomerItems);
 
                     // suppliers
-                    var ssSuppliers = cl.SupplierOffers
+                    var ssSuppliers = cl.SupplierOffers.Distinct()
                         .Select(q => new SSSupplier { Name = q.Supplier.Name, InternalId = q.Supplier.Id })
                         .ToList();
                     await _db.SSSuppliers.AddRangeAsync(ssSuppliers);
@@ -83,7 +91,7 @@ namespace DigitalPurchasing.Services
                     {
                         var ssSupplierItems = supplierOffer.Items.Select(q => new SSSupplierItem
                         {
-                            SupplierId = ssSuppliers.Find(e => e.InternalId == supplierOffer.Id).Id,
+                            SupplierId = ssSuppliers.Find(e => e.InternalId == supplierOffer.Supplier.Id).Id,
                             Name = q.RawName,
                             Quantity = q.RawQty,
                             Price = q.RawPrice,
@@ -113,9 +121,11 @@ namespace DigitalPurchasing.Services
                         // variant datas
                         foreach (var resultByItem in variantData.ResultsByItem)
                         {
-                            // variant data
-                            var ssSupplier = ssSuppliers.Find(q => q.InternalId == resultByItem.SupplierId);
+                            var dbSupplierId = data.SupplierOffers.Find(q => q.Id == resultByItem.SupplierId).SupplierId;
                             
+                            var ssSupplier = ssSuppliers.Find(q => q.InternalId == dbSupplierId);
+
+                            // variant data
                             var ssData = new SSData
                             {
                                 VariantId = ssVariant.Id,
@@ -131,12 +141,35 @@ namespace DigitalPurchasing.Services
 
                     // done
                     transaction.Commit();
+
+                    return new GenerateReportDataResult { IsSuccess = true, ReportId = ssReport.Id };
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    // todo
+                    _logger.LogError(e, "Unable to generate report");
+                    return new GenerateReportDataResult { IsSuccess = false, ReportId = Guid.Empty };
                 }
             }
+        }
+
+        public async Task<IEnumerable<SSReportSimple>> GetReports(Guid clId)
+        {
+            var root = await _db.Roots.FirstAsync(q => q.CompetitionListId == clId);
+            var reports = await _db.SSReports
+                .Include(q => q.User)
+                .Where(q => q.RootId == root.Id)
+                .OrderByDescending(q => q.CreatedOn)
+                .ToListAsync();
+            
+            var result = reports.Select(q => new SSReportSimple
+            {
+                ReportId = q.Id,
+                CreatedOn = q.CreatedOn,
+                UserFirstName = q.User.FirstName,
+                UserLastName = q.User.LastName
+            }).ToList();
+
+            return result;
         }
     }
 }
