@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190509135038_SSR")]
+    partial class SSR
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -930,17 +932,9 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<Guid>("OwnerId");
 
-                    b.Property<Guid>("RootId");
-
-                    b.Property<Guid>("UserId");
-
                     b.HasKey("Id");
 
                     b.HasIndex("OwnerId");
-
-                    b.HasIndex("RootId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("SSReports");
                 });
@@ -1714,16 +1708,6 @@ namespace DigitalPurchasing.Data.Migrations
                         .WithMany()
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("DigitalPurchasing.Models.Root", "Root")
-                        .WithMany()
-                        .HasForeignKey("RootId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("DigitalPurchasing.Models.Identity.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.SSR.SSSupplierItem", b =>

@@ -27,8 +27,16 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class CompetitionListVm
     {
+        public class CustomerVm
+        {
+            public Guid Id { get; set; }
+            public string Name { get; set; }
+        }
+
         public class PurchaseRequestVm
         {
+            public CustomerVm Customer { get; set; }
+
             public Guid Id { get; set; }
             public int PublicId { get; set; }
             public DateTime CreatedOn { get; set; }
@@ -47,8 +55,16 @@ namespace DigitalPurchasing.Core.Interfaces
             public decimal RawQty { get; set; }
         }
 
+        public class SupplierVm
+        {
+            public Guid Id { get; set; }
+            public string Name { get; set; }
+        }
+
         public class SupplierOfferVm
         {
+            public SupplierVm Supplier { get; set; }
+
             public Guid Id { get; set; }
             public int PublicId { get; set; }
             public DateTime CreatedOn { get; set; }

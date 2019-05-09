@@ -57,9 +57,8 @@
                 methods: {
                     loadData: function() {
                         var vm = this;
-                        this.$http.get('@Url.Action("DefaultData", "Analysis")').then(function(response) {
-                            var data = response.body;
-                            vm.variants = data.variants;
+                        this.$http.get('@Url.Action("DefaultVariants", "Analysis")').then(function(response) {
+                            vm.variants = response.body;
                         },
                         function(response) {
                             alert('Ошибка загрузки');
@@ -68,8 +67,7 @@
                     variantAdded: function() {
                         var vm = this;
                         this.$http.post('@Url.Action("AddDefaultVariant", "Analysis")').then(function(response) {
-                            var data = response.body;
-                            vm.variants.push(data.variants[0]);
+                            vm.variants.push(response.body);
                         }, function(response) {
                             alert('Ошибка при создания варианта');
                         });
