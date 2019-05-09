@@ -51,18 +51,23 @@ namespace DigitalPurchasing.Services
 
             if (!string.IsNullOrEmpty(search))
             {
-                qry = qry.Where(q =>
-                    ( q.Name.Contains(search) && !string.IsNullOrEmpty(q.Name) ) ||
-                    ( q.NameEng.Contains(search) && !string.IsNullOrEmpty(q.NameEng) ));
+                qry = from q in qry
+                      where (q.Name.Contains(search) && !string.IsNullOrEmpty(q.Name)) ||
+                            (q.NameEng.Contains(search) && !string.IsNullOrEmpty(q.NameEng)) ||
+                            q.Alternatives.Any(na => na.Name.Contains(search))
+                      select q;
             }
 
             var total = qry.Count();
             var orderedResults = qry.OrderBy($"{sortField}{(sortAsc ? "" : " DESC")}");
             var result = orderedResults.Skip((page - 1) * perPage).Take(perPage).ProjectToType<NomenclatureIndexDataItem>().ToList();
 
-            foreach (var nomenclatureResult in result)
+            foreach (var item in result)
             {
-                nomenclatureResult.CategoryFullName = _categoryService.FullCategoryName(nomenclatureResult.CategoryId);
+                item.CategoryFullName = _categoryService.FullCategoryName(item.CategoryId);
+                item.HasAlternativeWithRequiredName = !string.IsNullOrWhiteSpace(search) &&
+                    !item.Name.Contains(search, StringComparison.InvariantCultureIgnoreCase) &&
+                    item.NameEng?.Contains(search, StringComparison.InvariantCultureIgnoreCase) != true;
             }
 
             return new NomenclatureIndexData
@@ -161,7 +166,7 @@ namespace DigitalPurchasing.Services
             return result;
         }
 
-        public NomenclatureDetailsData GetDetailsData(Guid nomId, int page, int perPage, string sortField, bool sortAsc)
+        public NomenclatureDetailsData GetDetailsData(Guid nomId, int page, int perPage, string sortField, bool sortAsc, string sortBySearch)
         {
             if (string.IsNullOrEmpty(sortField))
             {
@@ -170,7 +175,9 @@ namespace DigitalPurchasing.Services
 
             var qry = _db.NomenclatureAlternatives.Where(q => q.NomenclatureId == nomId);
             var total = qry.Count();
-            var orderedResults = qry.OrderBy($"{sortField}{(sortAsc ? "" : " DESC")}");
+            var orderedResults = string.IsNullOrWhiteSpace(sortBySearch)
+                ? qry.OrderBy($"{sortField}{(sortAsc ? "" : " DESC")}")
+                : qry.OrderByDescending(q => q.Name.Contains(sortBySearch)).ThenBy(q => q.Name);
             var result = orderedResults
                 .Skip((page - 1) * perPage)
                 .Take(perPage)

@@ -6,7 +6,7 @@ namespace DigitalPurchasing.Core.Interfaces
     public interface INomenclatureService
     {
         NomenclatureIndexData GetData(int page, int perPage, string sortField, bool sortAsc, string search);
-        NomenclatureDetailsData GetDetailsData(Guid nomId, int page, int perPage, string sortField, bool sortAsc);
+        NomenclatureDetailsData GetDetailsData(Guid nomId, int page, int perPage, string sortField, bool sortAsc, string sortBySearch);
         NomenclatureVm CreateOrUpdate(NomenclatureVm model);
         void CreateOrUpdate(List<NomenclatureVm> models, Guid ownerId);
         NomenclatureVm GetById(Guid id, bool globalSearch = false);
@@ -85,6 +85,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid CategoryId { get; set; }
         public string CategoryName { get; set; }
         public string CategoryFullName { get; set; }
+        public bool HasAlternativeWithRequiredName { get; set; }
     }
 
     //todo: rename to NomenclatureDto

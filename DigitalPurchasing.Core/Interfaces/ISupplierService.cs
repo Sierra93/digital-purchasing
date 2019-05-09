@@ -23,6 +23,7 @@ namespace DigitalPurchasing.Core.Interfaces
         SupplierContactPersonVm GetContactPersonBySupplier(Guid supplierId);
         Guid GetSupplierByEmail(Guid ownerId, string email);
         List<SupplierNomenclatureCategory> GetSupplierNomenclatureCategories(Guid supplierId);
+        IEnumerable<SupplierVm> GetByCategoryIds(params Guid[] nomenclatureCategoryIds);
         void SaveSupplierNomenclatureCategoryContacts(Guid supplierId,
             IEnumerable<(Guid nomenclatureCategoryId, Guid? primarySupplierContactId, Guid? secondarySupplierContactId)> nomenclatureCategories2Contacts);
         void RemoveSupplierNomenclatureCategoryContacts(Guid supplierId, Guid nomenclatureCategoryId);
@@ -102,7 +103,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class SupplierNomenclatureCategory
     {
-        public Guid NomenclatureCategoryId { get; set; }
+        public Guid? NomenclatureCategoryId { get; set; }
         public string NomenclatureCategoryFullName { get; set; }
         public Guid? NomenclatureCategoryPrimaryContactId { get; set; }
         public Guid? NomenclatureCategorySecondaryContactId { get; set; }

@@ -1,5 +1,9 @@
 @model DigitalPurchasing.Web.ViewModels.Supplier.SupplierEditVm
 
+@{
+    bool isCreateMode = Model.Supplier?.Id == default;
+}
+
 <input type="hidden" asp-for="Supplier.CategoryId" />
 
 <div class="row">
@@ -29,13 +33,13 @@
 <div class="row">
     @if (Model.Supplier != null && Model.Supplier.Id != default(Guid))
     {
-    <div class="col-md-3">
-        <div class="form-group">
-            <label asp-for="Supplier.PublicId" class="control-label"></label>
-            <input asp-for="Supplier.PublicId" class="form-control" readonly="readonly" />
-            <span asp-validation-for="Supplier.PublicId" class="text-danger"></span>
+        <div class="col-md-3">
+            <div class="form-group">
+                <label asp-for="Supplier.PublicId" class="control-label"></label>
+                <input asp-for="Supplier.PublicId" class="form-control" readonly="readonly" />
+                <span asp-validation-for="Supplier.PublicId" class="text-danger"></span>
+            </div>
         </div>
-    </div>
     }
     <div class="col-md-3">
         <div class="form-group">
@@ -207,4 +211,85 @@
             </div>
         </div>
     </div>
+</div>
+
+@using DigitalPurchasing.Core.Interfaces
+
+@{
+    Func<NomenclatureCategoryVm, string> getCatNameInHierarchy = null;
+    getCatNameInHierarchy = (category) =>
+    {
+        if (category.ParentId.HasValue)
+        {
+            string categoryName = category.IsDeleted ? "[Удалена]" : category.Name;
+            var parentCategory = Model.AvailableCategories.First(_ => _.Id == category.ParentId.Value);
+            return $"{getCatNameInHierarchy(parentCategory)} > {categoryName}";
+        }
+        else
+        {
+            return category.Name;
+        }
+    };
+}
+
+<div>
+
+    <h3>Категории закупок</h3>
+    <table class="table table-striped">
+        <tr>
+            <th>Категория</th>
+            @if (!isCreateMode)
+            {
+            <th style="width: 250px">Контакт 1</th>
+            <th style="width: 250px">Контакт 2</th>
+            }
+        </tr>
+        @for (int i = 0; i < Model.NomenclatureCategoies.Count; i++)
+        {
+            var nc = Model.NomenclatureCategoies[i];
+            <tr>
+                <td>
+                    @if (nc.IsDefaultSupplierCategory)
+                    {
+                        <span>Основная:</span>
+                        <select asp-for="NomenclatureCategoies[i].NomenclatureCategoryId"
+                                asp-items="Model.AvailableCategories.Select(cp => new SelectListItem()
+                                                {
+                                                    Value = cp.Id.ToString(),
+                                                    Text = getCatNameInHierarchy(cp),
+                                                    Selected = cp.Id == nc.NomenclatureCategoryId
+                                                }).OrderBy(_ => _.Text)"
+                                class="form-control"
+                                style="max-width:500px; display: inline-block">
+                            <option value="">-- Не выбрана --</option>
+                        </select>
+                    }
+                    else
+                    {
+                        @nc.NomenclatureCategoryFullName
+                        <input type="hidden" asp-for="NomenclatureCategoies[i].NomenclatureCategoryId" />
+                    }
+                    <input type="hidden" asp-for="NomenclatureCategoies[i].IsDefaultSupplierCategory" />
+                </td>
+                @if (!isCreateMode)
+                {
+                <td>
+                    <select asp-for="NomenclatureCategoies[i].NomenclatureCategoryPrimaryContactId"
+                            asp-items="Model.ContactPersons.OrderBy(cp => cp.FullName).Select(cp => new SelectListItem() { Value = cp.Id.ToString(), Text = cp.FullName, Selected = cp.Id == nc.NomenclatureCategoryPrimaryContactId })"
+                            class="form-control">
+                        <option value="">-- Не выбран --</option>
+                    </select>
+                </td>
+                <td>
+                    <select asp-for="NomenclatureCategoies[i].NomenclatureCategorySecondaryContactId"
+                            asp-items="Model.ContactPersons.OrderBy(cp => cp.FullName).Select(cp => new SelectListItem() { Value = cp.Id.ToString(), Text = cp.FullName, Selected = cp.Id == nc.NomenclatureCategorySecondaryContactId })"
+                            class="form-control">
+                        <option value="">-- Не выбран --</option>
+                    </select>
+                </td>
+                }
+            </tr>
+        }
+    </table>
+
 </div>

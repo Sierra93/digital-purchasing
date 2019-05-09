@@ -286,7 +286,11 @@ namespace DigitalPurchasing.Services
                 .OrderBy(q => q.Position).ToList();
 
             // mappings - PurchaseRequestItemMappings
-            var res = new PRMatchItemsResponse { Items = entities.Adapt<List<PRMatchItemsResponse.Item>>(), CustomerName = pr.CustomerName };
+            var res = new PRMatchItemsResponse
+            {
+                Items = entities.Adapt<List<PRMatchItemsResponse.Item>>(),
+                CustomerName = pr.CustomerName
+            };
 
             return res;
         }

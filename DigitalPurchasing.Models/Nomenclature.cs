@@ -38,5 +38,7 @@ namespace DigitalPurchasing.Models
         public decimal PackUomValue { get; set; }
 
         public bool IsDeleted { get; set; }
+
+        public List<NomenclatureAlternative> Alternatives { get; set; }
     }
 }

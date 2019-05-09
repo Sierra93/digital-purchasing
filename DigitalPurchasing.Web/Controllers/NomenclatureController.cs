@@ -19,6 +19,12 @@ namespace DigitalPurchasing.Web.Controllers
 {
     public class NomenclatureController : BaseController
     {
+        public class AlternativesVueTableRequest : VueTableRequestWithId
+        {
+            [FromQuery(Name = "sortBySearch")]
+            public string SortBySearch { get; set; }
+        }
+
         private readonly INomenclatureService _nomenclatureService;
         private readonly INomenclatureCategoryService _nomenclatureCategoryService;
         private readonly IDictionaryService _dictionaryService;
@@ -66,9 +72,10 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         [HttpGet, Route("/nomenclature/detailsdata/{id}")]
-        public IActionResult DataDetails(VueTableRequestWithId request)
+        public IActionResult DataDetails(AlternativesVueTableRequest request)
         {
-            var result = _nomenclatureService.GetDetailsData(request.Id, request.Page, request.PerPage, request.SortField, request.SortAsc);
+            var result = _nomenclatureService.GetDetailsData(request.Id, request.Page, request.PerPage,
+                request.SortField, request.SortAsc, request.SortBySearch);
             var nextUrl = Url.Action("DataDetails", "Nomenclature", request.NextPageRequest(), Request.Scheme);
             var prevUrl = Url.Action("DataDetails", "Nomenclature", request.PrevPageRequest(), Request.Scheme);
             var data = result.Data.Adapt<List<NomenclatureDetailsDataItemEdit>>();

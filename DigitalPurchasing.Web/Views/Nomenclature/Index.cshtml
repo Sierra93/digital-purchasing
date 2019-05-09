@@ -1,3 +1,4 @@
+@using DigitalPurchasing.Web.Controllers
 @model object
 
 @{
@@ -39,7 +40,7 @@
     <div class="row">
         <div class="col-xs-12">
             <vuetable ref="vuetable"
-                      api-url="@Url.Action("Data")"
+                      api-url="@Url.Action(nameof(NomenclatureController.Data))"
                       :per-page="20"
                       :fields="fields"
                       :sort-order="sortOrder"
@@ -49,6 +50,7 @@
                       no-data-template="Нет данных"
                       :css="css"
                       @@vuetable:pagination-data="onPaginationData"
+                      @@vuetable:load-success="onTableLoaded"
                       @@vuetable:cell-clicked="onCellClicked">
                 <div slot="slot-actions" slot-scope="props">
                     <div class="btn-group" role="group" aria-label="...">
@@ -86,6 +88,7 @@
     <div>
         <vuetable ref="vuetableDetails"
                   :api-url="getDetailsUrl"
+                  :query-params="getQueryParams"
                   :fields="fields"
                   :sort-order="sortOrder"
                   pagination-path=""
@@ -262,12 +265,21 @@
                     },
                     deleteCancel: function() {
                         this.modalDelete = false;
+                    },
+                    getQueryParams: function (sortOrder, currentPage, perPage) {
+                        var sortBySearch = this.rowData._search;
+                        this.rowData._search = null;
+                        return {
+                            'sort': sortOrder[0].field + '|' + sortOrder[0].direction,
+                            'page': currentPage,
+                            'per_page': perPage,
+                            sortBySearch: sortBySearch
+                        };
                     }
                 },
                 computed: {
                     getDetailsUrl: function () {
-                        var url = '/nomenclature/detailsdata/'+this.rowData.id;
-                        return url;
+                        return '/nomenclature/detailsdata/' + this.rowData.id;
                     }
                 },
             });
@@ -379,6 +391,17 @@
                     },
                     onCellClicked: function (dataItem, field, event) {
                         this.$refs.vuetable.toggleDetailRow(dataItem.data.id);
+                    },
+                    onTableLoaded: function (payload) {
+                        var vm = this;
+                        var noms = payload.data.data;
+                        _.each(noms, function (n) {
+                            n._search = vm.search;
+                            if (n.hasAlternativeWithRequiredName) {
+                                //console.log('has alts', n.id);
+                                vm.$refs.vuetable.showDetailRow(n.id);
+                            }
+                        });
                     },
                     deleteRow: function (rowData, rowIndex) {
                         this.modalData.name = rowData.name;
