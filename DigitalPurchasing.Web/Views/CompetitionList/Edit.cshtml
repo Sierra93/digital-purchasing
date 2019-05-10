@@ -1,4 +1,5 @@
 @using DigitalPurchasing.Core
+@using DigitalPurchasing.Web.Controllers
 @model DigitalPurchasing.Web.ViewModels.CompetitionList.CompetitionListEditVm
 
 @{
@@ -156,7 +157,7 @@
                             <td>0 000</td>
                             <td>RUB</td>
                             <td>@report.SelectedBy</td>
-                            <td><a href="#@report.ReportId">20190318_ЗА 183_КЛ 79_Отчет о выборе поставщика</a></td>
+                            <td><a href="@Url.Action(nameof(CompetitionListController.Report), new { reportId = report.ReportId })">Скачать</a></td>
                         </tr>
                     }
                     </tbody>

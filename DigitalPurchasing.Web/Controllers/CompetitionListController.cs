@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core.Interfaces;
+using DigitalPurchasing.ExcelReader;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.CompetitionList;
@@ -92,6 +93,16 @@ namespace DigitalPurchasing.Web.Controllers
             }
 
             return RedirectToAction(nameof(Edit), "SupplierOffer", new { id = response.Id });
+        }
+
+        [HttpGet]
+        public IActionResult Report(Guid reportId)
+        {
+            var report = new ExcelSSR(new ExcelSSR.CLData(), new ExcelSSR.CustomerRequestData(), new List<ExcelSSR.Data>());
+            var fileBytes = report.Build();
+            var fileName = $"{report.CL.Date:yyyyMMdd}_КЛ {report.CL.Number}_Отчет о выборе поставщика.xlsx";
+
+            return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }
 
         [HttpPost]
