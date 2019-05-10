@@ -8,6 +8,32 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         Task<GenerateReportDataResult> GenerateReportData(Guid ownerId, Guid userId, Guid variantId);
         Task<IEnumerable<SSReportSimple>> GetReports(Guid clId);
+        Task<SSReportDto> GetReport(Guid reportId);
+    }
+
+    public class SSReportDto
+    {
+        public Guid Id { get; set; }
+        public DateTime CreatedOn { get; set; }
+
+        public UserDto User { get; set; }
+
+        public SSCustomerDto Customer { get; set; }
+        public List<SSSupplierDto> Suppliers { get; set; }
+    }
+
+    public class SSCustomerDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public Guid InternalId { get; set; }
+    }
+
+    public class SSSupplierDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public Guid InternalId { get; set; }
     }
 
     public class GenerateReportDataResult

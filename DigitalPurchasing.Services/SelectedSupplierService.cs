@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
@@ -62,7 +63,12 @@ namespace DigitalPurchasing.Services
                     var ssReport = ssReportEntry.Entity;
 
                     // customer
-                    var ssCustomerEntry = await _db.SSCustomers.AddAsync(new SSCustomer { Name = data.CustomerRequest.Name, InternalId = data.CustomerRequest.CustomerId });
+                    var ssCustomerEntry = await _db.SSCustomers.AddAsync(new SSCustomer
+                    {
+                        Name = data.CustomerRequest.Name,
+                        InternalId = data.CustomerRequest.CustomerId,
+                        ReportId = ssReport.Id
+                    });
                     await _db.SaveChangesAsync();
                     var ssCustomer = ssCustomerEntry.Entity;
 
@@ -168,6 +174,24 @@ namespace DigitalPurchasing.Services
                 UserFirstName = q.User.FirstName,
                 UserLastName = q.User.LastName
             }).ToList();
+
+            return result;
+        }
+
+        public async Task<SSReportDto> GetReport(Guid reportId)
+        {
+            var report = await _db.SSReports.Include(q => q.User).FirstAsync();
+            var result = report.Adapt<SSReportDto>();
+
+            var variants = await _db.SSVariants.Where(q => q.ReportId == reportId).ToListAsync();
+
+            var datas = await _db.SSDatas
+                .Include(q => q.Variant)
+                .Include(q => q.Supplier)
+                .Where(q => q.Variant.ReportId == reportId)
+                .ToListAsync();
+
+            var customer = await _db.SSCustomers.FirstAsync(q => q.ReportId == reportId);
 
             return result;
         }

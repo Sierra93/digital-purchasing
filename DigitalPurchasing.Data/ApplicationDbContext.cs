@@ -217,6 +217,7 @@ namespace DigitalPurchasing.Data
                 e.HasOne(q => q.Variant).WithMany().HasForeignKey(q => q.VariantId);
                 e.HasOne(q => q.Supplier).WithMany().HasForeignKey(q => q.SupplierId);
             });
+            builder.Entity<SSCustomer>().HasOne(q => q.Report).WithMany().HasForeignKey(q => q.ReportId);
             builder.Entity<SSCustomerItem>().HasOne(q => q.Customer).WithMany().HasForeignKey(q => q.CustomerId);
             builder.Entity<SSSupplierItem>().HasOne(q => q.Supplier).WithMany().HasForeignKey(q => q.SupplierId);
 
