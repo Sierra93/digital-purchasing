@@ -50,15 +50,9 @@ namespace DigitalPurchasing.Emails
 
             string toName = supplierContact.FirstName;
 
-            if (string.IsNullOrWhiteSpace(toName))
+            if (!string.IsNullOrWhiteSpace(supplierContact.Patronymic))
             {
-                toName = supplierContact.LastName;
-            }
-            else
-            {
-                toName += string.IsNullOrWhiteSpace(supplierContact.Patronymic)
-                    ? string.Empty
-                    : supplierContact.Patronymic;
+                toName += $" {supplierContact.Patronymic}";
             }
 
             var model = new RFQEmail
