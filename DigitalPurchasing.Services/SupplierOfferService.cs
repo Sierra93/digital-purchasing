@@ -388,13 +388,13 @@ namespace DigitalPurchasing.Services
                         item.Id,
                         item.NomenclatureId,
                         RawName = cleanupNomName(item.RawName.ReplaceSpacesWithOneSpace()),
-                        item.RawUomMatchId,
+                        item.RawUomMatch,
                         item.RawQty
                     });
 
                 var alg = new Levenshtein();
 
-                var tolerance = 0.1;
+                var tolerance = 0.15;
 
                 var algResults = (from soItem in soItems.Where(_ => !_.NomenclatureId.HasValue)
                                   let soItemName = cleanupNomName(soItem.RawName.ReplaceSpacesWithOneSpace())
@@ -402,13 +402,11 @@ namespace DigitalPurchasing.Services
                                   let maxNameLen = Math.Max(soItemName.Length, prItem.RawName.Length)
                                   let soDigits = leaveOnlyDigits(soItemName)
                                   let prDigits = leaveOnlyDigits(prItem.RawName)
-                                  let sameUom = soItem.RawUomId == prItem.RawUomMatchId
+                                  let sameUom = soItem.RawUom?.NormalizedName == prItem.RawUomMatch?.NormalizedName
                                   let nameDistance = alg.Distance(soItemName, prItem.RawName)
                                   let digitsDistance = alg.Distance(soDigits, prDigits)
-                                  let qtyDiff = sameUom ? Math.Abs(prItem.RawQty - soItem.RawQty) / Math.Max(prItem.RawQty, soItem.RawQty) : 0
+                                  let qtyDiff = sameUom ? Math.Abs(prItem.RawQty - soItem.RawQty) / (10 * Math.Max(prItem.RawQty, soItem.RawQty)) : 0
                                   let completeDistance = (nameDistance + digitsDistance) / (2 * maxNameLen) + (double)qtyDiff
-                                  where completeDistance <= tolerance
-                                  orderby completeDistance
                                   select new
                                   {
                                       soItem,
@@ -419,6 +417,8 @@ namespace DigitalPurchasing.Services
                                       digitsDistance,
                                       completeDistance
                                   }).ToList();
+
+                algResults = algResults.Where(el => el.completeDistance <= tolerance).OrderBy(el => el.completeDistance).ToList();
 
                 while (algResults.Any())
                 {
