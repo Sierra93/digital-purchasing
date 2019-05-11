@@ -171,11 +171,11 @@ namespace DigitalPurchasing.Data
 
             builder.Entity<QuotationRequest>(e =>
             {
-                e.HasOne(q => q.PurchaseRequest).WithOne().HasForeignKey<QuotationRequest>(q => q.PurchaseRequestId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(q => q.PurchaseRequest).WithOne(q => q.QuotationRequest).HasForeignKey<QuotationRequest>(q => q.PurchaseRequestId).OnDelete(DeleteBehavior.Restrict);
                 e.HasMany(q => q.Emails).WithOne(q => q.Request).HasForeignKey(q => q.RequestId).OnDelete(DeleteBehavior.Restrict);
             });
 
-            builder.Entity<CompetitionList>().HasOne(q => q.QuotationRequest).WithOne().HasForeignKey<CompetitionList>(q => q.QuotationRequestId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<CompetitionList>().HasOne(q => q.QuotationRequest).WithOne(q => q.CompetitionList).HasForeignKey<CompetitionList>(q => q.QuotationRequestId).OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Supplier>(e =>
             {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Enums;
@@ -10,6 +11,7 @@ using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
 using EFCore.BulkExtensions;
+using F23.StringSimilarity;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -304,7 +306,7 @@ namespace DigitalPurchasing.Services
             if (!string.IsNullOrEmpty(columns.Price)) _columnNameService.SaveName(TableColumnType.Price, columns.Price, entity.OwnerId);
         }
 
-        public void GenerateRawItems(Guid id, bool globalSearch = false)
+        public void GenerateRawItems(Guid supplierOfferId, bool globalSearch = false)
         {
             var qrySo = _db.SupplierOffers.AsQueryable();
             var qrySoItems = _db.SupplierOfferItems.AsQueryable();
@@ -315,9 +317,12 @@ namespace DigitalPurchasing.Services
                 qrySoItems = qrySoItems.IgnoreQueryFilters();
             }
 
-            qrySoItems.Where(q => q.SupplierOfferId == id).BatchDelete();
+            qrySoItems.Where(q => q.SupplierOfferId == supplierOfferId).BatchDelete();
 
-            var supplierOffer = qrySo.Include(q => q.UploadedDocument).ThenInclude(q => q.Headers).First(q => q.Id == id);
+            var supplierOffer = qrySo
+                .Include(q => q.UploadedDocument)
+                .ThenInclude(q => q.Headers)
+                .First(q => q.Id == supplierOfferId);
 
             if (!supplierOffer.SupplierId.HasValue)
             {
@@ -330,7 +335,7 @@ namespace DigitalPurchasing.Services
             {
                 var rawItem = new SupplierOfferItem
                 {
-                    SupplierOfferId = id,
+                    SupplierOfferId = supplierOfferId,
                     Position = i + 1, //todo: get from #, № and etc?
                     RawCode = string.IsNullOrEmpty(supplierOffer.UploadedDocument.Headers.Code) ? "" : table.GetValue(supplierOffer.UploadedDocument.Headers.Code, i),
                     RawName = string.IsNullOrEmpty(supplierOffer.UploadedDocument.Headers.Name) ? "" : table.GetValue(supplierOffer.UploadedDocument.Headers.Name, i),
@@ -343,6 +348,9 @@ namespace DigitalPurchasing.Services
 
                 rawItems.Add(rawItem);
             }
+
+            var withUndefinedNoms = rawItems.Where(_ => !_.NomenclatureId.HasValue);
+            FixSoNomenclatureIds(rawItems);
 
             _db.BulkInsert(rawItems);
 
@@ -359,6 +367,67 @@ namespace DigitalPurchasing.Services
                         BatchUomId = q.RawUomId
                     }
                     ).ToList());
+        }
+
+        private void FixSoNomenclatureIds(IReadOnlyList<SupplierOfferItem> soItems)
+        {
+            if (soItems.Any(_ => !_.NomenclatureId.HasValue))
+            {
+                var soId = soItems[0].SupplierOfferId;
+                var prItems = (from item in _db.PurchaseRequestItems.IgnoreQueryFilters().Include(_ => _.Nomenclature)
+                               where item.NomenclatureId.HasValue &&
+                                    item.PurchaseRequest.QuotationRequest.CompetitionList.SupplierOffers.Any(so => so.Id == soId)
+                               select item).ToList();
+
+                Func<string, string> cleanupNomName = (nomName) => Regex.Replace(nomName, @"[^a-zA-Z0-9\p{IsCyrillic}\s]", "");
+                Func<string, string> leaveOnlyDigits = (str) => Regex.Replace(str, "[^0-9]", "");
+
+                var unlinkedPrItems = prItems.Where(item => !soItems.Any(soItem => soItem.NomenclatureId == item.NomenclatureId))
+                    .Select(item => new
+                    {
+                        item.Id,
+                        item.NomenclatureId,
+                        RawName = cleanupNomName(item.RawName.ReplaceSpacesWithOneSpace()),
+                        item.RawUomMatchId,
+                        item.RawQty
+                    });
+
+                var alg = new Levenshtein();
+
+                var tolerance = 0.1;
+
+                var algResults = (from soItem in soItems.Where(_ => !_.NomenclatureId.HasValue)
+                                  let soItemName = cleanupNomName(soItem.RawName.ReplaceSpacesWithOneSpace())
+                                  from prItem in unlinkedPrItems
+                                  let maxNameLen = Math.Max(soItemName.Length, prItem.RawName.Length)
+                                  let soDigits = leaveOnlyDigits(soItemName)
+                                  let prDigits = leaveOnlyDigits(prItem.RawName)
+                                  let sameUom = soItem.RawUomId == prItem.RawUomMatchId
+                                  let nameDistance = alg.Distance(soItemName, prItem.RawName)
+                                  let digitsDistance = alg.Distance(soDigits, prDigits)
+                                  let qtyDiff = sameUom ? Math.Abs(prItem.RawQty - soItem.RawQty) / Math.Max(prItem.RawQty, soItem.RawQty) : 0
+                                  let completeDistance = (nameDistance + digitsDistance) / (2 * maxNameLen) + (double)qtyDiff
+                                  where completeDistance <= tolerance
+                                  orderby completeDistance
+                                  select new
+                                  {
+                                      soItem,
+                                      prItem,
+                                      soDigits,
+                                      prDigits,
+                                      nameDistance,
+                                      digitsDistance,
+                                      completeDistance
+                                  }).ToList();
+
+                while (algResults.Any())
+                {
+                    algResults[0].soItem.NomenclatureId = algResults[0].prItem.NomenclatureId;
+                    var soItemId = algResults[0].soItem.Id;
+                    var prItemId = algResults[0].prItem.Id;
+                    algResults = algResults.Where(el => el.soItem.Id != soItemId && el.prItem.Id != prItemId).OrderBy(el => el.completeDistance).ToList();
+                }
+            }
         }
 
         private void Autocomplete(SupplierOffer so, SupplierOfferItem soItem)

@@ -51,5 +51,8 @@ namespace DigitalPurchasing.Core.Extensions
                 return sb.ToString();
             }
         }
+
+        public static string ReplaceSpacesWithOneSpace(this string str) =>
+            string.IsNullOrWhiteSpace(str) ? str : Regex.Replace(str, @"\s+", " ");
     }
 }

@@ -18,6 +18,8 @@ namespace DigitalPurchasing.Models
 
         public ICollection<PurchaseRequestItem> Items { get; set; } = new List<PurchaseRequestItem>();
 
+        public QuotationRequest QuotationRequest { get; set; }
+
         public Guid? UploadedDocumentId { get; set; }
         public UploadedDocument UploadedDocument { get; set; }
 
