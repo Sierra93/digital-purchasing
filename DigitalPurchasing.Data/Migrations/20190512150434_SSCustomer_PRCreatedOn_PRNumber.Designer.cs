@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190512150434_SSCustomer_PRCreatedOn_PRNumber")]
+    partial class SSCustomer_PRCreatedOn_PRNumber
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -965,10 +967,6 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<Guid>("InternalId");
 
                     b.Property<string>("Name");
-
-                    b.Property<DateTime>("SOCreatedOn");
-
-                    b.Property<int>("SONumber");
 
                     b.HasKey("Id");
 

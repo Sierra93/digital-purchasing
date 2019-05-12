@@ -9,5 +9,8 @@ namespace DigitalPurchasing.Models.SSR
 
         public Guid ReportId { get; set; }
         public SSReport Report { get; set; }
+
+        public DateTime PRCreatedOn { get; set; }
+        public int PRNumber { get; set; }
     }
 }

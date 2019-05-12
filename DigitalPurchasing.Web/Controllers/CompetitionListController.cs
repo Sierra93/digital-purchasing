@@ -96,11 +96,12 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         [HttpGet]
-        public IActionResult Report(Guid reportId)
+        public async Task<IActionResult> Report(Guid reportId)
         {
-            var report = new ExcelSSR(new ExcelSSR.CLData(), new ExcelSSR.CustomerRequestData(), new List<ExcelSSR.Data>());
+            var reportData = await _selectedSupplierService.GetReport(reportId);
+            var report = new ExcelSSR(reportData);
             var fileBytes = report.Build();
-            var fileName = $"{report.CL.Date:yyyyMMdd}_КЛ {report.CL.Number}_Отчет о выборе поставщика.xlsx";
+            var fileName = $"{reportData.CLCreatedOn:yyyyMMdd}_КЛ {reportData.CLNumber}_Отчет о выборе поставщика.xlsx";
 
             return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }
