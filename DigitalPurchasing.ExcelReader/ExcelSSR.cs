@@ -87,14 +87,14 @@ namespace DigitalPurchasing.ExcelReader
                 ws.Cells[5, 6].HeaderText("Кол-во для заказа, ЕИ");
 
                 var i = 6;
-                foreach (var data in _datas)
+                foreach (var data in _report.CustomerItems.OrderBy(q => q.Position))
                 {
                     ws.Row(i).Height = 48;
-                    ws.Cells[i, 2].TableText(data.Number);
+                    ws.Cells[i, 2].TableText(data.Position);
                     ws.Cells[i, 3].TableText(data.Code);
-                    ws.Cells[i, 4].TableText(data.Name);
-                    ws.Cells[i, 5].TableText(data.BatchUomName);
-                    ws.Cells[i, 6].TableText(data.CustomerQuantity, "N1");
+                    ws.Cells[i, 4].TableText(data.Name).AlignLeft();
+                    ws.Cells[i, 5].TableText(data.Uom); 
+                    ws.Cells[i, 6].TableText(data.Quantity, "N1");
                     i++;
                 }
 

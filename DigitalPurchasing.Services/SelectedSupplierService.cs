@@ -86,11 +86,13 @@ namespace DigitalPurchasing.Services
                     var ssCustomerItems = cl.PurchaseRequest.Items.Select(q => new SSCustomerItem
                     {
                         CustomerId = ssCustomer.Id,
-                        Name = ssCustomer.Name,
+                        Code = q.Nomenclature.Code,
+                        Uom = q.Nomenclature.BatchUomName,
+                        Name = q.RawName,
                         Quantity = q.RawQty,
                         Position = q.Position,
                         InternalId = q.Id,
-                        NomenclatureId = q.NomenclatureId,
+                        NomenclatureId = q.NomenclatureId
                     }).ToList();
 
                     await _db.SSCustomerItems.AddRangeAsync(ssCustomerItems);
@@ -197,6 +199,7 @@ namespace DigitalPurchasing.Services
             var customerItems = await _db.SSCustomerItems.Where(q => q.CustomerId == customer.Id).ToListAsync();
 
             result.Customer = customer.Adapt<SSCustomerDto>();
+            result.CustomerItems = customerItems.Adapt<List<SSCustomerItemDto>>();
 
             var suppliersIds = await _db.SSDatas
                 .Include(q => q.Variant)

@@ -105,17 +105,14 @@ namespace DigitalPurchasing.Services
                 var purchaseRequest = _db.PurchaseRequests
                     .Include(q => q.Customer)
                     .Include(q => q.Items)
+                        .ThenInclude(q => q.Nomenclature)
+                            .ThenInclude(q => q.BatchUom)
                     .First(q => q.Id == quotationRequest.PurchaseRequestId);
 
                 var nomIds = purchaseRequest.Items.Where(q => q.NomenclatureId.HasValue).Select(q => q.NomenclatureId.Value).ToList();
 
                 vm.PurchaseRequest = purchaseRequest.Adapt<CompetitionListVm.PurchaseRequestVm>();
                 vm.PurchaseRequest.Items = vm.PurchaseRequest.Items.OrderBy(q => q.NomenclatureId).ToList();
-                var idx = 0;
-                foreach (var requestItem in vm.PurchaseRequest.Items)
-                {
-                    requestItem.Position = ++idx;
-                }
 
                 var supplierOffers = _db.SupplierOffers
                     .AsNoTracking()

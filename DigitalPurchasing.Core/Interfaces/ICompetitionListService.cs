@@ -48,6 +48,7 @@ namespace DigitalPurchasing.Core.Interfaces
         {
             public Guid Id { get; set; }
             public Guid NomenclatureId { get; set; }
+            public NomenclatureVm Nomenclature { get; set; }
             public int Position { get; set; }
             public string RawCode { get; set; }
             public string RawName { get; set; }

@@ -22,6 +22,8 @@ namespace DigitalPurchasing.Core.Interfaces
         public UserDto User { get; set; }
 
         public SSCustomerDto Customer { get; set; }
+        public List<SSCustomerItemDto> CustomerItems { get; set; }
+
         public List<SSSupplierDto> Suppliers { get; set; }
     }
 
@@ -42,6 +44,25 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid InternalId { get; set; }
         public DateTime SOCreatedOn { get; set; }
         public int SONumber { get; set; }
+    }
+
+    public class SSCustomerItemDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+
+        public decimal Quantity { get; set; }
+
+        public string Code { get; set; }
+
+        public string Uom { get; set; }
+
+        public Guid CustomerId { get; set; }
+
+        public Guid InternalId { get; set; }
+        public int Position { get; set; }
+
+        public Guid NomenclatureId { get; set; }
     }
 
     public class GenerateReportDataResult
