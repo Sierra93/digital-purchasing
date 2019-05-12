@@ -10,5 +10,8 @@ namespace DigitalPurchasing.Models.SSR
 
         public User User { get; set; }
         public Guid UserId { get; set; }
+
+        public DateTime CLCreatedOn { get; set; }
+        public int CLNumber { get; set; }
     }
 }

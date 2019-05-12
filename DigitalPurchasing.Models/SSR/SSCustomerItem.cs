@@ -10,6 +10,10 @@ namespace DigitalPurchasing.Models.SSR
         [Column(TypeName = "decimal(18, 4)")]
         public decimal Quantity { get; set; }
 
+        public string Code { get; set; }
+
+        public string Uom { get; set; }
+
         public SSCustomer Customer { get; set; }
         public Guid CustomerId { get; set; }
 

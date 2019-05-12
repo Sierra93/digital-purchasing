@@ -58,7 +58,15 @@ namespace DigitalPurchasing.Services
                 try
                 {
                     // report
-                    var ssReportEntry = await _db.SSReports.AddAsync(new SSReport { OwnerId = ownerId, UserId = userId, RootId = root.Id });
+                    var ssReportEntry = await _db.SSReports.AddAsync(new SSReport
+                    {
+                        OwnerId = ownerId,
+                        UserId = userId,
+                        RootId = root.Id,
+                        CLCreatedOn = cl.CreatedOn,
+                        CLNumber = cl.PublicId
+                    });
+
                     await _db.SaveChangesAsync();
                     var ssReport = ssReportEntry.Entity;
 
@@ -67,7 +75,9 @@ namespace DigitalPurchasing.Services
                     {
                         Name = data.CustomerRequest.Name,
                         InternalId = data.CustomerRequest.CustomerId,
-                        ReportId = ssReport.Id
+                        ReportId = ssReport.Id,
+                        PRNumber = cl.PurchaseRequest.PublicId,
+                        PRCreatedOn = cl.PurchaseRequest.CreatedOn
                     });
                     await _db.SaveChangesAsync();
                     var ssCustomer = ssCustomerEntry.Entity;
@@ -76,18 +86,20 @@ namespace DigitalPurchasing.Services
                     var ssCustomerItems = cl.PurchaseRequest.Items.Select(q => new SSCustomerItem
                     {
                         CustomerId = ssCustomer.Id,
-                        Name = ssCustomer.Name,
+                        Code = q.Nomenclature.Code,
+                        Uom = q.Nomenclature.BatchUomName,
+                        Name = q.RawName,
                         Quantity = q.RawQty,
                         Position = q.Position,
                         InternalId = q.Id,
-                        NomenclatureId = q.NomenclatureId,
+                        NomenclatureId = q.NomenclatureId
                     }).ToList();
 
                     await _db.SSCustomerItems.AddRangeAsync(ssCustomerItems);
 
                     // suppliers
                     var ssSuppliers = cl.SupplierOffers.Distinct()
-                        .Select(q => new SSSupplier { Name = q.Supplier.Name, InternalId = q.Supplier.Id })
+                        .Select(q => new SSSupplier { Name = q.Supplier.Name, InternalId = q.Supplier.Id, SOCreatedOn = q.CreatedOn, SONumber = q.PublicId })
                         .ToList();
                     await _db.SSSuppliers.AddRangeAsync(ssSuppliers);
                     await _db.SaveChangesAsync();
@@ -180,9 +192,26 @@ namespace DigitalPurchasing.Services
 
         public async Task<SSReportDto> GetReport(Guid reportId)
         {
-            var report = await _db.SSReports.Include(q => q.User).FirstAsync();
+            var report = await _db.SSReports.Include(q => q.User).FirstAsync(q => q.Id == reportId);
             var result = report.Adapt<SSReportDto>();
 
+            var customer = await _db.SSCustomers.FirstAsync(q => q.ReportId == reportId);
+            var customerItems = await _db.SSCustomerItems.Where(q => q.CustomerId == customer.Id).ToListAsync();
+
+            result.Customer = customer.Adapt<SSCustomerDto>();
+            result.CustomerItems = customerItems.Adapt<List<SSCustomerItemDto>>();
+
+            var suppliersIds = await _db.SSDatas
+                .Include(q => q.Variant)
+                .Where(q => q.Variant.ReportId == reportId)
+                .Select(q => q.SupplierId)
+                .Distinct()
+                .ToListAsync();
+
+            var suppliers = await _db.SSSuppliers.Where(q => suppliersIds.Contains(q.Id)).OrderBy(q => q.SOCreatedOn).ToListAsync();
+
+            result.Suppliers = suppliers.Adapt<List<SSSupplierDto>>();
+            
             var variants = await _db.SSVariants.Where(q => q.ReportId == reportId).ToListAsync();
 
             var datas = await _db.SSDatas
@@ -190,8 +219,6 @@ namespace DigitalPurchasing.Services
                 .Include(q => q.Supplier)
                 .Where(q => q.Variant.ReportId == reportId)
                 .ToListAsync();
-
-            var customer = await _db.SSCustomers.FirstAsync(q => q.ReportId == reportId);
 
             return result;
         }

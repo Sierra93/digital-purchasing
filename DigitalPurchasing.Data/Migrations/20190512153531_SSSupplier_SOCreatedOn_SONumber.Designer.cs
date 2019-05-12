@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190512153531_SSSupplier_SOCreatedOn_SONumber")]
+    partial class SSSupplier_SOCreatedOn_SONumber
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -886,8 +888,6 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("Code");
-
                     b.Property<Guid>("CustomerId");
 
                     b.Property<Guid>("InternalId");
@@ -900,8 +900,6 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<decimal>("Quantity")
                         .HasColumnType("decimal(18, 4)");
-
-                    b.Property<string>("Uom");
 
                     b.HasKey("Id");
 
