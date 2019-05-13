@@ -86,14 +86,20 @@ namespace DigitalPurchasing.Services
             var orderedResults = qry.OrderBy($"{sortField}{(sortAsc ? "" : " DESC")}");
             var query = orderedResults.Skip((page - 1) * perPage).Take(perPage);
             var qryResult = (from item in query
-                          select new
-                          {
-                              item.CreatedOn,
-                              item.Id,
-                              item.Subject,
-                              item.FromEmail,
-                              item.QuotationRequest.OwnerId
-                          }).ToList();
+                             select new
+                             {
+                                 item.CreatedOn,
+                                 item.Id,
+                                 item.Subject,
+                                 item.FromEmail,
+                                 item.QuotationRequest.OwnerId,
+                                 item.Body,
+                                 attachments = item.Attachments.Select(a => new
+                                 {
+                                     a.FileName,
+                                     a.Id
+                                 })
+                             }).ToList();
 
             var result = (from item in qryResult
                           let supplierId = _supplierService.GetSupplierByEmail(item.OwnerId, item.FromEmail)
@@ -103,7 +109,13 @@ namespace DigitalPurchasing.Services
                               SupplierName = supplier?.Name,
                               Id = item.Id,
                               CreatedOn = item.CreatedOn,
-                              Subject = item.Subject
+                              Subject = item.Subject,
+                              Body = item.Body,
+                              Attachments = item.attachments.Select(a => new InboxIndexAttachment
+                              {
+                                  FileName = a.FileName,
+                                  Id = a.Id
+                              }).ToList()
                           }).ToList();
 
             return new InboxIndexData

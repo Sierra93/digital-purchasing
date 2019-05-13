@@ -20,7 +20,8 @@
                       no-data-template="Нет данных"
                       :css="css"
                       :transform="transform"
-                      @@vuetable:pagination-data="onPaginationData">
+                      @@vuetable:pagination-data="onPaginationData"
+                      @@vuetable:cell-clicked="onCellClicked">
             </vuetable>
         </div>
     </div>
@@ -40,6 +41,20 @@
     </div>
 </div>
 
+<template id="row-details">
+    <div>
+        <div v-if="rowData.attachments.length > 0">
+            <ul class="list-unstyled list-inline">
+                <li><i class="glyphicon glyphicon-paperclip"></i></li>
+                <li v-for="att in rowData.attachments">
+                    <a href="#">{{att.fileName}}</a>                    
+                </li>
+            </ul>
+        </div>
+        <iframe :srcdoc="rowData.body" style="width: 100%; height: 500px"></iframe>
+    </div>
+</template>
+
 @section Styles {
     <style type="text/css">
         .w-140px {
@@ -52,6 +67,24 @@
     <script>
         (function () {
             Vue.use(Vuetable);
+
+            Vue.component('row-details', {
+                props: {
+                    rowData: {
+                        type: Object,
+                        required: true
+                    },
+                    rowIndex: {
+                        type: Number
+                    }
+                },
+                template: '#row-details',
+                data: function() {
+                    return {
+                        
+                    };
+                }
+            });
 
             window.app = new Vue({
                 el: '#app',
@@ -99,6 +132,9 @@
                             'per_page': perPage,
                             's': this.search
                         };
+                    },
+                    onCellClicked: function (dataItem, field, event) {
+                        this.$refs.vuetable.toggleDetailRow(dataItem.data.id);
                     },
                     transform: function (data) {
                         for (var i = 0; i < data.data.length; i++) {

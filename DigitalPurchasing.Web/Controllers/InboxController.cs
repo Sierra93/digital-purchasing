@@ -30,11 +30,6 @@ namespace DigitalPurchasing.Web.Controllers
             var result = _receivedEmailService.GetData(User.CompanyId(), request.Page, request.PerPage, request.SortField, request.SortAsc, request.Search);
             var nextUrl = Url.Action("Data", "Inbox", request.NextPageRequest(), Request.Scheme);
             var prevUrl = Url.Action("Data", "Inbox", request.PrevPageRequest(), Request.Scheme);
-            //var data = result.Data.Adapt<List<NomenclatureIndexDataItemEdit>>();
-            //foreach (var d in data)
-            //{
-            //    d.EditUrl = Url.Action("Edit", new { id = d.Id });
-            //}
             return Json(new VueTableResponse<InboxIndexDataItem, VueTableRequest>(result.Data, request, result.Total, nextUrl, prevUrl));
         }
     }

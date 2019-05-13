@@ -28,10 +28,17 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         public byte[] Bytes { get; set; }
         public string FileName { get; set; }
+        public Guid Id { get; set; }
     }
 
     public class InboxIndexData : BaseDataResponse<InboxIndexDataItem>
     {
+    }
+
+    public class InboxIndexAttachment
+    {
+        public string FileName { get; set; }
+        public Guid Id { get; set; }
     }
 
     public class InboxIndexDataItem
@@ -40,5 +47,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public DateTime CreatedOn { get; set; }
         public string Subject { get; set; }
         public string SupplierName { get; set; }
+        public string Body { get; set; }
+        public IReadOnlyList<InboxIndexAttachment> Attachments { get; set; } = new List<InboxIndexAttachment>();
     }
 }
