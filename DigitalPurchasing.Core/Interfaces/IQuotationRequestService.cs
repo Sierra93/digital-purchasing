@@ -15,7 +15,7 @@ namespace DigitalPurchasing.Core.Interfaces
         DeleteResultVm Delete(Guid id);
         Task SendRequests(Guid userId, Guid quotationRequestId, IReadOnlyList<Guid> suppliers);
         string QuotationRequestToUid(Guid quotationRequestId);
-        Guid UidToQuotationRequest(string uid);
+        Guid? UidToQuotationRequest(string uid);
         byte[] GenerateExcelForQR(Guid quotationRequestId);
         List<SentRequest> GetSentRequests(Guid quotationRequestId);
     }
