@@ -201,57 +201,63 @@ namespace DigitalPurchasing.Services
                         var allMatched = false;
 
                         var tempFile = Path.GetTempFileName();
-
-                        File.WriteAllBytes(tempFile, attachment.Bytes);
-
-                        var createOfferResult = await _supplierOfferService.CreateFromFile(clId, tempFile);
-                        if (!createOfferResult.IsSuccess) // unable parse excel file
-                        {
-                            // todo: send email with attachment?
-                            return true;
-                        }
-
                         try
                         {
-                            // set supplier name
-                            var soId = createOfferResult.Id;
-                            var supplier = _supplierService.GetById(supplierId, true);
-                            _supplierOfferService.UpdateSupplierName(soId, supplier.Name, supplier.Id, true);
+                            File.WriteAllBytes(tempFile, attachment.Bytes);
 
-                            // detect columns
-                            var columns = _supplierOfferService.GetColumnsData(soId, true);
-                            _supplierOfferService.UpdateStatus(soId, SupplierOfferStatus.MatchColumns, true);
-
-                            allColumns = !string.IsNullOrEmpty(columns.Name) &&
-                                         !string.IsNullOrEmpty(columns.Uom) &&
-                                         !string.IsNullOrEmpty(columns.Price) &&
-                                         !string.IsNullOrEmpty(columns.Qty);
-
-                            if (allColumns)
+                            var createOfferResult = await _supplierOfferService.CreateFromFile(clId, tempFile);
+                            if (!createOfferResult.IsSuccess) // unable parse excel file
                             {
-                                _supplierOfferService.SaveColumns(soId, columns, true);
-                                // raw items + match
-                                _supplierOfferService.GenerateRawItems(soId, true);
-                                _supplierOfferService.UpdateStatus(soId, SupplierOfferStatus.MatchItems, true);
-
-                                allMatched = _supplierOfferService.IsAllMatched(soId);
-                                var rootId = await _rootService.GetIdByQR(rfqEmail.QuotationRequestId);
-                                await _rootService.SetStatus(rootId, allMatched
-                                    ? RootStatus.EverythingMatches
-                                    : RootStatus.MatchingRequired);
+                                // todo: send email with attachment?
+                                return true;
                             }
-                        }
-                        catch (Exception e)
-                        {
-                            _logger.LogError(e, "Error during processing RFQ email");
-                        }
 
-                        if (!allColumns || !allMatched)
-                        {
-                            PartiallyProcessedEmail(email, qr.PublicId, createOfferResult.Id /* SO Id */);
-                        }
+                            try
+                            {
+                                // set supplier name
+                                var soId = createOfferResult.Id;
+                                var supplier = _supplierService.GetById(supplierId, true);
+                                _supplierOfferService.UpdateSupplierName(soId, supplier.Name, supplier.Id, true);
 
-                        return true;
+                                // detect columns
+                                var columns = _supplierOfferService.GetColumnsData(soId, true);
+                                _supplierOfferService.UpdateStatus(soId, SupplierOfferStatus.MatchColumns, true);
+
+                                allColumns = !string.IsNullOrEmpty(columns.Name) &&
+                                             !string.IsNullOrEmpty(columns.Uom) &&
+                                             !string.IsNullOrEmpty(columns.Price) &&
+                                             !string.IsNullOrEmpty(columns.Qty);
+
+                                if (allColumns)
+                                {
+                                    _supplierOfferService.SaveColumns(soId, columns, true);
+                                    // raw items + match
+                                    _supplierOfferService.GenerateRawItems(soId, true);
+                                    _supplierOfferService.UpdateStatus(soId, SupplierOfferStatus.MatchItems, true);
+
+                                    allMatched = _supplierOfferService.IsAllMatched(soId);
+                                    var rootId = await _rootService.GetIdByQR(rfqEmail.QuotationRequestId);
+                                    await _rootService.SetStatus(rootId, allMatched
+                                        ? RootStatus.EverythingMatches
+                                        : RootStatus.MatchingRequired);
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                _logger.LogError(e, "Error during processing RFQ email");
+                            }
+
+                            if (!allColumns || !allMatched)
+                            {
+                                PartiallyProcessedEmail(email, qr.PublicId, createOfferResult.Id /* SO Id */);
+                            }
+
+                            return true;
+                        }
+                        finally
+                        {
+                            TryDeleteFile(tempFile);
+                        }                        
                     }
                 }
 
@@ -259,6 +265,18 @@ namespace DigitalPurchasing.Services
             }
 
             return false;
+        }
+
+        private void TryDeleteFile(string filePath)
+        {
+            try
+            {
+                File.Delete(filePath);
+            }
+            catch
+            {
+
+            }
         }
 
         private bool IsSupportedFile(string path)
