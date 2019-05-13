@@ -47,7 +47,7 @@
             <ul class="list-unstyled list-inline">
                 <li><i class="glyphicon glyphicon-paperclip"></i></li>
                 <li v-for="att in rowData.attachments">
-                    <a href="#">{{att.fileName}}</a>                    
+                    <a :href="'@Url.Action(nameof(InboxController.DownloadAttachment))?attachmentId=' + att.id">{{att.fileName}}</a>                    
                 </li>
             </ul>
         </div>

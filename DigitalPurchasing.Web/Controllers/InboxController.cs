@@ -21,7 +21,6 @@ namespace DigitalPurchasing.Web.Controllers
 
         public IActionResult Index()
         {
-
             return View();
         }
 
@@ -31,6 +30,18 @@ namespace DigitalPurchasing.Web.Controllers
             var nextUrl = Url.Action("Data", "Inbox", request.NextPageRequest(), Request.Scheme);
             var prevUrl = Url.Action("Data", "Inbox", request.PrevPageRequest(), Request.Scheme);
             return Json(new VueTableResponse<InboxIndexDataItem, VueTableRequest>(result.Data, request, result.Total, nextUrl, prevUrl));
+        }
+
+        public IActionResult DownloadAttachment(Guid attachmentId)
+        {
+            var attachment = _receivedEmailService.GetAttachment(attachmentId);
+
+            if (attachment == null)
+            {
+                return NotFound();
+            }
+
+            return File(attachment.Bytes, attachment.ContentType, attachment.FileName);
         }
     }
 }

@@ -69,7 +69,8 @@ namespace DigitalPurchasing.Services
             return email.Id;
         }
 
-        public RfqEmailVm GetRfqEmail(Guid emailId) => _db.ReceivedEmails.OfType<ReceivedRfqEmail>().FirstOrDefault(e => e.Id == emailId)?.Adapt<RfqEmailVm>();
+        public RfqEmailVm GetRfqEmail(Guid emailId) =>
+            _db.ReceivedEmails.OfType<ReceivedRfqEmail>().FirstOrDefault(e => e.Id == emailId)?.Adapt<RfqEmailVm>();
 
         public InboxIndexData GetData(Guid ownerId, int page, int perPage, string sortField, bool sortAsc, string search)
         {
@@ -124,5 +125,8 @@ namespace DigitalPurchasing.Services
                 Data = result
             };
         }
+
+        public EmailAttachmentVm GetAttachment(Guid attachmentId) =>
+            _db.EmailAttachments.FirstOrDefault(a => a.Id == attachmentId)?.Adapt<EmailAttachmentVm>();
     }
 }
