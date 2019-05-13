@@ -39,5 +39,6 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid Id { get; set; }
         public DateTime CreatedOn { get; set; }
         public string Subject { get; set; }
+        public string SupplierName { get; set; }
     }
 }

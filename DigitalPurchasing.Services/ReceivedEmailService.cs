@@ -13,9 +13,15 @@ namespace DigitalPurchasing.Services
     public class ReceivedEmailService : IReceivedEmailService
     {
         private readonly ApplicationDbContext _db;
+        private readonly ISupplierService _supplierService;
 
-        public ReceivedEmailService(ApplicationDbContext db)
-            => _db = db;
+        public ReceivedEmailService(
+            ApplicationDbContext db,
+            ISupplierService supplierService)
+        {
+            _db = db;
+            _supplierService = supplierService;
+        }
 
         public bool IsProcessed(uint uid)
         {
@@ -78,7 +84,27 @@ namespace DigitalPurchasing.Services
 
             var total = qry.Count();
             var orderedResults = qry.OrderBy($"{sortField}{(sortAsc ? "" : " DESC")}");
-            var result = orderedResults.Skip((page - 1) * perPage).Take(perPage).ProjectToType<InboxIndexDataItem>().ToList();
+            var query = orderedResults.Skip((page - 1) * perPage).Take(perPage);
+            var qryResult = (from item in query
+                          select new
+                          {
+                              item.CreatedOn,
+                              item.Id,
+                              item.Subject,
+                              item.FromEmail,
+                              item.QuotationRequest.OwnerId
+                          }).ToList();
+
+            var result = (from item in qryResult
+                          let supplierId = _supplierService.GetSupplierByEmail(item.OwnerId, item.FromEmail)
+                          let supplier = _supplierService.GetById(supplierId, true)
+                          select new InboxIndexDataItem
+                          {
+                              SupplierName = supplier?.Name,
+                              Id = item.Id,
+                              CreatedOn = item.CreatedOn,
+                              Subject = item.Subject
+                          }).ToList();
 
             return new InboxIndexData
             {
