@@ -120,7 +120,8 @@
                         columnPrice: null,
                         columns: [],
                         isSaved: false,
-                        supplierAutocomplete: null
+                        supplierAutocomplete: null,
+                        saveStarted: false
                     };
                 },
                 created: function () {
@@ -171,14 +172,15 @@
                         return getInputClass(this.supplierNameHasError);
                     },
                     isSaveDisabled: function() {
-                        return this.supplierNameHasError;
+                        return this.supplierNameHasError || this.saveStarted;
                     },
                     isNewSupplier: function() {
                         return this.supplierId === null && !this.supplierNameHasError;
                     }
                 },
                 methods: {
-                    saveColumns: function() {
+                    saveColumns: function () {
+                        this.saveStarted = true;
                         var vm = this;
                         var data = {
                             soId: vm.id,

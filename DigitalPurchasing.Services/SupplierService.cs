@@ -185,7 +185,6 @@ namespace DigitalPurchasing.Services
         public Guid GetSupplierByEmail(Guid ownerId, string email)
         {
             var supplierContactPerson = _db.SupplierContactPersons
-                .Include(q => q.Supplier)
                 .IgnoreQueryFilters()
                 .FirstOrDefault(q =>
                     q.Email.Equals(email) &&

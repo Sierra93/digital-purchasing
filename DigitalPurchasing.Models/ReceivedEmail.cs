@@ -8,5 +8,11 @@ namespace DigitalPurchasing.Models
     {
         public uint UniqueId { get; set; }
         public bool IsProcessed { get; set; }
+        public string Subject { get; set; }
+        public string Body { get; set; }
+        public string FromEmail { get; set; }
+        public DateTimeOffset MessageDate { get; set; }
+
+        public ICollection<EmailAttachment> Attachments { get; set; }
     }
 }

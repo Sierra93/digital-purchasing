@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190513100148_ReceivedRfqEmail")]
+    partial class ReceivedRfqEmail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -854,8 +856,6 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<bool>("IsProcessed");
 
-                    b.Property<DateTimeOffset>("MessageDate");
-
                     b.Property<string>("Subject");
 
                     b.Property<long>("UniqueId");
@@ -986,11 +986,6 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<Guid>("RootId");
 
-                    b.Property<int>("SelectedVariantNumber");
-
-                    b.Property<decimal>("SelectedVariantTotalPrice")
-                        .HasColumnType("decimal(38, 17)");
-
                     b.Property<Guid>("UserId");
 
                     b.HasKey("Id");
@@ -1052,8 +1047,6 @@ namespace DigitalPurchasing.Data.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
-
-                    b.Property<DateTime>("CreatedOn");
 
                     b.Property<Guid>("InternalId");
 

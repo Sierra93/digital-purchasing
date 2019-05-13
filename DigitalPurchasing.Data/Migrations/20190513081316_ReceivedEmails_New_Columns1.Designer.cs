@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190513081316_ReceivedEmails_New_Columns1")]
+    partial class ReceivedEmails_New_Columns1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -847,14 +849,9 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<DateTime>("CreatedOn");
 
-                    b.Property<string>("Discriminator")
-                        .IsRequired();
-
                     b.Property<string>("FromEmail");
 
                     b.Property<bool>("IsProcessed");
-
-                    b.Property<DateTimeOffset>("MessageDate");
 
                     b.Property<string>("Subject");
 
@@ -863,8 +860,6 @@ namespace DigitalPurchasing.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ReceivedEmails");
-
-                    b.HasDiscriminator<string>("Discriminator").HasValue("ReceivedEmail");
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.Root", b =>
@@ -986,11 +981,6 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<Guid>("RootId");
 
-                    b.Property<int>("SelectedVariantNumber");
-
-                    b.Property<decimal>("SelectedVariantTotalPrice")
-                        .HasColumnType("decimal(38, 17)");
-
                     b.Property<Guid>("UserId");
 
                     b.HasKey("Id");
@@ -1052,8 +1042,6 @@ namespace DigitalPurchasing.Data.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
-
-                    b.Property<DateTime>("CreatedOn");
 
                     b.Property<Guid>("InternalId");
 
@@ -1396,17 +1384,6 @@ namespace DigitalPurchasing.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("UploadedDocumentHeaders");
-                });
-
-            modelBuilder.Entity("DigitalPurchasing.Models.ReceivedRfqEmail", b =>
-                {
-                    b.HasBaseType("DigitalPurchasing.Models.ReceivedEmail");
-
-                    b.Property<Guid>("QuotationRequestId");
-
-                    b.HasIndex("QuotationRequestId");
-
-                    b.HasDiscriminator().HasValue("ReceivedRfqEmail");
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.AnalysisVariant", b =>
@@ -1957,14 +1934,6 @@ namespace DigitalPurchasing.Data.Migrations
                     b.HasOne("DigitalPurchasing.Models.UploadedDocumentHeaders", "Headers")
                         .WithMany()
                         .HasForeignKey("UploadedDocumentHeadersId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("DigitalPurchasing.Models.ReceivedRfqEmail", b =>
-                {
-                    b.HasOne("DigitalPurchasing.Models.QuotationRequest", "QuotationRequest")
-                        .WithMany()
-                        .HasForeignKey("QuotationRequestId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
