@@ -415,6 +415,7 @@ namespace DigitalPurchasing.Services
                                       prDigits,
                                       nameDistance,
                                       digitsDistance,
+                                      qtyDiff,
                                       completeDistance
                                   }).ToList();
 
