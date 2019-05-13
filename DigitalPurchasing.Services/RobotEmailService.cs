@@ -53,29 +53,11 @@ namespace DigitalPurchasing.Services
                     if (!_receivedEmails.IsProcessed(uniqueId.Id))
                     {
                         var message = client.Inbox.GetMessage(uniqueId);
-                        var subject = message.Subject;
-                        var body = message.GetTextBody(TextFormat.Html);
-                        var fromEmail = message.From.Mailboxes.First().Address;
-
                         Guid? emailId = null;
 
                         if (RFQEmailProcessor.IsRfqEmail(message))
                         {
-                            string rfqUid = GetRfqEmailUid(message);
-                            var qrId = _quotationRequestService.UidToQuotationRequest(rfqUid);
-                            if (qrId.HasValue)
-                            {
-                                emailId = _receivedEmails.SaveRfqEmail(uniqueId.Id, qrId.Value, subject, body, fromEmail,
-                                    message.Attachments.Where(a => !(a is MessagePart)).Select(a =>
-                                    {
-                                        var part = (MimePart)a;
-                                        using (var ms = new MemoryStream())
-                                        {
-                                            part.Content.DecodeTo(ms);
-                                            return (part.FileName, part.ContentType.MimeType, ms.ToArray());
-                                        }
-                                    }).ToList());
-                            }
+                            emailId = SaveRfqEmail(uniqueId, message);
                         }
                         else
                         {
@@ -101,6 +83,31 @@ namespace DigitalPurchasing.Services
                     }
                 }
             }
+        }
+
+        private Guid? SaveRfqEmail(UniqueId messageId, MimeMessage message)
+        {
+            string rfqUid = GetRfqEmailUid(message);
+            var qrId = _quotationRequestService.UidToQuotationRequest(rfqUid);
+            if (qrId.HasValue)
+            {
+                var subject = message.Subject;
+                var body = message.GetTextBody(TextFormat.Html);
+                var fromEmail = message.From.Mailboxes.First().Address;
+
+                return _receivedEmails.SaveRfqEmail(messageId.Id, qrId.Value, subject, body, fromEmail,
+                    message.Attachments.Where(a => !(a is MessagePart)).Select(a =>
+                    {
+                        var part = (MimePart)a;
+                        using (var ms = new MemoryStream())
+                        {
+                            part.Content.DecodeTo(ms);
+                            return (part.FileName, part.ContentType.MimeType, ms.ToArray());
+                        }
+                    }).ToList());
+            }
+
+            return null;
         }
 
         private string GetRfqEmailUid(MimeMessage message)
