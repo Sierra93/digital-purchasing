@@ -46,7 +46,7 @@
         </tr>
         </tbody>
     </table>
-    <button v-on:click="saveColumns" class="btn btn-primary">Сохранить соответствие столбцов</button>&nbsp;
+    <button v-on:click="saveColumns" class="btn btn-primary" v-bind:disabled="saveStarted">Сохранить соответствие столбцов</button>&nbsp;
     <label v-if="isSaved">Сохранено!</label>
 </div>
 
@@ -92,7 +92,8 @@
                         columnUom: null,
                         columnQty: null,
                         columns: [],
-                        isSaved: false
+                        isSaved: false,
+                        saveStarted: false
                     };
                 },
                 created: function () {
@@ -107,13 +108,13 @@
                         $this.columnUom = data.uom;
                         $this.columnQty = data.qty;
                         $this.isSaved = data.isSaved;
-                        //this.someData = ;
                     }, response => {
                         alert('error');
                     });
                 },
                 methods: {
-                    saveColumns: function() {
+                    saveColumns: function () {
+                        this.saveStarted = true;
                         var $this = this;
                         var data = {
                             purchaseRequestId: '@Model.Id',
@@ -128,7 +129,6 @@
                         }, res => {
 
                         });
-                        console.log('saveColumns', data);
                     }
                 }
             });
