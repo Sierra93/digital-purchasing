@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
@@ -62,5 +64,27 @@ namespace DigitalPurchasing.Services
         }
 
         public RfqEmailVm GetRfqEmail(Guid emailId) => _db.ReceivedEmails.OfType<ReceivedRfqEmail>().FirstOrDefault(e => e.Id == emailId)?.Adapt<RfqEmailVm>();
+
+        public InboxIndexData GetData(Guid ownerId, int page, int perPage, string sortField, bool sortAsc, string search)
+        {
+            if (string.IsNullOrEmpty(sortField))
+            {
+                sortField = nameof(ReceivedEmail.CreatedOn);
+            }
+
+            var qry = from item in _db.ReceivedRfqEmails
+                      where item.QuotationRequest.OwnerId == ownerId
+                      select item;
+
+            var total = qry.Count();
+            var orderedResults = qry.OrderBy($"{sortField}{(sortAsc ? "" : " DESC")}");
+            var result = orderedResults.Skip((page - 1) * perPage).Take(perPage).ProjectToType<InboxIndexDataItem>().ToList();
+
+            return new InboxIndexData
+            {
+                Total = total,
+                Data = result
+            };
+        }
     }
 }

@@ -10,6 +10,7 @@ namespace DigitalPurchasing.Core.Interfaces
         Guid SaveRfqEmail(uint uid, Guid qrId, string subject, string body, string fromEmail,
             IReadOnlyList<(string fileName, string contentType, byte[] fileBytes)> attachments);
         RfqEmailVm GetRfqEmail(Guid emailId);
+        InboxIndexData GetData(Guid ownerId, int page, int perPage, string sortField, bool sortAsc, string search);
     }
 
     public class RfqEmailVm
@@ -27,5 +28,16 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         public byte[] Bytes { get; set; }
         public string FileName { get; set; }
+    }
+
+    public class InboxIndexData : BaseDataResponse<InboxIndexDataItem>
+    {
+    }
+
+    public class InboxIndexDataItem
+    {
+        public Guid Id { get; set; }
+        public DateTime CreatedOn { get; set; }
+        public string Subject { get; set; }
     }
 }
