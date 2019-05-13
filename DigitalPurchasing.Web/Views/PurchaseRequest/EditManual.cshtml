@@ -90,7 +90,8 @@
                         customerId: null,
                         customerAutocomplete: null,
                         // { code: '123-321', name: 'Болт 123-321 XYZ', uom: 'шт.', qty: 100 }
-                        rows: []
+                        rows: [],
+                        saveRawItemsStarted: false
                     };
                 },
                 created: function () {
@@ -132,7 +133,7 @@
                         return getInputClass(this.customerNameHasError);
                     },
                     isSaveDisabled: function() {
-                        return this.customerNameHasError;
+                        return this.customerNameHasError || this.saveRawItemsStarted;
                     },
                     isNewCustomer: function() {
                         return this.customerId === null && !this.customerNameHasError;
@@ -154,7 +155,8 @@
                         var index = this.rows.indexOf(item);
                         this.rows.splice(index, 1);
                     },
-                    saveRawItems: function() {
+                    saveRawItems: function () {
+                        this.saveRawItemsStarted = true;
                         var $this = this;
                         var data = {
                             purchasingRequestId: '@Model.Id',
