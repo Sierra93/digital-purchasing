@@ -11,7 +11,8 @@ namespace DigitalPurchasing.Core.Interfaces
             IReadOnlyList<(string fileName, string contentType, byte[] fileBytes)> attachments);
         RfqEmailVm GetRfqEmail(Guid emailId);
         EmailAttachmentVm GetAttachment(Guid attachmentId);
-        InboxIndexData GetData(Guid ownerId, int page, int perPage, string sortField, bool sortAsc, string search);
+        InboxIndexData GetData(Guid ownerId, bool unhandledSupplierOffersOnly,
+            int page, int perPage, string sortField, bool sortAsc, string search);
     }
 
     public class RfqEmailVm

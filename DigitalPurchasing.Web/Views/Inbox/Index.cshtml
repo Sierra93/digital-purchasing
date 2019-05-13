@@ -7,6 +7,13 @@
 <h2>@ViewBag.Title</h2>
 
 <div id="app">
+    <div>
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" v-model="unhandledSupplierOffersOnly" v-on:change="reloadData"> Показывать только необработанные КП
+            </label>
+        </div>
+    </div>
     <div class="row">
         <div class="col-xs-12">
             <vuetable ref="vuetable"
@@ -114,7 +121,8 @@
                                 field: 'createdOn',
                                 direction: 'desc'
                             }
-                        ]
+                        ],
+                        unhandledSupplierOffersOnly: true
                     };
                 },
                 methods: {
@@ -130,7 +138,7 @@
                             'sort': sortOrder[0].field + '|' + sortOrder[0].direction,
                             'page': currentPage,
                             'per_page': perPage,
-                            's': this.search
+                            'unhandledSupplierOffersOnly': this.unhandledSupplierOffersOnly
                         };
                     },
                     onCellClicked: function (dataItem, field, event) {
@@ -141,6 +149,9 @@
                             data.data[i].createdOn = moment.utc(data.data[i].createdOn).local().format('DD.MM.YYYY h:mm');
                         }
                         return data
+                    },
+                    reloadData: function () {
+                        this.$refs.vuetable.reload();
                     }
                 }
             });

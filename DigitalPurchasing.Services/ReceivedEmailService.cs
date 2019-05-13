@@ -72,7 +72,7 @@ namespace DigitalPurchasing.Services
         public RfqEmailVm GetRfqEmail(Guid emailId) =>
             _db.ReceivedEmails.OfType<ReceivedRfqEmail>().FirstOrDefault(e => e.Id == emailId)?.Adapt<RfqEmailVm>();
 
-        public InboxIndexData GetData(Guid ownerId, int page, int perPage, string sortField, bool sortAsc, string search)
+        public InboxIndexData GetData(Guid ownerId, bool unhandledSupplierOffersOnly, int page, int perPage, string sortField, bool sortAsc, string search)
         {
             if (string.IsNullOrEmpty(sortField))
             {
@@ -82,6 +82,11 @@ namespace DigitalPurchasing.Services
             var qry = from item in _db.ReceivedRfqEmails
                       where item.QuotationRequest.OwnerId == ownerId
                       select item;
+
+            if (unhandledSupplierOffersOnly)
+            {
+                qry = qry.Where(q => !q.IsProcessed);
+            }
 
             var total = qry.Count();
             var orderedResults = qry.OrderBy($"{sortField}{(sortAsc ? "" : " DESC")}");

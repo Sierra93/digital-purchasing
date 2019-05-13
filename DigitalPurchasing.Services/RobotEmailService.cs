@@ -46,7 +46,7 @@ namespace DigitalPurchasing.Services
 
                 client.Inbox.Open(FolderAccess.ReadOnly);
 
-                var query = SearchQuery.DeliveredAfter(DateTime.Now.AddHours(-12));
+                var query = SearchQuery.DeliveredAfter(DateTime.Now.AddHours(-312));
 
                 foreach (var uniqueId in client.Inbox.Search(query))
                 {

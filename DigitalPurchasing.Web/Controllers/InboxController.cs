@@ -13,6 +13,11 @@ namespace DigitalPurchasing.Web.Controllers
     {
         private readonly IReceivedEmailService _receivedEmailService;
 
+        public class InboxTableRequest: VueTableRequest
+        {
+            public bool UnhandledSupplierOffersOnly { get; set; }
+        }
+
         public InboxController(
             IReceivedEmailService receivedEmailService)
         {
@@ -24,9 +29,10 @@ namespace DigitalPurchasing.Web.Controllers
             return View();
         }
 
-        public IActionResult Data(VueTableRequest request)
+        public IActionResult Data(InboxTableRequest request)
         {
-            var result = _receivedEmailService.GetData(User.CompanyId(), request.Page, request.PerPage, request.SortField, request.SortAsc, request.Search);
+            var result = _receivedEmailService.GetData(User.CompanyId(), request.UnhandledSupplierOffersOnly,
+                request.Page, request.PerPage, request.SortField, request.SortAsc, request.Search);
             var nextUrl = Url.Action("Data", "Inbox", request.NextPageRequest(), Request.Scheme);
             var prevUrl = Url.Action("Data", "Inbox", request.PrevPageRequest(), Request.Scheme);
             return Json(new VueTableResponse<InboxIndexDataItem, VueTableRequest>(result.Data, request, result.Total, nextUrl, prevUrl));
