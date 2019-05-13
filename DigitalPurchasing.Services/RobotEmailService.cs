@@ -91,11 +91,10 @@ namespace DigitalPurchasing.Services
             var qrId = _quotationRequestService.UidToQuotationRequest(rfqUid);
             if (qrId.HasValue)
             {
-                var subject = message.Subject;
                 var body = message.GetTextBody(TextFormat.Html);
                 var fromEmail = message.From.Mailboxes.First().Address;
 
-                return _receivedEmails.SaveRfqEmail(messageId.Id, qrId.Value, subject, body, fromEmail,
+                return _receivedEmails.SaveRfqEmail(messageId.Id, qrId.Value, message.Subject, body, fromEmail, message.Date,
                     message.Attachments.Where(a => !(a is MessagePart)).Select(a =>
                     {
                         var part = (MimePart)a;

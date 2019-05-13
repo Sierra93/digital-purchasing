@@ -42,7 +42,7 @@ namespace DigitalPurchasing.Services
         private ReceivedEmail GetByUid(uint uid) => _db.ReceivedEmails.FirstOrDefault(q => q.UniqueId == uid);
 
         public Guid SaveRfqEmail(uint uid, Guid qrId, string subject, string body,
-            string fromEmail, IReadOnlyList<(string fileName, string contentType, byte[] fileBytes)> attachments)
+            string fromEmail, DateTimeOffset messageDate, IReadOnlyList<(string fileName, string contentType, byte[] fileBytes)> attachments)
         {
             var email = GetByUid(uid);
             if (email == null)
@@ -54,6 +54,7 @@ namespace DigitalPurchasing.Services
                     Subject = subject,
                     Body = body,
                     FromEmail = fromEmail,
+                    MessageDate = messageDate,
                     Attachments = attachments.Select(a => new EmailAttachment()
                     {
                         FileName = a.fileName,
@@ -76,7 +77,7 @@ namespace DigitalPurchasing.Services
         {
             if (string.IsNullOrEmpty(sortField))
             {
-                sortField = nameof(ReceivedEmail.CreatedOn);
+                sortField = nameof(ReceivedEmail.MessageDate);
             }
 
             var qry = from item in _db.ReceivedRfqEmails
@@ -94,7 +95,7 @@ namespace DigitalPurchasing.Services
             var qryResult = (from item in query
                              select new
                              {
-                                 item.CreatedOn,
+                                 item.MessageDate,
                                  item.Id,
                                  item.Subject,
                                  item.FromEmail,
@@ -114,7 +115,7 @@ namespace DigitalPurchasing.Services
                           {
                               SupplierName = supplier?.Name,
                               Id = item.Id,
-                              CreatedOn = item.CreatedOn,
+                              MessageDate = item.MessageDate,
                               Subject = item.Subject,
                               Body = item.Body,
                               Attachments = item.attachments.Select(a => new InboxIndexAttachment

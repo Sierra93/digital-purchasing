@@ -101,8 +101,8 @@
                         fields: [
                             {
                                 title: 'Дата',
-                                name: 'createdOn',
-                                sortField: 'createdOn',
+                                name: 'messageDate',
+                                sortField: 'messageDate',
                                 titleClass: 'w-140px'
                             },
                             {
@@ -118,7 +118,7 @@
                         ],
                         sortOrder: [
                             {
-                                field: 'createdOn',
+                                field: 'messageDate',
                                 direction: 'desc'
                             }
                         ],
@@ -146,7 +146,7 @@
                     },
                     transform: function (data) {
                         for (var i = 0; i < data.data.length; i++) {
-                            data.data[i].createdOn = moment.utc(data.data[i].createdOn).local().format('DD.MM.YYYY h:mm');
+                            data.data[i].messageDate = moment.utc(data.data[i].messageDate).local().format('DD.MM.YYYY H:mm');
                         }
                         return data
                     },

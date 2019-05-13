@@ -7,7 +7,7 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         bool IsProcessed(uint uid);
         void MarkProcessed(uint uid);
-        Guid SaveRfqEmail(uint uid, Guid qrId, string subject, string body, string fromEmail,
+        Guid SaveRfqEmail(uint uid, Guid qrId, string subject, string body, string fromEmail, DateTimeOffset messageDate,
             IReadOnlyList<(string fileName, string contentType, byte[] fileBytes)> attachments);
         RfqEmailVm GetRfqEmail(Guid emailId);
         EmailAttachmentVm GetAttachment(Guid attachmentId);
@@ -47,7 +47,7 @@ namespace DigitalPurchasing.Core.Interfaces
     public class InboxIndexDataItem
     {
         public Guid Id { get; set; }
-        public DateTime CreatedOn { get; set; }
+        public DateTimeOffset MessageDate { get; set; }
         public string Subject { get; set; }
         public string SupplierName { get; set; }
         public string Body { get; set; }
