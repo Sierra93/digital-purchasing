@@ -9,20 +9,17 @@
     Layout = "_Layout";
 }
 
+<h2 class="with-button">@ViewBag.Title</h2>
+<div class="btn-group">
+    <form class="form-button" method="post" enctype="multipart/form-data" asp-action="Upload" asp-controller="CompetitionList" asp-route-id="@cl.Id">
+        <label class="btn btn-default btn-file">
+            Загрузить предложение <input type="file" style="display: none;" name="file">
+        </label>
+    </form>
+    <a class="btn btn-default" href="@Url.Action("Index", "Analysis", new { clId = cl.Id })">Варианты выбора</a>
+    <a class="btn btn-default" href="@Url.Action("Details", "Analysis", new { clId = cl.Id })">Детальный анализ</a>
+</div>
 <div id="app">
-    <h2 class="with-button">@ViewBag.Title</h2>
-    <div class="btn-group">
-        <form class="form-button" method="post" enctype="multipart/form-data" asp-action="Upload" asp-controller="CompetitionList" asp-route-id="@cl.Id">
-            <fieldset :disabled="soUploadDisabled">
-                <label class="btn btn-default btn-file">
-                    Загрузить предложение <input type="file" style="display: none;" name="file" v-on:change="soFileSelected" />
-                </label>
-            </fieldset>
-        </form>
-        <a class="btn btn-default" href="@Url.Action("Index", "Analysis", new { clId = cl.Id })">Варианты выбора</a>
-        <a class="btn btn-default" href="@Url.Action("Details", "Analysis", new { clId = cl.Id })">Детальный анализ</a>
-    </div>
-
     <div class="long-table-wrap">
         <div class="long-table">
             <div class="long-table-item">
@@ -34,39 +31,39 @@
                 </div>
                 <table class="table table-striped">
                     <thead>
-                        <tr>
-                            <td>№</td>
-                            <td>Код</td>
-                            <td>Наименование</td>
-                            <td>ЕИ</td>
-                            <td>Кол-во для<br />заказа, ЕИ</td>
-                        </tr>
+                    <tr>
+                        <td>№</td>
+                        <td>Код</td>
+                        <td>Наименование</td>
+                        <td>ЕИ</td>
+                        <td>Кол-во для<br />заказа, ЕИ</td>
+                    </tr>
                     </thead>
                     <tfoot>
-                        <tr>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td>@cl.PurchaseRequest.Items.Sum(q => q.RawQty).ToString(Consts.Format.Qty)</td>
-                        </tr>
-                        <tr>
-                            <td colspan="5">
-                                <p>&nbsp;</p>
-                            </td>
-                        </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>@cl.PurchaseRequest.Items.Sum(q => q.RawQty).ToString(Consts.Format.Qty)</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5">
+                            <p>&nbsp;</p>
+                        </td>
+                    </tr>
                     </tfoot>
                     <tbody>
-                        @foreach (var item in cl.PurchaseRequest.Items)
-                        {
-                            <tr>
-                                <td>@item.Position</td>
-                                <td>@item.RawCode</td>
-                                <td>@item.RawName</td>
-                                <td>@item.RawUom</td>
-                                <td>@item.RawQty.ToString(Consts.Format.Qty)</td>
-                            </tr>
-                        }
+                    @foreach (var item in cl.PurchaseRequest.Items)
+                    {
+                        <tr>
+                            <td>@item.Position</td>
+                            <td>@item.RawCode</td>
+                            <td>@item.RawName</td>
+                            <td>@item.RawUom</td>
+                            <td>@item.RawQty.ToString(Consts.Format.Qty)</td>
+                        </tr>
+                    }
                     </tbody>
                 </table>
             </div>
@@ -82,54 +79,54 @@
                     </div>
                     <table class="table table-striped with-left-border">
                         <thead>
-                            <tr>
-                                <td>Код</td>
-                                <td>Наименование</td>
-                                <td>ЕИ</td>
-                                <td>Кол-во,<br />ЕИ</td>
-                                <td>Цена за ЕИ,<br />валюта</td>
-                                <td>Валюта</td>
-                                <td>Стоимость,<br />валюта</td>
-                            </tr>
+                        <tr>
+                            <td>Код</td>
+                            <td>Наименование</td>
+                            <td>ЕИ</td>
+                            <td>Кол-во,<br />ЕИ</td>
+                            <td>Цена за ЕИ,<br />валюта</td>
+                            <td>Валюта</td>
+                            <td>Стоимость,<br />валюта</td>
+                        </tr>
                         </thead>
                         <tfoot>
-                            <tr>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td>@so.Items.Where(q => q != null).Sum(q => q.RawQty).ToString(Consts.Format.Qty)</td>
-                                <td></td>
-                                <td></td>
-                                <td>@so.Items.Where(q => q != null).Sum(q => q.TotalPrice).ToString(Consts.Format.Money2)</td>
-                            </tr>
-                            <tr>
-                                <td colspan="7">
-                                    <so-terms :so="'@so.Id'"></so-terms>
-                                </td>
-                            </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td>@so.Items.Where(q => q != null).Sum(q => q.RawQty).ToString(Consts.Format.Qty)</td>
+                            <td></td>
+                            <td></td>
+                            <td>@so.Items.Where(q => q != null).Sum(q => q.TotalPrice).ToString(Consts.Format.Money2)</td>
+                        </tr>
+                        <tr>
+                            <td colspan="7">
+                                <so-terms :so="'@so.Id'"></so-terms>
+                            </td>
+                        </tr>
                         </tfoot>
                         <tbody>
-                            @foreach (var item in so.Items)
+                        @foreach (var item in so.Items)
+                        {
+                            if (item != null)
                             {
-                                if (item != null)
-                                {
-                                    <tr>
-                                        <td>@item.RawCode</td>
-                                        <td>@item.RawName</td>
-                                        <td>@item.RawUom</td>
-                                        <td>@item.RawQty.ToString(Consts.Format.Qty)</td>
-                                        <td>@item.RawPrice.ToString(Consts.Format.Money2)</td>
-                                        <td>@so.Currency.Name</td>
-                                        <td>@item.TotalPrice.ToString(Consts.Format.Money2)</td>
-                                    </tr>
-                                }
-                                else
-                                {
-                                    <tr>
-                                        <td colspan="7" style="text-align: center;">Не сопоставлено</td>
-                                    </tr>
-                                }
+                                <tr>
+                                    <td>@item.RawCode</td>
+                                    <td>@item.RawName</td>
+                                    <td>@item.RawUom</td>
+                                    <td>@item.RawQty.ToString(Consts.Format.Qty)</td>
+                                    <td>@item.RawPrice.ToString(Consts.Format.Money2)</td>
+                                    <td>@so.Currency.Name</td>
+                                    <td>@item.TotalPrice.ToString(Consts.Format.Money2)</td>
+                                </tr>
                             }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" style="text-align: center;">Не сопоставлено</td>
+                                </tr>
+                            }
+                        }
                         </tbody>
                     </table>
                 </div>
@@ -142,27 +139,27 @@
             <div class="col-md-6">
                 <table class="table">
                     <thead>
-                        <tr>
-                            <th>Дата и время подтверждения</th>
-                            <th>Вариант выбора</th>
-                            <th>Общая сумма</th>
-                            <th>Валюта</th>
-                            <th>Выбор подтвердил</th>
-                            <th>Отчет о выборе поставщиков</th>
-                        </tr>
+                    <tr>
+                        <th>Дата и время подтверждения</th>
+                        <th>Вариант выбора</th>
+                        <th>Общая сумма</th>
+                        <th>Валюта</th>
+                        <th>Выбор подтвердил</th>
+                        <th>Отчет о выборе поставщиков</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach (var report in reports)
-                        {
-                            <tr>
-                                <td>@report.CreatedOn.ToString("dd.MM.yyyy HH:mm")</td>
-                                <td>0</td>
-                                <td>0 000</td>
-                                <td>RUB</td>
-                                <td>@report.SelectedBy</td>
-                                <td><a href="@Url.Action(nameof(CompetitionListController.Report), new { reportId = report.ReportId })">Скачать</a></td>
-                            </tr>
-                        }
+                    @foreach (var report in reports)
+                    {
+                        <tr>
+                            <td>@report.CreatedOn.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>0</td>
+                            <td>0 000</td>
+                            <td>RUB</td>
+                            <td>@report.SelectedBy</td>
+                            <td><a href="@Url.Action(nameof(CompetitionListController.Report), new { reportId = report.ReportId })">Скачать</a></td>
+                        </tr>
+                    }
                     </tbody>
                 </table>
             </div>
@@ -176,15 +173,7 @@
     <script>
         (function() {
             var vue = new Vue({
-                el: '#app',
-                data: {
-                    soUploadDisabled: false
-                },
-                methods: {
-                    soFileSelected: function () {
-                        this.soUploadDisabled = true;
-                    }
-                }
+                el: '#app'
             });
         })();
     </script>
