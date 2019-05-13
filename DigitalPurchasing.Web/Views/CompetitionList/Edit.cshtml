@@ -153,9 +153,9 @@
                     {
                         <tr>
                             <td>@report.CreatedOn.ToString("dd.MM.yyyy HH:mm")</td>
-                            <td>0</td>
-                            <td>0 000</td>
-                            <td>RUB</td>
+                            <td>@report.SelectedVariantNumber</td>
+                            <td>@report.SelectedVariantTotalPrice.ToString("N")</td>
+                            <td>@report.Currency</td>
                             <td>@report.SelectedBy</td>
                             <td><a href="@Url.Action(nameof(CompetitionListController.Report), new { reportId = report.ReportId })">Скачать</a></td>
                         </tr>

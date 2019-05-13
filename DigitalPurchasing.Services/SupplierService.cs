@@ -49,9 +49,9 @@ namespace DigitalPurchasing.Services
             return result;
         }
 
-        public Guid CreateSupplier(string name)
+        public Guid CreateSupplier(string name, Guid ownerId)
         {
-            var entry = _db.Suppliers.Add(new Supplier { Name = name });
+            var entry = _db.Suppliers.Add(new Supplier { Name = name, PublicId = _counterService.GetSupplierNextId(ownerId) });
             _db.SaveChanges();
             return entry.Entity.Id;
         }

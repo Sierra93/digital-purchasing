@@ -12,5 +12,6 @@ namespace DigitalPurchasing.Models.SSR
         public bool IsSelected { get; set; }
 
         public Guid InternalId { get; set; }
+        public DateTime CreatedOn { get; set; }
     }
 }
