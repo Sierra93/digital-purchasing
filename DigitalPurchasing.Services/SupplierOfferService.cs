@@ -326,7 +326,7 @@ namespace DigitalPurchasing.Services
 
             if (!supplierOffer.SupplierId.HasValue)
             {
-                supplierOffer.SupplierId = _supplierService.CreateSupplier(supplierOffer.SupplierName);
+                supplierOffer.SupplierId = _supplierService.CreateSupplier(supplierOffer.SupplierName, supplierOffer.OwnerId);
             }
 
             var table = JsonConvert.DeserializeObject<ExcelTable>(supplierOffer.UploadedDocument.Data);

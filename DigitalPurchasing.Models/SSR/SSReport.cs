@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 using DigitalPurchasing.Models.Identity;
 
 namespace DigitalPurchasing.Models.SSR
@@ -13,5 +14,10 @@ namespace DigitalPurchasing.Models.SSR
 
         public DateTime CLCreatedOn { get; set; }
         public int CLNumber { get; set; }
+
+        public int SelectedVariantNumber { get; set; }
+
+        [Column(TypeName = "decimal(38, 17)")]
+        public decimal SelectedVariantTotalPrice { get; set; }
     }
 }

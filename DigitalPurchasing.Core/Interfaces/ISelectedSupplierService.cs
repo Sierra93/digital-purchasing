@@ -25,6 +25,11 @@ namespace DigitalPurchasing.Core.Interfaces
         public List<SSCustomerItemDto> CustomerItems { get; set; }
 
         public List<SSSupplierDto> Suppliers { get; set; }
+        public List<SSSupplierItemDto> SSSupplierItems { get; set; }
+
+        public List<SSVariantDto> Variants { get; set; }
+
+        public List<SSDataDto> Datas { get; set; }
     }
 
     public class SSCustomerDto
@@ -65,6 +70,53 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid NomenclatureId { get; set; }
     }
 
+    public class SSSupplierItemDto
+    {
+        public Guid Id { get; set; }
+
+        public string Name { get; set; }
+
+        public decimal Quantity { get; set; }
+
+        public decimal Price { get; set; }
+
+        public SSSupplierDto Supplier { get; set; }
+        public Guid SupplierId { get; set; }
+
+        public Guid InternalId { get; set; }
+
+        public Guid NomenclatureId { get; set; }
+    }
+
+    public class SSVariantDto
+    {
+        public Guid ReportId { get; set; }
+
+        public int Number { get; set; }
+
+        public bool IsSelected { get; set; }
+
+        public Guid InternalId { get; set; }
+
+        public DateTime CreatedOn { get; set; }
+        public Guid Id { get; set; }
+    }
+
+    public class SSDataDto
+    {
+        public Guid Id { get; set; }
+
+        public SSVariantDto Variant { get; set; }
+        public Guid VariantId { get; set; }
+
+        public SSSupplierDto Supplier { get; set; }
+        public Guid SupplierId { get; set; }
+
+        public Guid NomenclatureId { get; set; }
+
+        public decimal Quantity { get; set; }
+    }
+
     public class GenerateReportDataResult
     {
         public Guid ReportId { get; set; }
@@ -79,5 +131,8 @@ namespace DigitalPurchasing.Core.Interfaces
         public string UserLastName { get; set; }
 
         public string SelectedBy => $"{UserLastName} {UserFirstName}";
+        public string Currency { get; set; }
+        public int SelectedVariantNumber { get; set; }
+        public decimal SelectedVariantTotalPrice { get; set; }
     }
 }
