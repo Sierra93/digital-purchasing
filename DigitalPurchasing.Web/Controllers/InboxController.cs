@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalPurchasing.Web.Controllers
 {
-    public class InboxController : Controller
+    public class InboxController : BaseController
     {
         private readonly IReceivedEmailService _receivedEmailService;
         private readonly IQuotationRequestService _quotationRequestService;
