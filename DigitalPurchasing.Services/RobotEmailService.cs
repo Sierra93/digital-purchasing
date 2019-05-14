@@ -190,9 +190,6 @@ namespace DigitalPurchasing.Services
                 // detect supplier by contact email
                 var supplierId = _supplierService.GetSupplierByEmail(qr.OwnerId, rfqEmail.FromEmail);
 
-                // get owner email
-                var email = _companyService.GetContactEmailByOwner(qr.OwnerId);
-
                 // upload supplier offer
                 if (supplierId != Guid.Empty)
                 {
@@ -243,7 +240,8 @@ namespace DigitalPurchasing.Services
 
                                     if (!allColumns || !allMatched)
                                     {
-                                        PartiallyProcessedEmail(email, qr.PublicId, createOfferResult.Id /* SO Id */);
+                                        var ownerEmail = _companyService.GetContactEmailByOwner(qr.OwnerId);
+                                        PartiallyProcessedEmail(ownerEmail, qr.PublicId, createOfferResult.Id /* SO Id */);
                                     }
 
                                     return true;
