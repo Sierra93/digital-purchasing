@@ -123,15 +123,20 @@ namespace DigitalPurchasing.Services
 
                         var soDetails = _supplierOfferService.GetDetailsById(supplierOffer.Id);
 
-                        var ssSupplierItems = supplierOffer.Items.Select(q => new SSSupplierItem
+                        var ssSupplierItems = supplierOffer.Items.Select(q =>
                         {
-                            SupplierId = ssSupplier.Id,
-                            Name = q.RawName,
-                            Quantity = q.RawQty,
-                            Price = q.RawPrice,
-                            NomenclatureId = q.NomenclatureId,
-                            InternalId = q.Id,
-                            ConvertedQuantity = soDetails.Items.Find(i => i.Offer.ItemId == q.Id).Conversion.OfferQty
+                            var detailsItem = soDetails.Items.Find(i => i.Offer.ItemId == q.Id);
+                            return new SSSupplierItem
+                            {
+                                SupplierId = ssSupplier.Id,
+                                Name = q.RawName,
+                                Quantity = q.RawQty,
+                                Price = q.RawPrice,
+                                NomenclatureId = q.NomenclatureId,
+                                InternalId = q.Id,
+                                ConvertedQuantity = detailsItem.Conversion.OfferQty,
+                                ConvertedPrice = detailsItem.Conversion.OfferPrice
+                            };
                         }).ToList();
                         await _db.SSSupplierItems.AddRangeAsync(ssSupplierItems);
                         await _db.SaveChangesAsync();

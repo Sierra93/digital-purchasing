@@ -64,7 +64,7 @@ namespace DigitalPurchasing.ExcelReader
                     foreach (var item in _report.SSSupplierItems.Where(q => q.SupplierId == supplier.Id))
                     {
                         var nomPos = GetPositionByNomenclature(item.NomenclatureId);
-                        ws.Cells[6 + nomPos, col].TableText(item.Price);
+                        ws.Cells[6 + nomPos, col].TableText(item.ConvertedPrice);
                     }
                 }
 
@@ -81,9 +81,9 @@ namespace DigitalPurchasing.ExcelReader
                     foreach (var item in supplierItems)
                     {
                         var nomPos = GetPositionByNomenclature(item.NomenclatureId);
-                        ws.Cells[6 + nomPos, col].TableText(item.Price * item.Quantity);
+                        ws.Cells[6 + nomPos, col].TableText(item.ConvertedPrice * item.ConvertedQuantity);
                     }
-                    ws.Cells[6 + supplierItems.Count, col].TableText(supplierItems.Sum(item => item.Price * item.Quantity)).BoldFont();
+                    ws.Cells[6 + supplierItems.Count, col].TableText(supplierItems.Sum(item => item.ConvertedPrice * item.ConvertedQuantity)).BoldFont();
                 }
 
                 ws.Row(5).Height = 48;
