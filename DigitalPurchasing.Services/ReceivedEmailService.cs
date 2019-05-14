@@ -82,8 +82,17 @@ namespace DigitalPurchasing.Services
             return email.Id;
         }
 
-        public SoEmailVm GetSoEmail(Guid emailId) =>
-            _db.ReceivedEmails.Include(e => e.Attachments).OfType<ReceivedSoEmail>().FirstOrDefault(e => e.Id == emailId)?.Adapt<SoEmailVm>();
+        public SoEmailVm GetSoEmail(Guid emailId, bool includeAttachments = true)
+        {
+            var qry = _db.ReceivedEmails.AsQueryable();
+
+            if (includeAttachments)
+            {
+                qry = qry.Include(e => e.Attachments);
+            }
+
+            return qry.OfType<ReceivedSoEmail>().FirstOrDefault(e => e.Id == emailId)?.Adapt<SoEmailVm>();
+        }
 
         public InboxIndexData GetData(Guid ownerId, bool unhandledSupplierOffersOnly, int page, int perPage, string sortField, bool sortAsc, string search)
         {

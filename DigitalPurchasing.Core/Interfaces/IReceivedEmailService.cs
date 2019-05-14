@@ -10,7 +10,7 @@ namespace DigitalPurchasing.Core.Interfaces
         void IncProcessingTries(uint uid);
         Guid SaveSoEmail(uint uid, Guid qrId, string subject, string body, string fromEmail, DateTimeOffset messageDate,
             IReadOnlyList<(string fileName, string contentType, byte[] fileBytes)> attachments);
-        SoEmailVm GetSoEmail(Guid emailId);
+        SoEmailVm GetSoEmail(Guid emailId, bool includeAttachments = true);
         EmailAttachmentVm GetAttachment(Guid attachmentId);
         InboxIndexData GetData(Guid ownerId, bool unhandledSupplierOffersOnly,
             int page, int perPage, string sortField, bool sortAsc, string search);
@@ -24,6 +24,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public string FromEmail { get; set; }
         public Guid QuotationRequestId { get; set; }
         public int ProcessingTries { get; set; }
+        public DateTimeOffset MessageDate { get; set; }
 
         public IReadOnlyList<EmailAttachmentVm> Attachments { get; set; }
     }

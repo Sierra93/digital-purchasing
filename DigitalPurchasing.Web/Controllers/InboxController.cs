@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Web.Core;
+using DigitalPurchasing.Web.ViewModels.Inbox;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalPurchasing.Web.Controllers
@@ -12,6 +13,8 @@ namespace DigitalPurchasing.Web.Controllers
     public class InboxController : Controller
     {
         private readonly IReceivedEmailService _receivedEmailService;
+        private readonly IQuotationRequestService _quotationRequestService;
+        private readonly ISupplierService _supplierService;
 
         public class InboxTableRequest: VueTableRequest
         {
@@ -19,9 +22,13 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         public InboxController(
-            IReceivedEmailService receivedEmailService)
+            IReceivedEmailService receivedEmailService,
+            IQuotationRequestService quotationRequestService,
+            ISupplierService supplierService)
         {
             _receivedEmailService = receivedEmailService;
+            _quotationRequestService = quotationRequestService;
+            _supplierService = supplierService;
         }
 
         public IActionResult Index()
@@ -31,7 +38,26 @@ namespace DigitalPurchasing.Web.Controllers
 
         public IActionResult View(Guid id)
         {
-            return View();
+            var soEmail = _receivedEmailService.GetSoEmail(id);
+
+            if (soEmail == null) return NotFound();
+
+            var qr = _quotationRequestService.GetById(soEmail.QuotationRequestId);
+            var supplierId = _supplierService.GetSupplierByEmail(qr.OwnerId, soEmail.FromEmail);
+            var supplier = _supplierService.GetById(supplierId, true);
+
+            return View(new InboxViewVm
+            {
+                SupplierName = supplier?.Name,
+                EmailBody = soEmail.Body,
+                EmailDate = soEmail.MessageDate,
+                EmailSubject = soEmail.Subject,
+                Attachments = soEmail.Attachments.Select(a => new InboxViewVm.EmailAttachment()
+                {
+                    FileName = a.FileName,
+                    Id = a.Id
+                }).ToList()
+            });
         }
 
         public IActionResult Data(InboxTableRequest request)
