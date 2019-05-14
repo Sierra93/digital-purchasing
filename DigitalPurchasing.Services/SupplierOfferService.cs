@@ -201,6 +201,7 @@ namespace DigitalPurchasing.Services
                 result.Items.Add(item);
 
                 item.Position = requestItem.Position;
+                item.Request.ItemId = requestItem.Id;
                 item.Request.Code = requestItem.RawCode;
                 item.Request.Name = requestItem.RawName;
                 item.Request.Qty = requestItem.RawQty;
@@ -215,6 +216,7 @@ namespace DigitalPurchasing.Services
                     .FirstOrDefault(q => q.NomenclatureId.HasValue && q.NomenclatureId == requestItem.NomenclatureId);
                 if (offerItem == null) continue;
 
+                item.Offer.ItemId = offerItem.Id;
                 item.Offer.Code = offerItem.RawCode;
                 item.Offer.Name = offerItem.RawName;
                 item.Offer.Qty = offerItem.RawQty;

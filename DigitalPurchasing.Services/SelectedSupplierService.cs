@@ -17,17 +17,20 @@ namespace DigitalPurchasing.Services
         private readonly ApplicationDbContext _db;
         private readonly IAnalysisService _analysisService;
         private readonly ICompetitionListService _competitionListService;
+        private readonly ISupplierOfferService _supplierOfferService;
         private readonly ILogger _logger;
 
         public SelectedSupplierService(
             ApplicationDbContext db,
             IAnalysisService analysisService,
             ICompetitionListService competitionListService,
+            ISupplierOfferService supplierOfferService,
             ILogger<SelectedSupplierService> logger)
         {
             _db = db;
             _analysisService = analysisService;
             _competitionListService = competitionListService;
+            _supplierOfferService = supplierOfferService;
             _logger = logger;
         }
 
@@ -98,24 +101,42 @@ namespace DigitalPurchasing.Services
 
                     await _db.SSCustomerItems.AddRangeAsync(ssCustomerItems);
 
-                    // suppliers
-                    var ssSuppliers = cl.SupplierOffers.Distinct()
-                        .Select(q => new SSSupplier { Name = q.Supplier.Name, InternalId = q.Supplier.Id, SOCreatedOn = q.CreatedOn, SONumber = q.PublicId })
-                        .ToList();
-                    await _db.SSSuppliers.AddRangeAsync(ssSuppliers);
-                    await _db.SaveChangesAsync();
+                    var ssSuppliers = new List<SSSupplier>();
 
                     // supplier items
                     foreach (var supplierOffer in cl.SupplierOffers)
                     {
-                        var ssSupplierItems = supplierOffer.Items.Select(q => new SSSupplierItem
+                        // supplier + so data
+                        var ssSupplier = new SSSupplier
                         {
-                            SupplierId = ssSuppliers.Find(e => e.InternalId == supplierOffer.Supplier.Id).Id,
-                            Name = q.RawName,
-                            Quantity = q.RawQty,
-                            Price = q.RawPrice,
-                            NomenclatureId = q.NomenclatureId,
-                            InternalId = q.Id,
+                            Name = supplierOffer.Supplier.Name,
+                            InternalId = supplierOffer.Supplier.Id,
+                            SOCreatedOn = supplierOffer.CreatedOn,
+                            SONumber = supplierOffer.PublicId,
+                            SOInternalId = supplierOffer.Id
+                        };
+
+                        await _db.SSSuppliers.AddAsync(ssSupplier);
+                        await _db.SaveChangesAsync();
+
+                        ssSuppliers.Add(ssSupplier);
+
+                        var soDetails = _supplierOfferService.GetDetailsById(supplierOffer.Id);
+
+                        var ssSupplierItems = supplierOffer.Items.Select(q =>
+                        {
+                            var detailsItem = soDetails.Items.Find(i => i.Offer.ItemId == q.Id);
+                            return new SSSupplierItem
+                            {
+                                SupplierId = ssSupplier.Id,
+                                Name = q.RawName,
+                                Quantity = q.RawQty,
+                                Price = q.RawPrice,
+                                NomenclatureId = q.NomenclatureId,
+                                InternalId = q.Id,
+                                ConvertedQuantity = detailsItem.Conversion.OfferQty,
+                                ConvertedPrice = detailsItem.Conversion.OfferPrice
+                            };
                         }).ToList();
                         await _db.SSSupplierItems.AddRangeAsync(ssSupplierItems);
                         await _db.SaveChangesAsync();
@@ -143,9 +164,7 @@ namespace DigitalPurchasing.Services
                         // variant datas
                         foreach (var resultByItem in variantData.ResultsByItem)
                         {
-                            var dbSupplierId = data.SupplierOffers.Find(q => q.Id == resultByItem.SupplierId).SupplierId;
-                            
-                            var ssSupplier = ssSuppliers.Find(q => q.InternalId == dbSupplierId);
+                            var ssSupplier = ssSuppliers.Find(q => q.SOInternalId == resultByItem.SupplierId);
 
                             // variant data
                             var ssData = new SSData
