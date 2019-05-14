@@ -8,6 +8,7 @@ namespace DigitalPurchasing.Models
     {
         public uint UniqueId { get; set; }
         public bool IsProcessed { get; set; }
+        public int ProcessingTries { get; set; }
         public string Subject { get; set; }
         public string Body { get; set; }
         public string FromEmail { get; set; }

@@ -7,6 +7,7 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         bool IsProcessed(uint uid);
         void MarkProcessed(uint uid);
+        void IncProcessingTries(uint uid);
         Guid SaveRfqEmail(uint uid, Guid qrId, string subject, string body, string fromEmail, DateTimeOffset messageDate,
             IReadOnlyList<(string fileName, string contentType, byte[] fileBytes)> attachments);
         RfqEmailVm GetRfqEmail(Guid emailId);
@@ -22,6 +23,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public string Body { get; set; }
         public string FromEmail { get; set; }
         public Guid QuotationRequestId { get; set; }
+        public int ProcessingTries { get; set; }
 
         public IReadOnlyList<EmailAttachmentVm> Attachments { get; set; }
     }

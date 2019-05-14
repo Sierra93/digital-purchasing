@@ -29,6 +29,11 @@ namespace DigitalPurchasing.Web.Controllers
             return View();
         }
 
+        public IActionResult View(Guid id)
+        {
+            return View();
+        }
+
         public IActionResult Data(InboxTableRequest request)
         {
             var result = _receivedEmailService.GetData(User.CompanyId(), request.UnhandledSupplierOffersOnly,

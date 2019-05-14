@@ -30,12 +30,23 @@ namespace DigitalPurchasing.Services
             return email != null && email.IsProcessed;
         }
 
+        public void IncProcessingTries(uint uid)
+        {
+            var email = GetByUid(uid);
+            if (email != null)
+            {
+                email.ProcessingTries++;
+                _db.SaveChanges();
+            }
+        }
+
         public void MarkProcessed(uint uid)
         {
             var email = GetByUid(uid);
             if (email != null && !email.IsProcessed)
             {
                 email.IsProcessed = true;
+                email.ProcessingTries++;
                 _db.SaveChanges();
             }
         }
