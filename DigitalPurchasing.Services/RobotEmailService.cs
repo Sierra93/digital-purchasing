@@ -55,9 +55,9 @@ namespace DigitalPurchasing.Services
                         var message = client.Inbox.GetMessage(uniqueId);
                         Guid? emailId = null;
 
-                        if (RFQEmailProcessor.IsRfqEmail(message))
+                        if (RFQEmailProcessor.IsSupplierOfferEmail(message))
                         {
-                            emailId = SaveRfqEmail(uniqueId, message);
+                            emailId = SaveSoEmail(uniqueId, message);
                         }
                         else
                         {
@@ -87,7 +87,7 @@ namespace DigitalPurchasing.Services
             }
         }
 
-        private Guid? SaveRfqEmail(UniqueId messageId, MimeMessage message)
+        private Guid? SaveSoEmail(UniqueId messageId, MimeMessage message)
         {
             string rfqUid = RFQEmailProcessor.GetRfqEmailUid(message);
             var qrId = _quotationRequestService.UidToQuotationRequest(rfqUid);
@@ -96,7 +96,7 @@ namespace DigitalPurchasing.Services
                 var body = message.GetTextBody(TextFormat.Html);
                 var fromEmail = message.From.Mailboxes.First().Address;
 
-                return _receivedEmails.SaveRfqEmail(messageId.Id, qrId.Value, message.Subject, body, fromEmail, message.Date,
+                return _receivedEmails.SaveSoEmail(messageId.Id, qrId.Value, message.Subject, body, fromEmail, message.Date,
                     message.Attachments.Where(a => !(a is MessagePart)).Select(a =>
                     {
                         var part = (MimePart)a;
@@ -158,7 +158,7 @@ namespace DigitalPurchasing.Services
             _receivedEmails = receivedEmails;
         }
 
-        internal static bool IsRfqEmail(MimeMessage message)
+        internal static bool IsSupplierOfferEmail(MimeMessage message)
         {
             Func<MimePart, bool> isSupportedFile = (part) =>
             {
@@ -179,7 +179,7 @@ namespace DigitalPurchasing.Services
 
         public async Task<bool> Process(Guid emailId)
         {
-            var soEmail = _receivedEmails.GetRfqEmail(emailId);
+            var soEmail = _receivedEmails.GetSoEmail(emailId);
 
             if (soEmail != null)
             {

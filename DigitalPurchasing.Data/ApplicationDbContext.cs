@@ -66,7 +66,7 @@ namespace DigitalPurchasing.Data
         public DbSet<UploadedDocumentHeaders> UploadedDocumentHeaders { get; set; }
 
         public DbSet<ReceivedEmail> ReceivedEmails { get; set; }
-        public DbSet<ReceivedRfqEmail> ReceivedRfqEmails { get; set; }
+        public DbSet<ReceivedSoEmail> ReceivedSoEmails { get; set; }
         public DbSet<EmailAttachment> EmailAttachments { get; set; }
 
         #region Selected supplier report

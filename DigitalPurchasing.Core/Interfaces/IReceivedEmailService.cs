@@ -8,15 +8,15 @@ namespace DigitalPurchasing.Core.Interfaces
         bool IsProcessed(uint uid);
         void MarkProcessed(uint uid);
         void IncProcessingTries(uint uid);
-        Guid SaveRfqEmail(uint uid, Guid qrId, string subject, string body, string fromEmail, DateTimeOffset messageDate,
+        Guid SaveSoEmail(uint uid, Guid qrId, string subject, string body, string fromEmail, DateTimeOffset messageDate,
             IReadOnlyList<(string fileName, string contentType, byte[] fileBytes)> attachments);
-        RfqEmailVm GetRfqEmail(Guid emailId);
+        SoEmailVm GetSoEmail(Guid emailId);
         EmailAttachmentVm GetAttachment(Guid attachmentId);
         InboxIndexData GetData(Guid ownerId, bool unhandledSupplierOffersOnly,
             int page, int perPage, string sortField, bool sortAsc, string search);
     }
 
-    public class RfqEmailVm
+    public class SoEmailVm
     {
         public Guid Id { get; set; }
         public string Subject { get; set; }

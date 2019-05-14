@@ -53,13 +53,13 @@ namespace DigitalPurchasing.Services
 
         private ReceivedEmail GetByUid(uint uid) => _db.ReceivedEmails.FirstOrDefault(q => q.UniqueId == uid);
 
-        public Guid SaveRfqEmail(uint uid, Guid qrId, string subject, string body,
+        public Guid SaveSoEmail(uint uid, Guid qrId, string subject, string body,
             string fromEmail, DateTimeOffset messageDate, IReadOnlyList<(string fileName, string contentType, byte[] fileBytes)> attachments)
         {
             var email = GetByUid(uid);
             if (email == null)
             {
-                email = new ReceivedRfqEmail
+                email = new ReceivedSoEmail
                 {
                     UniqueId = uid,
                     IsProcessed = false,
@@ -82,8 +82,8 @@ namespace DigitalPurchasing.Services
             return email.Id;
         }
 
-        public RfqEmailVm GetRfqEmail(Guid emailId) =>
-            _db.ReceivedEmails.Include(e => e.Attachments).OfType<ReceivedRfqEmail>().FirstOrDefault(e => e.Id == emailId)?.Adapt<RfqEmailVm>();
+        public SoEmailVm GetSoEmail(Guid emailId) =>
+            _db.ReceivedEmails.Include(e => e.Attachments).OfType<ReceivedSoEmail>().FirstOrDefault(e => e.Id == emailId)?.Adapt<SoEmailVm>();
 
         public InboxIndexData GetData(Guid ownerId, bool unhandledSupplierOffersOnly, int page, int perPage, string sortField, bool sortAsc, string search)
         {
@@ -92,7 +92,7 @@ namespace DigitalPurchasing.Services
                 sortField = nameof(ReceivedEmail.MessageDate);
             }
 
-            var qry = from item in _db.ReceivedRfqEmails
+            var qry = from item in _db.ReceivedSoEmails
                       where item.QuotationRequest.OwnerId == ownerId
                       select item;
 
