@@ -49,7 +49,7 @@ namespace DigitalPurchasing.ExcelReader
                     foreach (var item in _report.SSSupplierItems.Where(q => q.SupplierId == supplier.Id))
                     {
                         var nomPos = GetPositionByNomenclature(item.NomenclatureId);
-                        ws.Cells[6 + nomPos, col].TableText(item.Quantity);
+                        ws.Cells[6 + nomPos, col].TableText(item.ConvertedQuantity);
                     }
                 }
 

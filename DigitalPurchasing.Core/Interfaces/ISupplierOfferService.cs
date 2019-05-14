@@ -50,12 +50,16 @@ namespace DigitalPurchasing.Core.Interfaces
         {
             public decimal QtyMod { get; set; } = 1;
             public decimal QtyInPsc => Qty * QtyMod;
+
+            public Guid ItemId { get; set; }
         }
 
         public class OfferData : BaseData
         {
             public decimal Price { get; set; }
             public decimal TotalPrice => Qty * Price;
+
+            public Guid ItemId { get; set; }
         }
 
         public class MassData

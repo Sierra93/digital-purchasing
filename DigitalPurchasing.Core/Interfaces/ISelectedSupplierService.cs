@@ -86,6 +86,8 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid InternalId { get; set; }
 
         public Guid NomenclatureId { get; set; }
+
+        public decimal ConvertedQuantity { get; set; }
     }
 
     public class SSVariantDto
