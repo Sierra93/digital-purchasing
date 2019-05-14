@@ -147,7 +147,7 @@ namespace DigitalPurchasing.Core.Interfaces
             public decimal OfferQty => _item.Offer.Qty * UomRatio;
 
             // converted price
-            public decimal OfferPrice => _item.ImportAndDelivery.FinalCostCostPer1 * CurrencyExchangeRate / UomRatio;
+            public decimal OfferPrice => _item.ImportAndDelivery.FinalCostCostPer1 * CurrencyExchangeRate / (UomRatio != 0 ? UomRatio : 1);
 
             public decimal OfferTotalPrice => OfferQty * OfferPrice;
         }
