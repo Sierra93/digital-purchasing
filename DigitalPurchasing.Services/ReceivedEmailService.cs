@@ -7,6 +7,7 @@ using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
 using Mapster;
+using Microsoft.EntityFrameworkCore;
 
 namespace DigitalPurchasing.Services
 {
@@ -71,7 +72,7 @@ namespace DigitalPurchasing.Services
         }
 
         public RfqEmailVm GetRfqEmail(Guid emailId) =>
-            _db.ReceivedEmails.OfType<ReceivedRfqEmail>().FirstOrDefault(e => e.Id == emailId)?.Adapt<RfqEmailVm>();
+            _db.ReceivedEmails.Include(e => e.Attachments).OfType<ReceivedRfqEmail>().FirstOrDefault(e => e.Id == emailId)?.Adapt<RfqEmailVm>();
 
         public InboxIndexData GetData(Guid ownerId, bool unhandledSupplierOffersOnly, int page, int perPage, string sortField, bool sortAsc, string search)
         {

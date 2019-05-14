@@ -87,7 +87,7 @@ namespace DigitalPurchasing.Services
 
         private Guid? SaveRfqEmail(UniqueId messageId, MimeMessage message)
         {
-            string rfqUid = GetRfqEmailUid(message);
+            string rfqUid = RFQEmailProcessor.GetRfqEmailUid(message);
             var qrId = _quotationRequestService.UidToQuotationRequest(rfqUid);
             if (qrId.HasValue)
             {
@@ -107,13 +107,6 @@ namespace DigitalPurchasing.Services
             }
 
             return null;
-        }
-
-        private string GetRfqEmailUid(MimeMessage message)
-        {
-            var uidStartIndex = message.Subject.IndexOf("[RFQ", StringComparison.Ordinal);
-            var uidEndEnd = message.Subject.IndexOf(']', uidStartIndex);
-            return message.Subject.Substring(uidStartIndex + 1, uidEndEnd - uidStartIndex - 1);
         }
     }
 
@@ -172,11 +165,15 @@ namespace DigitalPurchasing.Services
             };
 
             return !string.IsNullOrEmpty(message.Subject) &&
-                message.Subject.Contains("[RFQ") &&
-                GetAttachments(message).Any(isSupportedFile);
+                message.Subject.Contains("[RFQ");
         }
 
-        private static IEnumerable<MimePart> GetAttachments(MimeMessage message) => message.Attachments.Where(a => !(a is MessagePart)).Select(a => (MimePart)a);
+        internal static string GetRfqEmailUid(MimeMessage message)
+        {
+            var uidStartIndex = message.Subject.IndexOf("[RFQ", StringComparison.Ordinal);
+            var uidEndEnd = message.Subject.IndexOf(']', uidStartIndex);
+            return message.Subject.Substring(uidStartIndex + 1, uidEndEnd - uidStartIndex - 1);
+        }
 
         public async Task<bool> Process(Guid emailId)
         {
