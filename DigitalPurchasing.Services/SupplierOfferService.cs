@@ -141,9 +141,11 @@ namespace DigitalPurchasing.Services
             if (vm != null)
             {
                 vm.ExcelTable =  vm.UploadedDocument?.Data != null ? JsonConvert.DeserializeObject<ExcelTable>(vm.UploadedDocument?.Data) : null;
-                vm.CompanyName = _db.PurchaseRequests
+                var pr = _db.PurchaseRequests
                     .IgnoreQueryFilters()
-                    .First(q => q.Id == entity.CompetitionList.QuotationRequest.PurchaseRequestId).CompanyName;
+                    .First(q => q.Id == entity.CompetitionList.QuotationRequest.PurchaseRequestId);
+                vm.CompanyName = pr.CompanyName;
+                vm.CompetitionList.PurchaseRequest = pr.Adapt<CompetitionListVm.PurchaseRequestVm>();
                 if (entity.Supplier != null)
                 {
                     vm.SupplierName = entity.Supplier.Name;
