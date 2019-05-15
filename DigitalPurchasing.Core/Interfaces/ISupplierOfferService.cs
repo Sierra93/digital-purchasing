@@ -50,12 +50,16 @@ namespace DigitalPurchasing.Core.Interfaces
         {
             public decimal QtyMod { get; set; } = 1;
             public decimal QtyInPsc => Qty * QtyMod;
+
+            public Guid ItemId { get; set; }
         }
 
         public class OfferData : BaseData
         {
             public decimal Price { get; set; }
             public decimal TotalPrice => Qty * Price;
+
+            public Guid ItemId { get; set; }
         }
 
         public class MassData
@@ -139,9 +143,11 @@ namespace DigitalPurchasing.Core.Interfaces
 
             public decimal CurrencyExchangeRate { get; set; } = 1;
 
+            // converted qty
             public decimal OfferQty => _item.Offer.Qty * UomRatio;
 
-            public decimal OfferPrice => _item.ImportAndDelivery.FinalCostCostPer1 * CurrencyExchangeRate / UomRatio;
+            // converted price
+            public decimal OfferPrice => _item.ImportAndDelivery.FinalCostCostPer1 * CurrencyExchangeRate / (UomRatio != 0 ? UomRatio : 1);
 
             public decimal OfferTotalPrice => OfferQty * OfferPrice;
         }

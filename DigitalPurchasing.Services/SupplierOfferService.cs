@@ -141,9 +141,11 @@ namespace DigitalPurchasing.Services
             if (vm != null)
             {
                 vm.ExcelTable =  vm.UploadedDocument?.Data != null ? JsonConvert.DeserializeObject<ExcelTable>(vm.UploadedDocument?.Data) : null;
-                vm.CompanyName = _db.PurchaseRequests
+                var pr = _db.PurchaseRequests
                     .IgnoreQueryFilters()
-                    .First(q => q.Id == entity.CompetitionList.QuotationRequest.PurchaseRequestId).CompanyName;
+                    .First(q => q.Id == entity.CompetitionList.QuotationRequest.PurchaseRequestId);
+                vm.CompanyName = pr.CompanyName;
+                vm.CompetitionList.PurchaseRequest = pr.Adapt<CompetitionListVm.PurchaseRequestVm>();
                 if (entity.Supplier != null)
                 {
                     vm.SupplierName = entity.Supplier.Name;
@@ -201,6 +203,7 @@ namespace DigitalPurchasing.Services
                 result.Items.Add(item);
 
                 item.Position = requestItem.Position;
+                item.Request.ItemId = requestItem.Id;
                 item.Request.Code = requestItem.RawCode;
                 item.Request.Name = requestItem.RawName;
                 item.Request.Qty = requestItem.RawQty;
@@ -215,6 +218,7 @@ namespace DigitalPurchasing.Services
                     .FirstOrDefault(q => q.NomenclatureId.HasValue && q.NomenclatureId == requestItem.NomenclatureId);
                 if (offerItem == null) continue;
 
+                item.Offer.ItemId = offerItem.Id;
                 item.Offer.Code = offerItem.RawCode;
                 item.Offer.Name = offerItem.RawName;
                 item.Offer.Qty = offerItem.RawQty;
@@ -326,7 +330,7 @@ namespace DigitalPurchasing.Services
 
             if (!supplierOffer.SupplierId.HasValue)
             {
-                supplierOffer.SupplierId = _supplierService.CreateSupplier(supplierOffer.SupplierName);
+                supplierOffer.SupplierId = _supplierService.CreateSupplier(supplierOffer.SupplierName, supplierOffer.OwnerId);
             }
 
             var table = JsonConvert.DeserializeObject<ExcelTable>(supplierOffer.UploadedDocument.Data);

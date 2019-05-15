@@ -17,17 +17,20 @@ namespace DigitalPurchasing.Services
         private readonly ApplicationDbContext _db;
         private readonly IAnalysisService _analysisService;
         private readonly ICompetitionListService _competitionListService;
+        private readonly ISupplierOfferService _supplierOfferService;
         private readonly ILogger _logger;
 
         public SelectedSupplierService(
             ApplicationDbContext db,
             IAnalysisService analysisService,
             ICompetitionListService competitionListService,
+            ISupplierOfferService supplierOfferService,
             ILogger<SelectedSupplierService> logger)
         {
             _db = db;
             _analysisService = analysisService;
             _competitionListService = competitionListService;
+            _supplierOfferService = supplierOfferService;
             _logger = logger;
         }
 
@@ -64,7 +67,8 @@ namespace DigitalPurchasing.Services
                         UserId = userId,
                         RootId = root.Id,
                         CLCreatedOn = cl.CreatedOn,
-                        CLNumber = cl.PublicId
+                        CLNumber = cl.PublicId,
+                        SelectedVariantNumber = variants.IndexOf(variants.Find(q => q.IsSelected)) + 1
                     });
 
                     await _db.SaveChangesAsync();
@@ -97,24 +101,42 @@ namespace DigitalPurchasing.Services
 
                     await _db.SSCustomerItems.AddRangeAsync(ssCustomerItems);
 
-                    // suppliers
-                    var ssSuppliers = cl.SupplierOffers.Distinct()
-                        .Select(q => new SSSupplier { Name = q.Supplier.Name, InternalId = q.Supplier.Id, SOCreatedOn = q.CreatedOn, SONumber = q.PublicId })
-                        .ToList();
-                    await _db.SSSuppliers.AddRangeAsync(ssSuppliers);
-                    await _db.SaveChangesAsync();
+                    var ssSuppliers = new List<SSSupplier>();
 
                     // supplier items
                     foreach (var supplierOffer in cl.SupplierOffers)
                     {
-                        var ssSupplierItems = supplierOffer.Items.Select(q => new SSSupplierItem
+                        // supplier + so data
+                        var ssSupplier = new SSSupplier
                         {
-                            SupplierId = ssSuppliers.Find(e => e.InternalId == supplierOffer.Supplier.Id).Id,
-                            Name = q.RawName,
-                            Quantity = q.RawQty,
-                            Price = q.RawPrice,
-                            NomenclatureId = q.NomenclatureId,
-                            InternalId = q.Id,
+                            Name = supplierOffer.Supplier.Name,
+                            InternalId = supplierOffer.Supplier.Id,
+                            SOCreatedOn = supplierOffer.CreatedOn,
+                            SONumber = supplierOffer.PublicId,
+                            SOInternalId = supplierOffer.Id
+                        };
+
+                        await _db.SSSuppliers.AddAsync(ssSupplier);
+                        await _db.SaveChangesAsync();
+
+                        ssSuppliers.Add(ssSupplier);
+
+                        var soDetails = _supplierOfferService.GetDetailsById(supplierOffer.Id);
+
+                        var ssSupplierItems = supplierOffer.Items.Select(q =>
+                        {
+                            var detailsItem = soDetails.Items.Find(i => i.Offer.ItemId == q.Id);
+                            return new SSSupplierItem
+                            {
+                                SupplierId = ssSupplier.Id,
+                                Name = q.RawName,
+                                Quantity = q.RawQty,
+                                Price = q.RawPrice,
+                                NomenclatureId = q.NomenclatureId,
+                                InternalId = q.Id,
+                                ConvertedQuantity = detailsItem.Conversion.OfferQty,
+                                ConvertedPrice = detailsItem.Conversion.OfferPrice
+                            };
                         }).ToList();
                         await _db.SSSupplierItems.AddRangeAsync(ssSupplierItems);
                         await _db.SaveChangesAsync();
@@ -130,18 +152,19 @@ namespace DigitalPurchasing.Services
                             ReportId = ssReport.Id,
                             IsSelected = variant.IsSelected,
                             Number = variants.FindIndex(e => e.Id == variantData.Id) + 1,
-                            InternalId = variant.Id
+                            InternalId = variant.Id,
+                            CreatedOn = variant.CreatedOn
                         };
                         var ssVariantEntry = await _db.SSVariants.AddAsync(ssVariant);
                         await _db.SaveChangesAsync();
                         ssVariant = ssVariantEntry.Entity;
 
+                        var datas = new List<SSData>();
+
                         // variant datas
                         foreach (var resultByItem in variantData.ResultsByItem)
                         {
-                            var dbSupplierId = data.SupplierOffers.Find(q => q.Id == resultByItem.SupplierId).SupplierId;
-                            
-                            var ssSupplier = ssSuppliers.Find(q => q.InternalId == dbSupplierId);
+                            var ssSupplier = ssSuppliers.Find(q => q.SOInternalId == resultByItem.SupplierId);
 
                             // variant data
                             var ssData = new SSData
@@ -152,7 +175,20 @@ namespace DigitalPurchasing.Services
                                 Quantity = resultByItem.Quantity,
                             };
 
-                            await _db.SSDatas.AddRangeAsync(ssData);
+                            await _db.SSDatas.AddAsync(ssData);
+                            await _db.SaveChangesAsync();
+
+                            datas.Add(ssData);
+                        }
+
+                        if (variant.IsSelected)
+                        {
+                            var supplierIds = datas.Select(q => q.SupplierId).ToList();
+
+                            var items = await _db.SSSupplierItems.Where(q => supplierIds.Contains(q.SupplierId)).ToListAsync();
+
+                            // todo: calc
+                            ssReport.SelectedVariantTotalPrice = datas.Sum(q => q.Quantity * GetPrice(items, q.SupplierId, q.NomenclatureId));
                             await _db.SaveChangesAsync();
                         }
                     }
@@ -170,6 +206,12 @@ namespace DigitalPurchasing.Services
             }
         }
 
+        private decimal GetPrice(List<SSSupplierItem> items, Guid supplierId, Guid nomenclatureId)
+        {
+            return items.Find(q => q.SupplierId == supplierId && q.NomenclatureId == nomenclatureId).Price;
+        }
+            
+
         public async Task<IEnumerable<SSReportSimple>> GetReports(Guid clId)
         {
             var root = await _db.Roots.FirstAsync(q => q.CompetitionListId == clId);
@@ -178,13 +220,16 @@ namespace DigitalPurchasing.Services
                 .Where(q => q.RootId == root.Id)
                 .OrderByDescending(q => q.CreatedOn)
                 .ToListAsync();
-            
-            var result = reports.Select(q => new SSReportSimple
+
+            var result = reports.Select(r => new SSReportSimple
             {
-                ReportId = q.Id,
-                CreatedOn = q.CreatedOn,
-                UserFirstName = q.User.FirstName,
-                UserLastName = q.User.LastName
+                ReportId = r.Id,
+                CreatedOn = r.CreatedOn,
+                UserFirstName = r.User.FirstName,
+                UserLastName = r.User.LastName,
+                Currency = "RUB",
+                SelectedVariantNumber = r.SelectedVariantNumber,
+                SelectedVariantTotalPrice = r.SelectedVariantTotalPrice
             }).ToList();
 
             return result;
@@ -193,14 +238,10 @@ namespace DigitalPurchasing.Services
         public async Task<SSReportDto> GetReport(Guid reportId)
         {
             var report = await _db.SSReports.Include(q => q.User).FirstAsync(q => q.Id == reportId);
-            var result = report.Adapt<SSReportDto>();
-
+           
             var customer = await _db.SSCustomers.FirstAsync(q => q.ReportId == reportId);
             var customerItems = await _db.SSCustomerItems.Where(q => q.CustomerId == customer.Id).ToListAsync();
-
-            result.Customer = customer.Adapt<SSCustomerDto>();
-            result.CustomerItems = customerItems.Adapt<List<SSCustomerItemDto>>();
-
+            
             var suppliersIds = await _db.SSDatas
                 .Include(q => q.Variant)
                 .Where(q => q.Variant.ReportId == reportId)
@@ -209,16 +250,23 @@ namespace DigitalPurchasing.Services
                 .ToListAsync();
 
             var suppliers = await _db.SSSuppliers.Where(q => suppliersIds.Contains(q.Id)).OrderBy(q => q.SOCreatedOn).ToListAsync();
-
-            result.Suppliers = suppliers.Adapt<List<SSSupplierDto>>();
+            var supplierItems = await _db.SSSupplierItems.Where(q => suppliersIds.Contains(q.SupplierId)).ToListAsync();
             
-            var variants = await _db.SSVariants.Where(q => q.ReportId == reportId).ToListAsync();
-
             var datas = await _db.SSDatas
                 .Include(q => q.Variant)
                 .Include(q => q.Supplier)
                 .Where(q => q.Variant.ReportId == reportId)
                 .ToListAsync();
+
+            var variants = await _db.SSVariants.Where(q => q.ReportId == reportId).ToListAsync();
+
+            var result = report.Adapt<SSReportDto>();
+            result.Customer = customer.Adapt<SSCustomerDto>();
+            result.CustomerItems = customerItems.Adapt<List<SSCustomerItemDto>>();
+            result.Suppliers = suppliers.Adapt<List<SSSupplierDto>>();
+            result.SSSupplierItems = supplierItems.Adapt<List<SSSupplierItemDto>>();
+            result.Datas = datas.Adapt<List<SSDataDto>>();
+            result.Variants = variants.Adapt<List<SSVariantDto>>();
 
             return result;
         }

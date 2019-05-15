@@ -295,7 +295,7 @@ namespace DigitalPurchasing.Services
             return $"RFQ-{qr.CreatedOn:yyMMdd}-{qr.PublicId}-{md5Time}";
         }
 
-        public Guid UidToQuotationRequest(string uid)
+        public Guid? UidToQuotationRequest(string uid)
         {
             if (string.IsNullOrEmpty(uid) || !uid.StartsWith("RFQ-")) return Guid.Empty;
 
@@ -313,7 +313,7 @@ namespace DigitalPurchasing.Services
             {
                 var qr = qrs.FirstOrDefault(q =>
                     q.CreatedOn.ToString("hh:mm:ss").ToMD5().Substring(0, 4).ToUpperInvariant() == strTime);
-                return qr?.Id ?? Guid.Empty;
+                return qr?.Id;
             }
         }
     }

@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Drawing.Printing;
 using System.Linq;
 using DigitalPurchasing.Core.Interfaces;
 using OfficeOpenXml;
@@ -10,25 +8,9 @@ namespace DigitalPurchasing.ExcelReader
 {
     public class ExcelSSR
     {
-        public class Data
-        {
-            public int Number { get; set; }
-            public string Code { get; set; }
-            public string Name { get; set; }
-            public string BatchUomName { get; set; }
-            public decimal CustomerQuantity { get; set; }
-        }
-
-        private readonly List<Data> _datas;
-
         private readonly SSReportDto _report;
 
-        public ExcelSSR(
-            SSReportDto report)
-        {
-            _report = report;
-            _datas = new List<Data>();
-        }
+        public ExcelSSR(SSReportDto report) => _report = report;
 
         public byte[] Build()
         {
@@ -55,28 +37,53 @@ namespace DigitalPurchasing.ExcelReader
 
                 ws.Cells[4, 2].Value = $"Клиент: {_report.Customer.Name}";
                 ws.Cells[4, 4].Value = $"Заявка № {_report.Customer.PRNumber} от {_report.Customer.PRCreatedOn:dd.MM.yyyy HH:mm}";
-                ws.Cells[4, 8].HeaderText("Кол-во КП в ЕИ запроса").AlignLeft();//.NoWrapText();
 
+                var colQuantityStart = 8;
+                ws.Cells[4, colQuantityStart].HeaderText("Кол-во КП в ЕИ запроса").AlignLeft();//.NoWrapText();
+                ws.Cells[4, colQuantityStart, 4, colQuantityStart + suppliersCount].Merge = true;
                 foreach (var supplier in _report.Suppliers.OrderBy(q => q.SOCreatedOn))
                 {
                     var pos = _report.Suppliers.IndexOf(supplier);
-                    ws.Cells[5, 8 + pos].HeaderText(supplier.Name);
+                    var col = colQuantityStart + pos;
+                    ws.Cells[5, colQuantityStart + pos].HeaderText(supplier.Name);
+                    foreach (var item in _report.SSSupplierItems.Where(q => q.SupplierId == supplier.Id))
+                    {
+                        var nomPos = GetPositionByNomenclature(item.NomenclatureId);
+                        ws.Cells[6 + nomPos, col].TableText(item.ConvertedQuantity);
+                    }
                 }
-                
-                ws.Cells[4, 8 + suppliersCount + 1].HeaderText("Цены в валюте запроса за ЕИ запроса").AlignLeft();//.NoWrapText();
 
+                var colPriceStart = colQuantityStart + suppliersCount + 1;
+                ws.Cells[4, colPriceStart].HeaderText("Цены в валюте запроса за ЕИ запроса").AlignLeft();//.NoWrapText();
+                ws.Cells[4, colPriceStart, 4, colPriceStart + suppliersCount].Merge = true;
                 foreach (var supplier in _report.Suppliers.OrderBy(q => q.SOCreatedOn))
                 {
                     var pos = _report.Suppliers.IndexOf(supplier);
-                    ws.Cells[5, 8 + suppliersCount + 1 + pos].HeaderText(supplier.Name);
+                    var col = colPriceStart + pos;
+                    ws.Cells[5, col].HeaderText(supplier.Name);
+                    foreach (var item in _report.SSSupplierItems.Where(q => q.SupplierId == supplier.Id))
+                    {
+                        var nomPos = GetPositionByNomenclature(item.NomenclatureId);
+                        ws.Cells[6 + nomPos, col].TableText(item.ConvertedPrice);
+                    }
                 }
 
-                ws.Cells[4, 8 + suppliersCount + 1 + suppliersCount + 1].HeaderText("Стоимость в валюте запроса").AlignLeft();//.NoWrapText();
-
+                var colTotalPriceStart = colPriceStart + suppliersCount + 1;
+                ws.Cells[4, colTotalPriceStart].HeaderText("Стоимость в валюте запроса").AlignLeft();//.NoWrapText();
+                ws.Cells[4, colTotalPriceStart, 4, colTotalPriceStart + suppliersCount].Merge = true;
                 foreach (var supplier in _report.Suppliers.OrderBy(q => q.SOCreatedOn))
                 {
                     var pos = _report.Suppliers.IndexOf(supplier);
-                    ws.Cells[5, 8 + suppliersCount + 1 + suppliersCount + 1 + pos].HeaderText(supplier.Name);
+                    var col = colTotalPriceStart + pos;
+                    ws.Column(col).AutoFit();
+                    ws.Cells[5, colTotalPriceStart + pos].HeaderText(supplier.Name);
+                    var supplierItems = _report.SSSupplierItems.Where(q => q.SupplierId == supplier.Id).ToList();
+                    foreach (var item in supplierItems)
+                    {
+                        var nomPos = GetPositionByNomenclature(item.NomenclatureId);
+                        ws.Cells[6 + nomPos, col].TableText(item.ConvertedPrice * item.ConvertedQuantity);
+                    }
+                    ws.Cells[6 + supplierItems.Count, col].TableText(supplierItems.Sum(item => item.ConvertedPrice * item.ConvertedQuantity)).BoldFont();
                 }
 
                 ws.Row(5).Height = 48;
@@ -94,7 +101,7 @@ namespace DigitalPurchasing.ExcelReader
                     ws.Cells[i, 3].TableText(data.Code);
                     ws.Cells[i, 4].TableText(data.Name).AlignLeft();
                     ws.Cells[i, 5].TableText(data.Uom); 
-                    ws.Cells[i, 6].TableText(data.Quantity, "N1");
+                    ws.Cells[i, 6].TableText(data.Quantity);
                     i++;
                 }
 
@@ -103,7 +110,7 @@ namespace DigitalPurchasing.ExcelReader
                 var dataRow = headerRow + 1;
 
                 ws.Row(i).Height = 48;
-                ws.Cells[i, 4].Value = "ИТОГО";
+                ws.Cells[i, 4].HeaderText("ИТОГО");
 
                 ws.Cells[titleRow, 4].Value = "Решение о выборе поставщиков";
 
@@ -115,15 +122,30 @@ namespace DigitalPurchasing.ExcelReader
                 ws.Cells[headerRow, 8].HeaderText("Выбор подтвердил");
 
                 ws.Row(dataRow).Height = 48;
+
+                var orderedVariants = _report.Variants.OrderBy(q => q.CreatedOn).ToList();
+                var selectedVariant = orderedVariants.Find(q => q.IsSelected);
+                var selectedVariantIndex = orderedVariants.IndexOf(selectedVariant);
+                var selectedVariantData = _report.Datas.Where(q => q.VariantId == selectedVariant.Id).ToList();
+
                 ws.Cells[dataRow, 3].TableText(_report.CreatedOn.ToString("dd.MM.yyyy HH:mm"));
-                ws.Cells[dataRow, 4].TableText(0);
-                ws.Cells[dataRow, 5].TableText(0m, "N2");
-                ws.Cells[dataRow, 6].TableText("RUB");
+                ws.Cells[dataRow, 4].TableText((selectedVariantIndex + 1).ToString());
+                ws.Cells[dataRow, 5].TableText(selectedVariantData.Sum(q => q.Quantity * GetSupplierPrice(q.SupplierId, q.NomenclatureId)));
+                ws.Cells[dataRow, 6].TableText("RUB"); // todo
                 ws.Cells[dataRow, 8].TableText($"{_report.User.LastName} {_report.User.FirstName}");
 
                 return excel.GetAsByteArray();
             }
         }
+
+        private int GetPositionByNomenclature(Guid nomenclatureId)
+        {
+            var customerItems = _report.CustomerItems.OrderBy(q => q.Position).ToList();
+            return customerItems.IndexOf(customerItems.Find(q => q.NomenclatureId == nomenclatureId));
+        }
+
+        private decimal GetSupplierPrice(Guid supplierId, Guid nomenclatureId)
+            => _report.SSSupplierItems.Find(q => q.SupplierId == supplierId && q.NomenclatureId == nomenclatureId).Price;
     }
 
     public static class Extensions
@@ -138,9 +160,29 @@ namespace DigitalPurchasing.ExcelReader
             return cell;
         }
 
-        public static ExcelRange TableText(this ExcelRange cell, int value) => TableText(cell, value.ToString());
+        public static ExcelRange TableText(this ExcelRange cell, int value)
+        {
+            if (value > 0)
+            {
+                cell.Style.Numberformat.Format = "### ### ##0.00";
+            }
+            cell.Value = value;
+            cell.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+            cell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            return cell;
+        }
 
-        public static ExcelRange TableText(this ExcelRange cell, decimal value, string format = "N") => TableText(cell, value.ToString(format));
+        public static ExcelRange TableText(this ExcelRange cell, decimal value)
+        {
+            if (value > 0)
+            {
+                cell.Style.Numberformat.Format = "### ### ##0.00";
+            }
+            cell.Value = value;
+            cell.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+            cell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            return cell;
+        }
 
         public static ExcelRange TableText(this ExcelRange cell, string text)
         {
@@ -165,6 +207,12 @@ namespace DigitalPurchasing.ExcelReader
         public static ExcelRange NoWrapText(this ExcelRange cell)
         {
             cell.Style.WrapText = false;
+            return cell;
+        }
+
+        public static ExcelRange BoldFont(this ExcelRange cell)
+        {
+            cell.Style.Font.Bold = true;
             return cell;
         }
     }

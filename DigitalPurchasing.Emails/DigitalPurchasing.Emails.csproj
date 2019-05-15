@@ -17,6 +17,9 @@
     <None Update="EmailTemplates\EmailConfirmationEmail.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="EmailTemplates\SoNotProcessedEmail.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="EmailTemplates\SOPartiallyProcessedEmail.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

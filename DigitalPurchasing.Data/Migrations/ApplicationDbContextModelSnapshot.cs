@@ -340,6 +340,32 @@ namespace DigitalPurchasing.Data.Migrations
                     b.ToTable("Deliveries");
                 });
 
+            modelBuilder.Entity("DigitalPurchasing.Models.File", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<byte[]>("Bytes")
+                        .IsRequired();
+
+                    b.Property<string>("ContentType")
+                        .IsRequired();
+
+                    b.Property<DateTime>("CreatedOn");
+
+                    b.Property<string>("Discriminator")
+                        .IsRequired();
+
+                    b.Property<string>("FileName")
+                        .IsRequired();
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Files");
+
+                    b.HasDiscriminator<string>("Discriminator").HasValue("File");
+                });
+
             modelBuilder.Entity("DigitalPurchasing.Models.Identity.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -818,15 +844,30 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<string>("Body");
+
                     b.Property<DateTime>("CreatedOn");
 
+                    b.Property<string>("Discriminator")
+                        .IsRequired();
+
+                    b.Property<string>("FromEmail");
+
                     b.Property<bool>("IsProcessed");
+
+                    b.Property<DateTimeOffset>("MessageDate");
+
+                    b.Property<int>("ProcessingTries");
+
+                    b.Property<string>("Subject");
 
                     b.Property<long>("UniqueId");
 
                     b.HasKey("Id");
 
                     b.ToTable("ReceivedEmails");
+
+                    b.HasDiscriminator<string>("Discriminator").HasValue("ReceivedEmail");
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.Root", b =>
@@ -948,6 +989,11 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<Guid>("RootId");
 
+                    b.Property<int>("SelectedVariantNumber");
+
+                    b.Property<decimal>("SelectedVariantTotalPrice")
+                        .HasColumnType("decimal(38, 17)");
+
                     b.Property<Guid>("UserId");
 
                     b.HasKey("Id");
@@ -972,6 +1018,8 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<DateTime>("SOCreatedOn");
 
+                    b.Property<Guid>("SOInternalId");
+
                     b.Property<int>("SONumber");
 
                     b.HasKey("Id");
@@ -983,6 +1031,12 @@ namespace DigitalPurchasing.Data.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
+
+                    b.Property<decimal>("ConvertedPrice")
+                        .HasColumnType("decimal(38, 17)");
+
+                    b.Property<decimal>("ConvertedQuantity")
+                        .HasColumnType("decimal(18, 4)");
 
                     b.Property<Guid>("InternalId");
 
@@ -1009,6 +1063,8 @@ namespace DigitalPurchasing.Data.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
+
+                    b.Property<DateTime>("CreatedOn");
 
                     b.Property<Guid>("InternalId");
 
@@ -1351,6 +1407,28 @@ namespace DigitalPurchasing.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("UploadedDocumentHeaders");
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.EmailAttachment", b =>
+                {
+                    b.HasBaseType("DigitalPurchasing.Models.File");
+
+                    b.Property<Guid>("ReceivedEmailId");
+
+                    b.HasIndex("ReceivedEmailId");
+
+                    b.HasDiscriminator().HasValue("EmailAttachment");
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.ReceivedSoEmail", b =>
+                {
+                    b.HasBaseType("DigitalPurchasing.Models.ReceivedEmail");
+
+                    b.Property<Guid>("QuotationRequestId");
+
+                    b.HasIndex("QuotationRequestId");
+
+                    b.HasDiscriminator().HasValue("ReceivedSoEmail");
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.AnalysisVariant", b =>
@@ -1893,6 +1971,22 @@ namespace DigitalPurchasing.Data.Migrations
                     b.HasOne("DigitalPurchasing.Models.UploadedDocumentHeaders", "Headers")
                         .WithMany()
                         .HasForeignKey("UploadedDocumentHeadersId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.EmailAttachment", b =>
+                {
+                    b.HasOne("DigitalPurchasing.Models.ReceivedEmail", "ReceivedEmail")
+                        .WithMany("Attachments")
+                        .HasForeignKey("ReceivedEmailId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.ReceivedSoEmail", b =>
+                {
+                    b.HasOne("DigitalPurchasing.Models.QuotationRequest", "QuotationRequest")
+                        .WithMany()
+                        .HasForeignKey("QuotationRequestId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618

@@ -1,0 +1,14 @@
+@using RazorLight
+@inherits TemplatePage<DigitalPurchasing.Emails.EmailTemplates.SoNotProcessedEmail>
+
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+</head>
+<body>
+    <p>По запросу предложения №@(Model.QrPublicId) получено КП, но мы не смогли его обработать.<p />
+    <p>Вы можете посмотреть КП по ссылке: <a href="@(Model.ViewSoEmailUrl)">@(Model.ViewSoEmailUrl)</a></p>
+</body>
+</html>

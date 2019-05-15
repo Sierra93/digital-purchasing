@@ -4,9 +4,25 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+<partial name="_AlertSuccess" model="@TempData["SuccessMessage"]" />
+
 <h2>Статистика</h2>
 
 <ul>
     <li>Кол-во организаций: @Model.CompaniesCount</li>
     <li>Кол-во пользователей: @Model.UsersCount (подтвердили e-mail @Model.ConfirmedUsersCount)</li>
 </ul>
+
+<h3 class="with-button">Условия использования сайта</h3>
+<div class="btn-group">
+    @if (Model.TermsUploaded)
+    {
+        <a asp-action="DownloadTerms" class="btn btn-default">Скачать</a>
+    }
+    <form method="post" enctype="multipart/form-data" asp-action="UploadTerms" class="btn btn-default btn-file">
+        <label>
+            Загрузить
+            <input type="file" style="display: none;" name="file">
+        </label>
+    </form>
+</div>

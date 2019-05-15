@@ -370,6 +370,12 @@ namespace DigitalPurchasing.Services
                 }
             }
 
+            mainResults = mainResults
+                .OrderByDescending(_ => _.Name != null && _.Name.StartsWith(q, StringComparison.InvariantCultureIgnoreCase))
+                .ThenByDescending(_ => _.NameEng != null && _.NameEng.StartsWith(q, StringComparison.InvariantCultureIgnoreCase))
+                .ThenByDescending(_ => _.Code != null && _.Code.StartsWith(q, StringComparison.InvariantCultureIgnoreCase))
+                .ToList();
+
             result.Items.AddRange(mainResults.Adapt<List<NomenclatureAutocompleteResult.AutocompleteResultItem>>());
 
             return result;

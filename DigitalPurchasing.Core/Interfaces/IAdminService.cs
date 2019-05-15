@@ -16,6 +16,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public int CompaniesCount { get; set; }
         public int UsersCount { get; set; }
         public int ConfirmedUsersCount { get; set; }
+        public bool TermsUploaded { get; set; }
     }
 
     public class AdminCompanyDto

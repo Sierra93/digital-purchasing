@@ -19,5 +19,11 @@ namespace DigitalPurchasing.Models.SSR
         public Guid InternalId { get; set; }
 
         public Guid NomenclatureId { get; set; }
+
+        [Column(TypeName = "decimal(18, 4)")]
+        public decimal ConvertedQuantity { get; set; }
+
+        [Column(TypeName = "decimal(38, 17)")]
+        public decimal ConvertedPrice { get; set; }
     }
 }

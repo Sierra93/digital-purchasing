@@ -66,6 +66,10 @@ namespace DigitalPurchasing.Data
         public DbSet<UploadedDocumentHeaders> UploadedDocumentHeaders { get; set; }
 
         public DbSet<ReceivedEmail> ReceivedEmails { get; set; }
+        public DbSet<ReceivedSoEmail> ReceivedSoEmails { get; set; }
+        public DbSet<File> Files { get; set; }
+        public DbSet<EmailAttachment> EmailAttachments { get; set; }
+        public DbSet<TermsFile> TermsFiles { get; set; }
 
         #region Selected supplier report
 
@@ -222,6 +226,14 @@ namespace DigitalPurchasing.Data
             builder.Entity<SSSupplierItem>().HasOne(q => q.Supplier).WithMany().HasForeignKey(q => q.SupplierId);
 
             #endregion
+
+            builder.Entity<EmailAttachment>(e =>
+            {
+                e.Property(q => q.FileName).IsRequired();
+                e.Property(q => q.Bytes).IsRequired();
+                e.Property(q => q.ContentType).IsRequired();
+                e.HasOne(q => q.ReceivedEmail).WithMany(q => q.Attachments).HasForeignKey(q => q.ReceivedEmailId).OnDelete(DeleteBehavior.Cascade);
+            });
 
             builder.Entity<CustomerCounter>().HasIndex(q => q.OwnerId).IsUnique();
             builder.Entity<SupplierCounter>().HasIndex(q => q.OwnerId).IsUnique();

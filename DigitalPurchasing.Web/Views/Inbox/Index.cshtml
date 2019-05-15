@@ -1,0 +1,160 @@
+@using DigitalPurchasing.Web.Controllers
+
+@{
+    ViewData["Title"] = "Почтовый ящик";
+}
+
+<h2>@ViewBag.Title</h2>
+
+<div id="app">
+    <div>
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" v-model="unhandledSupplierOffersOnly" v-on:change="reloadData"> Показывать только необработанные КП
+            </label>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <vuetable ref="vuetable"
+                      api-url="@Url.Action(nameof(InboxController.Data))"
+                      :per-page="20"
+                      :fields="fields"
+                      :sort-order="sortOrder"
+                      :query-params="getQueryParams"
+                      pagination-path=""
+                      detail-row-component="row-details"
+                      no-data-template="Нет данных"
+                      :css="css"
+                      :transform="transform"
+                      @@vuetable:pagination-data="onPaginationData"
+                      @@vuetable:cell-clicked="onCellClicked">
+            </vuetable>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <vuetable-pagination-info ref="paginationInfo"
+                                      info-template="Показано с {from} по {to} из {total}"
+                                      no-data-template="Нет данных"
+                                      info-class="pull-left"
+                                      :css="css.pagination">
+            </vuetable-pagination-info>
+            <vuetable-pagination ref="pagination"
+                                 :css="css.pagination"
+                                 @@vuetable-pagination:change-page="onChangePage">
+            </vuetable-pagination>
+        </div>
+    </div>
+</div>
+
+<template id="row-details">
+    <div>
+        <div v-if="rowData.attachments.length > 0">
+            <ul class="list-unstyled list-inline">
+                <li><i class="glyphicon glyphicon-paperclip"></i></li>
+                <li v-for="att in rowData.attachments">
+                    <a :href="'@Url.Action(nameof(InboxController.DownloadAttachment))?attachmentId=' + att.id">{{att.fileName}}</a>                    
+                </li>
+            </ul>
+        </div>
+        <iframe :srcdoc="rowData.body" style="width: 100%; height: 500px"></iframe>
+    </div>
+</template>
+
+@section Styles {
+    <style type="text/css">
+        .w-140px {
+            width: 140px;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            Vue.use(Vuetable);
+
+            Vue.component('row-details', {
+                props: {
+                    rowData: {
+                        type: Object,
+                        required: true
+                    },
+                    rowIndex: {
+                        type: Number
+                    }
+                },
+                template: '#row-details',
+                data: function() {
+                    return {
+                        
+                    };
+                }
+            });
+
+            window.app = new Vue({
+                el: '#app',
+                data: function () {
+                    return {
+                        css: cssTable,
+                        fields: [
+                            {
+                                title: 'Дата',
+                                name: 'messageDate',
+                                sortField: 'messageDate',
+                                titleClass: 'w-140px'
+                            },
+                            {
+                                title: 'Поставщик',
+                                name: 'supplierName',
+                                titleClass: 'w-140px'
+                            },
+                            {
+                                title: 'Тема',
+                                name: 'subject',
+                                sortField: 'subject'
+                            }
+                        ],
+                        sortOrder: [
+                            {
+                                field: 'messageDate',
+                                direction: 'desc'
+                            }
+                        ],
+                        unhandledSupplierOffersOnly: true
+                    };
+                },
+                methods: {
+                    onPaginationData: function (paginationData) {
+                        this.$refs.pagination.setPaginationData(paginationData);
+                        this.$refs.paginationInfo.setPaginationData(paginationData);
+                    },
+                    onChangePage: function (page) {
+                        this.$refs.vuetable.changePage(page);
+                    },
+                    getQueryParams(sortOrder, currentPage, perPage) {
+                        return {
+                            'sort': sortOrder[0].field + '|' + sortOrder[0].direction,
+                            'page': currentPage,
+                            'per_page': perPage,
+                            'unhandledSupplierOffersOnly': this.unhandledSupplierOffersOnly
+                        };
+                    },
+                    onCellClicked: function (dataItem, field, event) {
+                        this.$refs.vuetable.toggleDetailRow(dataItem.data.id);
+                    },
+                    transform: function (data) {
+                        for (var i = 0; i < data.data.length; i++) {
+                            data.data[i].messageDate = moment.utc(data.data[i].messageDate).local().format('DD.MM.YYYY H:mm');
+                        }
+                        return data
+                    },
+                    reloadData: function () {
+                        this.$refs.vuetable.reload();
+                    }
+                }
+            });
+        })();
+    </script>
+}
