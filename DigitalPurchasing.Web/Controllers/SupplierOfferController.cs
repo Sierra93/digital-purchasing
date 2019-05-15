@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Extensions;
@@ -37,19 +38,22 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly IUomService _uomService;
         private readonly IRootService _rootService;
         private readonly INomenclatureAlternativeService _nomenclatureAlternativeService;
+        private readonly IPurchaseRequestService _purchaseRequestService;
 
         public SupplierOfferController(
             ISupplierOfferService supplierOfferService,
             INomenclatureService nomenclatureService,
             IUomService uomService,
             IRootService rootService,
-            INomenclatureAlternativeService nomenclatureAlternativeService)
+            INomenclatureAlternativeService nomenclatureAlternativeService,
+            IPurchaseRequestService purchaseRequestService)
         {
             _supplierOfferService = supplierOfferService;
             _nomenclatureService = nomenclatureService;
             _uomService = uomService;
             _rootService = rootService;
             _nomenclatureAlternativeService = nomenclatureAlternativeService;
+            _purchaseRequestService = purchaseRequestService;
         }
 
         public IActionResult Edit(Guid id)
@@ -67,6 +71,21 @@ namespace DigitalPurchasing.Web.Controllers
             }
 
             return NotFound();
+        }
+
+        public IActionResult NomenclatureMappingAutocomplete(Guid supplierOfferId, string q)
+        {
+            var so = _supplierOfferService.GetById(supplierOfferId);
+            var pr = _purchaseRequestService.MatchItemsData(so.CompetitionList.PurchaseRequest.Id);
+            var autocompleteResult = _nomenclatureService.Autocomplete(new AutocompleteOptions { Query = q, OwnerId = User.CompanyId() });
+            var noms2InPr = from item in autocompleteResult.Items
+                            select new
+                            {
+                                item,
+                                inPr = pr.Items.Any(_ => _.NomenclatureId == item.Id)
+                            };
+            autocompleteResult.Items = noms2InPr.OrderByDescending(_ => _.inPr).Select(_ => _.item).ToList();
+            return Json(autocompleteResult);
         }
 
         [HttpPost]

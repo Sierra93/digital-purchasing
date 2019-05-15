@@ -1,4 +1,5 @@
 @using Newtonsoft.Json
+@using DigitalPurchasing.Web.Controllers
 @model DigitalPurchasing.Core.Interfaces.SupplierOfferVm
 
 @{
@@ -86,7 +87,7 @@
                 <td>
                     <div class="form-group" v-bind:class="nomenclatureClass">
                         <input id="nomenclature" type="text" class="form-control" v-model="nomenclatureAutocomplete"/>
-                        <typeahead v-model="selectedNomenclature" target="#nomenclature" force-select async-src="@Url.Action("Autocomplete", "Nomenclature")?q=" async-key="items" item-key="name"></typeahead>
+                        <typeahead v-model="selectedNomenclature" target="#nomenclature" force-select async-src="@Url.Action(nameof(SupplierOfferController.NomenclatureMappingAutocomplete), "SupplierOffer")?supplierOfferId=@Model.Id&q=" async-key="items" item-key="name"></typeahead>
                     </div>
                 </td>
             </tr>
