@@ -47,6 +47,8 @@ namespace DigitalPurchasing.Web.Controllers
                 _fileService.ReplaceTermsFile(file.FileName, ms.ToArray(), file.ContentType);
             }
 
+            TempData["SuccessMessage"] = "\"Условия использования\" загружены";
+
             return RedirectToAction(nameof(Index));
         }
 
