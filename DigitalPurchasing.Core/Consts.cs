@@ -13,8 +13,9 @@ namespace DigitalPurchasing.Core
         public static class Format
         {
             public static string Qty = "0.####";
-            public static string Money = "0,0.00";
-            public static string Money2 = "0,0";
+            public static string Money3 = "N3";
+            public static string Money2 = "N2";
+            public static string Money1 = "N1";
         }
 
         public static class CacheKeys

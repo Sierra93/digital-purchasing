@@ -39,32 +39,39 @@ namespace DigitalPurchasing.Services
             var cl = _competitionListService.GetById(clId);
 
             var data = GetAnalysisData(cl);
-            var core = CreateAnalysisCore(cl);
+            var persons = CreateAnalysisPersons(cl);
             var variants = GetVariants(clId);
+
+            var coreVariants = variants.Select(ToCoreVariant).ToArray();
+
+            var results = new AnalysisCore(persons.Customer, persons.Suppliers).Run(coreVariants);
 
             foreach (var variant in variants)
             {
-                AddVariantToData(data, variant, core.Run(ToCoreVariant(variant)));
+                AddVariantToData(data, variant, results.Find(q => q.VariantId == variant.Id));
             }
 
             data.SelectedVariant = variants.FirstOrDefault(q => q.IsSelected)?.Id;
+            data.CustomerRequest = new AnalysisDataVm.CustomerRequestData
+            {
+                Id = cl.PurchaseRequest.Id,
+                Name = cl.PurchaseRequest.Customer.Name,
+                CustomerId = cl.PurchaseRequest.Customer.Id
+            };
 
             return data;
         }
 
-        public AnalysisDataVm GetDefaultData()
+        public List<AnalysisDataVm.Variant> GetDefaultVariants()
         {
             var ids = GetDefaultVariantsIds();
             var variants = _db.AnalysisVariants.Where(q => ids.Contains(q.Id)).ToList();
 
-            var data = new AnalysisDataVm();
-            data.Variants.AddRange(variants.Select(q => new AnalysisDataVm.Variant
+            return variants.Select(q => new AnalysisDataVm.Variant
             {
-                Id  = q.Id,
+                Id = q.Id,
                 CreatedOn = q.CreatedOn
-            }));
-
-            return data;
+            }).ToList();
         }
 
         private void AddVariantToData(AnalysisDataVm data, AnalysisVariant variant, AnalysisResult result)
@@ -75,23 +82,30 @@ namespace DigitalPurchasing.Services
             {
                 Id = coreVariant.Id,
                 CreatedOn = coreVariant.CreatedOn,
-                Results = totalBySupplier.Select(q => new AnalysisDataVm.Result
+                Results = totalBySupplier.Select(q => new AnalysisDataVm.ResultBySupplier
                 {
                     SupplierId = q.Key,
                     Total = q.Value,
-                    Order = data.Suppliers.Find(w => w.Id == q.Key).Order
+                    Order = data.SupplierOffers.Find(w => w.Id == q.Key).Order
+                }).ToList(),
+                ResultsByItem = result.Data.Select(q => new AnalysisDataVm.ResultByItem
+                {
+                    SupplierId = q.SupplierId,
+                    ItemId = q.Item.Id,
+                    Quantity = q.Item.Quantity,
+                    Price = q.Item.Price
                 }).ToList()
             };
 
-            foreach (var supplier in data.Suppliers)
+            foreach (var supplier in data.SupplierOffers)
             {
                 if (dataVariant.Results.All(q => q.SupplierId != supplier.Id))
                 {
-                    dataVariant.Results.Add(new AnalysisDataVm.Result
+                    dataVariant.Results.Add(new AnalysisDataVm.ResultBySupplier
                     {
                         SupplierId = supplier.Id,
                         Total = 0,
-                        Order = data.Suppliers.Find(w => w.Id == supplier.Id).Order
+                        Order = data.SupplierOffers.Find(w => w.Id == supplier.Id).Order
                     });
                 }
             }
@@ -115,7 +129,7 @@ namespace DigitalPurchasing.Services
             foreach (var q in cl.SupplierOffers)
             {
                 var so = _db.SupplierOffers.Find(q.Id);
-                data.Suppliers.Add(new AnalysisDataVm.Supplier
+                data.SupplierOffers.Add(new AnalysisDataVm.SupplierOfferData
                 {
                     Id  = q.Id,
                     Name = q.SupplierName,
@@ -123,44 +137,45 @@ namespace DigitalPurchasing.Services
                     DeliveryTerms = q.DeliveryTerms,
                     PayWithinDays = so.PayWithinDays,
                     PaymentTerms = q.PaymentTerms,
-                    DeliveryDate = so.DeliveryDate == DateTime.MinValue ? (DateTime?)null : so.DeliveryDate
+                    DeliveryDate = so.DeliveryDate == DateTime.MinValue ? (DateTime?)null : so.DeliveryDate,
+                    SupplierId = q.Supplier.Id
                 });
             }
 
             return data;
         }
 
-        private AnalysisCore CreateAnalysisCore(CompetitionListVm cl)
+        private (AnalysisCustomer Customer, List<AnalysisSupplier> Suppliers) CreateAnalysisPersons(CompetitionListVm cl)
         {
-            var core = new AnalysisCore
+            var customer = new AnalysisCustomer
             {
-                Customer = new AnalysisCustomer
+                Id = cl.PurchaseRequest.Id,
+                Items = cl.PurchaseRequest.Items.Select(q => new CustomerItem
                 {
-                    Id = cl.PurchaseRequest.Id,
-                    Items = cl.PurchaseRequest.Items.Select(q => new CustomerItem
-                    {
-                        Id = q.NomenclatureId,
-                        Quantity = q.RawQty
-                    }).ToList()
-                },
-                Suppliers = cl.SupplierOffers.Select(q =>
-                {
-                    return new AnalysisSupplier
-                    {
-                        Id = q.Id,
-                        DeliveryTerms = q.DeliveryTerms,
-                        PaymentTerms = q.PaymentTerms,
-                        Items = q.Items.Where(w => w != null).Select(w => new SupplierItem
-                        {
-                            Id = w.NomenclatureId,
-                            Price = w.RawPrice,
-                            Quantity = w.RawQty
-                        }).ToList()
-                    };
-                }).ToList()
+                    Id = q.NomenclatureId,
+                    Quantity = q.RawQty
+                }).ToList(),
+                CustomerId = cl.PurchaseRequest.Customer.Id
             };
 
-            return core;
+            var suppliers = cl.SupplierOffers.Select(q =>
+            {
+                return new AnalysisSupplier
+                {
+                    Id = q.Id,
+                    DeliveryTerms = q.DeliveryTerms,
+                    PaymentTerms = q.PaymentTerms,
+                    Items = q.Items.Where(w => w != null).Select(w => new SupplierItem
+                    {
+                        Id = w.NomenclatureId,
+                        Price = w.RawPrice,
+                        Quantity = w.RawQty
+                    }).ToList(),
+                    SupplierId = q.Supplier.Id
+                };
+            }).ToList();
+
+            return ( Customer: customer, Suppliers: suppliers );
         }
 
         private List<AnalysisVariant> GetVariants(Guid clId)
@@ -222,7 +237,7 @@ namespace DigitalPurchasing.Services
             return result;
         }
 
-        public AnalysisDataVm AddDefaultVariant()
+        public AnalysisDataVm.Variant AddDefaultVariant()
         {
             var av = new AnalysisVariant
             {
@@ -232,11 +247,7 @@ namespace DigitalPurchasing.Services
             var entry = _db.AnalysisVariants.Add(av);
             _db.SaveChanges();
             av = entry.Entity;
-
-
-            var data = new AnalysisDataVm();
-            data.Variants.Add(new AnalysisDataVm.Variant { Id  = av.Id, CreatedOn = av.CreatedOn });
-            return data;
+            return new AnalysisDataVm.Variant {Id = av.Id, CreatedOn = av.CreatedOn};
         }
 
         public AnalysisDataVm AddVariant(Guid clId)
@@ -244,7 +255,7 @@ namespace DigitalPurchasing.Services
             var cl = _competitionListService.GetById(clId);
 
             var data = GetAnalysisData(cl);
-            var core = CreateAnalysisCore(cl);
+            var persons = CreateAnalysisPersons(cl);
 
             var av = new AnalysisVariant
             {
@@ -256,7 +267,7 @@ namespace DigitalPurchasing.Services
 
             var variant = entry.Entity;
 
-            AddVariantToData(data, variant, core.Run(ToCoreVariant(variant)));
+            AddVariantToData(data, variant, new AnalysisCore(persons.Customer, persons.Suppliers).Run(ToCoreVariant(variant)));
 
             return data;
         }
@@ -277,20 +288,21 @@ namespace DigitalPurchasing.Services
         public AnalysisDetails GetDetails(Guid clId)
         {
             var cl = _competitionListService.GetById(clId);
-            var core = CreateAnalysisCore(cl);
+            var persons = CreateAnalysisPersons(cl);
             var variants = GetVariants(clId);
+            
+            var coreOptions = variants.Select(ToCoreVariant).ToArray();
+            var analysisResults = new AnalysisCore(persons.Customer, persons.Suppliers).Run(coreOptions);
+            var variantResults = new Dictionary<AnalysisResult, AnalysisCoreVariant>(analysisResults.Count);
 
-            var variantResults = new Dictionary<AnalysisResult, AnalysisCoreVariant>();
-            foreach (var variant in variants)
+            foreach (var analysisResult in analysisResults)
             {
-                var coreVariant = ToCoreVariant(variant);
-                var variantResult = core.Run(coreVariant);
-                variantResults.Add(variantResult, coreVariant);
+                variantResults.Add(analysisResult, coreOptions.First(q => q.Id == analysisResult.VariantId));
             }
 
             var result = new AnalysisDetails();
 
-            foreach (var customerItem in core.Customer.Items)
+            foreach (var customerItem in persons.Customer.Items)
             {
                 var nomenclature = _nomenclatureService.GetById(customerItem.Id);
                 var item = new AnalysisDetails.Item
@@ -307,7 +319,7 @@ namespace DigitalPurchasing.Services
                 var variantIndex = 0;
                 foreach (var variantResult in variantResults.Where(q => q.Key.IsSuccess).OrderBy(q => q.Value.CreatedOn))
                 {
-                    var supplierIds = variantResult.Key.Data.Select(q => q.Supplier.Id).Distinct().ToList();
+                    var supplierIds = variantResult.Key.Data.Select(q => q.SupplierId).Distinct().ToList();
 
                     var variant = new AnalysisDetails.Variant
                     {
@@ -317,15 +329,15 @@ namespace DigitalPurchasing.Services
 
                     foreach (var variantItemData in variantResult.Key.Data.Where(q => q.Item.Id == item.Id))
                     {
-                        if (variant.Suppliers.Any(q => q.Key.Id == variantItemData.Supplier.Id))
+                        if (variant.Suppliers.Any(q => q.Key.Id == variantItemData.SupplierId))
                         {
                             var supplier = variant.Suppliers
-                                .First(q => q.Key.Id == variantItemData.Supplier.Id);
+                                .First(q => q.Key.Id == variantItemData.SupplierId);
                             supplier.Value.TotalPrice += variantItemData.Item.TotalPrice;
                         }
                         else
                         {
-                            var so = _db.SupplierOffers.Find(variantItemData.Supplier.Id);
+                            var so = _db.SupplierOffers.Find(variantItemData.SupplierId);
                             var supplier = new AnalysisDetails.Supplier
                             {
                                 Id = so.Id,

@@ -5,6 +5,18 @@
 }
 
 <h2 class="with-button">@ViewBag.Title</h2>
+<div class="btn-group">
+    <a asp-action="Create" class="btn btn-default">Создать</a>
+    <a asp-action="Template" class="btn btn-default">Скачать шаблон</a>
+    <form method="post" enctype="multipart/form-data" asp-action="UploadTemplate" class="btn btn-default btn-file">
+        <label>
+            Загрузить заполненный шаблон
+            <input type="file" style="display: none;" name="file">
+        </label>
+    </form>
+</div>
+
+<partial name="_AlertDanger" for="@TempData["ErrorMessage"]" />
 
 <div id="app">
     <div class="row" style="margin-bottom: 10px">
@@ -21,6 +33,7 @@
         <div class="col-xs-12">
             <vuetable ref="vuetable"
                       api-url="@Url.Action("Data")"
+                      :per-page="20"
                       :fields="fields"
                       :sort-order="sortOrder"
                       :query-params="getQueryParams"
@@ -70,6 +83,10 @@
                                 sortField: 'Name'
                             },
                             {
+                                title: 'Основная категория',
+                                name: 'mainCategoriesCsv'
+                            },
+                            {
                                 name: 'slot-actions',
                                 title: 'Действия',
                                 titleClass: 'text-center',
@@ -103,7 +120,7 @@
                     onChangePage: function (page) {
                         this.$refs.vuetable.changePage(page);
                     },
-                    getQueryParams (sortOrder, currentPage, perPage) {
+                    getQueryParams(sortOrder, currentPage, perPage) {
                         return {
                             'sort': sortOrder[0].field + '|' + sortOrder[0].direction,
                             'page': currentPage,
@@ -111,7 +128,7 @@
                             's': this.search
                         };
                     },
-                    resetSearch: function() {
+                    resetSearch: function () {
                         this.search = null;
                     }
                 }

@@ -31,11 +31,17 @@ namespace DigitalPurchasing.ExcelReader
             public string UomMassValue { get; set; }
 
             [ExcelTableColumn(8)]
-            public string ResourceUom { get; set; }
+            public string PackUomValue { get; set; }
+
             [ExcelTableColumn(9)]
-            public string ResourceUomValue { get; set; }
+            public string PackUom { get; set; }
 
             [ExcelTableColumn(10)]
+            public string ResourceUom { get; set; }
+            [ExcelTableColumn(11)]
+            public string ResourceUomValue { get; set; }
+
+            [ExcelTableColumn(12)]
             public string ResourceBatchUom { get; set; }
         }
 
@@ -44,26 +50,26 @@ namespace DigitalPurchasing.ExcelReader
             using (var excel = new ExcelPackage())
             {
                 var ws = excel.Workbook.Worksheets.Add("Template");
-                ws.Cells[1, 1].Value = "Категория";
-                ws.Cells[1, 2].Value = "Код";
-                ws.Cells[1, 3].Value = "Название";
-                ws.Cells[1, 4].Value = "Название Eng";
-                ws.Cells[1, 5].Value = "EИ";
-                ws.Cells[1, 6].Value = "EИ массы";
-                ws.Cells[1, 7].Value = "Масса 1 ЕИ, ЕИ массы";
-                ws.Cells[1, 8].Value = "Название ресурса";
-                ws.Cells[1, 9].Value = "Ресурс, 1 ЕИ ресурса";
-                ws.Cells[1, 10].Value = "ЕИ ресурса";
-                ws.Column(1).AutoFit();
-                ws.Column(2).AutoFit();
-                ws.Column(3).AutoFit();
-                ws.Column(4).AutoFit();
-                ws.Column(5).AutoFit();
-                ws.Column(6).AutoFit();
-                ws.Column(7).AutoFit();
-                ws.Column(8).AutoFit();
-                ws.Column(9).AutoFit();
-                ws.Column(10).AutoFit();
+                var cols = new string[]
+                {
+                    "Категория",
+                    "Код",
+                    "Название",
+                    "Название Eng",
+                    "EИ",
+                    "EИ массы",
+                    "Масса 1 ЕИ, ЕИ массы",
+                    "Количество товара в упаковке, ЕИ товара в упаковке",
+                    "ЕИ товара в упаковке",
+                    "Название ресурса",
+                    "Ресурс, 1 ЕИ ресурса",
+                    "ЕИ ресурса",
+                };
+                for (var i = 0; i < cols.Length; i++)
+                {
+                    ws.Cells[1, i + 1].Value = cols[i];
+                    ws.Column(i + 1).AutoFit();
+                }
                 return excel.GetAsByteArray();
             }
         }
@@ -88,13 +94,17 @@ namespace DigitalPurchasing.ExcelReader
                     UomMass = q.UomMass,
                     ResourceUom = q.ResourceUom,
                     ResourceBatchUom = q.ResourceBatchUom,
-                    UomMassValue = decimal.Parse(q.UomMassValue.Replace(".", ",")),
-                    ResourceUomValue = decimal.Parse(q.ResourceUomValue.Replace(".", ","))
+                    UomMassValue = ToNullableDecimal(q.UomMassValue) ?? 0,
+                    ResourceUomValue = ToNullableDecimal(q.ResourceUomValue) ?? 0,
+                    PackUomValue = ToNullableDecimal(q.PackUomValue),
+                    PackUom = q.PackUom
                 }).ToList(); 
 
                 return result;
             }
         }
+
+        private static decimal? ToNullableDecimal(string s) => decimal.TryParse(s, out var i) ? (decimal?)i : null;
     }
 
     public class TemplateData
@@ -109,5 +119,7 @@ namespace DigitalPurchasing.ExcelReader
         public string ResourceUom { get; set; }
         public decimal ResourceUomValue { get; set; }
         public string ResourceBatchUom { get; set; }
+        public decimal? PackUomValue { get; set; }
+        public string PackUom { get; set; }
     }
 }

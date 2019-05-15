@@ -1,3 +1,4 @@
+@using DigitalPurchasing.Web.Controllers
 @model object
 
 @{
@@ -14,7 +15,16 @@
             <input type="file" style="display: none;" name="file">
         </label>
     </form>
+    <a asp-action="TemplateWithAlternatives" class="btn btn-default">Выгрузить аналоги</a>
+    <form method="post" enctype="multipart/form-data" asp-action="UploadTemplateWithAlternatives" asp-controller="Nomenclature" class="btn btn-default btn-file">
+        <label>
+            Загрузить аналоги
+            <input type="file" style="display: none;" name="file">
+        </label>
+    </form>
 </div>
+
+<partial name="_AlertDanger" for="@TempData["ErrorMessage"]" />
 
 <div id="app">
     <div class="row" style="margin-bottom: 10px">
@@ -30,7 +40,8 @@
     <div class="row">
         <div class="col-xs-12">
             <vuetable ref="vuetable"
-                      api-url="@Url.Action("Data")"
+                      api-url="@Url.Action(nameof(NomenclatureController.Data))"
+                      :per-page="20"
                       :fields="fields"
                       :sort-order="sortOrder"
                       :query-params="getQueryParams"
@@ -39,6 +50,7 @@
                       no-data-template="Нет данных"
                       :css="css"
                       @@vuetable:pagination-data="onPaginationData"
+                      @@vuetable:load-success="onTableLoaded"
                       @@vuetable:cell-clicked="onCellClicked">
                 <div slot="slot-actions" slot-scope="props">
                     <div class="btn-group" role="group" aria-label="...">
@@ -76,6 +88,7 @@
     <div>
         <vuetable ref="vuetableDetails"
                   :api-url="getDetailsUrl"
+                  :query-params="getQueryParams"
                   :fields="fields"
                   :sort-order="sortOrder"
                   pagination-path=""
@@ -171,6 +184,16 @@
                                 sortField: 'MassUomValue'
                             },
                             {
+                                title: 'ЕИ массы',
+                                name: 'massUomName',
+                                sortField: 'MassUom.Name'
+                            },
+                            {
+                                title: 'Масса 1 ЕИ, ЕИ массы',
+                                name: 'massUomValue',
+                                sortField: 'MassUomValue'
+                            },
+                            {
                                 title: 'Название ресурса',
                                 name: 'resourceUomName',
                                 sortField: 'ResourceUom.Name'
@@ -184,6 +207,16 @@
                                 title: 'ЕИ ресурса',
                                 name: 'resourceBatchUomName',
                                 sortField: 'ResourceBatchUom.Name'
+                            },
+                            {
+                                title: 'Количество товара в упаковке, ЕИ товара в упаковке',
+                                name: 'packUomValue',
+                                sortField: 'PackUomValue'
+                            },
+                            {
+                                title: 'ЕИ товара в упаковке',
+                                name: 'packUomName',
+                                sortField: 'PackUom.Name'
                             },
                             {
                                 name: 'slot-actions',
@@ -232,13 +265,21 @@
                     },
                     deleteCancel: function() {
                         this.modalDelete = false;
+                    },
+                    getQueryParams: function (sortOrder, currentPage, perPage) {
+                        var sortBySearch = this.rowData._search;
+                        this.rowData._search = null;
+                        return {
+                            'sort': sortOrder[0].field + '|' + sortOrder[0].direction,
+                            'page': currentPage,
+                            'per_page': perPage,
+                            sortBySearch: sortBySearch
+                        };
                     }
                 },
                 computed: {
                     getDetailsUrl: function () {
-                        console.info('rowData', this.rowData);
-                        var id = this.rowData.id;
-                        return '@Url.Action("DataDetails")/'+id;
+                        return '/nomenclature/detailsdata/' + this.rowData.id;
                     }
                 },
             });
@@ -288,6 +329,16 @@
                                 title: 'Масса 1 ЕИ, ЕИ массы',
                                 name: 'massUomValue',
                                 sortField: 'MassUomValue'
+                            },
+                            {
+                                title: 'Количество товара в упаковке, ЕИ товара в упаковке',
+                                name: 'packUomValue',
+                                sortField: 'PackUomValue'
+                            },
+                            {
+                                title: 'ЕИ товара в упаковке',
+                                name: 'packUomName',
+                                sortField: 'PackUom.Name'
                             },
                             {
                                 title: 'Название ресурса',
@@ -340,6 +391,17 @@
                     },
                     onCellClicked: function (dataItem, field, event) {
                         this.$refs.vuetable.toggleDetailRow(dataItem.data.id);
+                    },
+                    onTableLoaded: function (payload) {
+                        var vm = this;
+                        var noms = payload.data.data;
+                        _.each(noms, function (n) {
+                            n._search = vm.search;
+                            if (n.hasAlternativeWithRequiredName) {
+                                //console.log('has alts', n.id);
+                                vm.$refs.vuetable.showDetailRow(n.id);
+                            }
+                        });
                     },
                     deleteRow: function (rowData, rowIndex) {
                         this.modalData.name = rowData.name;

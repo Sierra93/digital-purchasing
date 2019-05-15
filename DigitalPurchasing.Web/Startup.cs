@@ -1,9 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
-using DigitalPurchasing.Core;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models.Identity;
 using DigitalPurchasing.Services;
@@ -13,31 +8,32 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.ExcelReader;
 using DigitalPurchasing.Web.Jobs;
 using Hangfire;
-using Microsoft.AspNetCore.Localization;
-using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
+using DigitalPurchasing.Web.Core.ModelBinders;
+using Hangfire.MemoryStorage;
+using Microsoft.Extensions.Logging;
 
 namespace DigitalPurchasing.Web
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration, IHostingEnvironment environment)
+        private readonly ILoggerFactory _loggerFactory;
+
+        public Startup(IConfiguration configuration, IHostingEnvironment environment, ILoggerFactory loggerFactory)
         {
             Configuration = configuration;
             Environment = environment;
+            _loggerFactory = loggerFactory;
         }
 
         public IHostingEnvironment Environment { get; }
@@ -70,13 +66,22 @@ namespace DigitalPurchasing.Web
                 options.AccessDeniedPath = $"/Identity/Account/AccessDenied";
             });
 
-            services.AddHangfire(x => x.UseSqlServerStorage(Configuration.GetConnectionString("HangfireConnection")));
+            // Job duplication fix https://github.com/HangfireIO/Hangfire/issues/1197
+            services.AddHangfire(x => {
+                //x.UseSqlServerStorage(Configuration.GetConnectionString("HangfireConnection"))
+                x.UseMemoryStorage();
+            });
+
+            //services.AddHangfire();
             GlobalJobFilters.Filters.Add(new AutomaticRetryAttribute { Attempts = 0 });
             GlobalJobFilters.Filters.Add(new HangfireSentryAttribute());
 
             services.AddMemoryCache();
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2).AddRazorPagesOptions(options =>
+            services.AddMvc(config =>
+            {
+                config.ModelBinderProviders.Insert(0, new InvariantDecimalModelBinderProvider(_loggerFactory));
+            }).SetCompatibilityVersion(CompatibilityVersion.Version_2_2).AddRazorPagesOptions(options =>
             {
                 options.AllowAreas = true;
                 options.Conventions.AuthorizeAreaFolder("Identity", "/Account/Manage");
@@ -134,6 +139,9 @@ namespace DigitalPurchasing.Web
             services.AddScoped<IDashboardService, DashboardService>();
             services.AddScoped<IRootService, RootService>();
             services.AddScoped<ISelectedSupplierService, SelectedSupplierService>();
+            services.AddScoped<IConversionRateService, ConversionRateService>();
+            services.AddScoped<INomenclatureAlternativeService, NomenclatureAlternativeService>();
+            services.AddScoped<IFileService, FileService>();
             services.AddMandrill();
 
             services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
@@ -163,22 +171,6 @@ namespace DigitalPurchasing.Web
             }
 
             dbContext.Database.Migrate();
-
-            const string defaultCulture = "ru-RU";
-
-            var supportedCultures = new[]
-            {
-                new CultureInfo(defaultCulture),
-            };
-
-            app.UseRequestLocalization(new RequestLocalizationOptions
-            {
-                DefaultRequestCulture = new RequestCulture(defaultCulture),
-                // Formatting numbers, dates, etc.
-                SupportedCultures = supportedCultures,
-                // UI strings that we have localized.
-                SupportedUICultures = supportedCultures
-            });
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();

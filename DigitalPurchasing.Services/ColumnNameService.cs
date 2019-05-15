@@ -29,14 +29,14 @@ namespace DigitalPurchasing.Services
             var entity = _db.ColumnNames
                 .IgnoreQueryFilters()
                 .FirstOrDefault(q => q.Type == type && q.OwnerId == ownerId);
-            if (entity == null) return new string[0];
-            var names = entity.Names.Split(Separator);
-            var defaultName = DefaultName(type);
-            if (!names.Contains(defaultName, StringComparer.InvariantCultureIgnoreCase))
-            {
-                names = names.Union(new [] {defaultName}).ToArray();
-            }
 
+            if (entity == null)
+            {
+                var defaultName = DefaultName(type);
+                return new string[1] { defaultName };
+            };
+
+            var names = entity.Names.Split(Separator);
             return names;
         }
 
@@ -48,11 +48,8 @@ namespace DigitalPurchasing.Services
             var entity = _db.ColumnNames.IgnoreQueryFilters().FirstOrDefault(q => q.Type == type && q.OwnerId == ownerId);
             if (entity == null)
             {
-                if (!defaultName.Equals(name, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    _db.ColumnNames.Add(new ColumnName { Type = type, Names = name, OwnerId = ownerId });
-                    _db.SaveChanges();
-                }                
+                _db.ColumnNames.Add(new ColumnName { Type = type, Names = name, OwnerId = ownerId });
+                _db.SaveChanges();
                 return;
             }
 

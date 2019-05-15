@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Services;
@@ -15,8 +16,15 @@ namespace DigitalPurchasing.Web.Controllers
     public class UomController : BaseController
     {
         private readonly IUomService _uomService;
+        private readonly IConversionRateService _conversionRateService;
 
-        public UomController(IUomService uomService) => _uomService = uomService;
+        public UomController(
+            IUomService uomService,
+            IConversionRateService conversionRateService)
+        {
+            _uomService = uomService;
+            _conversionRateService = conversionRateService;
+        }
 
         public IActionResult Index() => View();
 
@@ -90,12 +98,13 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult AutocompleteSingle([FromQuery] Guid id) => Json(_uomService.AutocompleteSingle(id));
 
         [HttpPost]
-        public IActionResult Factor([FromBody]UomFactorVm vm) => Json(_uomService.GetConversionRate(vm.FromId, vm.NomenclatureId));
+        public async Task<IActionResult> Factor([FromBody]UomFactorVm vm) => Json(await _conversionRateService.GetRate(vm.FromId, vm.NomenclatureId));
 
         [HttpPost]
         public IActionResult SaveFactor([FromBody]UomSaveFactorVm vm)
         {
-            _uomService.SaveConversionRate(vm.FromUomId, vm.ToUomId, vm.NomenclatureId ?? Guid.Empty, vm.FactorC, vm.FactorN);
+            var companyId = User.CompanyId();
+            _uomService.SaveConversionRate(companyId, vm.FromUomId, vm.ToUomId, vm.NomenclatureId ?? Guid.Empty, vm.FactorC, vm.FactorN);
             return Ok();
         }
 

@@ -15,7 +15,7 @@ namespace DigitalPurchasing.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.2.2-servicing-10034")
+                .HasAnnotation("ProductVersion", "2.2.4-servicing-10062")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
@@ -132,6 +132,26 @@ namespace DigitalPurchasing.Data.Migrations
                     b.ToTable("CLCounters");
                 });
 
+            modelBuilder.Entity("DigitalPurchasing.Models.Counters.CustomerCounter", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<DateTime>("CreatedOn");
+
+                    b.Property<int>("CurrentId")
+                        .IsConcurrencyToken();
+
+                    b.Property<Guid>("OwnerId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerId")
+                        .IsUnique();
+
+                    b.ToTable("CustomerCounters");
+                });
+
             modelBuilder.Entity("DigitalPurchasing.Models.Counters.PRCounter", b =>
                 {
                     b.Property<Guid>("Id")
@@ -189,6 +209,26 @@ namespace DigitalPurchasing.Data.Migrations
                     b.ToTable("SOCounters");
                 });
 
+            modelBuilder.Entity("DigitalPurchasing.Models.Counters.SupplierCounter", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<DateTime>("CreatedOn");
+
+                    b.Property<int>("CurrentId")
+                        .IsConcurrencyToken();
+
+                    b.Property<Guid>("OwnerId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerId")
+                        .IsUnique();
+
+                    b.ToTable("SupplierCounters");
+                });
+
             modelBuilder.Entity("DigitalPurchasing.Models.Currency", b =>
                 {
                     b.Property<Guid>("Id")
@@ -234,11 +274,32 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<Guid>("OwnerId");
 
+                    b.Property<int>("PublicId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerId", "PublicId")
+                        .IsUnique();
+
+                    b.ToTable("Customers");
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.DefaultUom", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<DateTime>("CreatedOn");
+
+                    b.Property<Guid>("OwnerId");
+
+                    b.Property<Guid>("PackagingUomId");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OwnerId");
 
-                    b.ToTable("Customers");
+                    b.ToTable("DefaultUoms");
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.Delivery", b =>
@@ -277,6 +338,32 @@ namespace DigitalPurchasing.Data.Migrations
                     b.HasIndex("OwnerId");
 
                     b.ToTable("Deliveries");
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.File", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<byte[]>("Bytes")
+                        .IsRequired();
+
+                    b.Property<string>("ContentType")
+                        .IsRequired();
+
+                    b.Property<DateTime>("CreatedOn");
+
+                    b.Property<string>("Discriminator")
+                        .IsRequired();
+
+                    b.Property<string>("FileName")
+                        .IsRequired();
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Files");
+
+                    b.HasDiscriminator<string>("Discriminator").HasValue("File");
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.Identity.Role", b =>
@@ -485,11 +572,17 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<decimal>("MassUomValue")
                         .HasColumnType("decimal(18, 4)");
 
-                    b.Property<string>("Name");
+                    b.Property<string>("Name")
+                        .IsRequired();
 
                     b.Property<string>("NameEng");
 
                     b.Property<Guid>("OwnerId");
+
+                    b.Property<Guid?>("PackUomId");
+
+                    b.Property<decimal>("PackUomValue")
+                        .HasColumnType("decimal(18, 4)");
 
                     b.Property<Guid>("ResourceBatchUomId");
 
@@ -506,11 +599,15 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.HasIndex("MassUomId");
 
-                    b.HasIndex("OwnerId");
+                    b.HasIndex("PackUomId");
 
                     b.HasIndex("ResourceBatchUomId");
 
                     b.HasIndex("ResourceUomId");
+
+                    b.HasIndex("OwnerId", "Name")
+                        .IsUnique()
+                        .HasFilter("IsDeleted = 0");
 
                     b.ToTable("Nomenclatures");
                 });
@@ -531,11 +628,17 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<decimal>("MassUomValue")
                         .HasColumnType("decimal(18, 4)");
 
-                    b.Property<string>("Name");
+                    b.Property<string>("Name")
+                        .IsRequired();
 
                     b.Property<Guid>("NomenclatureId");
 
                     b.Property<Guid>("OwnerId");
+
+                    b.Property<Guid?>("PackUomId");
+
+                    b.Property<decimal?>("PackUomValue")
+                        .HasColumnType("decimal(18, 4)");
 
                     b.Property<Guid?>("ResourceBatchUomId");
 
@@ -553,6 +656,8 @@ namespace DigitalPurchasing.Data.Migrations
                     b.HasIndex("NomenclatureId");
 
                     b.HasIndex("OwnerId");
+
+                    b.HasIndex("PackUomId");
 
                     b.HasIndex("ResourceBatchUomId");
 
@@ -652,12 +757,12 @@ namespace DigitalPurchasing.Data.Migrations
                         .ValueGeneratedOnAdd();
 
                     b.Property<decimal>("CommonFactor")
-                        .HasColumnType("decimal(18, 4)");
+                        .HasColumnType("decimal(38, 17)");
 
                     b.Property<DateTime>("CreatedOn");
 
                     b.Property<decimal>("NomenclatureFactor")
-                        .HasColumnType("decimal(18, 4)");
+                        .HasColumnType("decimal(38, 17)");
 
                     b.Property<Guid?>("NomenclatureId");
 
@@ -739,15 +844,30 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<string>("Body");
+
                     b.Property<DateTime>("CreatedOn");
 
+                    b.Property<string>("Discriminator")
+                        .IsRequired();
+
+                    b.Property<string>("FromEmail");
+
                     b.Property<bool>("IsProcessed");
+
+                    b.Property<DateTimeOffset>("MessageDate");
+
+                    b.Property<int>("ProcessingTries");
+
+                    b.Property<string>("Subject");
 
                     b.Property<long>("UniqueId");
 
                     b.HasKey("Id");
 
                     b.ToTable("ReceivedEmails");
+
+                    b.HasDiscriminator<string>("Discriminator").HasValue("ReceivedEmail");
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.Root", b =>
@@ -780,35 +900,185 @@ namespace DigitalPurchasing.Data.Migrations
                     b.ToTable("Roots");
                 });
 
-            modelBuilder.Entity("DigitalPurchasing.Models.SelectedSupplier", b =>
+            modelBuilder.Entity("DigitalPurchasing.Models.SSR.SSCustomer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<Guid>("InternalId");
+
+                    b.Property<string>("Name");
+
+                    b.Property<DateTime>("PRCreatedOn");
+
+                    b.Property<int>("PRNumber");
+
+                    b.Property<Guid>("ReportId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReportId");
+
+                    b.ToTable("SSCustomers");
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.SSR.SSCustomerItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("Code");
+
+                    b.Property<Guid>("CustomerId");
+
+                    b.Property<Guid>("InternalId");
+
+                    b.Property<string>("Name");
+
+                    b.Property<Guid>("NomenclatureId");
+
+                    b.Property<int>("Position");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(18, 4)");
+
+                    b.Property<string>("Uom");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("SSCustomerItems");
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.SSR.SSData", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<Guid>("NomenclatureId");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(18, 4)");
+
+                    b.Property<Guid>("SupplierId");
+
+                    b.Property<Guid>("VariantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SupplierId");
+
+                    b.HasIndex("VariantId");
+
+                    b.ToTable("SSDatas");
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.SSR.SSReport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<DateTime>("CLCreatedOn");
+
+                    b.Property<int>("CLNumber");
+
+                    b.Property<DateTime>("CreatedOn");
+
+                    b.Property<Guid>("OwnerId");
+
+                    b.Property<Guid>("RootId");
+
+                    b.Property<int>("SelectedVariantNumber");
+
+                    b.Property<decimal>("SelectedVariantTotalPrice")
+                        .HasColumnType("decimal(38, 17)");
+
+                    b.Property<Guid>("UserId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerId");
+
+                    b.HasIndex("RootId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SSReports");
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.SSR.SSSupplier", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<Guid>("InternalId");
+
+                    b.Property<string>("Name");
+
+                    b.Property<DateTime>("SOCreatedOn");
+
+                    b.Property<Guid>("SOInternalId");
+
+                    b.Property<int>("SONumber");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SSSuppliers");
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.SSR.SSSupplierItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<decimal>("ConvertedPrice")
+                        .HasColumnType("decimal(38, 17)");
+
+                    b.Property<decimal>("ConvertedQuantity")
+                        .HasColumnType("decimal(18, 4)");
+
+                    b.Property<Guid>("InternalId");
+
+                    b.Property<string>("Name");
+
+                    b.Property<Guid>("NomenclatureId");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(38, 17)");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(18, 4)");
+
+                    b.Property<Guid>("SupplierId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SupplierId");
+
+                    b.ToTable("SSSupplierItems");
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.SSR.SSVariant", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<DateTime>("CreatedOn");
 
-                    b.Property<Guid>("NomenclatureId");
+                    b.Property<Guid>("InternalId");
 
-                    b.Property<Guid>("OwnerId");
+                    b.Property<bool>("IsSelected");
 
-                    b.Property<decimal>("Qty")
-                        .HasColumnType("decimal(18, 4)");
+                    b.Property<int>("Number");
 
-                    b.Property<Guid>("RootId");
-
-                    b.Property<Guid>("SupplierId");
+                    b.Property<Guid>("ReportId");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("NomenclatureId");
+                    b.HasIndex("ReportId");
 
-                    b.HasIndex("OwnerId");
-
-                    b.HasIndex("RootId");
-
-                    b.HasIndex("SupplierId");
-
-                    b.ToTable("SelectedSuppliers");
+                    b.ToTable("SSVariants");
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.Supplier", b =>
@@ -816,17 +1086,90 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<string>("ActualAddressCity");
+
+                    b.Property<string>("ActualAddressCountry");
+
+                    b.Property<string>("ActualAddressStreet");
+
+                    b.Property<Guid?>("CategoryId");
+
                     b.Property<DateTime>("CreatedOn");
+
+                    b.Property<string>("DeliveryTerms");
+
+                    b.Property<string>("ErpCode");
+
+                    b.Property<long?>("Inn");
+
+                    b.Property<string>("LegalAddressCity");
+
+                    b.Property<string>("LegalAddressCountry");
+
+                    b.Property<string>("LegalAddressStreet");
 
                     b.Property<string>("Name");
 
+                    b.Property<string>("Note");
+
+                    b.Property<string>("OfferCurrency");
+
                     b.Property<Guid>("OwnerId");
+
+                    b.Property<string>("OwnershipType");
+
+                    b.Property<int?>("PaymentDeferredDays");
+
+                    b.Property<string>("Phone");
+
+                    b.Property<bool>("PriceWithVat");
+
+                    b.Property<int>("PublicId");
+
+                    b.Property<bool>("SumWithVat");
+
+                    b.Property<string>("SupplierType");
+
+                    b.Property<string>("WarehouseAddressCity");
+
+                    b.Property<string>("WarehouseAddressCountry");
+
+                    b.Property<string>("WarehouseAddressStreet");
+
+                    b.Property<string>("Website");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OwnerId");
+                    b.HasIndex("OwnerId", "Inn")
+                        .IsUnique()
+                        .HasFilter("Name IS NOT NULL AND Inn IS NOT NULL");
+
+                    b.HasIndex("OwnerId", "PublicId")
+                        .IsUnique();
 
                     b.ToTable("Suppliers");
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.SupplierCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<Guid>("NomenclatureCategoryId");
+
+                    b.Property<Guid?>("PrimaryContactPersonId");
+
+                    b.Property<Guid?>("SecondaryContactPersonId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NomenclatureCategoryId");
+
+                    b.HasIndex("PrimaryContactPersonId");
+
+                    b.HasIndex("SecondaryContactPersonId");
+
+                    b.ToTable("SupplierCategories");
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.SupplierContactPerson", b =>
@@ -843,6 +1186,8 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<string>("JobTitle");
 
                     b.Property<string>("LastName");
+
+                    b.Property<string>("MobilePhoneNumber");
 
                     b.Property<Guid>("OwnerId");
 
@@ -928,12 +1273,12 @@ namespace DigitalPurchasing.Data.Migrations
                         .ValueGeneratedOnAdd();
 
                     b.Property<decimal>("CommonFactor")
-                        .HasColumnType("decimal(18, 4)");
+                        .HasColumnType("decimal(38, 17)");
 
                     b.Property<DateTime>("CreatedOn");
 
                     b.Property<decimal>("NomenclatureFactor")
-                        .HasColumnType("decimal(18, 4)");
+                        .HasColumnType("decimal(38, 17)");
 
                     b.Property<Guid?>("NomenclatureId");
 
@@ -944,7 +1289,7 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<string>("RawName");
 
                     b.Property<decimal>("RawPrice")
-                        .HasColumnType("decimal(18, 4)");
+                        .HasColumnType("decimal(38, 17)");
 
                     b.Property<decimal>("RawQty")
                         .HasColumnType("decimal(18, 4)");
@@ -980,6 +1325,9 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<string>("NormalizedName");
 
                     b.Property<Guid>("OwnerId");
+
+                    b.Property<decimal?>("Quantity")
+                        .HasColumnType("decimal(18, 4)");
 
                     b.HasKey("Id");
 
@@ -1061,6 +1409,28 @@ namespace DigitalPurchasing.Data.Migrations
                     b.ToTable("UploadedDocumentHeaders");
                 });
 
+            modelBuilder.Entity("DigitalPurchasing.Models.EmailAttachment", b =>
+                {
+                    b.HasBaseType("DigitalPurchasing.Models.File");
+
+                    b.Property<Guid>("ReceivedEmailId");
+
+                    b.HasIndex("ReceivedEmailId");
+
+                    b.HasDiscriminator().HasValue("EmailAttachment");
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.ReceivedSoEmail", b =>
+                {
+                    b.HasBaseType("DigitalPurchasing.Models.ReceivedEmail");
+
+                    b.Property<Guid>("QuotationRequestId");
+
+                    b.HasIndex("QuotationRequestId");
+
+                    b.HasDiscriminator().HasValue("ReceivedSoEmail");
+                });
+
             modelBuilder.Entity("DigitalPurchasing.Models.AnalysisVariant", b =>
                 {
                     b.HasOne("DigitalPurchasing.Models.CompetitionList", "CompetitionList")
@@ -1090,7 +1460,7 @@ namespace DigitalPurchasing.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("DigitalPurchasing.Models.QuotationRequest", "QuotationRequest")
-                        .WithOne()
+                        .WithOne("CompetitionList")
                         .HasForeignKey("DigitalPurchasing.Models.CompetitionList", "QuotationRequestId")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
@@ -1103,10 +1473,18 @@ namespace DigitalPurchasing.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
+            modelBuilder.Entity("DigitalPurchasing.Models.Counters.CustomerCounter", b =>
+                {
+                    b.HasOne("DigitalPurchasing.Models.Company", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
             modelBuilder.Entity("DigitalPurchasing.Models.Counters.PRCounter", b =>
                 {
                     b.HasOne("DigitalPurchasing.Models.Company", "Owner")
-                        .WithMany("PRCounters")
+                        .WithMany()
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
@@ -1127,7 +1505,23 @@ namespace DigitalPurchasing.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
+            modelBuilder.Entity("DigitalPurchasing.Models.Counters.SupplierCounter", b =>
+                {
+                    b.HasOne("DigitalPurchasing.Models.Company", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
             modelBuilder.Entity("DigitalPurchasing.Models.Customer", b =>
+                {
+                    b.HasOne("DigitalPurchasing.Models.Company", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.DefaultUom", b =>
                 {
                     b.HasOne("DigitalPurchasing.Models.Company", "Owner")
                         .WithMany()
@@ -1154,7 +1548,7 @@ namespace DigitalPurchasing.Data.Migrations
             modelBuilder.Entity("DigitalPurchasing.Models.Identity.User", b =>
                 {
                     b.HasOne("DigitalPurchasing.Models.Company", "Company")
-                        .WithMany("Users")
+                        .WithMany()
                         .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
@@ -1218,6 +1612,11 @@ namespace DigitalPurchasing.Data.Migrations
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("DigitalPurchasing.Models.UnitsOfMeasurement", "PackUom")
+                        .WithMany()
+                        .HasForeignKey("PackUomId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("DigitalPurchasing.Models.UnitsOfMeasurement", "ResourceBatchUom")
                         .WithMany("ResourceBatchNomenclatures")
                         .HasForeignKey("ResourceBatchUomId")
@@ -1251,6 +1650,10 @@ namespace DigitalPurchasing.Data.Migrations
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("DigitalPurchasing.Models.UnitsOfMeasurement", "PackUom")
+                        .WithMany()
+                        .HasForeignKey("PackUomId");
+
                     b.HasOne("DigitalPurchasing.Models.UnitsOfMeasurement", "ResourceBatchUom")
                         .WithMany("ResourceBatchNomenclatureAlternatives")
                         .HasForeignKey("ResourceBatchUomId")
@@ -1281,7 +1684,7 @@ namespace DigitalPurchasing.Data.Migrations
             modelBuilder.Entity("DigitalPurchasing.Models.NomenclatureCategory", b =>
                 {
                     b.HasOne("DigitalPurchasing.Models.Company", "Owner")
-                        .WithMany("NomenclatureCategories")
+                        .WithMany()
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade);
 
@@ -1316,7 +1719,7 @@ namespace DigitalPurchasing.Data.Migrations
             modelBuilder.Entity("DigitalPurchasing.Models.PurchaseRequestItem", b =>
                 {
                     b.HasOne("DigitalPurchasing.Models.Nomenclature", "Nomenclature")
-                        .WithMany("PurchasingRequestItems")
+                        .WithMany()
                         .HasForeignKey("NomenclatureId")
                         .OnDelete(DeleteBehavior.Restrict);
 
@@ -1344,7 +1747,7 @@ namespace DigitalPurchasing.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("DigitalPurchasing.Models.PurchaseRequest", "PurchaseRequest")
-                        .WithOne()
+                        .WithOne("QuotationRequest")
                         .HasForeignKey("DigitalPurchasing.Models.QuotationRequest", "PurchaseRequestId")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
@@ -1382,27 +1785,67 @@ namespace DigitalPurchasing.Data.Migrations
                         .HasForeignKey("QuotationRequestId");
                 });
 
-            modelBuilder.Entity("DigitalPurchasing.Models.SelectedSupplier", b =>
+            modelBuilder.Entity("DigitalPurchasing.Models.SSR.SSCustomer", b =>
                 {
-                    b.HasOne("DigitalPurchasing.Models.Nomenclature", "Nomenclature")
+                    b.HasOne("DigitalPurchasing.Models.SSR.SSReport", "Report")
                         .WithMany()
-                        .HasForeignKey("NomenclatureId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("ReportId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
 
+            modelBuilder.Entity("DigitalPurchasing.Models.SSR.SSCustomerItem", b =>
+                {
+                    b.HasOne("DigitalPurchasing.Models.SSR.SSCustomer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.SSR.SSData", b =>
+                {
+                    b.HasOne("DigitalPurchasing.Models.SSR.SSSupplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("DigitalPurchasing.Models.SSR.SSVariant", "Variant")
+                        .WithMany()
+                        .HasForeignKey("VariantId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.SSR.SSReport", b =>
+                {
                     b.HasOne("DigitalPurchasing.Models.Company", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("DigitalPurchasing.Models.Root", "Root")
-                        .WithMany("SelectedSuppliers")
+                        .WithMany()
                         .HasForeignKey("RootId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("DigitalPurchasing.Models.Supplier", "Supplier")
+                    b.HasOne("DigitalPurchasing.Models.Identity.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.SSR.SSSupplierItem", b =>
+                {
+                    b.HasOne("DigitalPurchasing.Models.SSR.SSSupplier", "Supplier")
                         .WithMany()
                         .HasForeignKey("SupplierId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.SSR.SSVariant", b =>
+                {
+                    b.HasOne("DigitalPurchasing.Models.SSR.SSReport", "Report")
+                        .WithMany()
+                        .HasForeignKey("ReportId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.Supplier", b =>
@@ -1411,6 +1854,24 @@ namespace DigitalPurchasing.Data.Migrations
                         .WithMany()
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.SupplierCategory", b =>
+                {
+                    b.HasOne("DigitalPurchasing.Models.NomenclatureCategory", "NomenclatureCategory")
+                        .WithMany()
+                        .HasForeignKey("NomenclatureCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DigitalPurchasing.Models.SupplierContactPerson", "PrimaryContactPerson")
+                        .WithMany()
+                        .HasForeignKey("PrimaryContactPersonId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DigitalPurchasing.Models.SupplierContactPerson", "SecondaryContactPerson")
+                        .WithMany()
+                        .HasForeignKey("SecondaryContactPersonId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.SupplierContactPerson", b =>
@@ -1473,7 +1934,7 @@ namespace DigitalPurchasing.Data.Migrations
             modelBuilder.Entity("DigitalPurchasing.Models.UnitsOfMeasurement", b =>
                 {
                     b.HasOne("DigitalPurchasing.Models.Company", "Owner")
-                        .WithMany("UnitsOfMeasurements")
+                        .WithMany()
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
@@ -1486,7 +1947,7 @@ namespace DigitalPurchasing.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("DigitalPurchasing.Models.Nomenclature", "Nomenclature")
-                        .WithMany("ConversionRates")
+                        .WithMany()
                         .HasForeignKey("NomenclatureId");
 
                     b.HasOne("DigitalPurchasing.Models.Company", "Owner")
@@ -1510,6 +1971,22 @@ namespace DigitalPurchasing.Data.Migrations
                     b.HasOne("DigitalPurchasing.Models.UploadedDocumentHeaders", "Headers")
                         .WithMany()
                         .HasForeignKey("UploadedDocumentHeadersId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.EmailAttachment", b =>
+                {
+                    b.HasOne("DigitalPurchasing.Models.ReceivedEmail", "ReceivedEmail")
+                        .WithMany("Attachments")
+                        .HasForeignKey("ReceivedEmailId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.ReceivedSoEmail", b =>
+                {
+                    b.HasOne("DigitalPurchasing.Models.QuotationRequest", "QuotationRequest")
+                        .WithMany()
+                        .HasForeignKey("QuotationRequestId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618

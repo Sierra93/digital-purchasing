@@ -16,7 +16,5 @@ namespace DigitalPurchasing.Models
 
         public CompetitionList CompetitionList { get; set; }
         public Guid? CompetitionListId { get; set; }
-
-        public ICollection<SelectedSupplier> SelectedSuppliers { get; set; }
     }
 }

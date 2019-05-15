@@ -21,9 +21,9 @@ namespace DigitalPurchasing.Models
         public Guid? RawUomMatchId { get; set; }
         public UnitsOfMeasurement RawUomMatch { get; set; }
 
-        [Column(TypeName = "decimal(18, 4)")]
+        [Column(TypeName = "decimal(38, 17)")]
         public decimal CommonFactor { get; set; }
-        [Column(TypeName = "decimal(18, 4)")]
+        [Column(TypeName = "decimal(38, 17)")]
         public decimal NomenclatureFactor { get; set; }
     }
 }

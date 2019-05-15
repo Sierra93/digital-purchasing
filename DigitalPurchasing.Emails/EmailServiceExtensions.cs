@@ -48,6 +48,13 @@ namespace DigitalPurchasing.Emails
 
             var until = DateTime.UtcNow.AddDays(3).ToRussianStandardTime();
 
+            string toName = supplierContact.FirstName;
+
+            if (!string.IsNullOrWhiteSpace(supplierContact.Patronymic))
+            {
+                toName += $" {supplierContact.Patronymic}";
+            }
+
             var model = new RFQEmail
             {
                 From =
@@ -57,7 +64,7 @@ namespace DigitalPurchasing.Emails
                     Company = userInfo.Company,
                 },
                 Until = until,
-                ToName = supplierContact.LastName
+                ToName = toName
             };
 
             var htmlResult = await GetHtmlString(model);
@@ -75,6 +82,23 @@ namespace DigitalPurchasing.Emails
             {
                 QRPublicId = qrPublicId,
                 Url = qrUrl
+            };
+
+            var htmlResult = await GetHtmlString(model);
+            await emailService.SendFromRobotAsync(email, subject, htmlResult);
+        }
+
+        public static async Task SendSoNotProcessedEmail(this IEmailService emailService,
+            string email,
+            int qrPublicId,
+            string soEmailUrl)
+        {
+            var subject = "Вам пришло новое КП, но мы не смогли его обработать";
+
+            var model = new SoNotProcessedEmail
+            {
+                QrPublicId = qrPublicId,
+                ViewSoEmailUrl = soEmailUrl
             };
 
             var htmlResult = await GetHtmlString(model);

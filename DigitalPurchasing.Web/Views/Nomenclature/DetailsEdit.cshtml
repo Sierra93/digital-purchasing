@@ -15,13 +15,11 @@
             <input asp-for="Id" />
             <div class="form-group">
                 <label asp-for="ClientType" class="control-label"></label>
-                <select asp-for="ClientType" asp-items="Html.GetEnumSelectList<ClientType>()" class="form-control"></select>
-                <span asp-validation-for="ClientType" class="text-danger"></span>
+                <input asp-for="ClientTypeStr" class="form-control" readonly="readonly" />
             </div>
             <div class="form-group">
                 <label asp-for="ClientName" class="control-label"></label>
-                <input asp-for="ClientName" class="form-control" />
-                <span asp-validation-for="ClientName" class="text-danger"></span>
+                <input asp-for="ClientName" class="form-control" readonly="readonly" />
             </div>
             <div class="form-group">
                 <label asp-for="Code" class="control-label"></label>
@@ -45,7 +43,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="MassUomValue" class="control-label"></label>
-                <input asp-for="MassUomValue" class="form-control" />
+                <input asp-for="MassUomValue" asp-is-invariant="true" class="form-control" />
                 <span asp-validation-for="MassUomValue" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -55,13 +53,23 @@
             </div>
             <div class="form-group">
                 <label asp-for="ResourceUomValue" class="control-label"></label>
-                <input asp-for="ResourceUomValue" class="form-control" />
+                <input asp-for="ResourceUomValue" asp-is-invariant="true" class="form-control" />
                 <span asp-validation-for="ResourceUomValue" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="ResourceBatchUomId" class="control-label"></label>
                 <select asp-for="ResourceBatchUomId" class="form-control" asp-items="Model.ResourceBatchUoms"></select>
                 <span asp-validation-for="ResourceBatchUomId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PackUomValue" class="control-label"></label>
+                <input asp-for="PackUomValue" class="form-control" />
+                <span asp-validation-for="PackUomValue" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PackUomId" class="control-label"></label>
+                <select asp-for="PackUomId" class="form-control" asp-items="Model.PackUoms"></select>
+                <span asp-validation-for="PackUomId" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" class="btn btn-primary" value="Сохранить" />

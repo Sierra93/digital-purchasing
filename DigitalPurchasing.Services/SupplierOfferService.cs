@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Enums;
@@ -10,6 +11,7 @@ using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
 using EFCore.BulkExtensions;
+using F23.StringSimilarity;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -27,7 +29,9 @@ namespace DigitalPurchasing.Services
         private readonly IUploadedDocumentService _uploadedDocumentService;
         private readonly IUomService _uomService;
         private readonly ISupplierService _supplierService;
+        private readonly IConversionRateService _conversionRateService;
         private readonly IRootService _rootService;
+        private readonly INomenclatureAlternativeService _nomenclatureAlternativeService;
 
         public SupplierOfferService(
             ApplicationDbContext db,
@@ -39,7 +43,9 @@ namespace DigitalPurchasing.Services
             IUploadedDocumentService uploadedDocumentService,
             IUomService uomService,
             ISupplierService supplierService,
-            IRootService rootService)
+            IConversionRateService conversionRateService,
+            IRootService rootService,
+            INomenclatureAlternativeService nomenclatureAlternativeService)
         {
             _db = db;
             _excelRequestReader = excelRequestReader;
@@ -50,7 +56,9 @@ namespace DigitalPurchasing.Services
             _uploadedDocumentService = uploadedDocumentService;
             _uomService = uomService;
             _supplierService = supplierService;
+            _conversionRateService = conversionRateService;
             _rootService = rootService;
+            _nomenclatureAlternativeService = nomenclatureAlternativeService;
         }
 
         public void UpdateStatus(Guid id, SupplierOfferStatus status, bool globalSearch = false)
@@ -133,9 +141,11 @@ namespace DigitalPurchasing.Services
             if (vm != null)
             {
                 vm.ExcelTable =  vm.UploadedDocument?.Data != null ? JsonConvert.DeserializeObject<ExcelTable>(vm.UploadedDocument?.Data) : null;
-                vm.CompanyName = _db.PurchaseRequests
+                var pr = _db.PurchaseRequests
                     .IgnoreQueryFilters()
-                    .First(q => q.Id == entity.CompetitionList.QuotationRequest.PurchaseRequestId).CompanyName;
+                    .First(q => q.Id == entity.CompetitionList.QuotationRequest.PurchaseRequestId);
+                vm.CompanyName = pr.CompanyName;
+                vm.CompetitionList.PurchaseRequest = pr.Adapt<CompetitionListVm.PurchaseRequestVm>();
                 if (entity.Supplier != null)
                 {
                     vm.SupplierName = entity.Supplier.Name;
@@ -161,8 +171,24 @@ namespace DigitalPurchasing.Services
                 .Include(q => q.Nomenclature.MassUom)
                 .Include(q => q.Nomenclature.ResourceUom)
                 .Include(q => q.Nomenclature.ResourceBatchUom)
-                .Where(q => q.PurchaseRequestId == purchaseRequestId).ToList();
-            var offerItems = _db.SupplierOfferItems.Include(q => q.Nomenclature).ThenInclude(q => q.BatchUom).Where(q => q.SupplierOfferId == id).ToList();
+                .Where(q => q.PurchaseRequestId == purchaseRequestId)
+                .ToList();
+
+            var offerItems = _db.SupplierOfferItems
+                .Include(q => q.RawUom)
+                .Include(q => q.Nomenclature)
+                    .ThenInclude(q => q.BatchUom)
+                .Where(q => q.SupplierOfferId == id)
+                .ToList();
+
+            var nomIds = requestItems
+                .Select(q => q.Nomenclature.Id)
+                .ToList();
+
+            var nomAlts = _db.NomenclatureAlternatives
+                .Include(q => q.Link)
+                .Where(q => q.Link.SupplierId == supplierOffer.SupplierId && nomIds.Contains(q.NomenclatureId))
+                .ToList();
 
             var result = new SupplierOfferDetailsVm
             {
@@ -176,37 +202,71 @@ namespace DigitalPurchasing.Services
                 var item = new SupplierOfferDetailsVm.Item(result.Items);
                 result.Items.Add(item);
 
+                item.Position = requestItem.Position;
+                item.Request.ItemId = requestItem.Id;
                 item.Request.Code = requestItem.RawCode;
                 item.Request.Name = requestItem.RawName;
                 item.Request.Qty = requestItem.RawQty;
+
+                var qtyMod = requestItem.Nomenclature.BatchUom.Quantity ?? 1;
+
+                item.Request.QtyMod = qtyMod;
                 item.Request.Currency = "RUB"; //TODO
                 item.Request.Uom = requestItem.Nomenclature.BatchUom.Name;
-
-                var offerItem = offerItems.FirstOrDefault(q => q.NomenclatureId.HasValue && q.NomenclatureId == requestItem.NomenclatureId);
+                
+                var offerItem = offerItems
+                    .FirstOrDefault(q => q.NomenclatureId.HasValue && q.NomenclatureId == requestItem.NomenclatureId);
                 if (offerItem == null) continue;
 
+                item.Offer.ItemId = offerItem.Id;
                 item.Offer.Code = offerItem.RawCode;
                 item.Offer.Name = offerItem.RawName;
                 item.Offer.Qty = offerItem.RawQty;
                 item.Offer.Price = offerItem.RawPrice;
                 item.Offer.Currency = supplierOffer.Currency.Name;
-                item.Offer.Uom = offerItem.Nomenclature.BatchUom.Name;
+                item.Offer.Uom = offerItem.RawUomId.HasValue ? offerItem.RawUom.Name : string.Empty;
 
-                item.Mass.MassOf1 = requestItem.Nomenclature.MassUomValue;
+                var nomAlt = nomAlts.FirstOrDefault(q => q.NomenclatureId == requestItem.Nomenclature.Id);
+
+                decimal offerMassOf1;
+
+                var factor = offerItem.CommonFactor > 0 ? offerItem.CommonFactor : offerItem.NomenclatureFactor;
+
+                if (offerItem.RawUomId.HasValue && requestItem.Nomenclature.MassUomId == offerItem.RawUomId.Value)
+                {
+                    offerMassOf1 = 1;
+                }
+                else
+                {
+                    offerMassOf1 = (nomAlt?.MassUomValue > 0
+                        ? nomAlt.MassUomValue
+                        : requestItem.Nomenclature.MassUomValue) * factor;
+                }
+
+                item.Mass.MassOf1BatchUom = offerMassOf1;
                 item.Mass.MassUom = requestItem.Nomenclature.MassUom.Name;
 
                 item.ImportAndDelivery.DeliveryTerms = supplierOffer.DeliveryTerms;
                 item.ImportAndDelivery.TotalDeliveryCost = supplierOffer.DeliveryCost;
-
+                
                 item.Conversion.CurrencyExchangeRate = 1; //TODO
-                item.Conversion.UomRatio = 1; //TODO
+                item.Conversion.UomRatio = factor;
 
                 item.ResourceConversion.ResourceUom = requestItem.Nomenclature.ResourceUom.Name;
                 item.ResourceConversion.ResourceBatchUom = requestItem.Nomenclature.ResourceBatchUom.Name;
-                item.ResourceConversion.RequestResource = requestItem.Nomenclature.ResourceUomValue;
-                item.ResourceConversion.OfferResource = requestItem.Nomenclature.ResourceUomValue; //TODO
-                
-                
+
+                var requestResource = requestItem.Nomenclature.ResourceUomValue > 0
+                    ? requestItem.Nomenclature.ResourceUomValue
+                    : 1;
+
+                var offerResource = nomAlt?.ResourceUomValue > 0
+                    ? nomAlt.ResourceUomValue
+                    : (requestItem.Nomenclature.ResourceUomValue > 0
+                        ? requestItem.Nomenclature.ResourceUomValue
+                        : 1);
+
+                item.ResourceConversion.RequestResource = requestResource;
+                item.ResourceConversion.OfferResource = offerResource;
             }
 
             return result;
@@ -250,7 +310,7 @@ namespace DigitalPurchasing.Services
             if (!string.IsNullOrEmpty(columns.Price)) _columnNameService.SaveName(TableColumnType.Price, columns.Price, entity.OwnerId);
         }
 
-        public void GenerateRawItems(Guid id, bool globalSearch = false)
+        public void GenerateRawItems(Guid supplierOfferId, bool globalSearch = false)
         {
             var qrySo = _db.SupplierOffers.AsQueryable();
             var qrySoItems = _db.SupplierOfferItems.AsQueryable();
@@ -261,13 +321,16 @@ namespace DigitalPurchasing.Services
                 qrySoItems = qrySoItems.IgnoreQueryFilters();
             }
 
-            qrySoItems.Where(q => q.SupplierOfferId == id).BatchDelete();
+            qrySoItems.Where(q => q.SupplierOfferId == supplierOfferId).BatchDelete();
 
-            var supplierOffer = qrySo.Include(q => q.UploadedDocument).ThenInclude(q => q.Headers).First(q => q.Id == id);
+            var supplierOffer = qrySo
+                .Include(q => q.UploadedDocument)
+                .ThenInclude(q => q.Headers)
+                .First(q => q.Id == supplierOfferId);
 
             if (!supplierOffer.SupplierId.HasValue)
             {
-                supplierOffer.SupplierId = _supplierService.CreateSupplier(supplierOffer.SupplierName);
+                supplierOffer.SupplierId = _supplierService.CreateSupplier(supplierOffer.SupplierName, supplierOffer.OwnerId);
             }
 
             var table = JsonConvert.DeserializeObject<ExcelTable>(supplierOffer.UploadedDocument.Data);
@@ -276,7 +339,7 @@ namespace DigitalPurchasing.Services
             {
                 var rawItem = new SupplierOfferItem
                 {
-                    SupplierOfferId = id,
+                    SupplierOfferId = supplierOfferId,
                     Position = i + 1, //todo: get from #, № and etc?
                     RawCode = string.IsNullOrEmpty(supplierOffer.UploadedDocument.Headers.Code) ? "" : table.GetValue(supplierOffer.UploadedDocument.Headers.Code, i),
                     RawName = string.IsNullOrEmpty(supplierOffer.UploadedDocument.Headers.Name) ? "" : table.GetValue(supplierOffer.UploadedDocument.Headers.Name, i),
@@ -290,19 +353,85 @@ namespace DigitalPurchasing.Services
                 rawItems.Add(rawItem);
             }
 
+            var withUndefinedNoms = rawItems.Where(_ => !_.NomenclatureId.HasValue);
+            FixSoNomenclatureIds(rawItems);
+
             _db.BulkInsert(rawItems);
 
             // todo: move to background job?
-            _nomenclatureService.AddOrUpdateNomenclatureAlts(
+            _nomenclatureAlternativeService.AddOrUpdateNomenclatureAlts(
                 supplierOffer.OwnerId, supplierOffer.SupplierId.Value, ClientType.Supplier,
                 rawItems
                     .Where(q => q.NomenclatureId.HasValue)
-                    .Select(q => (
-                        NomenclatureId: q.NomenclatureId.Value,
-                        Name: q.RawName,
-                        Code: q.RawCode,
-                        Uom: q.RawUomId)
+                    .Select(q => new AddOrUpdateAltDto
+                    {
+                        NomenclatureId = q.NomenclatureId.Value,
+                        Name = q.RawName,
+                        Code = q.RawCode,
+                        BatchUomId = q.RawUomId
+                    }
                     ).ToList());
+        }
+
+        private void FixSoNomenclatureIds(IReadOnlyList<SupplierOfferItem> soItems)
+        {
+            if (soItems.Any(_ => !_.NomenclatureId.HasValue))
+            {
+                var soId = soItems[0].SupplierOfferId;
+                var prItems = (from item in _db.PurchaseRequestItems.IgnoreQueryFilters().Include(_ => _.Nomenclature)
+                               where item.NomenclatureId.HasValue &&
+                                    item.PurchaseRequest.QuotationRequest.CompetitionList.SupplierOffers.Any(so => so.Id == soId)
+                               select item).ToList();
+
+                Func<string, string> cleanupNomName = (nomName) => Regex.Replace(nomName, @"[^a-zA-Z0-9\p{IsCyrillic}\s]", "");
+                Func<string, string> leaveOnlyDigits = (str) => Regex.Replace(str, "[^0-9]", "");
+
+                var unlinkedPrItems = prItems.Where(item => !soItems.Any(soItem => soItem.NomenclatureId == item.NomenclatureId))
+                    .Select(item => new
+                    {
+                        item.Id,
+                        item.NomenclatureId,
+                        RawName = cleanupNomName(item.RawName.ReplaceSpacesWithOneSpace()),
+                        item.RawUomMatchId,
+                        item.RawQty
+                    });
+
+                var alg = new Levenshtein();
+
+                var tolerance = 0.15;
+
+                var algResults = (from soItem in soItems.Where(_ => !_.NomenclatureId.HasValue)
+                                  let soItemName = cleanupNomName(soItem.RawName.ReplaceSpacesWithOneSpace())
+                                  from prItem in unlinkedPrItems
+                                  let maxNameLen = Math.Max(soItemName.Length, prItem.RawName.Length)
+                                  let soDigits = leaveOnlyDigits(soItemName)
+                                  let prDigits = leaveOnlyDigits(prItem.RawName)
+                                  let sameUom = soItem.RawUomId == prItem.RawUomMatchId
+                                  let nameDistance = alg.Distance(soItemName, prItem.RawName)
+                                  let digitsDistance = alg.Distance(soDigits, prDigits)
+                                  let qtyDiff = sameUom ? Math.Abs(prItem.RawQty - soItem.RawQty) / (10 * Math.Max(prItem.RawQty, soItem.RawQty)) : 0
+                                  let completeDistance = (nameDistance + digitsDistance) / (2 * maxNameLen) + (double)qtyDiff
+                                  select new
+                                  {
+                                      soItem,
+                                      prItem,
+                                      soDigits,
+                                      prDigits,
+                                      nameDistance,
+                                      digitsDistance,
+                                      completeDistance
+                                  }).ToList();
+
+                algResults = algResults.Where(el => el.completeDistance <= tolerance).OrderBy(el => el.completeDistance).ToList();
+
+                while (algResults.Any())
+                {
+                    algResults[0].soItem.NomenclatureId = algResults[0].prItem.NomenclatureId;
+                    var soItemId = algResults[0].soItem.Id;
+                    var prItemId = algResults[0].prItem.Id;
+                    algResults = algResults.Where(el => el.soItem.Id != soItemId && el.prItem.Id != prItemId).OrderBy(el => el.completeDistance).ToList();
+                }
+            }
         }
 
         private void Autocomplete(SupplierOffer so, SupplierOfferItem soItem)
@@ -310,13 +439,10 @@ namespace DigitalPurchasing.Services
             #region Try to find UoM in db
                 
             var res = _uomService.Autocomplete(soItem.RawUomStr, so.OwnerId);
-            if (res.Items != null && res.Items.Any())
+            var fullMatch = res.Items?.FirstOrDefault(q => q.IsFullMatch);
+            if (fullMatch != null)
             {
-                var match = res.Items.First();
-                if (match != null)
-                {
-                    soItem.RawUomId = match.Id;
-                }
+                soItem.RawUomId = fullMatch.Id;
             }
 
             #endregion
@@ -342,7 +468,7 @@ namespace DigitalPurchasing.Services
 
             if (soItem.NomenclatureId != null && soItem.RawUomId != null)
             {
-                var rate = _uomService.GetConversionRate(soItem.RawUomId.Value, soItem.NomenclatureId.Value);
+                var rate = _conversionRateService.GetRate(soItem.RawUomId.Value, soItem.NomenclatureId.Value).Result;
                 soItem.CommonFactor = rate.CommonFactor;
                 soItem.NomenclatureFactor = rate.NomenclatureFactor;
             }

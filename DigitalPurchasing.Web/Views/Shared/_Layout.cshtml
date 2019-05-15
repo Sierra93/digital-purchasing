@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/solid.css" integrity="sha384-VGP9aw4WtGH/uPAOseYxZ+Vz/vaTb1ehm1bwx92Fm8dTrE+3boLfF1SpAtB1z7HW" crossorigin="anonymous">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/regular.css" integrity="sha384-ZlNfXjxAqKFWCwMwQFGhmMh3i89dWDnaFU2/VZg9CvsMGA7hXHQsPIqS+JIAmgEq" crossorigin="anonymous">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/fontawesome.css" integrity="sha384-1rquJLNOM3ijoueaaeS5m+McXPJCGdr5HcA03/VHXxcp2kX2sUrQDmFc3jR5i/C7" crossorigin="anonymous">
+    @RenderSection("Styles", required: false)
 </head>
 <body>
     <nav class="navbar navbar-inverse navbar-fixed-top">
@@ -63,12 +64,14 @@
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Справочники&nbsp;<span class="caret"></span></a>
                             <ul class="dropdown-menu">
                                 <li><a asp-area="" asp-controller="Supplier" asp-action="Index">Поставщики</a></li>
+                                <li><a asp-area="" asp-controller="Customer" asp-action="Index">Клиенты</a></li>
                                 <li><a asp-area="" asp-controller="Nomenclature" asp-action="Index">Наименования материалов</a></li>
                                 <li><a asp-area="" asp-controller="NomenclatureCategory" asp-action="Index">Категории закупок</a></li>
                                 <li><a asp-area="" asp-controller="Uom" asp-action="Index">Единицы измерения</a></li>
                                 <li><a asp-area="" asp-controller="Column" asp-action="Index">Соответсвия названий колонок</a></li>
                             </ul>
                         </li>
+                        <li><a asp-area="" asp-controller="Inbox" asp-action="Index">Почтовый ящик</a></li>
                     }
                     else
                     {

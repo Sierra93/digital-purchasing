@@ -6,9 +6,15 @@ namespace DigitalPurchasing.Analysis2
 {
     public class AnalysisResult
     {
-        public List<AnalysisData> Data { get; set; }
+        public Guid VariantId { get;  }
 
-        public AnalysisResult(List<AnalysisData> data) => Data = data;
+        public List<AnalysisData> Data { get; }
+
+        public AnalysisResult(Guid variantId, List<AnalysisData> data)
+        {
+            VariantId = variantId;
+            Data = data;
+        }
 
         public bool IsSuccess => Data.Any();
 
@@ -22,19 +28,21 @@ namespace DigitalPurchasing.Analysis2
 
             foreach (var data in Data)
             {
-                if (result.ContainsKey(data.Supplier.Id))
+                if (result.ContainsKey(data.SupplierId))
                 {
-                    result[data.Supplier.Id] += data.Item.TotalPrice;
+                    result[data.SupplierId] += data.Item.TotalPrice;
                 }
                 else
                 {
-                    result.Add(data.Supplier.Id, data.Item.TotalPrice);
+                    result.Add(data.SupplierId, data.Item.TotalPrice);
                 }
             }
 
             return result;
         }
 
-        public int SuppliersCount => Data?.Select(q => q.Supplier.Id).Distinct().Count() ?? 0;
+        public int SuppliersCount => Data?.Select(q => q.SupplierId).Distinct().Count() ?? 0;
+
+        public static AnalysisResult Empty(Guid variantId) => new AnalysisResult(variantId, new List<AnalysisData>());
     }
 }

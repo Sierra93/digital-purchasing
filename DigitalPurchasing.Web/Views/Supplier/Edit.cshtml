@@ -2,58 +2,70 @@
 @model DigitalPurchasing.Web.ViewModels.Supplier.SupplierEditVm
 
 @{
-    ViewData["Title"] = Model.Supplier.Name + " - Поставщики" ;
+    ViewData["Title"] = Model.Supplier.Name + " - Поставщики";
 }
 
-<h2 class="with-button">@Model.Supplier.Name</h2>
-<div class="btn-group">
-    <a asp-action="Index" class="btn btn-default">Назад к списку</a>
-</div>
+<h2 class="with-button">@ViewData["Title"]</h2>
+<hr />
+<form asp-action="Edit">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="Supplier.Id" />
+    <partial name="_FormFields" model="Model" />
+    <div class="form-group">
+        <input type="submit" class="btn btn-primary" value="Сохранить" />
+        <a asp-action="Index" class="btn btn-default">Отмена</a>
+    </div>
+</form>
+
 <hr />
 
-<h3 class="with-button">Контакты сотрудников</h3>
-<div class="btn-group">
-    <a class="btn btn-default" asp-action="AddContactPerson" asp-route-supplierId="@Model.Supplier.Id">Добавить</a>
-</div>
-@if (Model.ContactPersons.Any())
-{
-    <div class="row" id="table-persons">
-        <div class="col-md-12">
-            <table class="table table-striped"> 
-                <thead>
-                <tr>
-                    <th>Должность</th>
-                    <th>Фамилия</th>
-                    <th>Имя</th>
-                    <th>Отчество</th>
-                    <th>E-mail</th>
-                    <th>Моб. телефон</th>
-                    <th>Использовать для<br/>отправки запросов и<br />получения КП?</th>
-                    <th></th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach (var person in Model.ContactPersons)
-                {
-                    <tr data-fullname="@person.FullName" data-id="@person.Id">
-                        <td>@person.JobTitle</td>
-                        <td>@person.LastName</td>
-                        <td>@person.FirstName</td>
-                        <td>@person.Patronymic</td>
-                        <td>@person.Email</td>
-                        <td>@person.PhoneNumber.FormatPhoneNumber()</td>
-                        <td>@(person.UseForRequests?"Да":"Нет")</td>
-                        <td>
-                            <a asp-action="EditContactPerson" asp-route-personId="@person.Id"><i class="far fa-edit"></i></a>
-                            <button type="button" class="btn btn-link" data-delete-person><i class="far fa-trash-alt"></i></button>
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
-        </div>
+<div>
+    <h3 class="with-button">Контакты сотрудников</h3>
+    <div class="btn-group">
+        <a class="btn btn-default" asp-action="AddContactPerson" asp-route-supplierId="@Model.Supplier.Id">Добавить</a>
     </div>
-}
+    @if (Model.ContactPersons.Any())
+    {
+        <div class="row" id="table-persons">
+            <div class="col-md-12">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Должность</th>
+                            <th>Фамилия</th>
+                            <th>Имя</th>
+                            <th>Отчество</th>
+                            <th>E-mail</th>
+                            <th>Телефон</th>
+                            <th>Моб. телефон</th>
+                            <th>Использовать для<br />отправки запросов и<br />получения КП?</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var person in Model.ContactPersons)
+                        {
+                            <tr data-fullname="@person.FullName" data-id="@person.Id">
+                                <td>@person.JobTitle</td>
+                                <td>@person.LastName</td>
+                                <td>@person.FirstName</td>
+                                <td>@person.Patronymic</td>
+                                <td>@person.Email</td>
+                                <td>@person.PhoneNumber.FormatPhoneNumber()</td>
+                                <td>@person.MobilePhoneNumber.FormatPhoneNumber()</td>
+                                <td>@(person.UseForRequests ? "Да" : "Нет")</td>
+                                <td>
+                                    <a asp-action="EditContactPerson" asp-route-personId="@person.Id"><i class="far fa-edit"></i></a>
+                                    <button type="button" class="btn btn-link" data-delete-person><i class="far fa-trash-alt"></i></button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
 
 <div class="modal fade" tabindex="-1" role="dialog" id="modal-delete-person">
     <div class="modal-dialog" role="document">
@@ -74,6 +86,8 @@
 </div><!-- /.modal -->
 
 @section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
     <script>
         (function() {
             $(document).ready(function() {

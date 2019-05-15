@@ -6,25 +6,21 @@ namespace DigitalPurchasing.Core.Interfaces
     public interface INomenclatureService
     {
         NomenclatureIndexData GetData(int page, int perPage, string sortField, bool sortAsc, string search);
-        NomenclatureDetailsData GetDetailsData(Guid nomId, int page, int perPage, string sortField, bool sortAsc);
+        NomenclatureDetailsData GetDetailsData(Guid nomId, int page, int perPage, string sortField, bool sortAsc, string sortBySearch);
         NomenclatureVm CreateOrUpdate(NomenclatureVm model);
         void CreateOrUpdate(List<NomenclatureVm> models, Guid ownerId);
-        NomenclatureVm GetById(Guid id);
-        bool Update(NomenclatureVm model);
+        NomenclatureVm GetById(Guid id, bool globalSearch = false);
+        IEnumerable<NomenclatureVm> GetByNames(params string[] nomenclatureNames);
         NomenclatureAutocompleteResult Autocomplete(AutocompleteOptions options);
         BaseResult<NomenclatureAutocompleteResult.AutocompleteResultItem> AutocompleteSingle(Guid id);
         void Delete(Guid id);
-        NomenclatureAlternativeVm GetAlternativeById(Guid id);
-        void UpdateAlternative(NomenclatureAlternativeVm model);
+        NomenclatureWholeData GetWholeNomenclature();
+    }
 
-        void AddNomenclatureForCustomer(Guid prItemId);
-        void AddNomenclatureForSupplier(Guid soItemId);
-
-        void AddOrUpdateNomenclatureAlts(Guid ownerId, Guid clientId, ClientType clientType,
-            Guid nomenclatureId, string name, string code, Guid? uom);
-
-        void AddOrUpdateNomenclatureAlts(Guid ownerId,Guid clientId, ClientType clientType,
-            List<(Guid NomenclatureId, string Name, string Code, Guid? Uom)> alts);
+    public class NomenclatureWholeData
+    {
+        public IDictionary<NomenclatureIndexDataItem, NomenclatureDetailsData> Nomenclatures { get; set; } =
+            new Dictionary<NomenclatureIndexDataItem, NomenclatureDetailsData>();
     }
 
     public class NomenclatureDetailsDataItem
@@ -33,6 +29,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public int ClientType { get; set; }
         public string ClientName { get; set; }
+        public int? ClientPublicId { get; set; }
 
         public string Code { get; set; }
         public string Name { get; set; }
@@ -50,6 +47,9 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public Guid ResourceBatchUomId { get; set; }
         public string ResourceBatchUomName { get; set; }
+
+        public string PackUomName { get; set; }
+        public decimal? PackUomValue { get; set; }
     }
 
     public class NomenclatureDetailsData : BaseDataResponse<NomenclatureDetailsDataItem>
@@ -78,13 +78,21 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid ResourceBatchUomId { get; set; }
         public string ResourceBatchUomName { get; set; }
 
+        public Guid? PackUomId { get; set; }
+        public string PackUomName { get; set; }
+        public decimal PackUomValue { get; set; }
+
         public Guid CategoryId { get; set; }
         public string CategoryName { get; set; }
         public string CategoryFullName { get; set; }
+        public bool HasAlternativeWithRequiredName { get; set; }
     }
 
+    //todo: rename to NomenclatureDto
     public class NomenclatureVm
     {
+        public Guid OwnerId { get; set; }
+
         public Guid Id { get; set; }
         public string Code { get; set; }
 
@@ -105,36 +113,13 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid ResourceBatchUomId { get; set; }
         public string ResourceBatchUomName { get; set; }
 
+        public Guid? PackUomId { get; set; }
+        public string PackUomName { get; set; }
+        public decimal PackUomValue { get; set; }
+
         public Guid CategoryId { get; set; }
         public string CategoryName { get; set; }
         public string CategoryFullName { get; set; }
-    }
-
-    public class NomenclatureAlternativeVm
-    {
-        public Guid Id { get; set; }
-
-        public ClientType ClientType { get; set; }
-        public string ClientName { get; set; }
-
-        public string Code { get; set; }
-        public string Name { get; set; }
-
-        public Guid? BatchUomId { get; set; }
-        public UomVm BatchUom { get; set; }
-
-        public Guid? MassUomId { get; set; }
-        public UomVm MassUom { get; set; }
-
-        public decimal MassUomValue { get; set; }
-       
-        public Guid? ResourceUomId { get; set; }
-        public UomVm ResourceUom { get; set; }
-
-        public decimal ResourceUomValue { get; set; }
-
-        public Guid? ResourceBatchUomId { get; set; }
-        public UomVm ResourceBatchUom { get; set; }
     }
 
     public class NomenclatureIndexData : BaseDataResponse<NomenclatureIndexDataItem>

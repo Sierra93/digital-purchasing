@@ -6,8 +6,10 @@ using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
+using DigitalPurchasing.Services.Exceptions;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using MoreLinq;
 
 namespace DigitalPurchasing.Services
 {
@@ -15,8 +17,18 @@ namespace DigitalPurchasing.Services
     {
         private readonly ApplicationDbContext _db;
         private const StringComparison StrComparison = StringComparison.InvariantCultureIgnoreCase;
+        private readonly INomenclatureCategoryService _categoryService;
+        private readonly ICounterService _counterService;
 
-        public SupplierService(ApplicationDbContext db) => _db = db;
+        public SupplierService(
+            ApplicationDbContext db,
+            INomenclatureCategoryService categoryService,
+            ICounterService counterService)
+        {
+            _db = db;
+            _categoryService = categoryService;
+            _counterService = counterService;
+        }
 
         public SupplierAutocomplete Autocomplete(AutocompleteBaseOptions options)
         {
@@ -37,9 +49,9 @@ namespace DigitalPurchasing.Services
             return result;
         }
 
-        public Guid CreateSupplier(string name)
+        public Guid CreateSupplier(string name, Guid ownerId)
         {
-            var entry = _db.Suppliers.Add(new Supplier { Name = name });
+            var entry = _db.Suppliers.Add(new Supplier { Name = name, PublicId = _counterService.GetSupplierNextId(ownerId) });
             _db.SaveChanges();
             return entry.Entity.Id;
         }
@@ -52,8 +64,8 @@ namespace DigitalPurchasing.Services
             {
                 sortField = "Name";
             }
-            
-            var qry = _db.Suppliers.AsQueryable();//.Where(q => !q.IsDeleted);
+
+            var qry = _db.Suppliers.AsQueryable();
 
             if (!string.IsNullOrEmpty(search))
             {
@@ -62,13 +74,48 @@ namespace DigitalPurchasing.Services
             }
 
             var total = qry.Count();
-            var orderedResults = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}");
-            var result = orderedResults.Skip((page-1)*perPage).Take(perPage).ProjectToType<SupplierIndexDataItem>().ToList();
+            qry = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}")
+                .Skip((page - 1) * perPage)
+                .Take(perPage);
+            var result = qry.ProjectToType<SupplierIndexDataItem>().ToList();
+
+            var supplier2altNomCategories = (from s in qry
+                                             join nal in _db.NomenclatureAlternativeLinks on s.Id equals nal.SupplierId
+                                             join na in _db.NomenclatureAlternatives on nal.AlternativeId equals na.Id
+                                             join n in _db.Nomenclatures on na.NomenclatureId equals n.Id
+                                             where !n.IsDeleted
+                                             group new
+                                             {
+                                                 supplierId = s.Id,
+                                                 altCategoryId = n.CategoryId
+                                             } by new { s.Id, altCategoryId = n.CategoryId } into g
+                                             select g.FirstOrDefault()).ToList();
+            var supplier2NomCategories = (from s in qry
+                                          select new
+                                          {
+                                              supplierId = s.Id,
+                                              defaultCategoryId = s.CategoryId
+                                          }).ToList();
+
+            foreach (var item in result)
+            {                
+                var supplierCategoryIds = supplier2altNomCategories
+                    .Where(_ => _.supplierId == item.Id)
+                    .Select(_ => _.altCategoryId)
+                    .ToList();
+                Guid? defaultCategoryId = supplier2NomCategories
+                    .FirstOrDefault(_ => _.supplierId == item.Id)?.defaultCategoryId;
+                if (defaultCategoryId.HasValue)
+                {
+                    supplierCategoryIds.Add(defaultCategoryId.Value);
+                }
+                item.MainCategoriesCsv = string.Join(", ", supplierCategoryIds.Select(cId => _categoryService.GetTopParentCategory(cId).Name));
+            }
 
             return new SupplierIndexData
             {
                 Total = total,
-                Data = result
+                Data = result,                
             };
         }
 
@@ -91,7 +138,8 @@ namespace DigitalPurchasing.Services
         public Guid AddContactPerson(SupplierContactPersonVm vm)
         {
             var contactPerson = vm.Adapt<SupplierContactPerson>();
-            contactPerson.PhoneNumber = contactPerson.PhoneNumber.CleanPhoneNumber();
+            contactPerson.PhoneNumber = vm.PhoneNumber.CleanPhoneNumber();
+            contactPerson.MobilePhoneNumber = vm.MobilePhoneNumber.CleanPhoneNumber()?.LastSymbols(10);
             var entry = _db.SupplierContactPersons.Add(contactPerson);
             _db.SaveChanges();
             return entry.Entity.Id;
@@ -107,6 +155,7 @@ namespace DigitalPurchasing.Services
             entity.UseForRequests = vm.UseForRequests;
             entity.JobTitle = vm.JobTitle;
             entity.PhoneNumber = vm.PhoneNumber.CleanPhoneNumber();
+            entity.MobilePhoneNumber = vm.MobilePhoneNumber.CleanPhoneNumber()?.LastSymbols(10);
             _db.SaveChanges();
             return entity.Id;
         }
@@ -133,12 +182,203 @@ namespace DigitalPurchasing.Services
             return supplierContactPerson?.Adapt<SupplierContactPersonVm>();
         }
 
-        public Guid GetSupplierByEmail(string email)
+        public Guid GetSupplierByEmail(Guid ownerId, string email)
         {
-            var supplierContactPerson = _db.SupplierContactPersons.IgnoreQueryFilters()
-                .FirstOrDefault(q => q.Email.Equals(email) && q.UseForRequests);
+            var supplierContactPerson = _db.SupplierContactPersons
+                .IgnoreQueryFilters()
+                .FirstOrDefault(q =>
+                    q.Email.Equals(email) &&
+                    q.UseForRequests &&
+                    q.Supplier.OwnerId == ownerId);
 
             return supplierContactPerson?.SupplierId ?? Guid.Empty;
+        }
+
+        public void Update(SupplierVm model)
+        {
+            var entity = _db.Suppliers.Find(model.Id);
+
+            if (entity != null)
+            {
+                if (HasSameSupplierInn(entity.OwnerId, model.Id, model.Inn))
+                {
+                    throw new SameInnException();
+                }
+
+                entity.Name = model.Name;
+                entity.OwnershipType = model.OwnershipType;
+                entity.Inn = model.Inn;
+                entity.ErpCode = model.ErpCode;
+                entity.Website = model.Website;
+                entity.LegalAddressStreet = model.LegalAddressStreet;
+                entity.LegalAddressCity = model.LegalAddressCity;
+                entity.LegalAddressCountry = model.LegalAddressCountry;
+                entity.ActualAddressStreet = model.ActualAddressStreet;
+                entity.ActualAddressCity = model.ActualAddressCity;
+                entity.ActualAddressCountry = model.ActualAddressCountry;
+                entity.WarehouseAddressStreet = model.WarehouseAddressStreet;
+                entity.WarehouseAddressCity = model.WarehouseAddressCity;
+                entity.WarehouseAddressCountry = model.WarehouseAddressCountry;
+                entity.PriceWithVat = model.PriceWithVat;
+                entity.SumWithVat = model.SumWithVat;
+                entity.DeliveryTerms = model.DeliveryTerms;
+                entity.Note = model.Note;
+                entity.OfferCurrency = model.OfferCurrency;
+                entity.PaymentDeferredDays = model.PaymentDeferredDays;
+                entity.Phone = model.Phone.CleanPhoneNumber();
+                entity.SupplierType = model.SupplierType;
+                entity.CategoryId = model.CategoryId;
+
+                _db.SaveChanges();
+            }
+        }
+
+        public Guid CreateSupplier(SupplierVm model, Guid ownerId)
+        {
+            if (HasSameSupplierInn(ownerId, null, model.Inn))
+            {
+                throw new SameInnException();
+            }
+
+            var entry = _db.Suppliers.Add(new Supplier
+            {
+                Name = model.Name,
+                OwnershipType = model.OwnershipType,
+                Inn = model.Inn,
+                ErpCode = model.ErpCode,
+                Website = model.Website,
+                LegalAddressStreet = model.LegalAddressStreet,
+                LegalAddressCity = model.LegalAddressCity,
+                LegalAddressCountry = model.LegalAddressCountry,
+                ActualAddressStreet = model.ActualAddressStreet,
+                ActualAddressCity = model.ActualAddressCity,
+                ActualAddressCountry = model.ActualAddressCountry,
+                WarehouseAddressStreet = model.WarehouseAddressStreet,
+                WarehouseAddressCity = model.WarehouseAddressCity,
+                WarehouseAddressCountry = model.WarehouseAddressCountry,
+                PriceWithVat = model.PriceWithVat,
+                SumWithVat = model.SumWithVat,
+                DeliveryTerms = model.DeliveryTerms,
+                Note = model.Note,
+                OfferCurrency = model.OfferCurrency,
+                PaymentDeferredDays = model.PaymentDeferredDays,
+                Phone = model.Phone.CleanPhoneNumber(),
+                SupplierType = model.SupplierType,
+                CategoryId = model.CategoryId,
+                PublicId = _counterService.GetSupplierNextId(ownerId)
+            });
+            _db.SaveChanges();
+            return entry.Entity.Id;
+        }
+
+        private bool HasSameSupplierInn(Guid ownerId, Guid? exceptSupplierId, long? inn) =>
+            inn.HasValue &&
+            _db.Suppliers.Any(_ => _.OwnerId == ownerId && _.Id != exceptSupplierId && _.Inn == inn.Value);
+
+        public List<SupplierNomenclatureCategory> GetSupplierNomenclatureCategories(Guid supplierId)
+        {
+            var qry = from n in _db.Nomenclatures.Where(q => !q.IsDeleted)
+                      join na in _db.NomenclatureAlternatives on n.Id equals na.NomenclatureId
+                      join nal in _db.NomenclatureAlternativeLinks on na.Id equals nal.AlternativeId
+                      where nal.SupplierId == supplierId &&
+                            !n.Category.IsDeleted
+                      select n.CategoryId;
+
+            var categoryIds = qry.Distinct().ToList();
+
+            var defaultCategoryId = _db.Suppliers
+                .Where(_ => _.Id == supplierId)
+                .Select(_ => _.CategoryId)
+                .FirstOrDefault();
+
+            if (defaultCategoryId.HasValue && !categoryIds.Contains(defaultCategoryId.Value))
+            {
+                categoryIds.Add(defaultCategoryId.Value);
+            }
+
+            return categoryIds.Select(ncId =>
+            {
+                var mapping = _db.SupplierCategories.Where(_ =>
+                    _.NomenclatureCategoryId == ncId &&
+                    (_.PrimaryContactPerson.SupplierId == supplierId || _.SecondaryContactPerson.SupplierId == supplierId)).FirstOrDefault();
+                return new SupplierNomenclatureCategory()
+                {
+                    NomenclatureCategoryId = ncId,
+                    NomenclatureCategoryFullName = _categoryService.FullCategoryName(ncId),
+                    NomenclatureCategoryPrimaryContactId = mapping?.PrimaryContactPersonId,
+                    NomenclatureCategorySecondaryContactId = mapping?.SecondaryContactPersonId,
+                    IsDefaultSupplierCategory = defaultCategoryId == ncId
+                };
+            }).ToList();
+        }
+
+        public void RemoveSupplierNomenclatureCategoryContacts(Guid supplierId, Guid nomenclatureCategoryId)
+        {
+            _db.SupplierCategories.RemoveRange(
+                _db.SupplierCategories.Where(_ => _.NomenclatureCategoryId == nomenclatureCategoryId &&
+                    (_.PrimaryContactPerson.SupplierId == supplierId || _.SecondaryContactPerson.SupplierId == supplierId)));
+            _db.SaveChanges();
+        }
+
+        public void SaveSupplierNomenclatureCategoryContacts(Guid supplierId,
+            IEnumerable<(Guid nomenclatureCategoryId, Guid? primarySupplierContactId, Guid? secondarySupplierContactId)> nomenclatureCategories2Contacts)
+        {
+            if (nomenclatureCategories2Contacts.Any())
+            {
+                foreach (var mapping in nomenclatureCategories2Contacts)
+                {
+                    RemoveSupplierNomenclatureCategoryContacts(supplierId, mapping.nomenclatureCategoryId);
+
+                    if (mapping.primarySupplierContactId.HasValue ||
+                        mapping.secondarySupplierContactId.HasValue)
+                    {
+                        _db.SupplierCategories.Add(new SupplierCategory()
+                        {
+                            NomenclatureCategoryId = mapping.nomenclatureCategoryId,
+                            PrimaryContactPersonId = mapping.primarySupplierContactId,
+                            SecondaryContactPersonId = mapping.secondarySupplierContactId
+                        });
+                    }
+                }
+
+                _db.SaveChanges();
+            }
+        }
+
+        public IEnumerable<SupplierVm> GetByPublicIds(params int[] publicIds)
+        {
+            if (!publicIds.Any())
+            {
+                return Enumerable.Empty<SupplierVm>();
+            }
+
+            return (from item in _db.Suppliers
+                    where publicIds.Contains(item.PublicId)
+                    select item).ToList().Select(_ => _.Adapt<SupplierVm>());
+        }
+
+        public IEnumerable<SupplierVm> GetByCategoryIds(params Guid[] nomenclatureCategoryIds)
+        {
+            if (!nomenclatureCategoryIds.Any())
+            {
+                return Enumerable.Empty<SupplierVm>();
+            }
+
+            var suppliersByAlternatives = from n in _db.Nomenclatures.Where(q => !q.IsDeleted)
+                                          join na in _db.NomenclatureAlternatives on n.Id equals na.NomenclatureId
+                                          join nal in _db.NomenclatureAlternativeLinks on na.Id equals nal.AlternativeId
+                                          join s in _db.Suppliers on nal.SupplierId equals s.Id
+                                          where nomenclatureCategoryIds.Contains(n.CategoryId)
+                                          select s;
+
+            var suppliersByMainCategories = from s in _db.Suppliers
+                                            where s.CategoryId.HasValue && nomenclatureCategoryIds.Contains(s.CategoryId.Value)
+                                            select s;
+
+            return suppliersByAlternatives.Union(suppliersByMainCategories).OrderBy(s => s.Name)
+                .ToList()
+                .DistinctBy(s => s.Id)
+                .Select(_ => _.Adapt<SupplierVm>());
         }
     }
 }

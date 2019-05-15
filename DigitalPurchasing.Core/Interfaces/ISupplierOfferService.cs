@@ -48,12 +48,18 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public class RequestData : BaseData
         {
+            public decimal QtyMod { get; set; } = 1;
+            public decimal QtyInPsc => Qty * QtyMod;
+
+            public Guid ItemId { get; set; }
         }
 
         public class OfferData : BaseData
         {
             public decimal Price { get; set; }
             public decimal TotalPrice => Qty * Price;
+
+            public Guid ItemId { get; set; }
         }
 
         public class MassData
@@ -72,10 +78,10 @@ namespace DigitalPurchasing.Core.Interfaces
                 }
             }
 
-            public decimal MassOf1 { get; set; }
+            public decimal MassOf1BatchUom { get; set; }
             public string MassUom { get; set; }
 
-            public decimal TotalMass => _item.Offer.Qty * MassOf1;
+            public decimal TotalMass => _item.Offer.Qty * MassOf1BatchUom;
 
             public decimal TotalMassPerc
             {
@@ -120,7 +126,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
             public decimal TotalDeliveryCost { get; set; }
 
-            public decimal DeliveryCost => TotalDeliveryCost * (_item.Mass.TotalMassPerc != 0 ? _item.Mass.TotalMassPerc :  _item.Mass.TotalPricePerc);
+            public decimal DeliveryCost => TotalDeliveryCost * (_item.Mass.TotalMassPerc > 0 ? _item.Mass.TotalMassPerc :  _item.Mass.TotalPricePerc);
 
             public decimal FinalCost => CustomsDuty + DeliveryCost + _item.Offer.TotalPrice;
             
@@ -137,9 +143,11 @@ namespace DigitalPurchasing.Core.Interfaces
 
             public decimal CurrencyExchangeRate { get; set; } = 1;
 
+            // converted qty
             public decimal OfferQty => _item.Offer.Qty * UomRatio;
 
-            public decimal OfferPrice => _item.ImportAndDelivery.FinalCostCostPer1 * CurrencyExchangeRate / UomRatio;
+            // converted price
+            public decimal OfferPrice => _item.ImportAndDelivery.FinalCostCostPer1 * CurrencyExchangeRate / (UomRatio != 0 ? UomRatio : 1);
 
             public decimal OfferTotalPrice => OfferQty * OfferPrice;
         }
@@ -155,7 +163,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
             public decimal RequestResource { get; set; } = 1;
             public decimal OfferResource { get; set; } = 1;
-            public decimal ResourceRatio => OfferResource / RequestResource;
+            public decimal ResourceRatio => RequestResource / OfferResource;
             public decimal OfferPrice => _item.Conversion.OfferPrice * ResourceRatio;
             public decimal OfferTotalPrice => _item.Conversion.OfferTotalPrice * ResourceRatio;
         }
@@ -163,6 +171,8 @@ namespace DigitalPurchasing.Core.Interfaces
         public class Item
         {
             internal List<Item> Items { get; }
+
+            public int Position { get; set; }
 
             public Item(List<Item> items)
             {

@@ -6,6 +6,8 @@ namespace DigitalPurchasing.Analysis2.Filters
 {
     public class VariantsSuppliersCountFilter : VariantsFilter<VariantsSuppliersCountOptions>
     {
+        public override int Order => 0;
+
         public VariantsSuppliersCountFilter(VariantsSuppliersCountOptions options) => Options = options;
 
         public override List<List<AnalysisData>> Filter(List<List<AnalysisData>> allVariants, IAnalysisContext context)
@@ -16,12 +18,12 @@ namespace DigitalPurchasing.Analysis2.Filters
                 {
                     case SupplierCountType.Equal:
                         allVariants = allVariants
-                            .Where(q => q.Select(w => w.Supplier).Distinct().Count() == Options.Count)
+                            .Where(q => q.Select(w => w.SupplierId).Distinct().Count() == Options.Count)
                             .ToList();
                         return allVariants;
                     case SupplierCountType.LessOrEqual:
                         allVariants = allVariants
-                            .Where(q => q.Select(w => w.Supplier).Distinct().Count() <= Options.Count)
+                            .Where(q => q.Select(w => w.SupplierId).Distinct().Count() <= Options.Count)
                             .ToList();
                         return allVariants;
                 }

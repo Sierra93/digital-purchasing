@@ -1,4 +1,5 @@
 @model DigitalPurchasing.Core.Interfaces.QuotationRequestVm
+@using DigitalPurchasing.Web.Controllers
 
 @{
     ViewBag.Title = $"Запрос коммерческого предложения № {Model.PublicId} от {Model.CreatedOn:dd.MM.yyyy HH:mm}";
@@ -50,26 +51,31 @@
             <address-form v-bind:qr="qrId"></address-form>
         </div>
         <div class="col-md-6">
-            <div class="form-horizontal">
-                <div class="form-group">
-                    <label>Поставщики, кому будет отправлен запрос коммерческого предложения</label>
-                </div>
+            <div class="form-group">
+                <label>Поставщики, кому будет отправлен запрос коммерческого предложения</label>
+            </div>
+            <div>
                 <div class="form-group" v-for="(supplier, index) in suppliers">
                     <div class="input-group">
                         <span class="input-group-addon">{{(index+1)}}.</span>
-                        <input type="text" class="form-control" placeholder="" v-model.trim="supplier.name" v-bind:id="('supplier-'+index)">
-                        <typeahead v-model="supplier.autocomplete" force-select force-clear v-bind:target="('#supplier-'+index)" async-src="@Url.Action("Autocomplete", "Supplier")?q=" async-key="items" item-key="name"></typeahead>
+                        <input type="text" class="form-control" placeholder="" v-model.trim="supplier.name" v-bind:id="('supplier-'+index)" autocomplete="off" />
                         <span class="input-group-btn">
                             <button class="btn btn-default" type="button" v-on:click="removeSupplier(supplier)"><i class="far fa-trash-alt"></i></button>
                         </span>
                     </div>
+                    <typeahead v-model="supplier.autocomplete" force-select force-clear v-bind:target="('#supplier-'+index)" async-src="@Url.Action("Autocomplete", "Supplier")?q=" async-key="items" item-key="name"></typeahead>
                 </div>
                 <div class="form-group">
                     <button class="btn btn-default" v-on:click="addSupplier">Добавить поставщика</button>
                 </div>
                 <div class="form-group">
                     <button class="btn btn-primary" v-on:click="sendEmailsToSupplier" :disabled="!canSendEmails">{{sendEmailsText}}</button>
+                    <div>
+                        <small>Для доставки запроса поставщику убедитесь, что Контакты поставщика активированы  в карточке поставщика</small>
+                    </div>
                 </div>
+            </div>
+            <div>
                 <div class="form-group" v-if="orderedRequests.length > 0">
                     <label>Отправленные запросы:</label>
                 </div>
@@ -102,7 +108,6 @@
             <button v-on:click="modalSendEmailsOk" class="btn btn-primary">ОК</button>
         </div>
     </modal>
-    // 
 </div>
 
 @section Scripts
@@ -161,12 +166,10 @@
                 },
                 watch: {
                     suppliers: {
-                        handler: function(newSuppliers) {
+                        handler: function (newSuppliers) {
                             _.forEach(newSuppliers, function(supplier) {
                                 if (supplier && supplier.autocomplete && supplier.autocomplete.name) {
                                     supplier.name = supplier.autocomplete.name;
-                                } else {
-                                    supplier.name = null;
                                 }
                             });
                         },
@@ -185,11 +188,18 @@
                     }
                 },
                 methods: {
-                    load: function() {
-                        this.$http.get('@Url.Action("ViewDData")?qrId=' + this.qrId).then(function(res) {
-                            this.items = res.data.items;
-                            this.requests = res.data.sentRequests;
-                            this.selectedCompany = this.keys[0];
+                    load: function () {
+                        var vm = this;
+                        this.$http.get('@Url.Action(nameof(QuotationRequestController.ViewDData))?qrId=' + this.qrId).then(function(res) {
+                            vm.items = res.data.items;
+                            vm.requests = res.data.sentRequests;
+                            vm.selectedCompany = vm.keys[0];
+                            _.each(res.data.applicableSuppliers, function (supplier) {
+                                vm.suppliers.push({
+                                    autocomplete: supplier,
+                                    name: supplier.name
+                                });
+                            });
                         }, function(res) {
 
                         });
@@ -218,11 +228,10 @@
                         var vm = this;
                         vm.sendingInProgress = true;
                         vm.$http
-                            .post('@Url.Action("SentRequests")', { id: vm.qrId, suppliers: vm.suppliersIds })
+                            .post('@Url.Action(nameof(QuotationRequestController.SentRequests))', { id: vm.qrId, suppliers: vm.suppliersIds })
                             .then(function(res) {
                                 var data = res.data;
                                 vm.requests = data;
-                                //console.info(data);
                                 vm.sendingInProgress = false;
                                 vm.modalSendEmails = true;
                             }, function (res) {

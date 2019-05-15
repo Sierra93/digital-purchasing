@@ -25,12 +25,58 @@ namespace DigitalPurchasing.Services
 
             var qry =  _db.NomenclatureCategories.Where(q => !q.IsDeleted).Include(q => q.Parent).AsNoTracking();
             var total = qry.Count();
-            var orderedResults = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}");
-            var result = orderedResults.Skip((page-1)*perPage).Take(perPage).ProjectToType<NomenclatureCategoryIndexDataItem>().ToList();
+            qry = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}")
+                .Skip((page - 1) * perPage)
+                .Take(perPage);
+            var result = qry.ProjectToType<NomenclatureCategoryIndexDataItem>().ToList();
+
+            var supplier2nomCategories = (from ncat in qry
+                                          join n in _db.Nomenclatures on ncat.Id equals n.CategoryId
+                                          join na in _db.NomenclatureAlternatives on n.Id equals na.NomenclatureId
+                                          join nal in _db.NomenclatureAlternativeLinks on na.Id equals nal.AlternativeId
+                                          join s in _db.Suppliers on nal.SupplierId equals s.Id                                          
+                                          where !n.IsDeleted
+                                          group new
+                                          {
+                                              supplierId = s.Id,
+                                              supplierName = s.Name,
+                                              categoryId = n.CategoryId
+                                          } by new { s.Id, n.CategoryId } into g
+                                          select g.FirstOrDefault()).ToList();
+
+            var suppliersWithDefaultCategory = (from ncat in qry
+                                                join s in _db.Suppliers on ncat.Id equals s.CategoryId
+                                                where !ncat.IsDeleted
+                                                group new
+                                                {
+                                                    supplierId = s.Id,
+                                                    supplierName = s.Name,
+                                                    categoryId = ncat.Id
+                                                } by new { s.Id, catId = ncat.Id } into g
+                                                select g.FirstOrDefault()).ToList();
+
+            supplier2nomCategories = (from item in supplier2nomCategories.Union(suppliersWithDefaultCategory)
+                                      group new
+                                      {
+                                          item.supplierId,
+                                          item.supplierName,
+                                          item.categoryId
+                                      } by new { item.supplierId, item.categoryId } into g
+                                      select g.FirstOrDefault()).ToList();
 
             foreach (var categoryResult in result)
             {
-                categoryResult.FullName = FullCategoryName(categoryResult.Id);
+                categoryResult.Suppliers = supplier2nomCategories
+                    .Where(_ => _.categoryId == categoryResult.Id)
+                    .OrderBy(_ => _.supplierName)
+                    .Select(_ => new NomenclatureCategoryIndexDataItem.SupplierInfo()
+                    {
+                        Id = _.supplierId,
+                        Name = _.supplierName
+                    })                    
+                    .ToList();
+
+                categoryResult.CategoriyHiearchy = GetCategoryHierarchy(categoryResult.Id).ToList();
             }
 
             return new NomenclatureCategoryIndexData
@@ -44,16 +90,29 @@ namespace DigitalPurchasing.Services
 
         public string FullCategoryName(Guid categoryId)
         {
-            var category = _db.NomenclatureCategories.Find(categoryId);
-            var name = category.Name;
+            var hierarchy = GetCategoryHierarchy(categoryId).ToList();
+            return string.Join(" > ", hierarchy.Select(_ => _.Name));
+        }
 
-            while (category.ParentId.HasValue)
+        public NomenclatureCategoryBasicInfo GetTopParentCategory(Guid categoryId)
+        {
+            var hierarchy = GetCategoryHierarchy(categoryId).ToList();
+            return hierarchy.FirstOrDefault()?.Adapt<NomenclatureCategoryBasicInfo>();
+        }
+
+        private IEnumerable<NomenclatureCategoryBasicInfo> GetCategoryHierarchy(Guid categoryId)
+        {
+            var category = _db.NomenclatureCategories.Find(categoryId);
+
+            if (category.ParentId.HasValue)
             {
-                category = _db.NomenclatureCategories.Find(category.ParentId);
-                name = category.Name + " > " + name;
+                foreach (var parent in GetCategoryHierarchy(category.ParentId.Value))
+                {
+                    yield return parent;
+                }
             }
 
-            return name;
+            yield return category.Adapt<NomenclatureCategoryBasicInfo>();
         }
 
         public void Delete(Guid id)
@@ -99,15 +158,18 @@ namespace DigitalPurchasing.Services
             return entry.Entity.Adapt<NomenclatureCategoryVm>();
         }
 
-        public IEnumerable<NomenclatureCategoryVm> GetAll()
+        public IEnumerable<NomenclatureCategoryVm> GetAll(bool includeDeleted = false)
         {
-            var result = _db.NomenclatureCategories.Where(q => !q.IsDeleted).Include(q => q.Parent).ProjectToType<NomenclatureCategoryVm>().ToList();
+            IQueryable<NomenclatureCategory> query = _db.NomenclatureCategories.Include(q => q.Parent);
+            
+            if (!includeDeleted)
+            {
+                query = query.Where(q => !q.IsDeleted);
+            }
+
+            var result = query.ProjectToType<NomenclatureCategoryVm>().ToList();
+
             return result;
         }
-    }
-
-    public class NomenclatureCategoryMappings : IRegister
-    {
-        public void Register(TypeAdapterConfig config) => config.NewConfig<NomenclatureCategory, NomenclatureCategoryVm>().Map(d => d.ParentName, s => s.Parent != null ? s.Parent.Name : null);
     }
 }

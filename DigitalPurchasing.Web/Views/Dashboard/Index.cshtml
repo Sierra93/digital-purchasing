@@ -73,13 +73,13 @@
                 <tr>
                     <th></th>
                     <th>Итого ТОП-10 поставщиков</th>
-                    <th class="align-right">@Model.Suppliers.TopSuppliersAmount.ToString(Consts.Format.Money)</th>
+                    <th class="align-right">@Model.Suppliers.TopSuppliersAmount.ToString(Consts.Format.Money2)</th>
                     <th class="align-right">@Model.Suppliers.TopSuppliersPercentage.ToString("P1")</th>
                 </tr>
                 <tr>
                     <td></td>
                     <td>Итого все постащики</td>
-                    <td class="align-right">@Model.Suppliers.AllSuppliersAmount.ToString(Consts.Format.Money)</td>
+                    <td class="align-right">@Model.Suppliers.AllSuppliersAmount.ToString(Consts.Format.Money2)</td>
                     <td class="align-right">@(1.ToString("P1"))</td>
                 </tr>
                 <tr>
@@ -98,7 +98,7 @@
                     <tr>
                         <td>@(++idx)</td>
                         <td>@req.Name</td>
-                        <td class="align-right">@req.Amount.ToString(Consts.Format.Money)</td>
+                        <td class="align-right">@req.Amount.ToString(Consts.Format.Money2)</td>
                         <td class="align-right">@req.Percentage(Model.Suppliers.AllSuppliersAmount).ToString("P1")</td>
                     </tr>
                 }

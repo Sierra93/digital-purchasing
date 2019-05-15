@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
@@ -28,10 +29,11 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpPost]
         public IActionResult SaveMatchItem([FromBody] SaveMatchItemVm model)
         {
+            var companyId = User.CompanyId();
             var nomenclature = _nomenclatureService.AutocompleteSingle(model.NomenclatureId);
-            _uomService.SaveConversionRate(model.UomId, nomenclature.Data.BatchUomId, nomenclature.Data.Id, model.FactorC, model.FactorN);
+            _uomService.SaveConversionRate(companyId, model.UomId, nomenclature.Data.BatchUomId, nomenclature.Data.Id, model.FactorC, model.FactorN);
             _purchasingRequestService.SaveMatch(model.ItemId, model.NomenclatureId, model.UomId, model.FactorC, model.FactorN);
-            _nomenclatureService.AddNomenclatureForCustomer(model.ItemId);
+            _nomenclatureAlternativeService.AddNomenclatureForCustomer(model.ItemId);
             return Ok();
         }
     }

@@ -1,0 +1,295 @@
+@model DigitalPurchasing.Web.ViewModels.Supplier.SupplierEditVm
+
+@{
+    bool isCreateMode = Model.Supplier?.Id == default;
+}
+
+<input type="hidden" asp-for="Supplier.CategoryId" />
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="Supplier.Name" class="control-label"></label>
+            <input asp-for="Supplier.Name" class="form-control" />
+            <span asp-validation-for="Supplier.Name" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="Supplier.OwnershipType" class="control-label"></label>
+            <input asp-for="Supplier.OwnershipType" class="form-control" />
+            <span asp-validation-for="Supplier.OwnershipType" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="Supplier.SupplierType" class="control-label"></label>
+            <input asp-for="Supplier.SupplierType" class="form-control" />
+            <span asp-validation-for="Supplier.SupplierType" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    @if (Model.Supplier != null && Model.Supplier.Id != default(Guid))
+    {
+        <div class="col-md-3">
+            <div class="form-group">
+                <label asp-for="Supplier.PublicId" class="control-label"></label>
+                <input asp-for="Supplier.PublicId" class="form-control" readonly="readonly" />
+                <span asp-validation-for="Supplier.PublicId" class="text-danger"></span>
+            </div>
+        </div>
+    }
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="Supplier.ErpCode" class="control-label"></label>
+            <input asp-for="Supplier.ErpCode" class="form-control" />
+            <span asp-validation-for="Supplier.ErpCode" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="Supplier.Inn" class="control-label"></label>
+            <input asp-for="Supplier.Inn" type="number" min="0" maxlength="12" class="form-control" />
+            <span asp-validation-for="Supplier.Inn" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="Supplier.PaymentDeferredDays" class="control-label"></label>
+            <input asp-for="Supplier.PaymentDeferredDays" class="form-control" />
+            <span asp-validation-for="Supplier.PaymentDeferredDays" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="Supplier.DeliveryTerms" class="control-label"></label>
+            <input asp-for="Supplier.DeliveryTerms" class="form-control" />
+            <span asp-validation-for="Supplier.DeliveryTerms" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="Supplier.OfferCurrency" class="control-label"></label>
+            <input asp-for="Supplier.OfferCurrency" class="form-control" />
+            <span asp-validation-for="Supplier.OfferCurrency" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+
+<div class="form-group">
+    <div class="checkbox">
+        <label asp-for="Supplier.PriceWithVat">
+            <input asp-for="Supplier.PriceWithVat" />
+            @Html.DisplayNameFor(m => m.Supplier.PriceWithVat)
+        </label>
+    </div>
+</div>
+<div class="form-group">
+    <div class="checkbox">
+        <label asp-for="Supplier.SumWithVat">
+            <input asp-for="Supplier.SumWithVat" />
+            @Html.DisplayNameFor(m => m.Supplier.SumWithVat)
+        </label>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-9">
+        <div class="form-group">
+            <label asp-for="Supplier.Note" class="control-label"></label>
+            <textarea asp-for="Supplier.Note" class="form-control"></textarea>
+            <span asp-validation-for="Supplier.Note" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+
+
+<div>
+    <h3>Контакты</h3>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="form-group">
+                <label asp-for="Supplier.Website" class="control-label"></label>
+                <input asp-for="Supplier.Website" class="form-control" />
+                <span asp-validation-for="Supplier.Website" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                <label asp-for="Supplier.Phone" class="control-label"></label>
+                <input asp-for="Supplier.Phone" class="form-control" />
+                <span asp-validation-for="Supplier.Phone" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <h4>Юридический адрес</h4>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label asp-for="Supplier.LegalAddressStreet" class="control-label"></label>
+                    <input asp-for="Supplier.LegalAddressStreet" class="form-control" />
+                    <span asp-validation-for="Supplier.LegalAddressStreet" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="Supplier.LegalAddressCity" class="control-label"></label>
+                    <input asp-for="Supplier.LegalAddressCity" class="form-control" />
+                    <span asp-validation-for="Supplier.LegalAddressCity" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="Supplier.LegalAddressCountry" class="control-label"></label>
+                    <input asp-for="Supplier.LegalAddressCountry" class="form-control" />
+                    <span asp-validation-for="Supplier.LegalAddressCountry" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <h4>Фактический адрес</h4>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label asp-for="Supplier.ActualAddressStreet" class="control-label"></label>
+                    <input asp-for="Supplier.ActualAddressStreet" class="form-control" />
+                    <span asp-validation-for="Supplier.ActualAddressStreet" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="Supplier.ActualAddressCity" class="control-label"></label>
+                    <input asp-for="Supplier.ActualAddressCity" class="form-control" />
+                    <span asp-validation-for="Supplier.ActualAddressCity" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="Supplier.ActualAddressCountry" class="control-label"></label>
+                    <input asp-for="Supplier.ActualAddressCountry" class="form-control" />
+                    <span asp-validation-for="Supplier.ActualAddressCountry" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <h4>Адрес склада</h4>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label asp-for="Supplier.WarehouseAddressStreet" class="control-label"></label>
+                    <input asp-for="Supplier.WarehouseAddressStreet" class="form-control" />
+                    <span asp-validation-for="Supplier.WarehouseAddressStreet" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="Supplier.WarehouseAddressCity" class="control-label"></label>
+                    <input asp-for="Supplier.WarehouseAddressCity" class="form-control" />
+                    <span asp-validation-for="Supplier.WarehouseAddressCity" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="Supplier.WarehouseAddressCountry" class="control-label"></label>
+                    <input asp-for="Supplier.WarehouseAddressCountry" class="form-control" />
+                    <span asp-validation-for="Supplier.WarehouseAddressCountry" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@using DigitalPurchasing.Core.Interfaces
+
+@{
+    Func<NomenclatureCategoryVm, string> getCatNameInHierarchy = null;
+    getCatNameInHierarchy = (category) =>
+    {
+        if (category.ParentId.HasValue)
+        {
+            string categoryName = category.IsDeleted ? "[Удалена]" : category.Name;
+            var parentCategory = Model.AvailableCategories.First(_ => _.Id == category.ParentId.Value);
+            return $"{getCatNameInHierarchy(parentCategory)} > {categoryName}";
+        }
+        else
+        {
+            return category.Name;
+        }
+    };
+}
+
+<div>
+
+    <h3>Категории закупок</h3>
+    <table class="table table-striped">
+        <tr>
+            <th>Категория</th>
+            @if (!isCreateMode)
+            {
+            <th style="width: 250px">Контакт 1</th>
+            <th style="width: 250px">Контакт 2</th>
+            }
+        </tr>
+        @for (int i = 0; i < Model.NomenclatureCategoies.Count; i++)
+        {
+            var nc = Model.NomenclatureCategoies[i];
+            <tr>
+                <td>
+                    @if (nc.IsDefaultSupplierCategory)
+                    {
+                        <span>Основная:</span>
+                        <select asp-for="NomenclatureCategoies[i].NomenclatureCategoryId"
+                                asp-items="Model.AvailableCategories.Select(cp => new SelectListItem()
+                                                {
+                                                    Value = cp.Id.ToString(),
+                                                    Text = getCatNameInHierarchy(cp),
+                                                    Selected = cp.Id == nc.NomenclatureCategoryId
+                                                }).OrderBy(_ => _.Text)"
+                                class="form-control"
+                                style="max-width:500px; display: inline-block">
+                            <option value="">-- Не выбрана --</option>
+                        </select>
+                    }
+                    else
+                    {
+                        @nc.NomenclatureCategoryFullName
+                        <input type="hidden" asp-for="NomenclatureCategoies[i].NomenclatureCategoryId" />
+                    }
+                    <input type="hidden" asp-for="NomenclatureCategoies[i].IsDefaultSupplierCategory" />
+                </td>
+                @if (!isCreateMode)
+                {
+                <td>
+                    <select asp-for="NomenclatureCategoies[i].NomenclatureCategoryPrimaryContactId"
+                            asp-items="Model.ContactPersons.OrderBy(cp => cp.FullName).Select(cp => new SelectListItem() { Value = cp.Id.ToString(), Text = cp.FullName, Selected = cp.Id == nc.NomenclatureCategoryPrimaryContactId })"
+                            class="form-control">
+                        <option value="">-- Не выбран --</option>
+                    </select>
+                </td>
+                <td>
+                    <select asp-for="NomenclatureCategoies[i].NomenclatureCategorySecondaryContactId"
+                            asp-items="Model.ContactPersons.OrderBy(cp => cp.FullName).Select(cp => new SelectListItem() { Value = cp.Id.ToString(), Text = cp.FullName, Selected = cp.Id == nc.NomenclatureCategorySecondaryContactId })"
+                            class="form-control">
+                        <option value="">-- Не выбран --</option>
+                    </select>
+                </td>
+                }
+            </tr>
+        }
+    </table>
+
+</div>

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core.Interfaces;
+using DigitalPurchasing.ExcelReader;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.CompetitionList;
@@ -17,11 +18,16 @@ namespace DigitalPurchasing.Web.Controllers
     {
         private readonly ICompetitionListService _competitionListService;
         private readonly ISupplierOfferService _supplierOfferService;
+        private readonly ISelectedSupplierService _selectedSupplierService;
 
-        public CompetitionListController(ICompetitionListService competitionListService, ISupplierOfferService supplierOfferService)
+        public CompetitionListController(
+            ICompetitionListService competitionListService,
+            ISupplierOfferService supplierOfferService,
+            ISelectedSupplierService selectedSupplierService)
         {
             _competitionListService = competitionListService;
             _supplierOfferService = supplierOfferService;
+            _selectedSupplierService = selectedSupplierService;
         }
 
         public IActionResult Index() => View();
@@ -49,10 +55,18 @@ namespace DigitalPurchasing.Web.Controllers
             return RedirectToAction(nameof(Edit), new { id });
         }
 
-        public IActionResult Edit(Guid id)
+        public async Task<IActionResult> Edit(Guid id)
         {
-            var vm = _competitionListService.GetById(id);
-            if (vm == null) return NotFound();
+            var cl = _competitionListService.GetById(id);
+            if (cl == null) return NotFound();
+
+            var reports = await _selectedSupplierService.GetReports(id);
+
+            var vm = new CompetitionListEditVm
+            {
+                CompetitionList = cl,
+                Reports = reports.ToList()
+            };
             return View(vm);
         }
 
@@ -79,6 +93,17 @@ namespace DigitalPurchasing.Web.Controllers
             }
 
             return RedirectToAction(nameof(Edit), "SupplierOffer", new { id = response.Id });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Report(Guid reportId)
+        {
+            var reportData = await _selectedSupplierService.GetReport(reportId);
+            var report = new ExcelSSR(reportData);
+            var fileBytes = report.Build();
+            var fileName = $"{reportData.CLCreatedOn:yyyyMMdd}_КЛ {reportData.CLNumber}_Отчет о выборе поставщика.xlsx";
+
+            return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }
 
         [HttpPost]

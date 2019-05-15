@@ -7,7 +7,7 @@
 
 <h2>@ViewBag.Title</h2>
 
-<h3>Подбор соответсвия номенклатуры в заявке клиента номенклатуре предприятия</h3>
+<h3>Подбор соответствия номенклатуры в заявке клиента номенклатуре предприятия</h3>
 
 <div id="app">
     <table class="table table-striped">
@@ -165,16 +165,12 @@
                     selectedNomenclature: function(val) {
                         if (val) {
                             this.nomenclatureAutocomplete = val.name;
-                        } else {
-                            this.nomenclatureAutocomplete = '';
                         }
                         this.loadFactor();
                     },
                     selectedUom: function (val) {
                         if (val) {
                             this.uomAutocomplete = val.name;
-                        } else {
-                            this.uomAutocomplete = '';
                         }
                         this.loadFactor();
                     }

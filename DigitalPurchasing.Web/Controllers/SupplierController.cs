@@ -1,12 +1,19 @@
 using System;
 using System.Collections.Generic;
 using DigitalPurchasing.Core.Interfaces;
+using DigitalPurchasing.Services.Exceptions;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.Supplier;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
+using System.Linq;
+using DigitalPurchasing.Core.Extensions;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using System.IO;
 
 namespace DigitalPurchasing.Web.Controllers
 {
@@ -18,8 +25,16 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         private readonly ISupplierService _supplierService;
+        private readonly INomenclatureCategoryService _nomenclatureCategoryService;
+        private const string SameInnErrorMessage = "Контрагент с таким ИНН уже есть в системе";
 
-        public SupplierController(ISupplierService supplierService) => _supplierService = supplierService;
+        public SupplierController(
+            ISupplierService supplierService,
+            INomenclatureCategoryService nomenclatureCategoryService)
+        {
+            _supplierService = supplierService;
+            _nomenclatureCategoryService = nomenclatureCategoryService;
+        }
 
         public IActionResult Index() => View();
 
@@ -51,12 +66,80 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpGet]
         public IActionResult Edit(Guid id)
         {
-            var vm = _supplierService.GetById(id);
-            if (vm == null) return NotFound();
+            var data = _supplierService.GetById(id);
+            if (data == null) return NotFound();
 
-            var contactPersons = _supplierService.GetContactPersonsBySupplier(id);
+            var vm = new SupplierEditVm
+            {
+                Supplier = data.Adapt<SupplierEditVm.SupplierVm>()
+            };
 
-            return View(new SupplierEditVm { Supplier = vm, ContactPersons = contactPersons });
+            LoadRelatedData(vm, id);
+
+            return View(vm);
+        }
+
+        private void LoadRelatedData(SupplierEditVm vm, Guid? supplierId)
+        {
+            if (supplierId.HasValue)
+            {
+                vm.ContactPersons = _supplierService.GetContactPersonsBySupplier(supplierId.Value);
+                vm.NomenclatureCategoies = _supplierService.GetSupplierNomenclatureCategories(supplierId.Value)
+                    .OrderByDescending(_ => _.IsDefaultSupplierCategory).ToList();
+            }
+            if (!vm.NomenclatureCategoies.Any(nc => nc.IsDefaultSupplierCategory))
+            {
+                vm.NomenclatureCategoies.Insert(0, new SupplierNomenclatureCategory()
+                {
+                    IsDefaultSupplierCategory = true,                    
+                });
+            }
+            vm.AvailableCategories = _nomenclatureCategoryService.GetAll(true).ToList();
+        }
+
+        [HttpPost]
+        public IActionResult Edit(SupplierEditVm vm)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _supplierService.Update(vm.Supplier.Adapt<SupplierVm>());
+                    SaveSupplierCategories(vm, vm.Supplier.Id);
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (SameInnException)
+                {
+                    ModelState.AddModelError(string.Empty, SameInnErrorMessage);
+                }
+            }
+
+            LoadRelatedData(vm, vm.Supplier.Id);
+            return View(vm);
+        }
+
+        private void SaveSupplierCategories(SupplierEditVm vm, Guid supplierId)
+        {
+            var defaultCategory = vm.NomenclatureCategoies.FirstOrDefault(_ => _.IsDefaultSupplierCategory);
+            if (defaultCategory != null)
+            {
+                var supplier = _supplierService.GetById(supplierId);
+                if (supplier.CategoryId != defaultCategory.NomenclatureCategoryId)
+                {
+                    if (supplier.CategoryId.HasValue)
+                    {
+                        _supplierService.RemoveSupplierNomenclatureCategoryContacts(supplierId, supplier.CategoryId.Value);
+                    }
+                    supplier.CategoryId = defaultCategory.NomenclatureCategoryId;
+                    _supplierService.Update(supplier);
+                }
+            }
+
+            var definedCategories = vm.NomenclatureCategoies.Where(nc => nc.NomenclatureCategoryId.HasValue);
+
+            _supplierService.SaveSupplierNomenclatureCategoryContacts(
+                supplierId,
+                definedCategories.Select(nc => (nc.NomenclatureCategoryId.Value, nc.NomenclatureCategoryPrimaryContactId, nc.NomenclatureCategorySecondaryContactId)));
         }
 
         [HttpGet, Route("/contactpersons/add/{supplierId}")]
@@ -119,6 +202,142 @@ namespace DigitalPurchasing.Web.Controllers
             }
 
             return Ok();
+        }
+
+        public IActionResult Create()
+        {
+            var vm = new SupplierEditVm();
+            LoadRelatedData(vm, null);
+            return View(vm);
+        }
+
+        [HttpPost]
+        public IActionResult Create(SupplierEditVm vm)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    Guid supplierId = _supplierService.CreateSupplier(vm.Supplier.Adapt<SupplierVm>(), User.CompanyId());
+                    SaveSupplierCategories(vm, supplierId);
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (SameInnException)
+                {
+                    ModelState.AddModelError(string.Empty, SameInnErrorMessage);
+                }
+            }
+
+            return View(vm);
+        }
+
+        [HttpGet]
+        public IActionResult Template()
+        {
+            var excelTemplate = new ExcelReader.SupplierListTemplate.ExcelTemplate();
+            return File(excelTemplate.Build(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "template.xlsx");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UploadTemplate(IFormFile file)
+        {
+            if (file == null)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            var fileName = file.FileName;
+            var fileExt = Path.GetExtension(fileName);
+            var filePath = Path.GetTempFileName() + fileExt;
+
+            using (var output = System.IO.File.Create(filePath))
+                await file.CopyToAsync(output);
+
+            var excelTemplate = new ExcelReader.SupplierListTemplate.ExcelTemplate();
+
+            var datas = excelTemplate.Read(filePath);
+
+            bool supplierWithSameInnExist = false;
+
+            foreach (var item in datas.Where(_ => !string.IsNullOrWhiteSpace(_.SupplierName)))
+            {
+                try
+                {
+                    NomenclatureCategoryVm category = null;
+
+                    if (!string.IsNullOrWhiteSpace(item.MainCategory))
+                    {
+                        category = _nomenclatureCategoryService.CreateOrUpdate(item.MainCategory, null);
+                        if (!string.IsNullOrWhiteSpace(item.SubCategory1))
+                        {
+                            category = _nomenclatureCategoryService.CreateOrUpdate(item.SubCategory1, category.Id);
+                            if (!string.IsNullOrWhiteSpace(item.SubCategory2))
+                            {
+                                category = _nomenclatureCategoryService.CreateOrUpdate(item.SubCategory2, category.Id);
+                            }
+                        }
+                    }
+
+                    Guid supplierId = _supplierService.CreateSupplier(new SupplierVm()
+                    {
+                        Inn = item.Inn,
+                        ErpCode = item.ErpCode,
+                        Name = item.SupplierName,
+                        OwnershipType = item.OwnershipType,
+                        PriceWithVat = item.PriceWithVat,
+                        Website = item.Website,
+                        ActualAddressCity = item.ActualAddressCity,
+                        ActualAddressCountry = item.ActualAddressCountry,
+                        ActualAddressStreet = item.ActualAddressStreet,
+                        LegalAddressCity = item.LegalAddressCity,
+                        LegalAddressCountry = item.LegalAddressCountry,
+                        LegalAddressStreet = item.LegalAddressStreet,
+                        WarehouseAddressCity = item.WarehouseAddressCity,
+                        WarehouseAddressCountry = item.WarehouseAddressCountry,
+                        WarehouseAddressStreet = item.WarehouseAddressStreet,
+                        DeliveryTerms = item.DeliveryTerms,
+                        Note = item.Note,
+                        OfferCurrency = item.OfferCurrency,
+                        PaymentDeferredDays = item.PaymentDeferredDays,
+                        Phone = item.SupplierPhone,
+                        SupplierType = item.SupplierType,
+                        CategoryId = category?.Id
+                    }, User.CompanyId());
+
+                    Guid? mainContactId = item.ContactSpecified
+                        ? (Guid?)_supplierService.AddContactPerson(new SupplierContactPersonVm()
+                        {
+                            SupplierId = supplierId,
+                            Email = item.ContactEmail,
+                            FirstName = item.ContactFirstName,
+                            LastName = item.ContactLastName,
+                            JobTitle = item.ContactJobTitle,
+                            MobilePhoneNumber = item.ContactMobilePhone,
+                            PhoneNumber = item.ContactPhone
+                        })
+                    : null;
+
+                    if (mainContactId.HasValue && category != null)
+                    {
+                        _supplierService.SaveSupplierNomenclatureCategoryContacts(supplierId,
+                            new List<(Guid nomenclatureCategoryId, Guid? primarySupplierContactId, Guid? secondarySupplierContactId)>()
+                            {
+                                (category.Id, mainContactId.Value, null)
+                            });
+                    }
+                }
+                catch (SameInnException)
+                {
+                    supplierWithSameInnExist = true;
+                }                
+            }
+
+            if (supplierWithSameInnExist)
+            {
+                TempData["ErrorMessage"] = "Некоторые поставщики не могут быть добавлены, так как поставщики с таким же ИНН уже есть в справочнике";
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }
