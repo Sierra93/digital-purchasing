@@ -44,7 +44,7 @@ namespace DigitalPurchasing.Web.Controllers
             using (var ms = new MemoryStream())
             {
                 await file.CopyToAsync(ms);
-                _fileService.CreateTermsFile(file.FileName, ms.ToArray(), file.ContentType);
+                _fileService.ReplaceTermsFile(file.FileName, ms.ToArray(), file.ContentType);
             }
 
             return RedirectToAction(nameof(Index));

@@ -19,15 +19,19 @@ namespace DigitalPurchasing.Services
             _db = db;
         }
 
-        public Guid CreateTermsFile(string fileName, byte[] bytes, string contentType)
+        public Guid ReplaceTermsFile(string fileName, byte[] bytes, string contentType)
         {
-            var file = new TermsFile
+            var file = _db.Files.OfType<TermsFile>().FirstOrDefault();
+            if (file == null)
             {
-                Bytes = bytes,
-                ContentType = contentType,
-                FileName = fileName
-            };
-            _db.TermsFiles.Add(file);
+                file = new TermsFile();
+                _db.TermsFiles.Add(file);
+            }
+
+            file.Bytes = bytes;
+            file.ContentType = contentType;
+            file.FileName = fileName;
+            
             _db.SaveChanges();
             return file.Id;
         }

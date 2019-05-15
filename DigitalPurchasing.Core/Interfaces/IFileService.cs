@@ -6,7 +6,7 @@ namespace DigitalPurchasing.Core.Interfaces
 {
     public interface IFileService
     {
-        Guid CreateTermsFile(string fileName, byte[] bytes, string contentType);
+        Guid ReplaceTermsFile(string fileName, byte[] bytes, string contentType);
         TermsFileDto GetTermsFile();
     }
 
