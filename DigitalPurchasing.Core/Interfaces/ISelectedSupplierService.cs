@@ -105,6 +105,13 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid Id { get; set; }
     }
 
+    public class SSVariantDtoComparer : IEqualityComparer<SSVariantDto>
+    {
+        public bool Equals(SSVariantDto x, SSVariantDto y) => x.Id == y.Id;
+
+        public int GetHashCode(SSVariantDto obj) => obj.Id.GetHashCode();
+    }
+
     public class SSDataDto
     {
         public Guid Id { get; set; }
@@ -118,6 +125,13 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid NomenclatureId { get; set; }
 
         public decimal Quantity { get; set; }
+    }
+
+    public class SSSupplierDtoComparer : IEqualityComparer<SSSupplierDto>
+    {
+        public bool Equals(SSSupplierDto x, SSSupplierDto y) => x.Id == y.Id;
+
+        public int GetHashCode(SSSupplierDto obj) => obj.Id.GetHashCode();
     }
 
     public class GenerateReportDataResult
