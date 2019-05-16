@@ -15,12 +15,11 @@ namespace DigitalPurchasing.Core.Interfaces
         IEnumerable<SupplierVm> GetByPublicIds(params int[] publicIds);
         void Update(SupplierVm model);
 
-        List<SupplierContactPersonVm> GetContactPersonsBySupplier(Guid supplierId);
+        List<SupplierContactPersonVm> GetContactPersonsBySupplier(Guid supplierId, bool whichCouldBeUsedForRequestsOnly = false);
         Guid AddContactPerson(SupplierContactPersonVm vm);
         Guid EditContactPerson(SupplierContactPersonVm vm);
         SupplierContactPersonVm GetContactPersonsById(Guid personId);
         void DeleteContactPerson(Guid personId);
-        SupplierContactPersonVm GetContactPersonBySupplier(Guid supplierId);
         Guid GetSupplierByEmail(Guid ownerId, string email);
         List<SupplierNomenclatureCategory> GetSupplierNomenclatureCategories(Guid supplierId);
         IEnumerable<SupplierVm> GetByCategoryIds(params Guid[] nomenclatureCategoryIds);
