@@ -49,12 +49,15 @@ namespace DigitalPurchasing.Services
 
             var qry = _db.Nomenclatures.Where(q => !q.IsDeleted);
 
+            search = search?.Trim();
+
             if (!string.IsNullOrEmpty(search))
             {
                 qry = from q in qry
-                      where (q.Name.Contains(search) && !string.IsNullOrEmpty(q.Name)) ||
-                            (q.NameEng.Contains(search) && !string.IsNullOrEmpty(q.NameEng)) ||
-                            q.Alternatives.Any(na => na.Name.Contains(search))
+                      where (q.Name.Contains(search)) ||
+                            (q.NameEng.Contains(search)) ||
+                            (q.Code.Contains(search)) ||
+                            q.Alternatives.Any(na => na.Name.Contains(search) || na.Code.Contains(search))
                       select q;
             }
 
@@ -67,7 +70,8 @@ namespace DigitalPurchasing.Services
                 item.CategoryFullName = _categoryService.FullCategoryName(item.CategoryId);
                 item.HasAlternativeWithRequiredName = !string.IsNullOrWhiteSpace(search) &&
                     !item.Name.Contains(search, StringComparison.InvariantCultureIgnoreCase) &&
-                    item.NameEng?.Contains(search, StringComparison.InvariantCultureIgnoreCase) != true;
+                    item.NameEng?.Contains(search, StringComparison.InvariantCultureIgnoreCase) != true &&
+                    item.Code?.Contains(search, StringComparison.InvariantCultureIgnoreCase) != true;
             }
 
             return new NomenclatureIndexData
@@ -175,9 +179,14 @@ namespace DigitalPurchasing.Services
 
             var qry = _db.NomenclatureAlternatives.Where(q => q.NomenclatureId == nomId);
             var total = qry.Count();
-            var orderedResults = string.IsNullOrWhiteSpace(sortBySearch)
+
+            sortBySearch = sortBySearch?.Trim();
+
+            var orderedResults = string.IsNullOrEmpty(sortBySearch)
                 ? qry.OrderBy($"{sortField}{(sortAsc ? "" : " DESC")}")
-                : qry.OrderByDescending(q => q.Name.Contains(sortBySearch)).ThenBy(q => q.Name);
+                : qry.OrderByDescending(q => q.Name.Contains(sortBySearch))
+                        .ThenByDescending(q => q.Code.Contains(sortBySearch))
+                        .ThenBy(q => q.Name);
             var result = orderedResults
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
