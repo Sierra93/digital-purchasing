@@ -49,6 +49,8 @@ namespace DigitalPurchasing.Services
 
             var qry = _db.Nomenclatures.Where(q => !q.IsDeleted);
 
+            search = search?.Trim();
+
             if (!string.IsNullOrEmpty(search))
             {
                 qry = from q in qry
