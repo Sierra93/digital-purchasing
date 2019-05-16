@@ -383,10 +383,27 @@ namespace DigitalPurchasing.Services
                                     item.PurchaseRequest.QuotationRequest.CompetitionList.SupplierOffers.Any(so => so.Id == soId)
                                select item).ToList();
 
+                var word2synonyms = new Dictionary<string, IReadOnlyList<string>>()
+                {
+                    { "очиститель", new List<string>() { "промывка" } }
+                };
+
                 Func<string, string> cleanupNomName = (nomName) => Regex.Replace(nomName, @"[^a-zA-Z\p{IsCyrillic}\s]", " ");
                 Func<string, string> leaveOnlyDigits = (str) => Regex.Replace(str, "[^0-9]", "");
                 Func<string, string> orderWords = (str) => string.Join(' ', str.Split(' ').OrderBy(w => w));
                 Func<string, string> removeNoize = (str) => string.Join(' ', str.Split(' ').Where(w => w.Length > 2));
+                Func<string, string> replaceSynonyms = (str) =>
+                {
+                    var result = new List<string>();
+                    foreach (var word in str.Split(' '))
+                    {
+                        foreach (var w2s in word2synonyms)
+                        {
+                            result.Add(w2s.Value.Any(s => s.Equals(word, StringComparison.InvariantCultureIgnoreCase)) ? w2s.Key : word);
+                        }
+                    }
+                    return string.Join(" ", result);
+                };
 
                 var unlinkedPrItems = prItems.Where(item => !soItems.Any(soItem => soItem.NomenclatureId == item.NomenclatureId))
                     .Select(item => new
@@ -402,11 +419,11 @@ namespace DigitalPurchasing.Services
 
                 var algResults = (from soItem in soItems.Where(_ => !_.NomenclatureId.HasValue)
                                   let soItemName = removeNoize(cleanupNomName(soItem.RawName).ReplaceSpacesWithOneSpace()).Trim()
-                                  let nameStr1 = orderWords(soItemName.ToLower())
+                                  let nameStr1 = orderWords(replaceSynonyms(soItemName.ToLower()))
                                   let soDigits = leaveOnlyDigits(soItem.RawName)
                                   from prItem in unlinkedPrItems
                                   let prItemName = removeNoize(cleanupNomName(prItem.RawName).ReplaceSpacesWithOneSpace()).Trim()
-                                  let nameStr2 = orderWords(prItemName.ToLower())
+                                  let nameStr2 = orderWords(replaceSynonyms(prItemName.ToLower()))
                                   let maxNameLen = Math.Max(nameStr1.Length, nameStr2.Length)
                                   let prDigits = leaveOnlyDigits(prItem.RawName)
                                   let isSameUom = soItem.RawUomId == prItem.RawUomMatchId
