@@ -43,6 +43,9 @@ namespace DigitalPurchasing.ExcelReader
                 var colVariantTotalPriceStart = colVariantQuantityStart + itemsPerVariantSectionCount + 1;
                 var colVariantTotalPriceEnd = colVariantTotalPriceStart + itemsPerVariantSectionCount - 1;
 
+                var rowDataStart = 6;
+                var rowTotal = rowDataStart + orderedCustomerItems.Count;
+
                 ws.Column(1).Width = 1.33;
                 ws.Column(2).AutoFit();
                 ws.Column(3).Width = 14.67;
@@ -113,6 +116,7 @@ namespace DigitalPurchasing.ExcelReader
                 ws.Cells[2, colVariantQuantityStart].HeaderText("Варианты распределения количества по поставщикам").AlignLeft();
                 ws.Cells[2, colVariantQuantityStart, 2, colVariantQuantityEnd].Merge = true;
                 ws.Cells[3, colVariantQuantityStart].TableText("ЕИ запроса").AlignLeft();
+                ws.Cells[rowTotal + 1, colVariantQuantityEnd].TableText("Доля поставщика в ИТОГО").AlignRight().GrayColor();
 
                 foreach (var itemsCountPerVariant in itemsCountByVariants.OrderBy(q => q.Variant.Number))
                 {
@@ -137,11 +141,10 @@ namespace DigitalPurchasing.ExcelReader
                     var variantSuppliersCount = variantData.Select(q => q.SupplierId).Distinct().Count();
                     var variantSuppliers = variantData.Select(q => q.Supplier).Distinct(new SSSupplierDtoComparer()).OrderBy(q => q.SONumber).ToList();
 
-                    var startRow = 6;
                     foreach (var item in orderedCustomerItems)
                     {
                         var itemIndex = orderedCustomerItems.IndexOf(item);
-                        var itemRow = startRow + itemIndex;
+                        var itemRow = rowDataStart + itemIndex;
 
                         var datas = variantData.Where(q => q.NomenclatureId == item.NomenclatureId).ToList();
 
@@ -158,14 +161,13 @@ namespace DigitalPurchasing.ExcelReader
                             ws.Cells[itemRow, colSectionEnd].Sum(sumStartAddr, sumEndAddr).BoldFont();
                         }
                     }
-
-                    var rowTotal = startRow + orderedCustomerItems.Count;
+                    
                     foreach (var variantSupplier in variantSuppliers)
                     {
                         var supplierIndex = variantSuppliers.IndexOf(variantSupplier);
                         var colSupplier = colSectionStart + supplierIndex;
-                        ws.Cells[startRow - 1, colSupplier].HeaderText(variantSupplier.Name);
-                        var sumCellStart = ws.Cells[startRow, colSupplier];
+                        ws.Cells[rowDataStart - 1, colSupplier].HeaderText(variantSupplier.Name);
+                        var sumCellStart = ws.Cells[rowDataStart, colSupplier];
                         var sumCellEnd = ws.Cells[rowTotal - 1, colSupplier];
                         var sumCellResult = ws.Cells[rowTotal, colSupplier];
                         sumCellResult.Sum(sumCellStart, sumCellEnd);
@@ -177,7 +179,7 @@ namespace DigitalPurchasing.ExcelReader
 
                     if (variantSuppliers.Count > 1)
                     {
-                        ws.Cells[startRow - 1, colSectionEnd].HeaderText("ИТОГО");
+                        ws.Cells[rowDataStart - 1, colSectionEnd].HeaderText("ИТОГО");
                         var finalSumStartAddr = ws.Cells[rowTotal, colSectionStart];
                         var finalSumEndAddr = ws.Cells[rowTotal, colSectionEnd - 1];
                         ws.Cells[rowTotal, colSectionEnd].Sum(finalSumStartAddr, finalSumEndAddr).BoldFont();
@@ -215,11 +217,10 @@ namespace DigitalPurchasing.ExcelReader
                     var variantSuppliersCount = variantData.Select(q => q.SupplierId).Distinct().Count();
                     var variantSuppliers = variantData.Select(q => q.Supplier).Distinct(new SSSupplierDtoComparer()).OrderBy(q => q.SONumber).ToList();
 
-                    var startRow = 6;
                     foreach (var item in orderedCustomerItems)
                     {
                         var itemIndex = orderedCustomerItems.IndexOf(item);
-                        var itemRow = startRow + itemIndex;
+                        var itemRow = rowDataStart + itemIndex;
 
                         var datas = variantData.Where(q => q.NomenclatureId == item.NomenclatureId).ToList();
 
@@ -237,28 +238,35 @@ namespace DigitalPurchasing.ExcelReader
                         }
                     }
 
-                    var rowTotal = startRow + orderedCustomerItems.Count;
                     foreach (var variantSupplier in variantSuppliers)
                     {
                         var supplierIndex = variantSuppliers.IndexOf(variantSupplier);
                         var colSupplier = colSectionStart + supplierIndex;
-                        ws.Cells[startRow - 1, colSupplier].HeaderText(variantSupplier.Name);
-                        var sumCellStart = ws.Cells[startRow, colSupplier];
+                        ws.Cells[rowDataStart - 1, colSupplier].HeaderText(variantSupplier.Name);
+                        var sumCellStart = ws.Cells[rowDataStart, colSupplier];
                         var sumCellEnd = ws.Cells[rowTotal - 1, colSupplier];
                         var sumCellResult = ws.Cells[rowTotal, colSupplier];
                         sumCellResult.Sum(sumCellStart, sumCellEnd);
                         if (variantSuppliers.Count == 1)
                         {
                             sumCellResult.BoldFont();
+                            ws.Cells[rowTotal + 1, colSupplier].Percentage(1).GrayColor().BoldFont();
+                        }
+                        else
+                        {
+                            var valueCell = ws.Cells[rowTotal, colSupplier];
+                            var totalCell = ws.Cells[rowTotal, colSectionEnd];
+                            ws.Cells[rowTotal + 1, colSupplier].Percentage(totalCell, valueCell).GrayColor();
                         }
                     }
 
                     if (variantSuppliers.Count > 1)
                     {
-                        ws.Cells[startRow - 1, colSectionEnd].HeaderText("ИТОГО");
+                        ws.Cells[rowDataStart - 1, colSectionEnd].HeaderText("ИТОГО");
                         var finalSumStartAddr = ws.Cells[rowTotal, colSectionStart];
                         var finalSumEndAddr = ws.Cells[rowTotal, colSectionEnd - 1];
                         ws.Cells[rowTotal, colSectionEnd].Sum(finalSumStartAddr, finalSumEndAddr).BoldFont();
+                        ws.Cells[rowTotal + 1, colSectionEnd].Percentage(1).GrayColor().BoldFont();
                     }
                 }
 
@@ -330,6 +338,9 @@ namespace DigitalPurchasing.ExcelReader
 
     public static class Extensions
     {
+        private const string MoneyFormat = "### ### ##0.00";
+        private const string PercentageFormat = "#0%";
+
         public static ExcelRange HeaderText(this ExcelRange cell, string text)
         {
             cell.Style.Font.Bold = true;
@@ -344,7 +355,7 @@ namespace DigitalPurchasing.ExcelReader
         {
             if (value > 0)
             {
-                cell.Style.Numberformat.Format = "### ### ##0.00";
+                cell.Style.Numberformat.Format = MoneyFormat;
             }
             cell.Value = value;
             cell.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
@@ -356,7 +367,7 @@ namespace DigitalPurchasing.ExcelReader
         {
             if (value > 0)
             {
-                cell.Style.Numberformat.Format = "### ### ##0.00";
+                cell.Style.Numberformat.Format = MoneyFormat;
             }
             cell.Value = value;
             cell.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
@@ -396,10 +407,34 @@ namespace DigitalPurchasing.ExcelReader
             return cell;
         }
 
+        public static ExcelRange GrayColor(this ExcelRange cell)
+        {
+            cell.Style.Font.Color.SetColor(1, 128, 128, 128);
+            return cell;
+        }
+
         public static ExcelRange Sum(this ExcelRange cell, ExcelRange start, ExcelRange end)
         {
             cell.Formula = $"=SUM({start.Address}:{end.Address})";
-            cell.Style.Numberformat.Format = "### ### ##0.00";
+            cell.Style.Numberformat.Format = MoneyFormat;
+            cell.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+            cell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            return cell;
+        }
+
+        public static ExcelRange Percentage(this ExcelRange cell, ExcelRange total, ExcelRange value)
+        {
+            cell.Formula = $"={value.Address}/{total.Address}";
+            cell.Style.Numberformat.Format = PercentageFormat;
+            cell.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+            cell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            return cell;
+        }
+
+        public static ExcelRange Percentage(this ExcelRange cell, decimal value)
+        {
+            cell.Value = value;
+            cell.Style.Numberformat.Format = PercentageFormat;
             cell.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
             cell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
             return cell;
