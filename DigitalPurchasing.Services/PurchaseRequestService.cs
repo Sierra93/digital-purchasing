@@ -245,7 +245,7 @@ namespace DigitalPurchasing.Services
                 OwnerId = pr.OwnerId
             });
 
-            if (nomRes.Items != null && nomRes.Items.Count == 1)
+            if (nomRes.Items.Count == 1)
             {
                 prItem.NomenclatureId = nomRes.Items[0].Id;
             }
