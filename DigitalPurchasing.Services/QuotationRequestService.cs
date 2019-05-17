@@ -211,38 +211,38 @@ namespace DigitalPurchasing.Services
             if (qr == null) return;
 
             // get supplier contacts
-            var contacts = suppliers.Select(supplierId => _supplierService.GetContactPersonBySupplier(supplierId))
-                .Where(q => q != null)
+            var contacts = suppliers.Select(supplierId => _supplierService.GetContactPersonsBySupplier(supplierId, whichCouldBeUsedForRequestsOnly: true))
+                .SelectMany(q => q)
                 .ToList();
 
-            if (!contacts.Any()) return;
-
-            // create excel and save
-            var excelBytes = GenerateExcelForQR(quotationRequestId);
-            var filename = $"RFQ_{qr.CreatedOn:yyyyMMdd}_{qr.PublicId}.xlsx";
-            var filepath = Path.Combine(Path.GetTempPath(), filename);
-            using (var fs = new FileStream(filepath, FileMode.Create, FileAccess.Write))
+            if (contacts.Any())
             {
-                fs.Write(excelBytes, 0, excelBytes.Length);
-            }
-            
-            // send emails for each contact
-            var emailUid = QuotationRequestToUid(quotationRequestId);
-            var userInfo = _userService.GetUserInfo(userId);
-            foreach (var contact in contacts)
-            {
-
-                await _emailService.SendRFQEmail(qr, userInfo, contact, emailUid, filepath);
-                await _db.QuotationRequestEmails.AddAsync(new QuotationRequestEmail
+                // create excel and save
+                var excelBytes = GenerateExcelForQR(quotationRequestId);
+                var filename = $"RFQ_{qr.CreatedOn:yyyyMMdd}_{qr.PublicId}.xlsx";
+                var filepath = Path.Combine(Path.GetTempPath(), filename);
+                using (var fs = new FileStream(filepath, FileMode.Create, FileAccess.Write))
                 {
-                    RequestId = qr.Id,
-                    ContactPersonId = contact.Id
-                });
-                await _db.SaveChangesAsync();
-            }
+                    fs.Write(excelBytes, 0, excelBytes.Length);
+                }
 
-            var rootId = await _rootService.GetIdByQR(quotationRequestId);
-            await _rootService.SetStatus(rootId, RootStatus.QuotationRequestSent);
+                // send emails for each contact
+                var emailUid = QuotationRequestToUid(quotationRequestId);
+                var userInfo = _userService.GetUserInfo(userId);
+                foreach (var contact in contacts)
+                {
+                    await _emailService.SendRFQEmail(qr, userInfo, contact, emailUid, filepath);
+                    await _db.QuotationRequestEmails.AddAsync(new QuotationRequestEmail
+                    {
+                        RequestId = qr.Id,
+                        ContactPersonId = contact.Id
+                    });
+                    await _db.SaveChangesAsync();
+                }
+
+                var rootId = await _rootService.GetIdByQR(quotationRequestId);
+                await _rootService.SetStatus(rootId, RootStatus.QuotationRequestSent);
+            }
         }
 
         public byte[] GenerateExcelForQR(Guid quotationRequestId)

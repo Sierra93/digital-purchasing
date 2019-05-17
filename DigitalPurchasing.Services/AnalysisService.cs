@@ -21,17 +21,19 @@ namespace DigitalPurchasing.Services
         private readonly ICompetitionListService _competitionListService;
         private readonly INomenclatureService _nomenclatureService;
         private readonly IRootService _rootService;
+        private readonly ISupplierOfferService _supplierOfferService;
 
         public AnalysisService(
             ApplicationDbContext db,
             ICompetitionListService competitionListService,
             INomenclatureService nomenclatureService,
-            IRootService rootService)
+            IRootService rootService, ISupplierOfferService supplierOfferService)
         {
             _db = db;
             _competitionListService = competitionListService;
             _nomenclatureService = nomenclatureService;
             _rootService = rootService;
+            _supplierOfferService = supplierOfferService;
         }
 
         public AnalysisDataVm GetData(Guid clId)
@@ -160,16 +162,22 @@ namespace DigitalPurchasing.Services
 
             var suppliers = cl.SupplierOffers.Select(q =>
             {
+                var soDetails = _supplierOfferService.GetDetailsById(q.Id);
+
                 return new AnalysisSupplier
                 {
                     Id = q.Id,
                     DeliveryTerms = q.DeliveryTerms,
                     PaymentTerms = q.PaymentTerms,
-                    Items = q.Items.Where(w => w != null).Select(w => new SupplierItem
+                    Items = q.Items.Where(w => w != null).Select(w =>
                     {
-                        Id = w.NomenclatureId,
-                        Price = w.RawPrice,
-                        Quantity = w.RawQty
+                        var soDetailsItem = soDetails.Items.Find(d => d.Offer.ItemId == w.Id);
+                        return new SupplierItem
+                        {
+                            Id = w.NomenclatureId,
+                            Price = soDetailsItem.ResourceConversion.OfferPrice,
+                            Quantity = soDetailsItem.Conversion.OfferQty
+                        };
                     }).ToList(),
                     SupplierId = q.Supplier.Id
                 };

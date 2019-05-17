@@ -129,11 +129,20 @@ namespace DigitalPurchasing.Services
             return qry.FirstOrDefault(q => q.Id == id)?.Adapt<SupplierVm>();
         }
 
-        public List<SupplierContactPersonVm> GetContactPersonsBySupplier(Guid supplierId)
-            => _db.SupplierContactPersons
-                .Where(q => q.SupplierId == supplierId)
+        public List<SupplierContactPersonVm> GetContactPersonsBySupplier(Guid supplierId, bool whichCouldBeUsedForRequestsOnly = false)
+        {
+            var query = _db.SupplierContactPersons
+                .Where(q => q.SupplierId == supplierId);
+
+            if (whichCouldBeUsedForRequestsOnly)
+            {
+                query = query.Where(q => q.UseForRequests);
+            }
+
+            return query
                 .ProjectToType<SupplierContactPersonVm>()
                 .ToList();
+        }
 
         public Guid AddContactPerson(SupplierContactPersonVm vm)
         {
@@ -172,14 +181,6 @@ namespace DigitalPurchasing.Services
             if (person == null) return;
             _db.SupplierContactPersons.Remove(person);
             _db.SaveChanges();
-        }
-
-        public SupplierContactPersonVm GetContactPersonBySupplier(Guid supplierId)
-        {
-            var supplierContactPerson = _db.SupplierContactPersons
-                .FirstOrDefault(q => q.SupplierId == supplierId && q.UseForRequests);
-
-            return supplierContactPerson?.Adapt<SupplierContactPersonVm>();
         }
 
         public Guid GetSupplierByEmail(Guid ownerId, string email)

@@ -54,5 +54,8 @@ namespace DigitalPurchasing.Core.Extensions
 
         public static string ReplaceSpacesWithOneSpace(this string str) =>
             string.IsNullOrWhiteSpace(str) ? str : Regex.Replace(str, @"\s+", " ");
+
+        public static string RemoveSpaces(this string str) =>
+            string.IsNullOrWhiteSpace(str) ? str : Regex.Replace(str, @"\s+", "");
     }
 }

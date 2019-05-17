@@ -83,7 +83,6 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> SentRequests([FromBody] SentRequestsModel model)
         {
-
             await _quotationRequestService.SendRequests(User.Id(), model.QuotationRequestId, model.Suppliers);
             var sentRequests = _quotationRequestService.GetSentRequests(model.QuotationRequestId);
             return Ok(sentRequests);

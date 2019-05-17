@@ -14,19 +14,22 @@ namespace DigitalPurchasing.Services
         private readonly IPurchaseRequestService _purchaseRequestService;
         private readonly IQuotationRequestService _quotationRequestService;
         private readonly ICompetitionListService _competitionListService;
+        private readonly IFileService _fileService;
 
         public AdminService(
             ICompanyService companyService,
             IUserService userService,
             IPurchaseRequestService purchaseRequestService,
             IQuotationRequestService quotationRequestService,
-            ICompetitionListService competitionListService)
+            ICompetitionListService competitionListService,
+            IFileService fileService)
         {
             _companyService = companyService;
             _userService = userService;
             _purchaseRequestService = purchaseRequestService;
             _quotationRequestService = quotationRequestService;
             _competitionListService = competitionListService;
+            _fileService = fileService;
         }
 
         public async Task<IEnumerable<AdminCompanyDto>> GetCompanies()
@@ -52,6 +55,7 @@ namespace DigitalPurchasing.Services
                 CompaniesCount = await _companyService.Count(),
                 UsersCount = await _userService.TotalCount(),
                 ConfirmedUsersCount = await _userService.ConfirmedEmailCount(),
+                TermsUploaded = _fileService.GetTermsFile() != null
             };
             return dto;
         }
