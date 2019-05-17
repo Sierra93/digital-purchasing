@@ -148,7 +148,7 @@ namespace DigitalPurchasing.ExcelReader
                         foreach (var data in datas)
                         {
                             var supplierIndex = variantSuppliers.IndexOf(variantSuppliers.Find(q => q.Id == data.SupplierId));
-                            ws.Cells[itemRow, colSectionStart + supplierIndex].TableText(1m);
+                            ws.Cells[itemRow, colSectionStart + supplierIndex].TableText(data.Quantity);
                         }
                         
                         if (variantSuppliersCount > 1)
@@ -164,14 +164,24 @@ namespace DigitalPurchasing.ExcelReader
                     {
                         var supplierIndex = variantSuppliers.IndexOf(variantSupplier);
                         var colSupplier = colSectionStart + supplierIndex;
-                        var sumStartAddr = ws.Cells[startRow, colSupplier];
-                        var sumEndAddr = ws.Cells[rowTotal - 1, colSupplier];
-                        ws.Cells[rowTotal, colSupplier].Sum(sumStartAddr, sumEndAddr);
+                        ws.Cells[startRow - 1, colSupplier].HeaderText(variantSupplier.Name);
+                        var sumCellStart = ws.Cells[startRow, colSupplier];
+                        var sumCellEnd = ws.Cells[rowTotal - 1, colSupplier];
+                        var sumCellResult = ws.Cells[rowTotal, colSupplier];
+                        sumCellResult.Sum(sumCellStart, sumCellEnd);
+                        if (variantSuppliers.Count == 1)
+                        {
+                            sumCellResult.BoldFont();
+                        }
                     }
 
-                    var finalSumStartAddr = ws.Cells[rowTotal, colSectionStart];
-                    var finalSumEndAddr = ws.Cells[rowTotal, colSectionEnd - 1];
-                    ws.Cells[rowTotal, colSectionEnd].Sum(finalSumStartAddr, finalSumEndAddr).BoldFont();
+                    if (variantSuppliers.Count > 1)
+                    {
+                        ws.Cells[startRow - 1, colSectionEnd].HeaderText("ИТОГО");
+                        var finalSumStartAddr = ws.Cells[rowTotal, colSectionStart];
+                        var finalSumEndAddr = ws.Cells[rowTotal, colSectionEnd - 1];
+                        ws.Cells[rowTotal, colSectionEnd].Sum(finalSumStartAddr, finalSumEndAddr).BoldFont();
+                    }
                 }
 
                 #endregion
