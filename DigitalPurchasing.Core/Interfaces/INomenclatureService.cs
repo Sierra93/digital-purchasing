@@ -15,6 +15,7 @@ namespace DigitalPurchasing.Core.Interfaces
         BaseResult<NomenclatureAutocompleteResult.AutocompleteResultItem> AutocompleteSingle(Guid id);
         void Delete(Guid id);
         NomenclatureWholeData GetWholeNomenclature();
+        NomenclatureVm FindBestFuzzyMatch(Guid ownerId, string nomName, int maxNameDistance);
     }
 
     public class NomenclatureWholeData

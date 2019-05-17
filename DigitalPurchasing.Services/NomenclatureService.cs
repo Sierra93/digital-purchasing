@@ -288,6 +288,18 @@ namespace DigitalPurchasing.Services
             !string.IsNullOrWhiteSpace(name) &&
             _db.Nomenclatures.Any(_ => _.Id != exceptNomenclatureId && _.Name == name);
 
+        public NomenclatureVm FindBestFuzzyMatch(Guid ownerId, string nomName, int maxNameDistance)
+        {
+            var results = from item in _db.Nomenclatures.IgnoreQueryFilters()
+                          let distance = ApplicationDbContext.LevenshteinDistanceFunc(nomName, item.Name, maxNameDistance)
+                          where item.OwnerId == ownerId &&
+                                distance.HasValue
+                          orderby distance
+                          select item;
+
+            return results.FirstOrDefault()?.Adapt<NomenclatureVm>();
+        }
+
         public NomenclatureAutocompleteResult Autocomplete(AutocompleteOptions options)
         {
             if (options.OwnerId == Guid.Empty)
