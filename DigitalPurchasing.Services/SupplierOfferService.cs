@@ -516,7 +516,7 @@ namespace DigitalPurchasing.Services
                 OwnerId = so.OwnerId
             });
 
-            if (nomRes.Items != null && nomRes.Items.Count == 1)
+            if (nomRes.Items.Count == 1)
             {
                 soItem.NomenclatureId = nomRes.Items[0].Id;
             }

@@ -19,6 +19,10 @@ namespace DigitalPurchasing.Data
 
         private Guid CompanyId() => _httpContextAccessor?.HttpContext?.User.CompanyId() ?? Guid.Empty;
 
+        [DbFunction("udf_LevenshteinDistance")]
+        public static int? LevenshteinDistanceFunc(string str1, string str2, int maxDistance) =>
+            throw new Exception("LevenshteinDistanceFunc scalar function should be in the database");
+
         public DbSet<Root> Roots { get; set; }
 
         public DbSet<Company> Companies { get; set; }
