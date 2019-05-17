@@ -293,6 +293,7 @@ namespace DigitalPurchasing.Services
             var results = from item in _db.Nomenclatures.IgnoreQueryFilters()
                           let distance = ApplicationDbContext.LevenshteinDistanceFunc(nomName, item.Name, maxNameDistance)
                           where item.OwnerId == ownerId &&
+                                !item.IsDeleted &&
                                 distance.HasValue
                           orderby distance
                           select item;

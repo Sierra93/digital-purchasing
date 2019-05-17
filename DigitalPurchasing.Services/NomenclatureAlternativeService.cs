@@ -46,6 +46,18 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
         }
 
+        public NomenclatureAlternativeVm FindBestFuzzyMatch(Guid ownerId, string nomName, int maxNameDistance)
+        {
+            var results = from item in _db.NomenclatureAlternatives.IgnoreQueryFilters()
+                          let distance = ApplicationDbContext.LevenshteinDistanceFunc(nomName, item.Name, maxNameDistance)
+                          where item.OwnerId == ownerId &&
+                                distance.HasValue
+                          orderby distance
+                          select item;
+
+            return results.FirstOrDefault()?.Adapt<NomenclatureAlternativeVm>();
+        }
+
         public NomenclatureAlternativeVm GetAlternativeById(Guid id)
         {
             var entity = _db.NomenclatureAlternatives.Find(id);

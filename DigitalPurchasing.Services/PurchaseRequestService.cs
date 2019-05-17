@@ -23,6 +23,7 @@ namespace DigitalPurchasing.Services
         private readonly IColumnNameService _columnNameService;
         private readonly IUomService _uomService;
         private readonly INomenclatureService _nomenclatureService;
+        private readonly INomenclatureAlternativeService _nomenclatureAlternativeService;
         private readonly IDeliveryService _deliveryService;
         private readonly IUploadedDocumentService _uploadedDocumentService;
         private readonly ICustomerService _customerService;
@@ -40,7 +41,8 @@ namespace DigitalPurchasing.Services
             IUploadedDocumentService uploadedDocumentService,
             ICustomerService customerService,
             IRootService rootService,
-            IConversionRateService conversionRateService)
+            IConversionRateService conversionRateService,
+            INomenclatureAlternativeService nomenclatureAlternativeService)
         {
             _db = db;
             _excelRequestReader = excelFileReader;
@@ -53,6 +55,7 @@ namespace DigitalPurchasing.Services
             _customerService = customerService;
             _rootService = rootService;
             _conversionRateService = conversionRateService;
+            _nomenclatureAlternativeService = nomenclatureAlternativeService;
         }
 
         public async Task<int> CountByCompany(Guid companyId) => await _db.PurchaseRequests.IgnoreQueryFilters().CountAsync(q => q.OwnerId == companyId);
@@ -247,8 +250,10 @@ namespace DigitalPurchasing.Services
 
             if (!nomRes.Items.Any())
             {
-                var bestMatch = _nomenclatureService.FindBestFuzzyMatch(pr.OwnerId, prItem.RawName, 5);
-                prItem.NomenclatureId = bestMatch?.Id;
+                var bestNomMatch = _nomenclatureService.FindBestFuzzyMatch(pr.OwnerId, prItem.RawName, 5);
+                prItem.NomenclatureId = bestNomMatch == null
+                    ? _nomenclatureAlternativeService.FindBestFuzzyMatch(pr.OwnerId, prItem.RawName, 5)?.NomenclatureId
+                    : bestNomMatch.Id;
             }
             // TODO :: why not just to use first item in case there is more than one item?!
             else if (nomRes.Items.Count == 1)
