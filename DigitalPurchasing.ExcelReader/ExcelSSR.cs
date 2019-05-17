@@ -194,11 +194,11 @@ namespace DigitalPurchasing.ExcelReader
 
                 foreach (var itemsCountPerVariant in itemsCountByVariants.OrderBy(q => q.Variant.Number))
                 {
-                    var currentVariant = itemsCountPerVariant.Variant;
+                    var variant = itemsCountPerVariant.Variant;
                     var colSectionStart = colVariantTotalPriceStart;
 
                     var previousVariants =
-                        itemsCountByVariants.Where(q => q.Variant.Number < currentVariant.Number).ToList();
+                        itemsCountByVariants.Where(q => q.Variant.Number < variant.Number).ToList();
 
                     if (previousVariants.Any())
                     {
@@ -208,8 +208,58 @@ namespace DigitalPurchasing.ExcelReader
                     var sectionWidth = itemsCountPerVariant.Count == 1 ? 1 : itemsCountPerVariant.Count + 1;
                     var colSectionEnd = colSectionStart + sectionWidth - 1;
 
-                    ws.Cells[4, colSectionStart].HeaderText($"Вариант {currentVariant.Number}").AlignLeft();
+                    ws.Cells[4, colSectionStart].HeaderText($"Вариант {variant.Number}").AlignLeft();
                     ws.Cells[4, colSectionStart, 4, colSectionEnd].Merge = true;
+
+                    var variantData = datasByVariants.Find(q => q.Key.Id == variant.Id);
+                    var variantSuppliersCount = variantData.Select(q => q.SupplierId).Distinct().Count();
+                    var variantSuppliers = variantData.Select(q => q.Supplier).Distinct(new SSSupplierDtoComparer()).OrderBy(q => q.SONumber).ToList();
+
+                    var startRow = 6;
+                    foreach (var item in orderedCustomerItems)
+                    {
+                        var itemIndex = orderedCustomerItems.IndexOf(item);
+                        var itemRow = startRow + itemIndex;
+
+                        var datas = variantData.Where(q => q.NomenclatureId == item.NomenclatureId).ToList();
+
+                        foreach (var data in datas)
+                        {
+                            var supplierIndex = variantSuppliers.IndexOf(variantSuppliers.Find(q => q.Id == data.SupplierId));
+                            ws.Cells[itemRow, colSectionStart + supplierIndex].TableText(data.Quantity*data.Price);
+                        }
+
+                        if (variantSuppliersCount > 1)
+                        {
+                            var sumStartAddr = ws.Cells[itemRow, colSectionStart];
+                            var sumEndAddr = ws.Cells[itemRow, colSectionEnd - 1];
+                            ws.Cells[itemRow, colSectionEnd].Sum(sumStartAddr, sumEndAddr).BoldFont();
+                        }
+                    }
+
+                    var rowTotal = startRow + orderedCustomerItems.Count;
+                    foreach (var variantSupplier in variantSuppliers)
+                    {
+                        var supplierIndex = variantSuppliers.IndexOf(variantSupplier);
+                        var colSupplier = colSectionStart + supplierIndex;
+                        ws.Cells[startRow - 1, colSupplier].HeaderText(variantSupplier.Name);
+                        var sumCellStart = ws.Cells[startRow, colSupplier];
+                        var sumCellEnd = ws.Cells[rowTotal - 1, colSupplier];
+                        var sumCellResult = ws.Cells[rowTotal, colSupplier];
+                        sumCellResult.Sum(sumCellStart, sumCellEnd);
+                        if (variantSuppliers.Count == 1)
+                        {
+                            sumCellResult.BoldFont();
+                        }
+                    }
+
+                    if (variantSuppliers.Count > 1)
+                    {
+                        ws.Cells[startRow - 1, colSectionEnd].HeaderText("ИТОГО");
+                        var finalSumStartAddr = ws.Cells[rowTotal, colSectionStart];
+                        var finalSumEndAddr = ws.Cells[rowTotal, colSectionEnd - 1];
+                        ws.Cells[rowTotal, colSectionEnd].Sum(finalSumStartAddr, finalSumEndAddr).BoldFont();
+                    }
                 }
 
                 #endregion

@@ -165,7 +165,7 @@ namespace DigitalPurchasing.Core.Interfaces
             public AnalysisVariantOptions Options { get; set; } = new AnalysisVariantOptions();
 
             public List<ResultBySupplier> Results { get; set; } = new List<ResultBySupplier>();
-            public List<ResultByItem> ResultsByItem { get; set; }
+            public List<ResultByItem> ResultsByItem { get; set; } = new List<ResultByItem>();
         }
 
         public class ResultBySupplier
