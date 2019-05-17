@@ -151,7 +151,7 @@ namespace DigitalPurchasing.Services
                         {
                             ReportId = ssReport.Id,
                             IsSelected = variant.IsSelected,
-                            Number = variants.FindIndex(e => e.Id == variantData.Id) + 1,
+                            Number = variants.IndexOf(variant) + 1,
                             InternalId = variant.Id,
                             CreatedOn = variant.CreatedOn
                         };
@@ -173,6 +173,7 @@ namespace DigitalPurchasing.Services
                                 SupplierId = ssSupplier.Id,
                                 NomenclatureId = resultByItem.ItemId,
                                 Quantity = resultByItem.Quantity,
+                                Price = resultByItem.Price
                             };
 
                             await _db.SSDatas.AddAsync(ssData);
@@ -183,12 +184,7 @@ namespace DigitalPurchasing.Services
 
                         if (variant.IsSelected)
                         {
-                            var supplierIds = datas.Select(q => q.SupplierId).ToList();
-
-                            var items = await _db.SSSupplierItems.Where(q => supplierIds.Contains(q.SupplierId)).ToListAsync();
-
-                            // todo: calc
-                            ssReport.SelectedVariantTotalPrice = datas.Sum(q => q.Quantity * GetPrice(items, q.SupplierId, q.NomenclatureId));
+                            ssReport.SelectedVariantTotalPrice = datas.Sum(q => q.Quantity * q.Price);
                             await _db.SaveChangesAsync();
                         }
                     }
@@ -205,12 +201,6 @@ namespace DigitalPurchasing.Services
                 }
             }
         }
-
-        private decimal GetPrice(List<SSSupplierItem> items, Guid supplierId, Guid nomenclatureId)
-        {
-            return items.Find(q => q.SupplierId == supplierId && q.NomenclatureId == nomenclatureId).Price;
-        }
-            
 
         public async Task<IEnumerable<SSReportSimple>> GetReports(Guid clId)
         {
