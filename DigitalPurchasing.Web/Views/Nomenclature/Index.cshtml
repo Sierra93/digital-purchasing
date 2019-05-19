@@ -398,8 +398,15 @@
                         _.each(noms, function (n) {
                             n._search = vm.search;
                             if (n.hasAlternativeWithRequiredName) {
-                                //console.log('has alts', n.id);
-                                vm.$refs.vuetable.showDetailRow(n.id);
+                                if (vm.$refs.vuetable.isVisibleDetailRow(n.id)) {
+                                    vm.$refs.vuetable.hideDetailRow(n.id);
+                                    // Add timeout. Otherwise details row not refresh sometimes
+                                    setTimeout(function () {
+                                        vm.$refs.vuetable.showDetailRow(n.id);
+                                    }, 100)
+                                } else {
+                                    vm.$refs.vuetable.showDetailRow(n.id);
+                                }
                             }
                         });
                     },
