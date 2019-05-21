@@ -317,8 +317,8 @@ namespace DigitalPurchasing.ExcelReader
                 var selectedVariantData = _report.Datas.Where(q => q.VariantId == selectedVariant.Id).ToList();
 
                 ws.Cells[dataRow, 3].TableText(_report.CreatedOn.ToString("dd.MM.yyyy HH:mm"));
-                ws.Cells[dataRow, 4].TableText((selectedVariantIndex + 1).ToString());
-                ws.Cells[dataRow, 5].TableText(selectedVariantData.Sum(q => q.Quantity * GetSupplierPrice(q.SupplierId, q.NomenclatureId)));
+                ws.Cells[dataRow, 4].TableText(_report.SelectedVariantNumber.ToString());
+                ws.Cells[dataRow, 5].TableText(_report.SelectedVariantTotalPrice);
                 ws.Cells[dataRow, 6].TableText("RUB"); // todo: currency
                 ws.Cells[dataRow, 8].TableText($"{_report.User.LastName} {_report.User.FirstName}");
 
