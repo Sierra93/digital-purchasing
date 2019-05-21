@@ -19,6 +19,9 @@ namespace DigitalPurchasing.Core.Interfaces
         public DateTime CLCreatedOn { get; set; }
         public int CLNumber { get; set; }
 
+        public decimal SelectedVariantTotalPrice { get; set; }
+        public int SelectedVariantNumber { get; set; }
+
         public UserDto User { get; set; }
 
         public SSCustomerDto Customer { get; set; }
