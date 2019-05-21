@@ -123,7 +123,7 @@ namespace DigitalPurchasing.Services
 
                         var soDetails = _supplierOfferService.GetDetailsById(supplierOffer.Id);
 
-                        var ssSupplierItems = supplierOffer.Items.Select(q =>
+                        var ssSupplierItems = supplierOffer.Items.Where(q => q != null).Select(q =>
                         {
                             var detailsItem = soDetails.Items.Find(i => i.Offer.ItemId == q.Id);
                             return new SSSupplierItem
