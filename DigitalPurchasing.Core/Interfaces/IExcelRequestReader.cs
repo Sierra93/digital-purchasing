@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DigitalPurchasing.Core.Enums;
 
 namespace DigitalPurchasing.Core.Interfaces
 {
@@ -40,6 +41,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public string GetValue(string header, int index)
         {
             var values = GetValues(header);
+            if (values == null || index >= values.Count) return string.Empty;
             return values?[index];
         }
 
