@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using DigitalPurchasing.Core;
+using DigitalPurchasing.Core.Enums;
 
 namespace DigitalPurchasing.Models
 {

@@ -1,4 +1,4 @@
-namespace DigitalPurchasing.Core.Interfaces
+namespace DigitalPurchasing.Core.Enums
 {
     public enum TableColumnType
     {

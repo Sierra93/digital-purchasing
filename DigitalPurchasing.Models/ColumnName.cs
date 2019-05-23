@@ -1,3 +1,4 @@
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Interfaces;
 
 namespace DigitalPurchasing.Models

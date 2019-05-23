@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DigitalPurchasing.Analysis2.Enums;
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Extensions;
 using Newtonsoft.Json;
 
@@ -164,20 +164,20 @@ namespace DigitalPurchasing.Core.Interfaces
             public DateTime CreatedOn { get; set; }
             public AnalysisVariantOptions Options { get; set; } = new AnalysisVariantOptions();
 
-            public List<ResultBySupplier> Results { get; set; } = new List<ResultBySupplier>();
+            public List<ResultBySupplierOffer> Results { get; set; } = new List<ResultBySupplierOffer>();
             public List<ResultByItem> ResultsByItem { get; set; } = new List<ResultByItem>();
         }
 
-        public class ResultBySupplier
+        public class ResultBySupplierOffer
         {
-            public Guid SupplierId { get; set; }
+            public Guid SupplierOfferId { get; set; }
             public decimal Total { get; set; }
             public int Order { get; set; }
         }
 
         public class ResultByItem
         {
-            public Guid SupplierId { get; set; } // so id
+            public Guid SupplierOfferId { get; set; }
             public Guid ItemId { get; set; }
             public decimal Quantity { get; set; }
             public decimal Price { get; set; }

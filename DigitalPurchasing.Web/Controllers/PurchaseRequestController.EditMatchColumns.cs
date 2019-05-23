@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
