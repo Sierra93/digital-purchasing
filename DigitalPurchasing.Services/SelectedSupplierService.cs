@@ -164,7 +164,7 @@ namespace DigitalPurchasing.Services
                         // variant datas
                         foreach (var resultByItem in variantData.ResultsByItem)
                         {
-                            var ssSupplier = ssSuppliers.Find(q => q.SOInternalId == resultByItem.SupplierId);
+                            var ssSupplier = ssSuppliers.Find(q => q.SOInternalId == resultByItem.SupplierOfferId);
 
                             // variant data
                             var ssData = new SSData

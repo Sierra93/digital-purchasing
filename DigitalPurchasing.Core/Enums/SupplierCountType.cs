@@ -1,4 +1,4 @@
-namespace DigitalPurchasing.Analysis2.Enums
+namespace DigitalPurchasing.Core.Enums
 {
     public enum SupplierCountType
     {

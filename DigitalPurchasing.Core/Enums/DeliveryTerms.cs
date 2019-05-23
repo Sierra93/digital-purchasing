@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace DigitalPurchasing.Core
+namespace DigitalPurchasing.Core.Enums
 {
     public enum DeliveryTerms
     {

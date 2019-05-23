@@ -1,6 +1,7 @@
 using DigitalPurchasing.ExcelReader;
 using System;
 using System.Linq;
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using Xunit;
