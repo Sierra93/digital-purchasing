@@ -213,9 +213,8 @@ namespace DigitalPurchasing.Services
                 item.Request.QtyMod = qtyMod;
                 item.Request.Currency = "RUB"; //TODO
                 item.Request.Uom = requestItem.Nomenclature.BatchUom.Name;
-                
-                var offerItem = offerItems
-                    .FirstOrDefault(q => q.NomenclatureId.HasValue && q.NomenclatureId == requestItem.NomenclatureId);
+
+                var offerItem = FindOfferItem(offerItems, requestItem);
                 if (offerItem == null) continue;
 
                 item.Offer.ItemId = offerItem.Id;
@@ -270,6 +269,20 @@ namespace DigitalPurchasing.Services
             }
 
             return result;
+        }
+
+        // todo: better algorithm to find match between PR and SO items. Add PRId to so item?
+        private SupplierOfferItem FindOfferItem(List<SupplierOfferItem> offerItems, PurchaseRequestItem requestItem)
+        {
+            var items = offerItems.Where(q => q.NomenclatureId.HasValue && q.NomenclatureId == requestItem.NomenclatureId).ToList();
+
+            if (items.Count == 0) return null;
+            if (items.Count == 1)
+            {
+                return items.First();
+            }
+
+            return items.FirstOrDefault(q => q.Position == requestItem.Position);
         }
 
         public SupplierOfferColumnsDataVm GetColumnsData(Guid id, bool globalSearch = false)
