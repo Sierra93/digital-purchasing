@@ -404,6 +404,22 @@ namespace DigitalPurchasing.Services
                     }
                     return string.Join(" ", result);
                 };
+                Func<string, string> getDimensions = (str) =>
+                {
+                    var match = Regex.Match(str, @"\s?\d+[,.]?\d*\s?[x*х]\s?\d+[,.]?\d*\s?", RegexOptions.IgnoreCase);
+                    var dims = match.Success ? match.Groups[0].Value.RemoveSpaces() : string.Empty;
+                    var cleanedUp = Regex.Replace(dims.Replace('.', ','), @"[^\d\*,]", "*", RegexOptions.IgnoreCase);
+                    return cleanedUp;
+                };
+                Func<string, string, string, string, (string nameWithDims1, string nameWithDims2)> getNamesWithDims = (name1, dims1, name2, dims2) =>
+                {
+                    if (!string.IsNullOrEmpty(dims1) && !string.IsNullOrEmpty(dims2))
+                    {
+                        return ($"{name1} {dims1}", $"{name2} {dims2}");
+                    }
+
+                    return (name1, name2);
+                };
 
                 var unlinkedPrItems = prItems.Where(item => !soItems.Any(soItem => soItem.NomenclatureId == item.NomenclatureId))
                     .Select(item => new
@@ -419,17 +435,20 @@ namespace DigitalPurchasing.Services
 
                 var algResults = (from soItem in soItems.Where(_ => !_.NomenclatureId.HasValue)
                                   let soItemName = removeNoize(cleanupNomName(soItem.RawName).ReplaceSpacesWithOneSpace()).Trim()
+                                  let soItemDims = getDimensions(soItem.RawName)
                                   let nameStr1 = orderWords(replaceSynonyms(soItemName.ToLower()))
                                   let soDigits = leaveOnlyDigits(soItem.RawName)
                                   from prItem in unlinkedPrItems
                                   let prItemName = removeNoize(cleanupNomName(prItem.RawName).ReplaceSpacesWithOneSpace()).Trim()
+                                  let prItemDims = getDimensions(prItem.RawName)
                                   let nameStr2 = orderWords(replaceSynonyms(prItemName.ToLower()))
-                                  let maxNameLen = Math.Max(nameStr1.Length, nameStr2.Length)
+                                  let names = getNamesWithDims(nameStr1, soItemDims, nameStr2, prItemDims)
+                                  let maxNameLen = Math.Max(names.nameWithDims1.Length, names.nameWithDims2.Length)
                                   let prDigits = leaveOnlyDigits(prItem.RawName)
                                   let isSameUom = soItem.RawUomId == prItem.RawUomMatchId
-                                  let nameIntersect = string.Join("", nameStr1.Split(' ').Intersect(nameStr2.Split(' '))).Length
-                                  let longestNameSubstr = LongestCommonSubstring(nameStr1.RemoveSpaces(), nameStr2.RemoveSpaces())
-                                  let nameDistance = alg.Distance(nameStr1, nameStr2)
+                                  let nameIntersect = string.Join("", names.nameWithDims1.Split(' ').Intersect(names.nameWithDims2.Split(' '))).Length
+                                  let longestNameSubstr = LongestCommonSubstring(names.nameWithDims1.RemoveSpaces(), names.nameWithDims2.RemoveSpaces())
+                                  let nameDistance = alg.Distance(names.nameWithDims1, names.nameWithDims2)
                                   let digitsDistance = alg.Distance(soDigits, prDigits)
                                   let qtyDiff = isSameUom ? Math.Abs(prItem.RawQty - soItem.RawQty) / (10 * Math.Max(prItem.RawQty, soItem.RawQty)) : 0.1m
                                   let completeDistance = (nameDistance + digitsDistance - 2 * Math.Max(longestNameSubstr, nameIntersect)) / (2 * maxNameLen) + (double)qtyDiff
@@ -440,13 +459,15 @@ namespace DigitalPurchasing.Services
                                       soDigits,
                                       prDigits,
                                       nameDistance,
-                                      nameStr1,
-                                      nameStr2,
+                                      names.nameWithDims1,
+                                      names.nameWithDims2,
                                       digitsDistance,
                                       qtyDiff,
                                       completeDistance,
                                       nameIntersect,
-                                      longestNameSubstr
+                                      longestNameSubstr,
+                                      soItemDims,
+                                      prItemDims
                                   }).ToList();
 
                 algResults = algResults
