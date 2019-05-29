@@ -393,15 +393,25 @@ namespace DigitalPurchasing.Services
                 }
             }
 
-            mainResults = mainResults
-                .OrderByDescending(_ => (_.Name != null && _.Name.Equals(q, StringComparison.InvariantCultureIgnoreCase))
-                    || (_.NameEng != null && _.NameEng.Equals(q, StringComparison.InvariantCultureIgnoreCase)))
-                .ThenByDescending(_ => _.Name != null && _.Name.StartsWith(q, StringComparison.InvariantCultureIgnoreCase))
-                .ThenByDescending(_ => _.NameEng != null && _.NameEng.StartsWith(q, StringComparison.InvariantCultureIgnoreCase))
-                .ThenByDescending(_ => _.Code != null && _.Code.StartsWith(q, StringComparison.InvariantCultureIgnoreCase))
-                .ToList();
+            var resultItems = mainResults.Select(n => new NomenclatureAutocompleteResult.AutocompleteResultItem
+            {
+                Id = n.Id,
+                Code = n.Code,
+                Name = n.Name,
+                NameEng = n.NameEng,
+                BatchUomId = n.BatchUom.Id,
+                BatchUomName = n.BatchUom.Name,                
+                IsFullMatch = (n.Name != null && n.Name.Equals(q, strComparison))
+                    || (n.NameEng != null && n.NameEng.Equals(q, strComparison))
+                    || (n.Code != null && n.Code.Equals(q, strComparison))
+            })
+            .OrderByDescending(_ => _.IsFullMatch)
+            .ThenByDescending(_ => _.Name != null && _.Name.StartsWith(q, strComparison))
+            .ThenByDescending(_ => _.NameEng != null && _.NameEng.StartsWith(q, strComparison))
+            .ThenByDescending(_ => _.Code != null && _.Code.StartsWith(q, strComparison))
+            .ToList();
 
-            result.Items.AddRange(mainResults.Adapt<List<NomenclatureAutocompleteResult.AutocompleteResultItem>>());
+            result.Items.AddRange(resultItems);
 
             return result;
         }

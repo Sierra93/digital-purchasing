@@ -151,6 +151,7 @@ namespace DigitalPurchasing.Core.Interfaces
             public string Code { get; set; }
             public string BatchUomName { get; set; }
             public Guid BatchUomId { get; set; }
+            public bool IsFullMatch { get; set; }
         }
 
         public List<AutocompleteResultItem> Items { get; set; } = new List<AutocompleteResultItem>();
