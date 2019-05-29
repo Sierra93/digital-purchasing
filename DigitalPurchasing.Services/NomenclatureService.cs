@@ -394,7 +394,9 @@ namespace DigitalPurchasing.Services
             }
 
             mainResults = mainResults
-                .OrderByDescending(_ => _.Name != null && _.Name.StartsWith(q, StringComparison.InvariantCultureIgnoreCase))
+                .OrderByDescending(_ => (_.Name != null && _.Name.Equals(q, StringComparison.InvariantCultureIgnoreCase))
+                    || (_.NameEng != null && _.NameEng.Equals(q, StringComparison.InvariantCultureIgnoreCase)))
+                .ThenByDescending(_ => _.Name != null && _.Name.StartsWith(q, StringComparison.InvariantCultureIgnoreCase))
                 .ThenByDescending(_ => _.NameEng != null && _.NameEng.StartsWith(q, StringComparison.InvariantCultureIgnoreCase))
                 .ThenByDescending(_ => _.Code != null && _.Code.StartsWith(q, StringComparison.InvariantCultureIgnoreCase))
                 .ToList();
