@@ -256,9 +256,9 @@ namespace DigitalPurchasing.Services
                     : bestNomMatch.Id;
             }
             // TODO :: why not just to use first item in case there is more than one item?!
-            else if (nomRes.Items.Count == 1)
+            else if (nomRes.Items.Count(q => q.IsFullMatch) == 1)
             {
-                prItem.NomenclatureId = nomRes.Items[0].Id;
+                prItem.NomenclatureId = nomRes.Items.First(q => q.IsFullMatch).Id;
             }
 
             #endregion

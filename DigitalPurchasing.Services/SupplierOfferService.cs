@@ -550,9 +550,9 @@ namespace DigitalPurchasing.Services
                 OwnerId = so.OwnerId
             });
 
-            if (nomRes.Items.Count == 1)
+            if (nomRes.Items.Count(q => q.IsFullMatch) == 1)
             {
-                soItem.NomenclatureId = nomRes.Items[0].Id;
+                soItem.NomenclatureId = nomRes.Items.First(q => q.IsFullMatch).Id;
             }
 
             #endregion
