@@ -4,6 +4,7 @@ using System.Linq;
 using DigitalPurchasing.Analysis.Filters;
 using DigitalPurchasing.Analysis.Pipelines;
 using DigitalPurchasing.Core.Enums;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces.Analysis;
 
 namespace DigitalPurchasing.Analysis
@@ -17,7 +18,7 @@ namespace DigitalPurchasing.Analysis
         public AnalysisCore(AnalysisCustomer customer, IEnumerable<AnalysisSupplier> suppliers)
         {
             _customer = customer;
-            _suppliers = suppliers;
+            _suppliers = suppliers.ToList();
             _customerItemsLookup = _customer.Items.ToDictionary(q => q.NomenclatureId);
         }
 
@@ -35,53 +36,130 @@ namespace DigitalPurchasing.Analysis
 
                 var suppliers = supplierPipeline.Process(_suppliers).ToList();
 
+                if (suppliers.Count() == 0)
+                {
+                    results.Add(AnalysisResult.Empty(variantData.Id));
+                    continue;
+                }
+
+                var minVariant = new Dictionary<Guid, decimal>();
+
+                foreach (var customerItem in _customerItemsLookup)
+                {
+                    var items = suppliers
+                        .SelectMany(q => q.Items.Where(w => w.NomenclatureId == customerItem.Key && w.Quantity >= customerItem.Value.Quantity));
+
+                    if (items.Any())
+                    {
+                        minVariant.Add(customerItem.Key, items.Min(q => q.TotalPrice));
+                    }
+                    else
+                    {
+                        results.Add(AnalysisResult.Empty(variantData.Id));
+                        continue;
+                    }
+                }
+
+                var suppliersCount = suppliers.Count;
                 var suppliersCountOptions = variantData.SuppliersCountOptions;
+                var suppliersIndexes = Enumerable.Range(0, suppliersCount);
+                var suppliersIndexesCombinations = suppliersIndexes.Combinations();
 
-                if (suppliersCountOptions.Type != SupplierCountType.Any)
+                switch (suppliersCountOptions.Type)
                 {
-                    if (suppliersCountOptions.Type == SupplierCountType.LessOrEqual
-                        || (suppliersCountOptions.Type == SupplierCountType.Equal && suppliersCountOptions.Count == 1))
-                    {
-                        suppliers = suppliers
-                            .OrderBy(q => q.Items.Sum(w => w.TotalPrice))
-                            .Take(suppliersCountOptions.Count)
-                            .ToList();
-                    }
+                    case SupplierCountType.Any:
+                        suppliersIndexesCombinations = suppliersIndexesCombinations.Where(q => q.Count() >= 1);
+                        break;
+                    case SupplierCountType.Equal:
+                        suppliersIndexesCombinations = suppliersIndexesCombinations.Where(q => q.Count() == suppliersCountOptions.Count);
+                        break;
+                    case SupplierCountType.LessOrEqual:
+                        suppliersIndexesCombinations = suppliersIndexesCombinations.Where(q => q.Count() >= 1 && q.Count() <= suppliersCountOptions.Count);
+                        break;
                 }
 
-                var datas = new List<AnalysisResultData>();
-                foreach (var supplier in suppliers)
+                var suppliersScores = new List<(List<int> Indexes, decimal Score)>();
+
+                foreach (var suppliersIndexesCombination in suppliersIndexesCombinations)
                 {
-                    var items = supplier.Items.Where(q => _customerItemsLookup.ContainsKey(q.NomenclatureId));
-                    foreach (var item in items)
+                    decimal score = 1;
+
+                    foreach (var customerItemLooku in _customerItemsLookup)
                     {
-                        var customerQuantity = _customerItemsLookup[item.NomenclatureId].Quantity;
-                        datas.Add(new AnalysisResultData(
-                            supplier.SupplierId,
-                            supplier.SupplierOfferId,
-                            item.NomenclatureId,
-                            item.Price,
-                            item.Quantity,
-                            customerQuantity));
+                        var nomenclatureId = customerItemLooku.Key;
+                        var customerQuantity = customerItemLooku.Value.Quantity;
+
+                        var items = suppliers
+                            .Where(q => suppliersIndexesCombination.Contains(suppliers.IndexOf(q)))
+                            .SelectMany(q => q.Items.Where(i => i.NomenclatureId == nomenclatureId && i.Quantity >= customerQuantity));
+
+                        if (items.Any())
+                        {
+                            var scoreMod = minVariant[nomenclatureId] / items.Min(q => q.TotalPrice);
+                            score *= scoreMod;
+                        }
+                        else
+                        {
+                            score = 0;
+                        }
                     }
+
+                    suppliersScores.Add((Indexes: suppliersIndexesCombination.ToList(), Score: score));
                 }
 
-                var datasByNomId = datas
-                        .GroupBy(q => q.NomenclatureId)
-                        .ToDictionary(k => k.Key, v => v)
-                        .OrderByDescending(q => q.Value.Average(w => w.TotalPrice))
-                        .ToDictionary(k => k.Key, v => v.Value.ToList());
+                var bestCombination = suppliersScores.OrderByDescending(q => q.Score).First();
+
+                if (bestCombination.Score == 0)
+                {
+                    results.Add(AnalysisResult.Empty(variantData.Id));
+                    continue;
+                }
+
+                var bestCombinationSuppliers = suppliers
+                        .Where(q => bestCombination.Indexes.Contains(suppliers.IndexOf(q)));
 
                 var bestDatas = new List<AnalysisResultData>();
 
-                foreach (var dataByNomId in datasByNomId)
+                foreach (var customerItemLookup in _customerItemsLookup)
                 {
-                    var validDatas = dataByNomId.Value.Where(q => q.Quantity >= q.CustomerQuantity && q.TotalPrice > 0).ToList();
-                    if (validDatas.Any())
+                    var nomenclatureId = customerItemLookup.Key;
+
+                    var datas = bestCombinationSuppliers
+                        .Select(q => {
+                            var supplier = q;
+                            var supplierItem = q.Items
+                                .Where(i => i.NomenclatureId == nomenclatureId)
+                                .Cast<AnalysisSupplierItem?>()
+                                .FirstOrDefault();
+
+                            if (!supplierItem.HasValue)
+                            {
+                                return default;                                
+                            }
+
+                            var customerQuantity = _customerItemsLookup[nomenclatureId].Quantity;
+                            var resultData = new AnalysisResultData(
+                                supplier.SupplierId,
+                                supplier.SupplierOfferId,
+                                supplierItem.Value.NomenclatureId,
+                                supplierItem.Value.Price,
+                                supplierItem.Value.Quantity,
+                                customerQuantity);
+
+                            return resultData;
+                        });
+
+                    if (datas.Any(q => !q.Equals(default(AnalysisResultData))))
                     {
-                        var data = validDatas.Aggregate((min, x) => x.TotalPrice < min.TotalPrice ? x : min);
+                        var data = datas.Where(q => !q.Equals(default(AnalysisResultData))).Aggregate((min, x) => x.TotalPrice < min.TotalPrice ? x : min);
                         bestDatas.Add(data);
                     }
+                    else
+                    {
+                        // only all positions
+                        results.Add(AnalysisResult.Empty(variantData.Id));
+                        continue;
+                    }                        
                 }
 
                 // only all positions
@@ -100,7 +178,7 @@ namespace DigitalPurchasing.Analysis
                 
                 results.Add(new AnalysisResult(variantData.Id, bestDatas));
             }
-            
+
             return results;
         }
 
