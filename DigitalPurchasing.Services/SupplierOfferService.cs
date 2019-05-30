@@ -420,7 +420,7 @@ namespace DigitalPurchasing.Services
                 };
                 Func<string, string> getDimensions = (str) =>
                 {
-                    var match = Regex.Match(str, @"\s?\d+[,.]?\d*\s?[x*х]\s?\d+[,.]?\d*\s?", RegexOptions.IgnoreCase);
+                    var match = Regex.Match(str, @"\s?\d+[,.]?\d*\s?[x*х]\s?\d+[,.]?\d*\s?([x*х]\s?\d+[,.]?\d*)?", RegexOptions.IgnoreCase);
                     var dims = match.Success ? match.Groups[0].Value.RemoveSpaces() : string.Empty;
                     var cleanedUp = Regex.Replace(dims.Replace('.', ','), @"[^\d\*,]", "*", RegexOptions.IgnoreCase);
                     return cleanedUp;
