@@ -402,7 +402,8 @@ namespace DigitalPurchasing.Services
                 };
 
                 Func<string, string> cleanupNomName = (nomName) => Regex.Replace(nomName, @"[^a-zA-Z\p{IsCyrillic}\s]", " ");
-                Func<string, string> leaveOnlyDigits = (str) => Regex.Replace(str, "[^0-9]", "");
+                Func<string, string> leaveOnlyDigits = (str) => Regex.Replace(str, "[^0-9]", " ").ReplaceSpacesWithOneSpace();
+                Func<string, string> onlyDigitsOrderedByGroupLen = (str) => leaveOnlyDigits(str).Split(' ').OrderBy(s => s.Length).JoinNotEmpty(" ");
                 Func<string, string> orderWords = (str) => string.Join(' ', str.Split(' ').OrderBy(w => w));
                 Func<string, string> removeNoize = (str) => string.Join(' ', str.Split(' ').Where(w => w.Length > 2));
                 Func<string, string> replaceSynonyms = (str) =>
@@ -450,14 +451,14 @@ namespace DigitalPurchasing.Services
                                   let soItemName = removeNoize(cleanupNomName(soItem.RawName).ReplaceSpacesWithOneSpace()).Trim()
                                   let soItemDims = getDimensions(soItem.RawName)
                                   let nameStr1 = orderWords(replaceSynonyms(soItemName.ToLower()))
-                                  let soDigits = leaveOnlyDigits(soItem.RawName)
+                                  let soDigits = onlyDigitsOrderedByGroupLen(soItem.RawName)
                                   from prItem in unlinkedPrItems
                                   let prItemName = removeNoize(cleanupNomName(prItem.RawName).ReplaceSpacesWithOneSpace()).Trim()
                                   let prItemDims = getDimensions(prItem.RawName)
                                   let nameStr2 = orderWords(replaceSynonyms(prItemName.ToLower()))
                                   let names = getNamesWithDims(nameStr1, soItemDims, nameStr2, prItemDims)
                                   let maxNameLen = Math.Max(names.nameWithDims1.Length, names.nameWithDims2.Length)
-                                  let prDigits = leaveOnlyDigits(prItem.RawName)
+                                  let prDigits = onlyDigitsOrderedByGroupLen(prItem.RawName)
                                   let isSameUom = soItem.RawUomId == prItem.RawUomMatchId
                                   let nameIntersect = string.Join("", names.nameWithDims1.Split(' ').Intersect(names.nameWithDims2.Split(' '))).Length
                                   let longestNameSubstr = LongestCommonSubstring(names.nameWithDims1.RemoveSpaces(), names.nameWithDims2.RemoveSpaces())
