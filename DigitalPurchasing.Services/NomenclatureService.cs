@@ -399,8 +399,8 @@ namespace DigitalPurchasing.Services
                 Code = n.Code,
                 Name = n.Name,
                 NameEng = n.NameEng,
-                BatchUomId = n.BatchUom.Id,
-                BatchUomName = n.BatchUom.Name,                
+                BatchUomId = n.BatchUom?.Id ?? Guid.Empty,
+                BatchUomName = n.BatchUom?.Name ?? string.Empty,                
                 IsFullMatch = (n.Name != null && n.Name.Equals(q, strComparison))
                     || (n.NameEng != null && n.NameEng.Equals(q, strComparison))
                     || (n.Code != null && n.Code.Equals(q, strComparison))
