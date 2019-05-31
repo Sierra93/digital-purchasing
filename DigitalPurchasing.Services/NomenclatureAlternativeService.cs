@@ -299,5 +299,15 @@ namespace DigitalPurchasing.Services
             if (forBulkUpdateNA.Any())
                 _db.BulkUpdate(forBulkUpdateNA);
         }
+
+        public void Delete(Guid id)
+        {
+            var entity = _db.NomenclatureAlternatives.Find(id);
+            if (entity != null)
+            {
+                _db.NomenclatureAlternatives.Remove(entity);
+                _db.SaveChanges();
+            }
+        }
     }
 }

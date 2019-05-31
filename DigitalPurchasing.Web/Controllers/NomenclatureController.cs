@@ -175,6 +175,13 @@ namespace DigitalPurchasing.Web.Controllers
             return Ok();
         }
 
+        [HttpPost]
+        public IActionResult DeleteAlternative([FromBody]DeleteVm vm)
+        {
+            _nomenclatureAlternativeService.Delete(vm.Id);
+            return Ok();
+        }
+
         [HttpGet]
         public IActionResult Template()
         {

@@ -29,5 +29,8 @@ namespace DigitalPurchasing.Core.Extensions
                 }
             }
         }
+
+        public static string JoinNotEmpty(this IEnumerable<string> values, string separator = ",") =>
+            string.Join(separator, values.Where(i => !string.IsNullOrWhiteSpace(i)));
     }
 }

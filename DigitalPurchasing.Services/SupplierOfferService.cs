@@ -361,13 +361,24 @@ namespace DigitalPurchasing.Services
                     RawUomStr = string.IsNullOrEmpty(supplierOffer.UploadedDocument.Headers.Uom) ? "" : table.GetValue(supplierOffer.UploadedDocument.Headers.Uom, i)
                 };
 
-                Autocomplete(supplierOffer, rawItem);
+                rawItem.RawUomId = FindUomId(rawItem.RawUomStr, supplierOffer.OwnerId);
+                rawItem.NomenclatureId = FindNomenclatureId(rawItem.RawName, supplierOffer.SupplierId.Value, supplierOffer.OwnerId);                
 
                 rawItems.Add(rawItem);
             }
 
             var withUndefinedNoms = rawItems.Where(_ => !_.NomenclatureId.HasValue).ToList();
             FixSoNomenclatureIds(withUndefinedNoms);
+
+            foreach (var item in rawItems)
+            {
+                if (item.NomenclatureId != null && item.RawUomId != null)
+                {
+                    var rate = _conversionRateService.GetRate(item.RawUomId.Value, item.NomenclatureId.Value).Result;
+                    item.CommonFactor = rate.CommonFactor;
+                    item.NomenclatureFactor = rate.NomenclatureFactor;
+                }
+            }
 
             _db.BulkInsert(rawItems);
 
@@ -402,7 +413,8 @@ namespace DigitalPurchasing.Services
                 };
 
                 Func<string, string> cleanupNomName = (nomName) => Regex.Replace(nomName, @"[^a-zA-Z\p{IsCyrillic}\s]", " ");
-                Func<string, string> leaveOnlyDigits = (str) => Regex.Replace(str, "[^0-9]", "");
+                Func<string, string> leaveOnlyDigits = (str) => Regex.Replace(str, "[^0-9]", " ").ReplaceSpacesWithOneSpace();
+                Func<string, string> onlyDigitsOrderedByGroupLen = (str) => leaveOnlyDigits(str).Split(' ').OrderBy(s => s.Length).JoinNotEmpty(" ");
                 Func<string, string> orderWords = (str) => string.Join(' ', str.Split(' ').OrderBy(w => w));
                 Func<string, string> removeNoize = (str) => string.Join(' ', str.Split(' ').Where(w => w.Length > 2));
                 Func<string, string> replaceSynonyms = (str) =>
@@ -419,7 +431,7 @@ namespace DigitalPurchasing.Services
                 };
                 Func<string, string> getDimensions = (str) =>
                 {
-                    var match = Regex.Match(str, @"\s?\d+[,.]?\d*\s?[x*х]\s?\d+[,.]?\d*\s?", RegexOptions.IgnoreCase);
+                    var match = Regex.Match(str, @"\s?\d+[,.]?\d*\s?[x*х]\s?\d+[,.]?\d*\s?([x*х]\s?\d+[,.]?\d*)?", RegexOptions.IgnoreCase);
                     var dims = match.Success ? match.Groups[0].Value.RemoveSpaces() : string.Empty;
                     var cleanedUp = Regex.Replace(dims.Replace('.', ','), @"[^\d\*,]", "*", RegexOptions.IgnoreCase);
                     return cleanedUp;
@@ -450,14 +462,14 @@ namespace DigitalPurchasing.Services
                                   let soItemName = removeNoize(cleanupNomName(soItem.RawName).ReplaceSpacesWithOneSpace()).Trim()
                                   let soItemDims = getDimensions(soItem.RawName)
                                   let nameStr1 = orderWords(replaceSynonyms(soItemName.ToLower()))
-                                  let soDigits = leaveOnlyDigits(soItem.RawName)
+                                  let soDigits = onlyDigitsOrderedByGroupLen(soItem.RawName)
                                   from prItem in unlinkedPrItems
                                   let prItemName = removeNoize(cleanupNomName(prItem.RawName).ReplaceSpacesWithOneSpace()).Trim()
                                   let prItemDims = getDimensions(prItem.RawName)
                                   let nameStr2 = orderWords(replaceSynonyms(prItemName.ToLower()))
                                   let names = getNamesWithDims(nameStr1, soItemDims, nameStr2, prItemDims)
                                   let maxNameLen = Math.Max(names.nameWithDims1.Length, names.nameWithDims2.Length)
-                                  let prDigits = leaveOnlyDigits(prItem.RawName)
+                                  let prDigits = onlyDigitsOrderedByGroupLen(prItem.RawName)
                                   let isSameUom = soItem.RawUomId == prItem.RawUomMatchId
                                   let nameIntersect = string.Join("", names.nameWithDims1.Split(' ').Intersect(names.nameWithDims2.Split(' '))).Length
                                   let longestNameSubstr = LongestCommonSubstring(names.nameWithDims1.RemoveSpaces(), names.nameWithDims2.RemoveSpaces())
@@ -481,17 +493,14 @@ namespace DigitalPurchasing.Services
                                       longestNameSubstr,
                                       soItemDims,
                                       prItemDims
-                                  }).ToList();
-
-                algResults = algResults
-                    .OrderBy(el => el.completeDistance).ToList();
-
+                                  });
+                
                 while (algResults.Any())
                 {
-                    algResults[0].soItem.NomenclatureId = algResults[0].prItem.NomenclatureId;
-                    var soItemId = algResults[0].soItem.Id;
-                    var prItemId = algResults[0].prItem.Id;
-                    algResults = algResults.Where(el => el.soItem.Id != soItemId && el.prItem.Id != prItemId).OrderBy(el => el.completeDistance).ToList();
+                    algResults = algResults.OrderBy(el => el.completeDistance);
+                    var bestMatch = algResults.First();
+                    bestMatch.soItem.NomenclatureId = bestMatch.prItem.NomenclatureId;
+                    algResults = algResults.Where(el => el.soItem.Id != bestMatch.soItem.Id && el.prItem.Id != bestMatch.prItem.Id);
                 }
             }
         }
@@ -527,46 +536,30 @@ namespace DigitalPurchasing.Services
             return maxlen;
         }
 
-        private void Autocomplete(SupplierOffer so, SupplierOfferItem soItem)
+        private Guid? FindUomId(string uomName, Guid ownerId)
         {
-            #region Try to find UoM in db
-                
-            var res = _uomService.Autocomplete(soItem.RawUomStr, so.OwnerId);
+            var res = _uomService.Autocomplete(uomName, ownerId);
             var fullMatch = res.Items?.FirstOrDefault(q => q.IsFullMatch);
-            if (fullMatch != null)
-            {
-                soItem.RawUomId = fullMatch.Id;
-            }
+            return fullMatch?.Id;
+        }
 
-            #endregion
-            #region Try to find in nomeclature
-                
+        private Guid? FindNomenclatureId(string nomName, Guid clientId, Guid ownerId)
+        {
             var nomRes = _nomenclatureService.Autocomplete(new AutocompleteOptions
             {
-                Query = soItem.RawName,
-                ClientId = so.SupplierId.Value,
+                Query = nomName,
+                ClientId = clientId,
                 ClientType = ClientType.Supplier,
                 SearchInAlts = true,
-                OwnerId = so.OwnerId
+                OwnerId = ownerId
             });
 
             if (nomRes.Items.Count(q => q.IsFullMatch) == 1)
             {
-                soItem.NomenclatureId = nomRes.Items.First(q => q.IsFullMatch).Id;
+                return nomRes.Items.First(q => q.IsFullMatch).Id;
             }
 
-            #endregion
-
-            #region Calc UoMs factor
-
-            if (soItem.NomenclatureId != null && soItem.RawUomId != null)
-            {
-                var rate = _conversionRateService.GetRate(soItem.RawUomId.Value, soItem.NomenclatureId.Value).Result;
-                soItem.CommonFactor = rate.CommonFactor;
-                soItem.NomenclatureFactor = rate.NomenclatureFactor;
-            }
-
-            #endregion
+            return null;
         }
 
         public SOMatchItemsVm MatchItemsData(Guid soId)
