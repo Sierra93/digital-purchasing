@@ -493,17 +493,14 @@ namespace DigitalPurchasing.Services
                                       longestNameSubstr,
                                       soItemDims,
                                       prItemDims
-                                  }).ToList();
-
-                algResults = algResults
-                    .OrderBy(el => el.completeDistance).ToList();
-
+                                  });
+                
                 while (algResults.Any())
                 {
-                    algResults[0].soItem.NomenclatureId = algResults[0].prItem.NomenclatureId;
-                    var soItemId = algResults[0].soItem.Id;
-                    var prItemId = algResults[0].prItem.Id;
-                    algResults = algResults.Where(el => el.soItem.Id != soItemId && el.prItem.Id != prItemId).OrderBy(el => el.completeDistance).ToList();
+                    algResults = algResults.OrderBy(el => el.completeDistance);
+                    var bestMatch = algResults.First();
+                    bestMatch.soItem.NomenclatureId = bestMatch.prItem.NomenclatureId;
+                    algResults = algResults.Where(el => el.soItem.Id != bestMatch.soItem.Id && el.prItem.Id != bestMatch.prItem.Id);
                 }
             }
         }
