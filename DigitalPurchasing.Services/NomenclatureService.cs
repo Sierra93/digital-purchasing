@@ -401,14 +401,14 @@ namespace DigitalPurchasing.Services
                 NameEng = n.NameEng,
                 BatchUomId = n.BatchUom?.Id ?? Guid.Empty,
                 BatchUomName = n.BatchUom?.Name ?? string.Empty,                
-                IsFullMatch = (!string.IsNullOrEmpty(n.Name) && n.Name.Equals(q, strComparison))
-                    || (!string.IsNullOrEmpty(n.NameEng) && n.NameEng.Equals(q, strComparison))
-                    || (!string.IsNullOrEmpty(n.Code) && n.Code.Equals(q, strComparison))
+                IsFullMatch = (!string.IsNullOrEmpty(n.Name) && n.Name.Trim().Equals(q, strComparison))
+                    || (!string.IsNullOrEmpty(n.NameEng) && n.NameEng.Trim().Equals(q, strComparison))
+                    || (!string.IsNullOrEmpty(n.Code) && n.Code.Trim().Equals(q, strComparison))
             })
             .OrderByDescending(w => w.IsFullMatch)
-            .ThenByDescending(w => !string.IsNullOrEmpty(w.Name) && w.Name.StartsWith(q, strComparison))
-            .ThenByDescending(w => !string.IsNullOrEmpty(w.NameEng) && w.NameEng.StartsWith(q, strComparison))
-            .ThenByDescending(w => !string.IsNullOrEmpty(w.Code) && w.Code.StartsWith(q, strComparison))
+            .ThenByDescending(w => !string.IsNullOrEmpty(w.Name) && w.Name.Trim().StartsWith(q, strComparison))
+            .ThenByDescending(w => !string.IsNullOrEmpty(w.NameEng) && w.NameEng.Trim().StartsWith(q, strComparison))
+            .ThenByDescending(w => !string.IsNullOrEmpty(w.Code) && w.Code.Trim().StartsWith(q, strComparison))
             .ToList();
 
             result.Items.AddRange(resultItems);
