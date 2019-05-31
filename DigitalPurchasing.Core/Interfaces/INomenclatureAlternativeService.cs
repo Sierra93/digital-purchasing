@@ -20,6 +20,8 @@ namespace DigitalPurchasing.Core.Interfaces
             List<AddOrUpdateAltDto> alts);
 
         NomenclatureAlternativeVm FindBestFuzzyMatch(Guid ownerId, string nomName, int maxNameDistance);
+
+        void Delete(Guid id);
     }
 
     public class AddOrUpdateAltDto
