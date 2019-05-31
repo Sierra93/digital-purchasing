@@ -361,13 +361,24 @@ namespace DigitalPurchasing.Services
                     RawUomStr = string.IsNullOrEmpty(supplierOffer.UploadedDocument.Headers.Uom) ? "" : table.GetValue(supplierOffer.UploadedDocument.Headers.Uom, i)
                 };
 
-                Autocomplete(supplierOffer, rawItem);
+                rawItem.RawUomId = FindUomId(rawItem.RawUomStr, supplierOffer.OwnerId);
+                rawItem.NomenclatureId = FindNomenclatureId(rawItem.RawName, supplierOffer.SupplierId.Value, supplierOffer.OwnerId);                
 
                 rawItems.Add(rawItem);
             }
 
             var withUndefinedNoms = rawItems.Where(_ => !_.NomenclatureId.HasValue).ToList();
             FixSoNomenclatureIds(withUndefinedNoms);
+
+            foreach (var item in rawItems)
+            {
+                if (item.NomenclatureId != null && item.RawUomId != null)
+                {
+                    var rate = _conversionRateService.GetRate(item.RawUomId.Value, item.NomenclatureId.Value).Result;
+                    item.CommonFactor = rate.CommonFactor;
+                    item.NomenclatureFactor = rate.NomenclatureFactor;
+                }
+            }
 
             _db.BulkInsert(rawItems);
 
@@ -528,46 +539,30 @@ namespace DigitalPurchasing.Services
             return maxlen;
         }
 
-        private void Autocomplete(SupplierOffer so, SupplierOfferItem soItem)
+        private Guid? FindUomId(string uomName, Guid ownerId)
         {
-            #region Try to find UoM in db
-                
-            var res = _uomService.Autocomplete(soItem.RawUomStr, so.OwnerId);
+            var res = _uomService.Autocomplete(uomName, ownerId);
             var fullMatch = res.Items?.FirstOrDefault(q => q.IsFullMatch);
-            if (fullMatch != null)
-            {
-                soItem.RawUomId = fullMatch.Id;
-            }
+            return fullMatch?.Id;
+        }
 
-            #endregion
-            #region Try to find in nomeclature
-                
+        private Guid? FindNomenclatureId(string nomName, Guid clientId, Guid ownerId)
+        {
             var nomRes = _nomenclatureService.Autocomplete(new AutocompleteOptions
             {
-                Query = soItem.RawName,
-                ClientId = so.SupplierId.Value,
+                Query = nomName,
+                ClientId = clientId,
                 ClientType = ClientType.Supplier,
                 SearchInAlts = true,
-                OwnerId = so.OwnerId
+                OwnerId = ownerId
             });
 
             if (nomRes.Items.Count(q => q.IsFullMatch) == 1)
             {
-                soItem.NomenclatureId = nomRes.Items.First(q => q.IsFullMatch).Id;
+                return nomRes.Items.First(q => q.IsFullMatch).Id;
             }
 
-            #endregion
-
-            #region Calc UoMs factor
-
-            if (soItem.NomenclatureId != null && soItem.RawUomId != null)
-            {
-                var rate = _conversionRateService.GetRate(soItem.RawUomId.Value, soItem.NomenclatureId.Value).Result;
-                soItem.CommonFactor = rate.CommonFactor;
-                soItem.NomenclatureFactor = rate.NomenclatureFactor;
-            }
-
-            #endregion
+            return null;
         }
 
         public SOMatchItemsVm MatchItemsData(Guid soId)
