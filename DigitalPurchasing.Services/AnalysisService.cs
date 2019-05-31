@@ -128,7 +128,7 @@ namespace DigitalPurchasing.Services
             };
 
             var order = 0;
-            foreach (var q in cl.SupplierOffers)
+            foreach (var q in cl.SupplierOffers.Where(q => q.Supplier != null))
             {
                 var so = _db.SupplierOffers.Find(q.Id);
                 data.SupplierOffers.Add(new AnalysisDataVm.SupplierOfferData
@@ -157,7 +157,7 @@ namespace DigitalPurchasing.Services
                     .Select(q => new AnalysisCustomerItem(q.NomenclatureId, q.RawQty))
             );
 
-            var suppliers = cl.SupplierOffers.Select(q =>
+            var suppliers = cl.SupplierOffers.Where(q => q.Supplier != null).Select(q =>
             {
                 var soDetails = _supplierOfferService.GetDetailsById(q.Id);
 
