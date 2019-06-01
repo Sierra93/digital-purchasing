@@ -407,45 +407,6 @@ namespace DigitalPurchasing.Services
                                     item.PurchaseRequest.QuotationRequest.CompetitionList.SupplierOffers.Any(so => so.Id == soId)
                                select item).ToList();
 
-                var word2synonyms = new Dictionary<string, IReadOnlyList<string>>()
-                {
-                    { "очиститель", new List<string>() { "промывка" } }
-                };
-
-                Func<string, string> cleanupNomName = (nomName) => Regex.Replace(nomName, @"[^a-zA-Z\p{IsCyrillic}\s]", " ");
-                Func<string, string> leaveOnlyDigits = (str) => Regex.Replace(str, "[^0-9]", " ").ReplaceSpacesWithOneSpace();
-                Func<string, string> onlyDigitsOrderedByGroupLen = (str) => leaveOnlyDigits(str).Split(' ').OrderBy(s => s.Length).JoinNotEmpty(" ");
-                Func<string, string> orderWords = (str) => string.Join(' ', str.Split(' ').OrderBy(w => w));
-                Func<string, string> removeNoize = (str) => string.Join(' ', str.Split(' ').Where(w => w.Length > 2));
-                Func<string, string> replaceSynonyms = (str) =>
-                {
-                    var result = new List<string>();
-                    foreach (var word in str.Split(' '))
-                    {
-                        foreach (var w2s in word2synonyms)
-                        {
-                            result.Add(w2s.Value.Any(s => s.Equals(word, StringComparison.InvariantCultureIgnoreCase)) ? w2s.Key : word);
-                        }
-                    }
-                    return string.Join(" ", result);
-                };
-                Func<string, string> getDimensions = (str) =>
-                {
-                    var match = Regex.Match(str, @"\s?\d+[,.]?\d*\s?[x*х]\s?\d+[,.]?\d*\s?([x*х]\s?\d+[,.]?\d*)?", RegexOptions.IgnoreCase);
-                    var dims = match.Success ? match.Groups[0].Value.RemoveSpaces() : string.Empty;
-                    var cleanedUp = Regex.Replace(dims.Replace('.', ','), @"[^\d\*,]", "*", RegexOptions.IgnoreCase);
-                    return cleanedUp;
-                };
-                Func<string, string, string, string, (string nameWithDims1, string nameWithDims2)> getNamesWithDims = (name1, dims1, name2, dims2) =>
-                {
-                    if (!string.IsNullOrEmpty(dims1) && !string.IsNullOrEmpty(dims2))
-                    {
-                        return ($"{name1} {dims1}", $"{name2} {dims2}");
-                    }
-
-                    return (name1, name2);
-                };
-
                 var unlinkedPrItems = prItems.Where(item => !soItems.Any(soItem => soItem.NomenclatureId == item.NomenclatureId))
                     .Select(item => new
                     {
@@ -458,42 +419,38 @@ namespace DigitalPurchasing.Services
 
                 var alg = new Levenshtein();
 
-                var algResults = (from soItem in soItems.Where(_ => !_.NomenclatureId.HasValue)
-                                  let soItemName = removeNoize(cleanupNomName(soItem.RawName).ReplaceSpacesWithOneSpace()).Trim()
-                                  let soItemDims = getDimensions(soItem.RawName)
-                                  let nameStr1 = orderWords(replaceSynonyms(soItemName.ToLower()))
-                                  let soDigits = onlyDigitsOrderedByGroupLen(soItem.RawName)
-                                  from prItem in unlinkedPrItems
-                                  let prItemName = removeNoize(cleanupNomName(prItem.RawName).ReplaceSpacesWithOneSpace()).Trim()
-                                  let prItemDims = getDimensions(prItem.RawName)
-                                  let nameStr2 = orderWords(replaceSynonyms(prItemName.ToLower()))
-                                  let names = getNamesWithDims(nameStr1, soItemDims, nameStr2, prItemDims)
-                                  let maxNameLen = Math.Max(names.nameWithDims1.Length, names.nameWithDims2.Length)
-                                  let prDigits = onlyDigitsOrderedByGroupLen(prItem.RawName)
-                                  let isSameUom = soItem.RawUomId == prItem.RawUomMatchId
-                                  let nameIntersect = string.Join("", names.nameWithDims1.Split(' ').Intersect(names.nameWithDims2.Split(' '))).Length
-                                  let longestNameSubstr = LongestCommonSubstring(names.nameWithDims1.RemoveSpaces(), names.nameWithDims2.RemoveSpaces())
-                                  let nameDistance = alg.Distance(names.nameWithDims1, names.nameWithDims2)
-                                  let digitsDistance = alg.Distance(soDigits, prDigits)
-                                  let qtyDiff = isSameUom ? Math.Abs(prItem.RawQty - soItem.RawQty) / (10 * Math.Max(prItem.RawQty, soItem.RawQty)) : 0.1m
-                                  let completeDistance = (nameDistance + digitsDistance - 2 * Math.Max(longestNameSubstr, nameIntersect)) / (2 * maxNameLen) + (double)qtyDiff
-                                  select new
-                                  {
-                                      soItem,
-                                      prItem,
-                                      soDigits,
-                                      prDigits,
-                                      nameDistance,
-                                      names.nameWithDims1,
-                                      names.nameWithDims2,
-                                      digitsDistance,
-                                      qtyDiff,
-                                      completeDistance,
-                                      nameIntersect,
-                                      longestNameSubstr,
-                                      soItemDims,
-                                      prItemDims
-                                  });
+                var algResults = from soItem in soItems.Where(_ => !_.NomenclatureId.HasValue)
+                                 let soTerms = new NomenclatureSearchTerms(soItem.RawName)
+                                 from prItem in unlinkedPrItems
+                                 let prTerms = new NomenclatureSearchTerms(prItem.RawName)
+                                 let names = string.IsNullOrEmpty(soTerms.NomDimensions) || string.IsNullOrEmpty(prTerms.NomDimensions)
+                                                ? (soTerms.AdjustedName, prTerms.AdjustedName)
+                                                : (soTerms.AdjustedNameWithDimensions, prTerms.AdjustedNameWithDimensions)
+                                 let maxNameLen = Math.Max(names.Item1.Length, names.Item2.Length)
+                                 let isSameUom = soItem.RawUomId == prItem.RawUomMatchId
+                                 let nameIntersect = string.Join("", names.Item1.Split(' ').Intersect(names.Item2.Split(' '))).Length
+                                 let longestNameSubstr = LongestCommonSubstring(names.Item1.RemoveSpaces(), names.Item2.RemoveSpaces())
+                                 let nameDistance = alg.Distance(names.Item1, names.Item2)
+                                 let digitsDistance = alg.Distance(soTerms.AdjustedDigits, prTerms.AdjustedDigits)
+                                 let qtyDiff = isSameUom ? Math.Abs(prItem.RawQty - soItem.RawQty) / (10 * Math.Max(prItem.RawQty, soItem.RawQty)) : 0.1m
+                                 let completeDistance = (nameDistance + digitsDistance - 2 * Math.Max(longestNameSubstr, nameIntersect)) / (2 * maxNameLen) + (double)qtyDiff
+                                 select new
+                                 {
+                                     soItem,
+                                     prItem,
+                                     soDigits = soTerms.AdjustedDigits,
+                                     prDigits = prTerms.AdjustedDigits,
+                                     nameDistance,
+                                     nameWithDims1 = names.Item1,
+                                     nameWithDims2 = names.Item2,
+                                     digitsDistance,
+                                     qtyDiff,
+                                     completeDistance,
+                                     nameIntersect,
+                                     longestNameSubstr,
+                                     soItemDims = soTerms.NomDimensions,
+                                     prItemDims = prTerms.NomDimensions
+                                 };
                 
                 while (algResults.Any())
                 {
