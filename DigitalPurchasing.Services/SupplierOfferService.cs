@@ -32,6 +32,7 @@ namespace DigitalPurchasing.Services
         private readonly IConversionRateService _conversionRateService;
         private readonly IRootService _rootService;
         private readonly INomenclatureAlternativeService _nomenclatureAlternativeService;
+        private readonly INomenclatureComparisonService _nomenclatureComparisonService;
 
         public SupplierOfferService(
             ApplicationDbContext db,
@@ -45,7 +46,8 @@ namespace DigitalPurchasing.Services
             ISupplierService supplierService,
             IConversionRateService conversionRateService,
             IRootService rootService,
-            INomenclatureAlternativeService nomenclatureAlternativeService)
+            INomenclatureAlternativeService nomenclatureAlternativeService,
+            INomenclatureComparisonService nomenclatureComparisonService)
         {
             _db = db;
             _excelRequestReader = excelRequestReader;
@@ -59,6 +61,7 @@ namespace DigitalPurchasing.Services
             _conversionRateService = conversionRateService;
             _rootService = rootService;
             _nomenclatureAlternativeService = nomenclatureAlternativeService;
+            _nomenclatureComparisonService = nomenclatureComparisonService;
         }
 
         public void UpdateStatus(Guid id, SupplierOfferStatus status, bool globalSearch = false)
@@ -420,34 +423,25 @@ namespace DigitalPurchasing.Services
                 var alg = new Levenshtein();
 
                 var algResults = from soItem in soItems.Where(_ => !_.NomenclatureId.HasValue)
-                                 let soTerms = new NomenclatureSearchTerms(soItem.RawName)
+                                 let soTerms = _nomenclatureComparisonService.CalculateComparisonTerms(soItem.RawName)
                                  from prItem in unlinkedPrItems
-                                 let prTerms = new NomenclatureSearchTerms(prItem.RawName)
-                                 let names = string.IsNullOrEmpty(soTerms.NomDimensions) || string.IsNullOrEmpty(prTerms.NomDimensions)
-                                                ? (soTerms.AdjustedName, prTerms.AdjustedName)
-                                                : (soTerms.AdjustedNameWithDimensions, prTerms.AdjustedNameWithDimensions)
-                                 let maxNameLen = Math.Max(names.Item1.Length, names.Item2.Length)
+                                 let prTerms = _nomenclatureComparisonService.CalculateComparisonTerms(prItem.RawName)
                                  let isSameUom = soItem.RawUomId == prItem.RawUomMatchId
-                                 let nameIntersect = string.Join("", names.Item1.Split(' ').Intersect(names.Item2.Split(' '))).Length
-                                 let longestNameSubstr = LongestCommonSubstring(names.Item1.RemoveSpaces(), names.Item2.RemoveSpaces())
-                                 let nameDistance = alg.Distance(names.Item1, names.Item2)
-                                 let digitsDistance = alg.Distance(soTerms.AdjustedDigits, prTerms.AdjustedDigits)
-                                 let qtyDiff = isSameUom ? Math.Abs(prItem.RawQty - soItem.RawQty) / (10 * Math.Max(prItem.RawQty, soItem.RawQty)) : 0.1m
-                                 let completeDistance = (nameDistance + digitsDistance - 2 * Math.Max(longestNameSubstr, nameIntersect)) / (2 * maxNameLen) + (double)qtyDiff
+                                 let distance = _nomenclatureComparisonService.CalculateDistance(soTerms, prTerms, isSameUom, soItem.RawQty, prItem.RawQty)
                                  select new
                                  {
                                      soItem,
                                      prItem,
                                      soDigits = soTerms.AdjustedDigits,
                                      prDigits = prTerms.AdjustedDigits,
-                                     nameDistance,
-                                     nameWithDims1 = names.Item1,
-                                     nameWithDims2 = names.Item2,
-                                     digitsDistance,
-                                     qtyDiff,
-                                     completeDistance,
-                                     nameIntersect,
-                                     longestNameSubstr,
+                                     nameDistance = distance.NameDistance,
+                                     nameWithDims1 = distance.ComparisonName1,
+                                     nameWithDims2 = distance.ComparisonName2,
+                                     digitsDistance = distance.DigitsDistance,
+                                     qtyDiff = distance.QtyDiff,
+                                     completeDistance = distance.CompleteDistance,
+                                     nameIntersect = distance.NamesIntersect,
+                                     longestNameSubstr = distance.NamesLongestSubstringLen,
                                      soItemDims = soTerms.NomDimensions,
                                      prItemDims = prTerms.NomDimensions
                                  };

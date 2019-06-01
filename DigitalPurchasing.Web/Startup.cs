@@ -116,6 +116,7 @@ namespace DigitalPurchasing.Web
             services.AddScoped<ICompanyService, CompanyService>();
             services.AddScoped<INomenclatureCategoryService, NomenclatureCategoryService>();
             services.AddScoped<IUomService, UomService>();
+            services.AddScoped<INomenclatureComparisonService, NomenclatureComparisonService>();
             services.AddScoped<INomenclatureService, NomenclatureService>();
             services.AddScoped<IDictionaryService, DictionaryService>();
             services.AddScoped<IExcelRequestReader, ExcelRequestReader>();
