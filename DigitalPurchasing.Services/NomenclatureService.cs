@@ -23,17 +23,20 @@ namespace DigitalPurchasing.Services
         private readonly INomenclatureCategoryService _categoryService;
         private readonly IMemoryCache _cache;
         private readonly ILogger _logger;
+        private readonly INomenclatureComparisonService _nomenclatureComparisonService;
 
         public NomenclatureService(
             ApplicationDbContext dbContext,
             INomenclatureCategoryService categoryService,
             IMemoryCache cache,
-            ILogger<NomenclatureService> logger)
+            ILogger<NomenclatureService> logger,
+            INomenclatureComparisonService nomenclatureComparisonService)
         {
             _db = dbContext;
             _categoryService = categoryService;
             _cache = cache;
             _logger = logger;
+            _nomenclatureComparisonService = nomenclatureComparisonService;
         }
 
         public NomenclatureIndexData GetData(
@@ -247,29 +250,62 @@ namespace DigitalPurchasing.Services
             entity.PackUomId = vm.PackUomId;
             entity.PackUomValue = vm.PackUomValue;
 
+            entity.ComparisonData = GetComparisonDataByNomenclatureName(entity.Name);
+
             _db.SaveChanges();
 
             return entity.Adapt<NomenclatureVm>();
         }
 
+        private NomenclatureComparisonData GetComparisonDataByNomenclatureName(string nomName)
+        {
+            var terms = _nomenclatureComparisonService.CalculateComparisonTerms(nomName);
+
+            return new NomenclatureComparisonData
+            {
+                AdjustedNomenclatureDigits = terms.AdjustedDigits,
+                AdjustedNomenclatureName = terms.AdjustedName,
+                NomenclatureDimensions = terms.NomDimensions
+            };
+        }
+
         public void CreateOrUpdate(List<NomenclatureVm> nomenclatures, Guid ownerId)
         {
-            var allNames = _db.Nomenclatures
-                .AsQueryable()
-                .GroupBy(q => q.Name)
-                .Select(q => new { Name = q.First().Name.ToLowerInvariant(), q.First().Id })
-                .ToList()
-                .DistinctBy(q => q.Name)
-                .ToDictionary(q => q.Name, w => w.Id);
+            var allNames = _db.Nomenclatures.IgnoreQueryFilters()
+                .Where(q => q.OwnerId == ownerId)
+                .Select(q => new
+                {
+                    q.Name,
+                    q.Id
+                })
+                .ToList();
 
+            var newEntities = new List<Nomenclature>();
             var entities = nomenclatures.Adapt<List<Nomenclature>>();
             foreach (var entity in entities)
             {
                 var normName = entity.Name.ToLowerInvariant();
-                entity.Id = allNames.ContainsKey(normName) ? allNames[normName] : Guid.NewGuid();
+                var existed = allNames.FirstOrDefault(i => i.Name.Equals(entity.Name, StringComparison.InvariantCultureIgnoreCase));
+                entity.Id = existed?.Id ?? Guid.NewGuid();
+                if (existed == null)
+                {
+                    newEntities.Add(entity);
+                }
                 entity.OwnerId = ownerId;
             }
             _db.BulkInsertOrUpdate(entities);
+
+            if (newEntities.Any())
+            {
+                var compDatas = new List<NomenclatureComparisonData>();
+                newEntities.ForEach(n =>
+                {
+                    var copmDataItem = GetComparisonDataByNomenclatureName(n.Name);
+                    copmDataItem.NomenclatureId = n.Id;
+                    compDatas.Add(copmDataItem);
+                });
+                _db.BulkInsert(compDatas);
+            }
         }
 
         public NomenclatureVm GetById(Guid id, bool globalSearch = false)
