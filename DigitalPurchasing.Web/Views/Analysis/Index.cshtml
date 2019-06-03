@@ -247,6 +247,9 @@
 						this.$http.post('@Url.Action("SaveSelectedVariant", "Analysis")', { id: vm.currentSelectedVariant })
 						.then(function (response) {
 							vm.selectedVariant = vm.currentSelectedVariant;
+                            if (!response.data.report) {
+                                alert('Ошибка при создание отчета');
+                            }
 						}, function(response) {
 							alert('Ошибка');
 						});
