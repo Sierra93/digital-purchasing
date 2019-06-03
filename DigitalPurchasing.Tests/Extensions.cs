@@ -29,5 +29,17 @@ namespace DigitalPurchasing.Tests
             Assert.Equal(2, combinations.Count(q => q.Count() == 1)); // {1},{2}
             Assert.Single(combinations, q => q.Count() == 2); // {1,2}
         }
+
+        [Fact]
+        public void Combintations_Single()
+        {
+            var list = new[] { 1 };
+
+            var combinations = list.Combinations();
+
+            Assert.Equal(2, combinations.Count()); // [{},{1}]
+            Assert.Single(combinations, q=>q.Count() == 1); // [{1}]
+            Assert.Single(combinations, q=>q.Count() == 0); // [{}]
+        }
     }
 }
