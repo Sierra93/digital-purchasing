@@ -327,11 +327,17 @@ namespace DigitalPurchasing.Services
 
         public NomenclatureVm FindBestFuzzyMatch(Guid ownerId, string nomName, int maxNameDistance)
         {
+            var compTerms = _nomenclatureComparisonService.CalculateComparisonTerms(nomName);
             var results = from item in _db.Nomenclatures.IgnoreQueryFilters()
-                          let distance = ApplicationDbContext.LevenshteinDistanceFunc(nomName, item.Name, maxNameDistance)
+                          let anyWithoutDimensions = string.IsNullOrEmpty(compTerms.NomDimensions) || string.IsNullOrEmpty(item.ComparisonData.NomenclatureDimensions)
+                          let nameDistance = anyWithoutDimensions
+                              ? ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedName, item.ComparisonData.AdjustedNomenclatureName, maxNameDistance)
+                              : ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedNameWithDimensions, item.ComparisonData.AdjustedNomenclatureNameWithDimensions, maxNameDistance)
+                          let digitsDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedDigits, item.ComparisonData.AdjustedNomenclatureDigits, maxNameDistance)
+                          let distance = (nameDistance + digitsDistance ?? maxNameDistance) / 2
                           where item.OwnerId == ownerId &&
-                                !item.IsDeleted &&
-                                distance.HasValue
+                              !item.IsDeleted &&
+                              nameDistance.HasValue
                           orderby distance
                           select item;
 

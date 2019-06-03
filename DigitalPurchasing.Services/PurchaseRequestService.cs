@@ -250,7 +250,7 @@ namespace DigitalPurchasing.Services
 
             if (!nomRes.Items.Any())
             {
-                var bestNomMatch = _nomenclatureService.FindBestFuzzyMatch(pr.OwnerId, prItem.RawName, 5);
+                var bestNomMatch = _nomenclatureService.FindBestFuzzyMatch(pr.OwnerId, prItem.RawName, 15);
                 prItem.NomenclatureId = bestNomMatch == null
                     ? _nomenclatureAlternativeService.FindBestFuzzyMatch(pr.OwnerId, prItem.RawName, 5)?.NomenclatureId
                     : bestNomMatch.Id;
