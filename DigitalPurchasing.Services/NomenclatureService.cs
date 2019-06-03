@@ -335,9 +335,9 @@ namespace DigitalPurchasing.Services
             var results = string.IsNullOrEmpty(compTerms.NomDimensions)
                 ? from item in query
                   let nameDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedName, item.ComparisonData.AdjustedNomenclatureName, maxNameDistance)
-                  let digitsDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedDigits, item.ComparisonData.AdjustedNomenclatureDigits, maxNameDistance)
+                  let digitsDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedDigits, item.ComparisonData.AdjustedNomenclatureDigits, maxNameDistance) ?? maxNameDistance
                   let maxSubstringLen = ApplicationDbContext.LongestCommonSubstringLenFunc(compTerms.AdjustedName, item.ComparisonData.AdjustedNomenclatureName)
-                  let distance = (nameDistance + digitsDistance ?? maxNameDistance - 2 * maxSubstringLen) / 2
+                  let distance = (nameDistance + digitsDistance - 2 * maxSubstringLen) / 2m
                   where nameDistance.HasValue
                   orderby distance
                   select item
@@ -345,16 +345,18 @@ namespace DigitalPurchasing.Services
                   let nameDistance = string.IsNullOrEmpty(item.ComparisonData.NomenclatureDimensions)
                       ? ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedName, item.ComparisonData.AdjustedNomenclatureName, maxNameDistance)
                       : ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedNameWithDimensions, item.ComparisonData.AdjustedNomenclatureNameWithDimensions, maxNameDistance)
-                  let digitsDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedDigits, item.ComparisonData.AdjustedNomenclatureDigits, maxNameDistance)
+                  let digitsDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedDigits, item.ComparisonData.AdjustedNomenclatureDigits, maxNameDistance) ?? maxNameDistance
                   let maxSubstringLen = string.IsNullOrEmpty(item.ComparisonData.NomenclatureDimensions)
                       ? ApplicationDbContext.LongestCommonSubstringLenFunc(compTerms.AdjustedName, item.ComparisonData.AdjustedNomenclatureName)
                       : ApplicationDbContext.LongestCommonSubstringLenFunc(compTerms.AdjustedNameWithDimensions, item.ComparisonData.AdjustedNomenclatureNameWithDimensions)
-                  let distance = (nameDistance + digitsDistance ?? maxNameDistance - 2 * maxSubstringLen) / 2
+                  let distance = (nameDistance + digitsDistance - 2 * maxSubstringLen) / 2m
                   where nameDistance.HasValue
                   orderby distance
                   select item;
 
-            return results.FirstOrDefault()?.Adapt<NomenclatureVm>();
+            var match = results.FirstOrDefault()?.Adapt<NomenclatureVm>();
+
+            return match;
         }
 
         public NomenclatureAutocompleteResult Autocomplete(AutocompleteOptions options)
