@@ -336,7 +336,8 @@ namespace DigitalPurchasing.Services
                 ? from item in query
                   let nameDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedName, item.ComparisonData.AdjustedNomenclatureName, maxNameDistance)
                   let digitsDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedDigits, item.ComparisonData.AdjustedNomenclatureDigits, maxNameDistance)
-                  let distance = (nameDistance + digitsDistance ?? maxNameDistance) / 2
+                  let maxSubstringLen = ApplicationDbContext.LongestCommonSubstringLenFunc(compTerms.AdjustedName, item.ComparisonData.AdjustedNomenclatureName)
+                  let distance = (nameDistance + digitsDistance ?? maxNameDistance - 2 * maxSubstringLen) / 2
                   where nameDistance.HasValue
                   orderby distance
                   select item
@@ -345,7 +346,10 @@ namespace DigitalPurchasing.Services
                       ? ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedName, item.ComparisonData.AdjustedNomenclatureName, maxNameDistance)
                       : ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedNameWithDimensions, item.ComparisonData.AdjustedNomenclatureNameWithDimensions, maxNameDistance)
                   let digitsDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedDigits, item.ComparisonData.AdjustedNomenclatureDigits, maxNameDistance)
-                  let distance = (nameDistance + digitsDistance ?? maxNameDistance) / 2
+                  let maxSubstringLen = string.IsNullOrEmpty(item.ComparisonData.NomenclatureDimensions)
+                      ? ApplicationDbContext.LongestCommonSubstringLenFunc(compTerms.AdjustedName, item.ComparisonData.AdjustedNomenclatureName)
+                      : ApplicationDbContext.LongestCommonSubstringLenFunc(compTerms.AdjustedNameWithDimensions, item.ComparisonData.AdjustedNomenclatureNameWithDimensions)
+                  let distance = (nameDistance + digitsDistance ?? maxNameDistance - 2 * maxSubstringLen) / 2
                   where nameDistance.HasValue
                   orderby distance
                   select item;
