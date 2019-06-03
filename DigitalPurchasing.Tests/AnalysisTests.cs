@@ -324,6 +324,59 @@ namespace DigitalPurchasing.Tests
         }
 
         [Fact]
+        public void MixSuppliers_2()
+        {
+            var itemId1 = new Guid("5e654ae674ce4e03be619ec6c5701b21");
+            var itemId2 = new Guid("b5f59198455c4646863a3589d2ec2f94");
+
+            var supplierId1 = Guid.NewGuid();
+            var supplierId2 = Guid.NewGuid();
+
+            var customer = new AnalysisCustomer(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                DateTime.UtcNow.Date.AddDays(10),
+                new[]
+                {
+                    new AnalysisCustomerItem(itemId1, 1),
+                    new AnalysisCustomerItem(itemId2, 1000)
+                }
+            );
+
+            var supplier1 = new AnalysisSupplier(supplierId1,
+                Guid.NewGuid(),
+                DateTime.UtcNow.Date.AddDays(11),
+                new[]
+                {
+                    new AnalysisSupplierItem(itemId1, 1, 5),
+                    new AnalysisSupplierItem(itemId2, 1000, 10)
+                } // = 10005
+            ); 
+
+            var supplier2 = new AnalysisSupplier(supplierId2,
+                Guid.NewGuid(),
+                DateTime.UtcNow.Date.AddDays(11),
+                new[]
+                {
+                    new AnalysisSupplierItem(itemId1, 1, 20),
+                    new AnalysisSupplierItem(itemId2, 1000, 6)
+                } // = 6020 - best offer
+            );
+
+            var suppliers = new List<AnalysisSupplier> { supplier1, supplier2 };
+
+            var result = new AnalysisCore(customer, suppliers).Run(new AnalysisVariantData()
+            {
+                SuppliersCountOptions = new VariantsSuppliersCountOptions { Count = 1, Type = SupplierCountType.Equal }
+            });
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(1, result.SuppliersCount);
+            Assert.True(result.Data.All(q => q.SupplierId == supplierId2));
+        }
+
+
+        [Fact]
         public void Supplier_MixQuantity()
         {
             var itemId1 = new Guid("5e654ae674ce4e03be619ec6c5701b21");

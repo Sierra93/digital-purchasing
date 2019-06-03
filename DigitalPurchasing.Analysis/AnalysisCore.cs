@@ -14,12 +14,14 @@ namespace DigitalPurchasing.Analysis
         private readonly AnalysisCustomer _customer;
         private readonly IEnumerable<AnalysisSupplier> _suppliers;
         private readonly Dictionary<Guid, AnalysisCustomerItem> _customerItemsLookup;
+        private readonly decimal _customerTotalQuantity;
 
         public AnalysisCore(AnalysisCustomer customer, IEnumerable<AnalysisSupplier> suppliers)
         {
             _customer = customer;
             _suppliers = suppliers.ToList();
             _customerItemsLookup = _customer.Items.ToDictionary(q => q.NomenclatureId);
+            _customerTotalQuantity = _customerItemsLookup.Sum(q => q.Value.Quantity);
         }
 
         public List<AnalysisResult> Run(params AnalysisVariantData[] variantDatas)
@@ -41,8 +43,6 @@ namespace DigitalPurchasing.Analysis
                     results.Add(AnalysisResult.Empty(variantData.Id));
                     continue;
                 }
-
-                //var totalCustomerQuantity = _customerItemsLookup.Sum(q => q.)
 
                 var minVariant = new Dictionary<Guid, (decimal TotalPrice, decimal Price)>();
 
@@ -97,6 +97,7 @@ namespace DigitalPurchasing.Analysis
                     {
                         var nomenclatureId = customerItemLookup.Key;
                         var customerQuantity = customerItemLookup.Value.Quantity;
+                        var quantityScoreMod = customerQuantity / _customerTotalQuantity;
 
                         var suppliersItems = suppliers
                             .Where(q => suppliersIndexesCombination.Contains(suppliers.IndexOf(q)))
@@ -107,9 +108,8 @@ namespace DigitalPurchasing.Analysis
 
                         if (itemsWEnoughQuality.Any())
                         {
-                            var scoreMod = minVariant[nomenclatureId].TotalPrice / itemsWEnoughQuality.Min(q => q.TotalPrice);
-                            // todo: apply according to quantities
-                            score *= scoreMod;                            
+                            var priceScoreMod = minVariant[nomenclatureId].TotalPrice / itemsWEnoughQuality.Min(q => q.TotalPrice);
+                            score += priceScoreMod * quantityScoreMod;                            
                         }
                         else
                         {
@@ -117,7 +117,7 @@ namespace DigitalPurchasing.Analysis
                             var isPossibleToFillPosition = maxQuantity >= customerQuantity;
                             if (isPossibleToFillPosition)
                             {
-                                var scoreMod = 0m;
+                                var priceScoreMod = 0m;
                                 var currentQuantity = 0m;
                                 var minPriceData = minVariant[nomenclatureId];
                                 foreach (var item in suppliersItems.OrderBy(q => q.Price).ThenByDescending(q => q.Quantity))
@@ -125,11 +125,10 @@ namespace DigitalPurchasing.Analysis
                                     var remainingQuantity = Math.Abs(customerQuantity - currentQuantity);
                                     var quantityToAdd = item.Quantity > remainingQuantity ? remainingQuantity : item.Quantity;
                                     currentQuantity += quantityToAdd;
-                                    scoreMod += (quantityToAdd / customerQuantity) * minPriceData.Price / item.Price;
+                                    priceScoreMod += (quantityToAdd / customerQuantity) * minPriceData.Price / item.Price;
                                     if (currentQuantity == customerQuantity) break;
                                 }
-                                // todo: apply according to quantities
-                                score *= scoreMod;
+                                score += priceScoreMod * quantityScoreMod;
                             }
                             else
                             {
