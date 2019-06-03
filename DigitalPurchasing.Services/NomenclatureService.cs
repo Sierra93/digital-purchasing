@@ -328,18 +328,27 @@ namespace DigitalPurchasing.Services
         public NomenclatureVm FindBestFuzzyMatch(Guid ownerId, string nomName, int maxNameDistance)
         {
             var compTerms = _nomenclatureComparisonService.CalculateComparisonTerms(nomName);
-            var results = from item in _db.Nomenclatures.IgnoreQueryFilters()
-                          let anyWithoutDimensions = string.IsNullOrEmpty(compTerms.NomDimensions) || string.IsNullOrEmpty(item.ComparisonData.NomenclatureDimensions)
-                          let nameDistance = anyWithoutDimensions
-                              ? ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedName, item.ComparisonData.AdjustedNomenclatureName, maxNameDistance)
-                              : ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedNameWithDimensions, item.ComparisonData.AdjustedNomenclatureNameWithDimensions, maxNameDistance)
-                          let digitsDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedDigits, item.ComparisonData.AdjustedNomenclatureDigits, maxNameDistance)
-                          let distance = (nameDistance + digitsDistance ?? maxNameDistance) / 2
-                          where item.OwnerId == ownerId &&
-                              !item.IsDeleted &&
-                              nameDistance.HasValue
-                          orderby distance
-                          select item;
+            var query = from item in _db.Nomenclatures.IgnoreQueryFilters()
+                        where item.OwnerId == ownerId &&
+                            !item.IsDeleted
+                        select item;
+            var results = string.IsNullOrEmpty(compTerms.NomDimensions)
+                ? from item in query
+                  let nameDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedName, item.ComparisonData.AdjustedNomenclatureName, maxNameDistance)
+                  let digitsDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedDigits, item.ComparisonData.AdjustedNomenclatureDigits, maxNameDistance)
+                  let distance = (nameDistance + digitsDistance ?? maxNameDistance) / 2
+                  where nameDistance.HasValue
+                  orderby distance
+                  select item
+                : from item in query
+                  let nameDistance = string.IsNullOrEmpty(item.ComparisonData.NomenclatureDimensions)
+                      ? ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedName, item.ComparisonData.AdjustedNomenclatureName, maxNameDistance)
+                      : ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedNameWithDimensions, item.ComparisonData.AdjustedNomenclatureNameWithDimensions, maxNameDistance)
+                  let digitsDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedDigits, item.ComparisonData.AdjustedNomenclatureDigits, maxNameDistance)
+                  let distance = (nameDistance + digitsDistance ?? maxNameDistance) / 2
+                  where nameDistance.HasValue
+                  orderby distance
+                  select item;
 
             return results.FirstOrDefault()?.Adapt<NomenclatureVm>();
         }
