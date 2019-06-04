@@ -42,15 +42,28 @@ namespace DigitalPurchasing.Web
                                 where !n.IsDeleted
                                 select new
                                 {
-                                    n.Id,
-                                    n.Name
+                                    NomenclatureId = n.Id,
+                                    n.Name,
+                                    AlternativeId = (Guid?)null
                                 }).ToList();
+                    noms.AddRange((from n in context.NomenclatureAlternatives.IgnoreQueryFilters()
+                                   where !n.Nomenclature.IsDeleted
+                                   select new
+                                   {
+                                       n.NomenclatureId,
+                                       n.Name,
+                                       AlternativeId = (Guid?)n.Id
+                                   }).ToList());
                     var compDatas = new List<NomenclatureComparisonData>();
                     noms.ForEach(n =>
                     {
-                        var copmDataItem = GetComparisonDataByNomenclatureName(n.Name);
-                        copmDataItem.NomenclatureId = n.Id;
-                        compDatas.Add(copmDataItem);
+                        var compDataItem = GetComparisonDataByNomenclatureName(n.Name);
+                        if (!string.IsNullOrWhiteSpace(compDataItem.AdjustedNomenclatureName))
+                        {
+                            compDataItem.NomenclatureId = n.NomenclatureId;
+                            compDataItem.NomenclatureAlternativeId = n.AlternativeId;
+                            compDatas.Add(compDataItem);
+                        }
                     });
                     context.NomenclatureComparisonDatas.AddRange(compDatas);
                     context.SaveChanges();

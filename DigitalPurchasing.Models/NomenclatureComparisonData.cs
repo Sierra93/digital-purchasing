@@ -11,5 +11,6 @@ namespace DigitalPurchasing.Models
         public string AdjustedNomenclatureNameWithDimensions { get; set; }
         public string AdjustedNomenclatureDigits { get; set; }
         public Guid NomenclatureId { get; set; }
+        public Guid? NomenclatureAlternativeId { get; set; }
     }
 }

@@ -36,5 +36,7 @@ namespace DigitalPurchasing.Models
         public UnitsOfMeasurement PackUom { get; set; }
         [Column(TypeName = "decimal(18, 4)")]
         public decimal? PackUomValue { get; set; }
+
+        public NomenclatureComparisonData ComparisonData { get; set; }
     }
 }

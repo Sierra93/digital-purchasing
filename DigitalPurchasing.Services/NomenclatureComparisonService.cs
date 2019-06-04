@@ -52,10 +52,11 @@ namespace DigitalPurchasing.Services
                 return (name1, name2);
             };
 
+            var dimensions = getDimensions(nomName);
             var terms = new NomenclatureComparisonTerms()
             {
                 AdjustedName = orderWords(replaceSynonyms(removeNoize(cleanupNomName(nomName).ReplaceSpacesWithOneSpace()).Trim().ToLower())),
-                NomDimensions = getDimensions(nomName),
+                NomDimensions = string.IsNullOrWhiteSpace(dimensions) ? null : dimensions,
                 AdjustedDigits = onlyDigitsOrderedByGroupLen(nomName)
             };
 
@@ -65,9 +66,9 @@ namespace DigitalPurchasing.Services
         public NomenclatureComparisonDistance CalculateDistance(NomenclatureComparisonTerms nom1, NomenclatureComparisonTerms nom2,
             bool isSameUoms, decimal nomQty1, decimal nomQty2)
         {
-            var names = string.IsNullOrEmpty(nom1.NomDimensions) || string.IsNullOrEmpty(nom2.NomDimensions)
-                                                ? (nom1.AdjustedName, nom2.AdjustedName)
-                                                : (nom1.AdjustedNameWithDimensions, nom2.AdjustedNameWithDimensions);
+            var names = nom1.NomDimensions == null || nom2.NomDimensions == null
+                            ? (nom1.AdjustedName, nom2.AdjustedName)
+                            : (nom1.AdjustedNameWithDimensions, nom2.AdjustedNameWithDimensions);
 
             var alg = new Levenshtein();
             var maxNameLen = Math.Max(names.Item1.Length, names.Item2.Length);
