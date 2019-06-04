@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
 using Microsoft.AspNetCore;
@@ -66,6 +67,27 @@ namespace DigitalPurchasing.Web
                         }
                     });
                     context.NomenclatureComparisonDatas.AddRange(compDatas);
+                    context.SaveChanges();
+                }
+
+                if (!context.NomenclatureComparisonDataNGrams.Any())
+                {
+                    byte ngramLen = 3;
+                    var data = (from cd in context.NomenclatureComparisonDatas
+                                select new
+                                {
+                                    cd.Id,
+                                    cd.AdjustedNomenclatureName
+                                }).ToList();
+                    var ngrams = (from cd in data
+                                  from ngram in cd.AdjustedNomenclatureName.Ngrams(ngramLen)
+                                  select new NomenclatureComparisonDataNGram
+                                  {
+                                      NomenclatureComparisonDataId = cd.Id,
+                                      N = ngramLen,
+                                      Gram = ngram,
+                                  }).ToList();
+                    context.NomenclatureComparisonDataNGrams.AddRange(ngrams);
                     context.SaveChanges();
                 }
             }

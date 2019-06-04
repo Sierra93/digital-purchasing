@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -57,5 +58,17 @@ namespace DigitalPurchasing.Core.Extensions
 
         public static string RemoveSpaces(this string str) =>
             string.IsNullOrWhiteSpace(str) ? str : Regex.Replace(str, @"\s+", "");
+
+        public static IEnumerable<string> Ngrams(this string str, int len)
+        {
+            var parts = str.ReplaceSpacesWithOneSpace().Split(" ");
+            foreach (var p in parts.Where(_ => _.Length >= len))
+            {
+                for (int i = 0; i <= p.Length - len; i++)
+                {
+                    yield return p.Substring(i, len);
+                }
+            }
+        }
     }
 }
