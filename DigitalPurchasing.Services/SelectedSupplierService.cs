@@ -104,7 +104,7 @@ namespace DigitalPurchasing.Services
                     var ssSuppliers = new List<SSSupplier>();
 
                     // supplier items
-                    foreach (var supplierOffer in cl.SupplierOffers)
+                    foreach (var supplierOffer in cl.SupplierOffers.Where(q => q.Supplier != null))
                     {
                         // supplier + so data
                         var ssSupplier = new SSSupplier
