@@ -250,10 +250,8 @@ namespace DigitalPurchasing.Services
 
             if (!nomRes.Items.Any())
             {
-                var bestNomMatch = _nomenclatureService.FindBestFuzzyMatch(pr.OwnerId, prItem.RawName, 15);
-                prItem.NomenclatureId = bestNomMatch == null
-                    ? _nomenclatureAlternativeService.FindBestFuzzyMatch(pr.OwnerId, prItem.RawName, 5)?.NomenclatureId
-                    : bestNomMatch.Id;
+                var bestNomMatch = _nomenclatureService.FindBestFuzzyMatch(pr.OwnerId, prItem.RawName);
+                prItem.NomenclatureId = bestNomMatch?.Id;
             }
             // TODO :: why not just to use first item in case there is more than one item?!
             else if (nomRes.Items.Count(q => q.IsFullMatch) == 1)

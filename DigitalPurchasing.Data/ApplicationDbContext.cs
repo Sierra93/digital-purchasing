@@ -155,7 +155,7 @@ namespace DigitalPurchasing.Data
             builder.Entity<Nomenclature>().HasOne(q => q.PackUom).WithMany().HasForeignKey(q => q.PackUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<Nomenclature>().Property(q => q.Name).IsRequired();
             builder.Entity<Nomenclature>().HasIndex(q => new { q.OwnerId, q.Name }).IsUnique().HasFilter($"{nameof(Nomenclature.IsDeleted)} = 0");
-            builder.Entity<Nomenclature>().HasMany(q => q.ComparisonDataItems).WithOne().HasForeignKey(q => q.NomenclatureId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<Nomenclature>().HasMany(q => q.ComparisonDataItems).WithOne(q => q.Nomenclature).HasForeignKey(q => q.NomenclatureId).OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<NomenclatureAlternative>().HasOne(q => q.Nomenclature).WithMany(q => q.Alternatives).HasForeignKey(q => q.NomenclatureId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<NomenclatureAlternative>().HasOne(q => q.BatchUom).WithMany(q => q.BatchNomenclatureAlternatives).HasForeignKey(q => q.BatchUomId).OnDelete(DeleteBehavior.Restrict);
