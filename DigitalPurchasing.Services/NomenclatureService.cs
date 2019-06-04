@@ -401,9 +401,9 @@ namespace DigitalPurchasing.Services
 
             var mainResults = ownerNomenclatures
                 .Where(w =>
-                    (!string.IsNullOrEmpty(w.Name) && w.Name.Contains(q, strComparison)) ||
-                    (!string.IsNullOrEmpty(w.NameEng) && w.NameEng.Contains(q, strComparison)) ||
-                    (!string.IsNullOrEmpty(w.Code) && w.Code.Contains(q, strComparison)))
+                    (!string.IsNullOrEmpty(w.Name) && w.Name.Trim().Contains(q, strComparison)) ||
+                    (!string.IsNullOrEmpty(w.NameEng) && w.NameEng.Trim().Contains(q, strComparison)) ||
+                    (!string.IsNullOrEmpty(w.Code) && w.Code.Trim().Contains(q, strComparison)))
                 .ToList();
 
             if (options.SearchInAlts)
@@ -458,14 +458,14 @@ namespace DigitalPurchasing.Services
                 NameEng = n.NameEng,
                 BatchUomId = n.BatchUom?.Id ?? Guid.Empty,
                 BatchUomName = n.BatchUom?.Name ?? string.Empty,                
-                IsFullMatch = (n.Name != null && n.Name.Equals(q, strComparison))
-                    || (n.NameEng != null && n.NameEng.Equals(q, strComparison))
-                    || (n.Code != null && n.Code.Equals(q, strComparison))
+                IsFullMatch = (!string.IsNullOrEmpty(n.Name) && n.Name.Trim().Equals(q, strComparison))
+                    || (!string.IsNullOrEmpty(n.NameEng) && n.NameEng.Trim().Equals(q, strComparison))
+                    || (!string.IsNullOrEmpty(n.Code) && n.Code.Trim().Equals(q, strComparison))
             })
-            .OrderByDescending(_ => _.IsFullMatch)
-            .ThenByDescending(_ => _.Name != null && _.Name.StartsWith(q, strComparison))
-            .ThenByDescending(_ => _.NameEng != null && _.NameEng.StartsWith(q, strComparison))
-            .ThenByDescending(_ => _.Code != null && _.Code.StartsWith(q, strComparison))
+            .OrderByDescending(w => w.IsFullMatch)
+            .ThenByDescending(w => !string.IsNullOrEmpty(w.Name) && w.Name.Trim().StartsWith(q, strComparison))
+            .ThenByDescending(w => !string.IsNullOrEmpty(w.NameEng) && w.NameEng.Trim().StartsWith(q, strComparison))
+            .ThenByDescending(w => !string.IsNullOrEmpty(w.Code) && w.Code.Trim().StartsWith(q, strComparison))
             .ToList();
 
             result.Items.AddRange(resultItems);

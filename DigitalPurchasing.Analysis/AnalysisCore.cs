@@ -14,12 +14,14 @@ namespace DigitalPurchasing.Analysis
         private readonly AnalysisCustomer _customer;
         private readonly IEnumerable<AnalysisSupplier> _suppliers;
         private readonly Dictionary<Guid, AnalysisCustomerItem> _customerItemsLookup;
+        private readonly decimal _customerTotalQuantity;
 
         public AnalysisCore(AnalysisCustomer customer, IEnumerable<AnalysisSupplier> suppliers)
         {
             _customer = customer;
             _suppliers = suppliers.ToList();
             _customerItemsLookup = _customer.Items.ToDictionary(q => q.NomenclatureId);
+            _customerTotalQuantity = _customerItemsLookup.Sum(q => q.Value.Quantity);
         }
 
         public List<AnalysisResult> Run(params AnalysisVariantData[] variantDatas)
@@ -36,20 +38,18 @@ namespace DigitalPurchasing.Analysis
 
                 var suppliers = supplierPipeline.Process(_suppliers).ToList();
 
-                if (suppliers.Count() == 0)
+                if (!suppliers.Any())
                 {
                     results.Add(AnalysisResult.Empty(variantData.Id));
                     continue;
                 }
-
-                //var totalCustomerQuantity = _customerItemsLookup.Sum(q => q.)
 
                 var minVariant = new Dictionary<Guid, (decimal TotalPrice, decimal Price)>();
 
                 foreach (var customerItem in _customerItemsLookup)
                 {
                     var customerQuantity = customerItem.Value.Quantity;
-                    var supplierItems = suppliers.SelectMany(q => q.Items.Where(w => w.NomenclatureId == customerItem.Key));
+                    var supplierItems = suppliers.SelectMany(q => q.Items.Where(w => w.NomenclatureId == customerItem.Key)).ToList();
                     var itemsWEnoughQuality = supplierItems.Any(q => q.Quantity >= customerQuantity);
                     var maxQuantity = supplierItems.Sum(q => q.Quantity);
                     if (itemsWEnoughQuality || maxQuantity > customerQuantity)
@@ -66,19 +66,25 @@ namespace DigitalPurchasing.Analysis
                 var suppliersCount = suppliers.Count;
                 var suppliersCountOptions = variantData.SuppliersCountOptions;
                 var suppliersIndexes = Enumerable.Range(0, suppliersCount);
-                var suppliersIndexesCombinations = suppliersIndexes.Combinations();
+                var suppliersIndexesCombinations = suppliersIndexes.Combinations().ToList();
 
                 switch (suppliersCountOptions.Type)
                 {
                     case SupplierCountType.Any:
-                        suppliersIndexesCombinations = suppliersIndexesCombinations.Where(q => q.Count() >= 1);
+                        suppliersIndexesCombinations = suppliersIndexesCombinations.Where(q => q.Any()).ToList();
                         break;
                     case SupplierCountType.Equal:
-                        suppliersIndexesCombinations = suppliersIndexesCombinations.Where(q => q.Count() == suppliersCountOptions.Count);
+                        suppliersIndexesCombinations = suppliersIndexesCombinations.Where(q => q.Count() == suppliersCountOptions.Count).ToList();
                         break;
                     case SupplierCountType.LessOrEqual:
-                        suppliersIndexesCombinations = suppliersIndexesCombinations.Where(q => q.Count() >= 1 && q.Count() <= suppliersCountOptions.Count);
+                        suppliersIndexesCombinations = suppliersIndexesCombinations.Where(q => q.Any() && q.Count() <= suppliersCountOptions.Count).ToList();
                         break;
+                }
+
+                if (!suppliersIndexesCombinations.Any())
+                {
+                    results.Add(AnalysisResult.Empty(variantData.Id));
+                    break;
                 }
 
                 var suppliersScores = new List<(List<int> Indexes, decimal Score)>();
@@ -87,22 +93,23 @@ namespace DigitalPurchasing.Analysis
                 {
                     decimal score = 1;
 
-                    foreach (var customerItemLooku in _customerItemsLookup)
+                    foreach (var customerItemLookup in _customerItemsLookup)
                     {
-                        var nomenclatureId = customerItemLooku.Key;
-                        var customerQuantity = customerItemLooku.Value.Quantity;
+                        var nomenclatureId = customerItemLookup.Key;
+                        var customerQuantity = customerItemLookup.Value.Quantity;
+                        var quantityScoreMod = customerQuantity / _customerTotalQuantity;
 
                         var suppliersItems = suppliers
                             .Where(q => suppliersIndexesCombination.Contains(suppliers.IndexOf(q)))
-                            .SelectMany(q => q.Items.Where(i => i.NomenclatureId == nomenclatureId));
+                            .SelectMany(q => q.Items.Where(i => i.NomenclatureId == nomenclatureId))
+                            .ToList();
 
-                        var itemsWEnoughQuality = suppliersItems.Where(q => q.Quantity >= customerQuantity);
+                        var itemsWEnoughQuality = suppliersItems.Where(q => q.Quantity >= customerQuantity).ToList();
 
                         if (itemsWEnoughQuality.Any())
                         {
-                            var scoreMod = minVariant[nomenclatureId].TotalPrice / itemsWEnoughQuality.Min(q => q.TotalPrice);
-                            // todo: apply according to quantities
-                            score *= scoreMod;                            
+                            var priceScoreMod = minVariant[nomenclatureId].TotalPrice / itemsWEnoughQuality.Min(q => q.TotalPrice);
+                            score += priceScoreMod * quantityScoreMod;                            
                         }
                         else
                         {
@@ -110,7 +117,7 @@ namespace DigitalPurchasing.Analysis
                             var isPossibleToFillPosition = maxQuantity >= customerQuantity;
                             if (isPossibleToFillPosition)
                             {
-                                var scoreMod = 0m;
+                                var priceScoreMod = 0m;
                                 var currentQuantity = 0m;
                                 var minPriceData = minVariant[nomenclatureId];
                                 foreach (var item in suppliersItems.OrderBy(q => q.Price).ThenByDescending(q => q.Quantity))
@@ -118,11 +125,10 @@ namespace DigitalPurchasing.Analysis
                                     var remainingQuantity = Math.Abs(customerQuantity - currentQuantity);
                                     var quantityToAdd = item.Quantity > remainingQuantity ? remainingQuantity : item.Quantity;
                                     currentQuantity += quantityToAdd;
-                                    scoreMod += (quantityToAdd / customerQuantity) * minPriceData.Price / item.Price;
+                                    priceScoreMod += (quantityToAdd / customerQuantity) * minPriceData.Price / item.Price;
                                     if (currentQuantity == customerQuantity) break;
                                 }
-                                // todo: apply according to quantities
-                                score *= scoreMod;
+                                score += priceScoreMod * quantityScoreMod;
                             }
                             else
                             {
@@ -143,7 +149,8 @@ namespace DigitalPurchasing.Analysis
                 }
 
                 var bestCombinationSuppliers = suppliers
-                        .Where(q => bestCombination.Indexes.Contains(suppliers.IndexOf(q)));
+                        .Where(q => bestCombination.Indexes.Contains(suppliers.IndexOf(q)))
+                        .ToList();
 
                 var bestDatas = new List<AnalysisResultData>();
 
@@ -174,9 +181,7 @@ namespace DigitalPurchasing.Analysis
                                 customerQuantity);
 
                             return resultData;
-                        });
-
-                    datas = datas.Where(q => !q.Equals(default(AnalysisResultData)));
+                        }).Where(q => !q.Equals(default(AnalysisResultData))).ToList();
 
                     if (datas.Any())
                     {
