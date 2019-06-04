@@ -92,6 +92,9 @@ namespace DigitalPurchasing.Data
 
         #endregion
 
+        public DbSet<AppNGram> AppNGrams { get; set; }
+        public DbSet<NomenclatureComparisonDataNGram> NomenclatureComparisonDataNGrams { get; set; }
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IHttpContextAccessor httpContextAccessor) : base(options)
         {
             _httpContextAccessor = httpContextAccessor;
@@ -271,6 +274,17 @@ namespace DigitalPurchasing.Data
                     Name = "EUR",
                     CreatedOn = new DateTime(2018, 11, 5)
                 });
+            });
+
+            builder.Entity<AppNGram>(e =>
+            {
+                e.Property(q => q.Gram).IsRequired().HasMaxLength(10);
+            });
+            builder.Entity<NomenclatureComparisonDataNGram>(e =>
+            {
+                e.HasIndex(q => new { q.Gram })
+                    .ForSqlServerInclude("Discriminator", nameof(NomenclatureComparisonDataNGram.NomenclatureComparisonDataId))
+                    .HasName("IX_AppNGrams_Gram_INCL_Discriminator_NomenclatureComparisonDataId");
             });
 
             // default filters to show company data
