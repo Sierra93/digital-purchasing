@@ -10,25 +10,29 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using DigitalPurchasing.Core.Enums;
+using DigitalPurchasing.Core.Extensions;
 
 namespace DigitalPurchasing.Services
 {
     public sealed class NomenclatureAlternativeService : INomenclatureAlternativeService
     {
         private readonly ApplicationDbContext _db;
+        private readonly INomenclatureComparisonService _nomenclatureComparisonService;
 
         public NomenclatureAlternativeService(
-            ApplicationDbContext dbContext)
+            ApplicationDbContext dbContext,
+            INomenclatureComparisonService nomenclatureComparisonService)
         {
             _db = dbContext;
+            _nomenclatureComparisonService = nomenclatureComparisonService;
         }
 
         public void UpdateAlternative(NomenclatureAlternativeVm model)
         {
             var entity = _db.NomenclatureAlternatives.Find(model.Id);
 
-            //entity.ClientName = model.ClientName;
-            //entity.ClientType = model.ClientType;
+            bool isNameChanged = entity.Name != model.Name;
+
             entity.Name = model.Name;
             entity.Code = model.Code;
 
@@ -45,6 +49,17 @@ namespace DigitalPurchasing.Services
             entity.PackUomValue = model.PackUomValue;
 
             _db.SaveChanges();
+
+            if (isNameChanged)
+            {
+                _db.NomenclatureComparisonDatas.Remove(
+                    _db.NomenclatureComparisonDatas.First(_ => _.NomenclatureId == entity.NomenclatureId && _.NomenclatureAlternativeId == entity.Id));
+                _db.SaveChanges();
+                var cd = GetComparisonDataByNomenclatureAlt(entity);
+                _db.NomenclatureComparisonDatas.Add(cd);
+                cd.AdjustedNameNgrams.AddRange(GetNgramsForNomComparisonData(cd));
+                _db.SaveChanges();
+            }
         }
 
         public NomenclatureAlternativeVm GetAlternativeById(Guid id)
@@ -173,7 +188,6 @@ namespace DigitalPurchasing.Services
 
             var forBulkInsertNA = new List<NomenclatureAlternative>();
             var forBulkUpdateNA = new List<NomenclatureAlternative>();
-            var forBulkInsertLink = new List<NomenclatureAlternativeLink>();
 
             foreach (var alt in alts)
             {
@@ -247,10 +261,8 @@ namespace DigitalPurchasing.Services
                 }
                 else
                 {
-                    var naId = Guid.NewGuid();
-                    altByName = new NomenclatureAlternative
+                    forBulkInsertNA.Add(new NomenclatureAlternative
                     {
-                        Id = naId,
                         Name = altNomName,
                         Code = alt.Code?.Trim(),
                         BatchUomId = alt.BatchUomId,
@@ -263,29 +275,54 @@ namespace DigitalPurchasing.Services
                         PackUomId = alt.PackUomId,
                         PackUomValue = alt.PackUomValue,
                         OwnerId = ownerId
-                    };
-
-                    var link = new NomenclatureAlternativeLink
-                    {
-                        Id = Guid.NewGuid(),
-                        CustomerId = clientType == ClientType.Customer ? clientId : (Guid?)null,
-                        SupplierId = clientType == ClientType.Supplier ? clientId : (Guid?)null,
-                        AlternativeId = naId
-                    };
-
-                    forBulkInsertNA.Add(altByName);
-                    forBulkInsertLink.Add(link);
+                    });
                 }
             }
 
             if (forBulkInsertNA.Any())
             {
                 _db.BulkInsert(forBulkInsertNA);
-                _db.BulkInsert(forBulkInsertLink);
+                _db.BulkInsert(forBulkInsertNA.Select(alt => new NomenclatureAlternativeLink
+                {
+                    CustomerId = clientType == ClientType.Customer ? clientId : (Guid?)null,
+                    SupplierId = clientType == ClientType.Supplier ? clientId : (Guid?)null,
+                    AlternativeId = alt.Id
+                }).ToList());
+                var compDataItems = forBulkInsertNA.Select(alt => GetComparisonDataByNomenclatureAlt(alt)).ToList();
+                _db.BulkInsert(compDataItems);
+                _db.BulkInsert(compDataItems.Select(cd => GetNgramsForNomComparisonData(cd)).SelectMany(ng => ng).ToList());
             }
 
             if (forBulkUpdateNA.Any())
+            {
                 _db.BulkUpdate(forBulkUpdateNA);
+            }
+        }
+
+        private IEnumerable<NomenclatureComparisonDataNGram> GetNgramsForNomComparisonData(NomenclatureComparisonData cd)
+        {
+            byte ngramLen = 3;
+            return from ng in cd.AdjustedNomenclatureName.Ngrams(ngramLen)
+                   select new NomenclatureComparisonDataNGram()
+                   {
+                       NomenclatureComparisonDataId = cd.Id,
+                       N = ngramLen,
+                       Gram = ng
+                   };
+        }
+
+        private NomenclatureComparisonData GetComparisonDataByNomenclatureAlt(NomenclatureAlternative alt)
+        {
+            var terms = _nomenclatureComparisonService.CalculateComparisonTerms(alt.Name);
+
+            return new NomenclatureComparisonData
+            {
+                AdjustedNomenclatureDigits = terms.AdjustedDigits,
+                AdjustedNomenclatureName = terms.AdjustedName,
+                NomenclatureDimensions = terms.NomDimensions,
+                NomenclatureId = alt.NomenclatureId,
+                NomenclatureAlternativeId = alt.Id
+            };
         }
 
         public void Delete(Guid id)

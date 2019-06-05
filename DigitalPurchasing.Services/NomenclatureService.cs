@@ -322,16 +322,15 @@ namespace DigitalPurchasing.Services
 
             if (newEntities.Any())
             {
-                var compDatas = new List<NomenclatureComparisonData>();
+                var compDataItems = new List<NomenclatureComparisonData>();
                 newEntities.ForEach(n =>
                 {
                     var compDataItem = GetComparisonDataByNomenclatureName(n.Name);
                     compDataItem.NomenclatureId = n.Id;
-                    compDatas.Add(compDataItem);
+                    compDataItems.Add(compDataItem);
                 });
-                _db.BulkInsert(compDatas);
-
-                _db.BulkInsert(compDatas.Select(cd => GetNgramsForNomComparisonData(cd)).SelectMany(ng => ng).ToList());
+                _db.BulkInsert(compDataItems);
+                _db.BulkInsert(compDataItems.Select(cd => GetNgramsForNomComparisonData(cd)).SelectMany(ng => ng).ToList());
             }
         }
 
