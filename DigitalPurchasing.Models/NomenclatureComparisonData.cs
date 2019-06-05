@@ -15,5 +15,7 @@ namespace DigitalPurchasing.Models
         public Nomenclature Nomenclature { get; set; }
 
         public Guid? NomenclatureAlternativeId { get; set; }
+
+        public List<NomenclatureComparisonDataNGram> AdjustedNameNgrams { get; set; } = new List<NomenclatureComparisonDataNGram>();
     }
 }

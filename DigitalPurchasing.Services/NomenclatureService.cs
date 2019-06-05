@@ -251,7 +251,9 @@ namespace DigitalPurchasing.Services
             entity.PackUomId = vm.PackUomId;
             entity.PackUomValue = vm.PackUomValue;
 
-            entity.ComparisonDataItems.Add(GetComparisonDataByNomenclatureName(entity.Name));
+            var cd = GetComparisonDataByNomenclatureName(entity.Name);
+            cd.AdjustedNameNgrams.AddRange(GetNgramsForNomComparisonData(cd));
+            entity.ComparisonDataItems.Add(cd);
 
             _db.SaveChanges();
 
@@ -301,12 +303,26 @@ namespace DigitalPurchasing.Services
                 var compDatas = new List<NomenclatureComparisonData>();
                 newEntities.ForEach(n =>
                 {
-                    var copmDataItem = GetComparisonDataByNomenclatureName(n.Name);
-                    copmDataItem.NomenclatureId = n.Id;
-                    compDatas.Add(copmDataItem);
+                    var compDataItem = GetComparisonDataByNomenclatureName(n.Name);
+                    compDataItem.NomenclatureId = n.Id;
+                    compDatas.Add(compDataItem);
                 });
                 _db.BulkInsert(compDatas);
+
+                _db.BulkInsert(compDatas.Select(cd => GetNgramsForNomComparisonData(cd)).SelectMany(ng => ng).ToList());
             }
+        }
+
+        private IEnumerable<NomenclatureComparisonDataNGram> GetNgramsForNomComparisonData(NomenclatureComparisonData cd)
+        {
+            byte ngramLen = 3;
+            return from ng in cd.AdjustedNomenclatureName.Ngrams(ngramLen)
+                   select new NomenclatureComparisonDataNGram()
+                   {
+                       NomenclatureComparisonDataId = cd.Id,
+                       N = ngramLen,
+                       Gram = ng
+                   };
         }
 
         public NomenclatureVm GetById(Guid id, bool globalSearch = false)
