@@ -88,6 +88,9 @@ namespace DigitalPurchasing.Services
             return distance;
         }
 
+        public NomenclatureComparisonDistance CalculateDistance(NomenclatureComparisonTerms nom1, NomenclatureComparisonTerms nom2) =>
+            CalculateDistance(nom1, nom2, false, 1, 1);
+
         private static int LongestCommonSubstring(string str1, string str2)
         {
             if (string.IsNullOrEmpty(str1) || string.IsNullOrEmpty(str2))

@@ -406,28 +406,20 @@ namespace DigitalPurchasing.Services
 
             var ncDataItems = comparisonDataQry.ToList();
 
-            var levAlg = new F23.StringSimilarity.Levenshtein();
-            var results = compTerms.NomDimensions == null
-                ? from cd in ncDataItems
-                  let nameDistance = levAlg.Distance(compTerms.AdjustedName, cd.AdjustedNomenclatureName)
-                  let digitsDistance = levAlg.Distance(compTerms.AdjustedDigits, cd.AdjustedNomenclatureDigits)
-                  //let maxSubstringLen = ApplicationDbContext.LongestCommonSubstringLenFunc(compTerms.AdjustedName, cd.AdjustedNomenclatureName)
-                  let distance = nameDistance + digitsDistance /*- 2 * maxSubstringLen*/
-                  orderby distance
-                  select cd.Nomenclature
-                : from cd in ncDataItems
-                  let nameDistance = string.IsNullOrEmpty(cd.NomenclatureDimensions)
-                      ? levAlg.Distance(compTerms.AdjustedName, cd.AdjustedNomenclatureName)
-                      : levAlg.Distance(compTerms.AdjustedNameWithDimensions, cd.AdjustedNomenclatureNameWithDimensions)
-                  let digitsDistance = levAlg.Distance(compTerms.AdjustedDigits, cd.AdjustedNomenclatureDigits)
-                  //let maxSubstringLen = string.IsNullOrEmpty(cd.NomenclatureDimensions)
-                  //    ? ApplicationDbContext.LongestCommonSubstringLenFunc(compTerms.AdjustedName, cd.AdjustedNomenclatureName)
-                  //    : ApplicationDbContext.LongestCommonSubstringLenFunc(compTerms.AdjustedNameWithDimensions, cd.AdjustedNomenclatureNameWithDimensions)
-                  let distance = nameDistance + digitsDistance /*- 2 * maxSubstringLen*/
-                  orderby distance
-                  select cd.Nomenclature;
+            var results = from cd in ncDataItems
+                          let distance = _nomenclatureComparisonService.CalculateDistance(compTerms, new NomenclatureComparisonTerms()
+                          {
+                              AdjustedDigits = cd.AdjustedNomenclatureDigits,
+                              AdjustedName = cd.AdjustedNomenclatureName,
+                              NomDimensions = cd.NomenclatureDimensions
+                          })
+                          orderby distance.CompleteDistance
+                          select cd.Nomenclature;
 
-            
+            var match = results.FirstOrDefault()?.Adapt<NomenclatureVm>();
+
+            return match;
+
             //var results = compTerms.NomDimensions == null
             //    ? from cd in comparisonDataQry
             //      let nameDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedName, cd.AdjustedNomenclatureName, maxNameLevenshteinDistance)
@@ -449,10 +441,6 @@ namespace DigitalPurchasing.Services
             //      where nameDistance.HasValue
             //      orderby distance
             //      select cd.Nomenclature;
-
-            var match = results.FirstOrDefault()?.Adapt<NomenclatureVm>();
-
-            return match;
         }
 
         public NomenclatureAutocompleteResult Autocomplete(AutocompleteOptions options)

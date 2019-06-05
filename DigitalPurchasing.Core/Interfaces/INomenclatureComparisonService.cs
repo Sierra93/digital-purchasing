@@ -12,6 +12,7 @@ namespace DigitalPurchasing.Core.Interfaces
         NomenclatureComparisonTerms CalculateComparisonTerms(string nomName);
         NomenclatureComparisonDistance CalculateDistance(NomenclatureComparisonTerms nom1, NomenclatureComparisonTerms nom2,
             bool isSameUoms, decimal nomQty1, decimal nomQty2);
+        NomenclatureComparisonDistance CalculateDistance(NomenclatureComparisonTerms nom1, NomenclatureComparisonTerms nom2);
     }
 
     public class NomenclatureComparisonDistance
