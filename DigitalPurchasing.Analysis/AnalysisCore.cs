@@ -50,16 +50,21 @@ namespace DigitalPurchasing.Analysis
                 {
                     var customerQuantity = customerItem.Value.Quantity;
                     var supplierItems = suppliers.SelectMany(q => q.Items.Where(w => w.NomenclatureId == customerItem.Key)).ToList();
-                    var itemsWEnoughQuality = supplierItems.Any(q => q.Quantity >= customerQuantity);
-                    var maxQuantity = supplierItems.Sum(q => q.Quantity);
-                    if (itemsWEnoughQuality || maxQuantity > customerQuantity)
+                    if (supplierItems.Any())
                     {
-                        minVariant.Add(customerItem.Key, (TotalPrice: supplierItems.Min(q => q.TotalPrice), Price: supplierItems.Min(q => q.Price)));
-                    }
-                    else
-                    {
-                        results.Add(AnalysisResult.Empty(variantData.Id));
-                        break;
+                        var itemsWEnoughQuality = supplierItems.Any(q => q.Quantity >= customerQuantity);
+                        if (itemsWEnoughQuality)
+                        {
+                            minVariant.Add(customerItem.Key, (
+                                TotalPrice: supplierItems.Where(q => q.Quantity >= customerQuantity).Min(q => q.TotalPrice),
+                                Price: supplierItems.Where(q => q.Quantity >= customerQuantity).Min(q => q.Price)));
+                        }
+                        else
+                        {
+                            minVariant.Add(customerItem.Key, (
+                                TotalPrice: 0, // unused in this case
+                                Price: supplierItems.Min(q => q.Price)));
+                        }
                     }
                 }
 
@@ -87,11 +92,12 @@ namespace DigitalPurchasing.Analysis
                     break;
                 }
 
-                var suppliersScores = new List<(List<int> Indexes, decimal Score)>();
+                var suppliersScores = new List<(List<int> Indexes, decimal Score, int ItemsCount)>();
 
                 foreach (var suppliersIndexesCombination in suppliersIndexesCombinations)
                 {
                     decimal score = 1;
+                    var itemsCount = 0;
 
                     foreach (var customerItemLookup in _customerItemsLookup)
                     {
@@ -104,18 +110,18 @@ namespace DigitalPurchasing.Analysis
                             .SelectMany(q => q.Items.Where(i => i.NomenclatureId == nomenclatureId))
                             .ToList();
 
-                        var itemsWEnoughQuality = suppliersItems.Where(q => q.Quantity >= customerQuantity).ToList();
+                        if (suppliersItems.Any())
+                        {
+                            itemsCount++;
 
-                        if (itemsWEnoughQuality.Any())
-                        {
-                            var priceScoreMod = minVariant[nomenclatureId].TotalPrice / itemsWEnoughQuality.Min(q => q.TotalPrice);
-                            score += priceScoreMod * quantityScoreMod;                            
-                        }
-                        else
-                        {
-                            var maxQuantity = suppliersItems.Sum(q => q.Quantity);
-                            var isPossibleToFillPosition = maxQuantity >= customerQuantity;
-                            if (isPossibleToFillPosition)
+                            var itemsWEnoughQuality = suppliersItems.Where(q => q.Quantity >= customerQuantity).ToList();
+
+                            if (itemsWEnoughQuality.Any())
+                            {
+                                var priceScoreMod = minVariant[nomenclatureId].TotalPrice / itemsWEnoughQuality.Min(q => q.TotalPrice);
+                                score += priceScoreMod * quantityScoreMod;
+                            }
+                            else
                             {
                                 var priceScoreMod = 0m;
                                 var currentQuantity = 0m;
@@ -130,17 +136,16 @@ namespace DigitalPurchasing.Analysis
                                 }
                                 score += priceScoreMod * quantityScoreMod;
                             }
-                            else
-                            {
-                                score = 0;
-                            }                            
                         }
                     }
 
-                    suppliersScores.Add((Indexes: suppliersIndexesCombination.ToList(), Score: score));
+                    suppliersScores.Add((Indexes: suppliersIndexesCombination.ToList(), Score: score, ItemsCount: itemsCount));
                 }
 
-                var bestCombination = suppliersScores.OrderByDescending(q => q.Score).First();
+                var bestCombination = suppliersScores
+                    .OrderByDescending(q => q.Score)
+                    .ThenBy(q => q.ItemsCount)
+                    .First();
 
                 if (bestCombination.Score == 0)
                 {
@@ -238,21 +243,8 @@ namespace DigitalPurchasing.Analysis
 
                         bestDatas.Add(singleSupplierData);
                     }
-                    else
-                    {
-                        // only all positions
-                        results.Add(AnalysisResult.Empty(variantData.Id));
-                        break;
-                    }                        
                 }
-
-                // only all positions
-                if (bestDatas.Count < _customer.Items.Count)
-                {
-                    results.Add(AnalysisResult.Empty(variantData.Id));
-                    continue;
-                }
-
+                
                 // total price filter
                 if (variantData.TotalValueOptions?.Value > 0 && bestDatas.Sum(q => q.TotalPrice) > variantData.TotalValueOptions.Value)
                 {

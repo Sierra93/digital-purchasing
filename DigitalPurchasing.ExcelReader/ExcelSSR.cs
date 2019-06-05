@@ -108,7 +108,7 @@ namespace DigitalPurchasing.ExcelReader
                         var nomPos = GetPositionByNomenclature(item.NomenclatureId);
                         ws.Cells[6 + nomPos, col].TableText(item.ConvertedPrice * item.ConvertedQuantity);
                     }
-                    ws.Cells[6 + supplierItems.Count, col].TableText(supplierItems.Sum(item => item.ConvertedPrice * item.ConvertedQuantity)).BoldFont();
+                    ws.Cells[rowTotal, col].TableText(supplierItems.Sum(item => item.ConvertedPrice * item.ConvertedQuantity)).BoldFont();
                 }
 
                 #region Варианты распределения количества по поставщикам
