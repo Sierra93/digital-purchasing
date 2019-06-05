@@ -172,6 +172,7 @@ namespace DigitalPurchasing.Web
             }
 
             dbContext.Database.Migrate();
+            DataSeeder.Seed(dbContext);
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
