@@ -228,15 +228,23 @@ namespace DigitalPurchasing.Services
 
             var entity = _db.Nomenclatures.FirstOrDefault(q => q.Id == vm.Id);
 
-            if (entity == null)
+            string name = vm.Name?.Trim();
+            var isNew = entity == null;
+            bool nameIsChanged = false;
+
+            if (isNew)
             {
                 entity = new Nomenclature();
                 _db.Nomenclatures.Add(entity);
             }
+            else
+            {
+                nameIsChanged = entity.Name != name;
+            }
 
             entity.CategoryId = vm.CategoryId;
             entity.Code = vm.Code?.Trim();
-            entity.Name = vm.Name?.Trim();
+            entity.Name = name;
             entity.NameEng = vm.NameEng?.Trim();
 
             entity.ResourceUomId = vm.ResourceUomId;
@@ -251,11 +259,25 @@ namespace DigitalPurchasing.Services
             entity.PackUomId = vm.PackUomId;
             entity.PackUomValue = vm.PackUomValue;
 
-            var cd = GetComparisonDataByNomenclatureName(entity.Name);
-            cd.AdjustedNameNgrams.AddRange(GetNgramsForNomComparisonData(cd));
-            entity.ComparisonDataItems.Add(cd);
-
             _db.SaveChanges();
+
+            var cd = GetComparisonDataByNomenclatureName(entity.Name);
+
+            if (nameIsChanged)
+            {
+                _db.NomenclatureComparisonDatas.Remove(
+                    _db.NomenclatureComparisonDatas.First(_ => _.NomenclatureId == entity.Id && !_.NomenclatureAlternativeId.HasValue));
+                _db.SaveChanges();
+            }
+
+            if (isNew || nameIsChanged)
+            {
+                cd.Id = Guid.NewGuid();
+                cd.NomenclatureId = entity.Id;
+                _db.NomenclatureComparisonDatas.Add(cd);
+                cd.AdjustedNameNgrams.AddRange(GetNgramsForNomComparisonData(cd));
+                _db.SaveChanges();
+            }
 
             return entity.Adapt<NomenclatureVm>();
         }
