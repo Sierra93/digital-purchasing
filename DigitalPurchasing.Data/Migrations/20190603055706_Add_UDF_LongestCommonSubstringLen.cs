@@ -4,7 +4,10 @@ namespace DigitalPurchasing.Data.Migrations
 {
     public partial class Add_UDF_LongestCommonSubstringLen : Migration
     {
-        protected override void Up(MigrationBuilder migrationBuilder) =>
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            // Disabled because takes a lot of time to create necessary tables
+            /*
             // From https://www.red-gate.com/simple-talk/blogs/string-comparisons-in-sql-the-longest-common-substring/
             migrationBuilder.Sql(@"
 --This will need a NUMBERS table, stocked with numbers. If you haven't got one
@@ -35,13 +38,12 @@ TRUNCATE TABLE numbers
 GO
 
 CREATE FUNCTION udf_LongestCommonSubstringLen
-/**
-summary:   >
- The longest common subSubstring (LCS) tells you the longest common substring between two strings.
-	 If you, for example, were to compare 'And the Dish ran away with the Spoon' with 'away', you'd 
-	 get 'away' as being the string in common. Likewise, comparing '465932859472109683472' with 
-	 '697834859472135348' would give you '8594721'. This returns length of this substring
-**/    
+
+-- summary:   >
+--  The longest common subSubstring (LCS) tells you the longest common substring between two strings.
+-- 	 If you, for example, were to compare 'And the Dish ran away with the Spoon' with 'away', you'd 
+-- 	 get 'away' as being the string in common. Likewise, comparing '465932859472109683472' with 
+-- 	 '697834859472135348' would give you '8594721'. This returns length of this substring
 (
 @firstString NVARCHAR(MAX),
 @SecondString NVARCHAR(MAX)
@@ -84,6 +86,8 @@ SELECT top(1) @maxLen = COUNT(*)
 RETURN @maxLen
 END
 ");
+*/
+        }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {

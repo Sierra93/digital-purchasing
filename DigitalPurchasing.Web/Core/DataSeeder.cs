@@ -1,6 +1,7 @@
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
+using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -63,8 +64,7 @@ namespace DigitalPurchasing.Web.Core
                                   N = ngramLen,
                                   Gram = ngram,
                               }).ToList();
-                context.NomenclatureComparisonDataNGrams.AddRange(ngrams);
-                context.SaveChanges();
+                context.BulkInsert(ngrams);
             }
         }
 
