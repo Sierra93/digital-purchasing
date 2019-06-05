@@ -8,5 +8,6 @@ namespace DigitalPurchasing.Models
     {
         public Guid NomenclatureComparisonDataId { get; set; }
         public NomenclatureComparisonData NomenclatureComparisonData { get; set; }
+        public Guid OwnerId { get; set; }
     }
 }

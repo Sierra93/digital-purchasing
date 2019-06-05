@@ -8,7 +8,7 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         NomenclatureIndexData GetData(int page, int perPage, string sortField, bool sortAsc, string search);
         NomenclatureDetailsData GetDetailsData(Guid nomId, int page, int perPage, string sortField, bool sortAsc, string sortBySearch);
-        NomenclatureVm CreateOrUpdate(NomenclatureVm model);
+        NomenclatureVm CreateOrUpdate(NomenclatureVm model, Guid ownerId);
         void CreateOrUpdate(List<NomenclatureVm> models, Guid ownerId);
         NomenclatureVm GetById(Guid id, bool globalSearch = false);
         IEnumerable<NomenclatureVm> GetByNames(params string[] nomenclatureNames);

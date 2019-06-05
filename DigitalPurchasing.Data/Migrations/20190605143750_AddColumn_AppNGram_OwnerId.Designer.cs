@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190605143750_AddColumn_AppNGram_OwnerId")]
+    partial class AddColumn_AppNGram_OwnerId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1475,11 +1477,11 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<Guid>("OwnerId");
 
-                    b.HasIndex("NomenclatureComparisonDataId");
-
-                    b.HasIndex("Gram", "OwnerId")
-                        .HasName("IX_AppNGrams_Gram_OwnerId_INCL_Discriminator_NomenclatureComparisonDataId")
+                    b.HasIndex("Gram")
+                        .HasName("IX_AppNGrams_Gram_INCL_Discriminator_NomenclatureComparisonDataId")
                         .HasAnnotation("SqlServer:Include", new[] { "Discriminator", "NomenclatureComparisonDataId" });
+
+                    b.HasIndex("NomenclatureComparisonDataId");
 
                     b.HasDiscriminator().HasValue("NomenclatureComparisonDataNGram");
                 });

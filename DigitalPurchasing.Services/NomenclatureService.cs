@@ -219,7 +219,7 @@ namespace DigitalPurchasing.Services
             };
         }
 
-        public NomenclatureVm CreateOrUpdate(NomenclatureVm vm)
+        public NomenclatureVm CreateOrUpdate(NomenclatureVm vm, Guid ownerId)
         {
             if (HasSameNomenclatureName(vm.Id == default ? (Guid?)null : vm.Id, vm.Name?.Trim()))
             {
@@ -234,7 +234,10 @@ namespace DigitalPurchasing.Services
 
             if (isNew)
             {
-                entity = new Nomenclature();
+                entity = new Nomenclature()
+                {
+                    OwnerId = ownerId
+                };
                 _db.Nomenclatures.Add(entity);
             }
             else
@@ -275,7 +278,7 @@ namespace DigitalPurchasing.Services
                 cd.Id = Guid.NewGuid();
                 cd.NomenclatureId = entity.Id;
                 _db.NomenclatureComparisonDatas.Add(cd);
-                cd.AdjustedNameNgrams.AddRange(GetNgramsForNomComparisonData(cd));
+                cd.AdjustedNameNgrams.AddRange(GetNgramsForNomComparisonData(cd, ownerId));
                 _db.SaveChanges();
             }
 
@@ -330,11 +333,11 @@ namespace DigitalPurchasing.Services
                     compDataItems.Add(compDataItem);
                 });
                 _db.BulkInsert(compDataItems);
-                _db.BulkInsert(compDataItems.Select(cd => GetNgramsForNomComparisonData(cd)).SelectMany(ng => ng).ToList());
+                _db.BulkInsert(compDataItems.Select(cd => GetNgramsForNomComparisonData(cd, ownerId)).SelectMany(ng => ng).ToList());
             }
         }
 
-        private IEnumerable<NomenclatureComparisonDataNGram> GetNgramsForNomComparisonData(NomenclatureComparisonData cd)
+        private IEnumerable<NomenclatureComparisonDataNGram> GetNgramsForNomComparisonData(NomenclatureComparisonData cd, Guid ownerId)
         {
             byte ngramLen = 3;
             return from ng in cd.AdjustedNomenclatureName.Ngrams(ngramLen)
@@ -342,7 +345,8 @@ namespace DigitalPurchasing.Services
                    {
                        NomenclatureComparisonDataId = cd.Id,
                        N = ngramLen,
-                       Gram = ng
+                       Gram = ng,
+                       OwnerId = ownerId
                    };
         }
 
@@ -394,9 +398,9 @@ namespace DigitalPurchasing.Services
 
             var satisfiedNgrams = (from item in _db.NomenclatureComparisonDataNGrams
                                    let nom = item.NomenclatureComparisonData.Nomenclature
-                                   where ngrams.Contains(item.Gram) &&
-                                      !nom.IsDeleted &&
-                                      nom.OwnerId == ownerId
+                                   where item.OwnerId == ownerId &&
+                                        ngrams.Contains(item.Gram) &&
+                                        !nom.IsDeleted
                                    group item by item.NomenclatureComparisonDataId into g
                                    where g.Count() >= minNgramIntersect
                                    select g.Key).Distinct();

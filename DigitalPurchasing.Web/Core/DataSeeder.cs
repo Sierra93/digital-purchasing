@@ -54,7 +54,8 @@ namespace DigitalPurchasing.Web.Core
                             select new
                             {
                                 cd.Id,
-                                cd.AdjustedNomenclatureName
+                                cd.AdjustedNomenclatureName,
+                                cd.Nomenclature.OwnerId
                             }).ToList();
                 var ngrams = (from cd in data
                               from ngram in cd.AdjustedNomenclatureName.Ngrams(ngramLen)
@@ -63,6 +64,7 @@ namespace DigitalPurchasing.Web.Core
                                   NomenclatureComparisonDataId = cd.Id,
                                   N = ngramLen,
                                   Gram = ngram,
+                                  OwnerId = cd.OwnerId
                               }).ToList();
                 context.BulkInsert(ngrams);
             }

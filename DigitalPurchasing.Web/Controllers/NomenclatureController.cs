@@ -124,7 +124,7 @@ namespace DigitalPurchasing.Web.Controllers
             {
                 try
                 {
-                    _nomenclatureService.CreateOrUpdate(vm.Adapt<NomenclatureVm>());
+                    _nomenclatureService.CreateOrUpdate(vm.Adapt<NomenclatureVm>(), User.CompanyId());
                     return RedirectToAction(nameof(Index));
                 }
                 catch (SameNomenclatureNameException)

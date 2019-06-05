@@ -283,9 +283,9 @@ namespace DigitalPurchasing.Data
             });
             builder.Entity<NomenclatureComparisonDataNGram>(e =>
             {
-                e.HasIndex(q => new { q.Gram })
+                e.HasIndex(q => new { q.Gram, q.OwnerId })
                     .ForSqlServerInclude("Discriminator", nameof(NomenclatureComparisonDataNGram.NomenclatureComparisonDataId))
-                    .HasName("IX_AppNGrams_Gram_INCL_Discriminator_NomenclatureComparisonDataId");
+                    .HasName("IX_AppNGrams_Gram_OwnerId_INCL_Discriminator_NomenclatureComparisonDataId");
             });
 
             // default filters to show company data
