@@ -328,26 +328,28 @@ namespace DigitalPurchasing.Services
 
         public NomenclatureVm FindBestFuzzyMatch(Guid ownerId, string nomName)
         {
+            // Ngrams with specified length should already exist in the database
             const byte ngramLen = 3;
-            const int maxNameDistance = 30;
+
+            const int maxNameLevenshteinDistance = 30;
 
             var sw = System.Diagnostics.Stopwatch.StartNew();
 
-            var match = FindBestFuzzyMatch(ownerId, nomName, maxNameDistance, ngramLen, 15);
+            var match = FindBestFuzzyMatch(ownerId, nomName, maxNameLevenshteinDistance, ngramLen, 15);
             if (match == null)
             {
-                match = FindBestFuzzyMatch(ownerId, nomName, maxNameDistance, ngramLen, 10);
+                match = FindBestFuzzyMatch(ownerId, nomName, maxNameLevenshteinDistance, ngramLen, 10);
             }
             if (match == null)
             {
-                match = FindBestFuzzyMatch(ownerId, nomName, maxNameDistance, ngramLen, 3);
+                match = FindBestFuzzyMatch(ownerId, nomName, maxNameLevenshteinDistance, ngramLen, 3);
             }
             sw.Stop();
 
             return match;
         }
 
-        private NomenclatureVm FindBestFuzzyMatch(Guid ownerId, string nomName, int maxNameDistance,
+        private NomenclatureVm FindBestFuzzyMatch(Guid ownerId, string nomName, int maxNameLevenshteinDistance,
             byte ngramLen, byte minNgramIntersect)
         {
             var compTerms = _nomenclatureComparisonService.CalculateComparisonTerms(nomName);
@@ -361,24 +363,24 @@ namespace DigitalPurchasing.Services
                                    group item by item.NomenclatureComparisonDataId into g
                                    where g.Count() >= minNgramIntersect
                                    select g.Key).Distinct();
-            var q2 = from ncdId in satisfiedNgrams
-                     join ncd in _db.NomenclatureComparisonDatas on ncdId equals ncd.Id
-                     select ncd;
+            var comparisonDataQry = from ncdId in satisfiedNgrams
+                                    join ncd in _db.NomenclatureComparisonDatas on ncdId equals ncd.Id
+                                    select ncd;
 
             var results = compTerms.NomDimensions == null
-                ? from cd in q2
-                  let nameDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedName, cd.AdjustedNomenclatureName, maxNameDistance)
-                  let digitsDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedDigits, cd.AdjustedNomenclatureDigits, maxNameDistance) ?? maxNameDistance
+                ? from cd in comparisonDataQry
+                  let nameDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedName, cd.AdjustedNomenclatureName, maxNameLevenshteinDistance)
+                  let digitsDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedDigits, cd.AdjustedNomenclatureDigits, maxNameLevenshteinDistance) ?? maxNameLevenshteinDistance
                   let maxSubstringLen = ApplicationDbContext.LongestCommonSubstringLenFunc(compTerms.AdjustedName, cd.AdjustedNomenclatureName)
                   let distance = nameDistance + digitsDistance - 2 * maxSubstringLen
                   where nameDistance.HasValue
                   orderby distance
                   select cd.Nomenclature
-                : from cd in q2
+                : from cd in comparisonDataQry
                   let nameDistance = string.IsNullOrEmpty(cd.NomenclatureDimensions)
-                      ? ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedName, cd.AdjustedNomenclatureName, maxNameDistance)
-                      : ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedNameWithDimensions, cd.AdjustedNomenclatureNameWithDimensions, maxNameDistance)
-                  let digitsDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedDigits, cd.AdjustedNomenclatureDigits, maxNameDistance) ?? maxNameDistance
+                      ? ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedName, cd.AdjustedNomenclatureName, maxNameLevenshteinDistance)
+                      : ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedNameWithDimensions, cd.AdjustedNomenclatureNameWithDimensions, maxNameLevenshteinDistance)
+                  let digitsDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedDigits, cd.AdjustedNomenclatureDigits, maxNameLevenshteinDistance) ?? maxNameLevenshteinDistance
                   let maxSubstringLen = string.IsNullOrEmpty(cd.NomenclatureDimensions)
                       ? ApplicationDbContext.LongestCommonSubstringLenFunc(compTerms.AdjustedName, cd.AdjustedNomenclatureName)
                       : ApplicationDbContext.LongestCommonSubstringLenFunc(compTerms.AdjustedNameWithDimensions, cd.AdjustedNomenclatureNameWithDimensions)
