@@ -411,16 +411,22 @@ namespace DigitalPurchasing.Services
             var ncDataItems = comparisonDataQry.ToList();
 
             var results = from cd in ncDataItems
+                          let isAnalog = cd.NomenclatureAlternativeId.HasValue
                           let distance = _nomenclatureComparisonService.CalculateDistance(compTerms, new NomenclatureComparisonTerms()
                           {
                               AdjustedDigits = cd.AdjustedNomenclatureDigits,
                               AdjustedName = cd.AdjustedNomenclatureName,
                               NomDimensions = cd.NomenclatureDimensions
                           })
-                          orderby distance.CompleteDistance
-                          select cd.Nomenclature;
+                          orderby distance.CompleteDistance, isAnalog
+                          select new
+                          {
+                              isAnalog,
+                              cd.Nomenclature,
+                              distance
+                          };
 
-            var match = results.FirstOrDefault()?.Adapt<NomenclatureVm>();
+            var match = results.FirstOrDefault()?.Nomenclature.Adapt<NomenclatureVm>();
 
             return match;
 
