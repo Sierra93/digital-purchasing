@@ -248,15 +248,14 @@ namespace DigitalPurchasing.Services
                 OwnerId = pr.OwnerId
             });
 
-            if (!nomRes.Items.Any())
+            if (nomRes.Items.Any(q => q.IsFullMatch))
+            {
+                prItem.NomenclatureId = nomRes.Items.First(q => q.IsFullMatch).Id;
+            }
+            else
             {
                 var bestNomMatch = _nomenclatureService.FindBestFuzzyMatch(pr.OwnerId, prItem.RawName);
                 prItem.NomenclatureId = bestNomMatch?.Id;
-            }
-            // TODO :: why not just to use first item in case there is more than one item?!
-            else if (nomRes.Items.Count(q => q.IsFullMatch) == 1)
-            {
-                prItem.NomenclatureId = nomRes.Items.First(q => q.IsFullMatch).Id;
             }
 
             #endregion
