@@ -19,8 +19,13 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         public string ComparisonName1 { get; set; }
         public string ComparisonName2 { get; set; }
+        public string AdjustedDigits1 { get; set; }
+        public string AdjustedDigits2 { get; set; }
+        private int MaxComparisonNameLen => Math.Max(ComparisonName1.RemoveSpaces().Length, ComparisonName2.RemoveSpaces().Length);
+        private double MaxSimilarChainLen => Math.Max((NamesLongestSubstringLen > 3 ? 2 : 1) * NamesLongestSubstringLen, 2.5 * NamesIntersect);
+        private int MaxDigitsLen => Math.Max(AdjustedDigits1.RemoveSpaces().Length, AdjustedDigits2.RemoveSpaces().Length);
         public double CompleteDistance =>
-            (NameDistance + DigitsDistance - 2 * Math.Max(NamesLongestSubstringLen, NamesIntersect)) / (2 * Math.Max(ComparisonName1.Length, ComparisonName2.Length)) + (double) QtyDiff;
+            (NameDistance + DigitsDistance - MaxSimilarChainLen) / (2 * (MaxComparisonNameLen + MaxDigitsLen)) + (double) QtyDiff;
         public double NameDistance { get; set; }
         public decimal QtyDiff { get; set; }
         public int NamesIntersect { get; set; }

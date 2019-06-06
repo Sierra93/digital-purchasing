@@ -18,11 +18,21 @@ namespace DigitalPurchasing.Services
                     { "очиститель", new List<string>() { "промывка" } }
                 };
 
-            Func<string, string> cleanupNomName = (str) => Regex.Replace(str, @"[^a-zA-Z\p{IsCyrillic}\s]", " ");
-            Func<string, string> leaveOnlyDigits = (str) => Regex.Replace(str, "[^0-9]", " ").ReplaceSpacesWithOneSpace();
+            Func<string, string> basicCleanupNomName = (str) => Regex.Replace(str, @"[^a-zA-Z\p{IsCyrillic}\s]", " ");
+            Func<string, string> removeCodes = (str) =>
+            {
+                // Remove codes like 091-123 and 0123-123-123-1
+                var result = Regex.Replace(str, @"(^|[\s,.])\d+-[\w-]*\d($|[\s,.])", " ");
+
+                // Remove codes like XX09ABC and УФ09, etc.
+                result = Regex.Replace(result, @"[\p{Lu}]([\p{Lu}\d])*\d([\p{Lu}\d])*|\d([\p{Lu}\d])*[\p{Lu}]([\p{Lu}\d])*", " ");
+                return result;
+            };
+            Func<string, string> leaveOnlyDigits = (str) => Regex.Replace(removeCodes(str), "[^0-9]", " ").ReplaceSpacesWithOneSpace();
             Func<string, string> onlyDigitsOrderedByGroupLen = (str) => leaveOnlyDigits(str).Split(' ').OrderBy(s => s.Length).JoinNotEmpty(" ");
             Func<string, string> orderWords = (str) => string.Join(' ', str.Split(' ').OrderBy(w => w));
             Func<string, string> removeNoize = (str) => string.Join(' ', str.Split(' ').Where(w => w.Length > 2));
+            Func<string, string> cleanupNomName = (str) => removeNoize(basicCleanupNomName(nomName).ReplaceSpacesWithOneSpace());
             Func<string, string> replaceSynonyms = (str) =>
             {
                 var result = new List<string>();
@@ -55,7 +65,7 @@ namespace DigitalPurchasing.Services
             var dimensions = getDimensions(nomName);
             var terms = new NomenclatureComparisonTerms()
             {
-                AdjustedName = orderWords(replaceSynonyms(removeNoize(cleanupNomName(nomName).ReplaceSpacesWithOneSpace()).Trim().ToLower())),
+                AdjustedName = orderWords(replaceSynonyms(cleanupNomName(nomName).Trim().ToLower())),
                 NomDimensions = string.IsNullOrWhiteSpace(dimensions) ? null : dimensions,
                 AdjustedDigits = onlyDigitsOrderedByGroupLen(nomName)
             };
@@ -76,11 +86,15 @@ namespace DigitalPurchasing.Services
             var distance = new NomenclatureComparisonDistance
             {
                 ComparisonName1 = names.Item1,
-                ComparisonName2 = names.Item2
+                ComparisonName2 = names.Item2,
+                AdjustedDigits1 = nom1.AdjustedDigits,
+                AdjustedDigits2 = nom2.AdjustedDigits
             };
 
-            distance.NamesIntersect = string.Join("", distance.ComparisonName1.Split(' ').Intersect(distance.ComparisonName2.Split(' '))).Length;
-            distance.NamesLongestSubstringLen = LongestCommonSubstring(distance.ComparisonName1.RemoveSpaces(), distance.ComparisonName2.RemoveSpaces());
+            int namesIntersect = string.Join("", distance.ComparisonName1.Split(' ').Intersect(distance.ComparisonName2.Split(' '))).Length;
+            distance.NamesIntersect = namesIntersect > 2 ? namesIntersect : 0;
+            int longestSubstLen = LongestCommonSubstring(distance.ComparisonName1.RemoveSpaces(), distance.ComparisonName2.RemoveSpaces());
+            distance.NamesLongestSubstringLen = longestSubstLen > 2 ? longestSubstLen : 0;
             distance.NameDistance = alg.Distance(distance.ComparisonName1, distance.ComparisonName2);
             distance.DigitsDistance = alg.Distance(nom1.AdjustedDigits, nom2.AdjustedDigits);
             distance.QtyDiff = isSameUoms ? Math.Abs(nomQty2 - nomQty1) / (10 * Math.Max(nomQty2, nomQty1)) : 0.1m;
