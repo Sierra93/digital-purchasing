@@ -17,12 +17,12 @@ namespace DigitalPurchasing.Services
                 {
                     { "очиститель", new List<string>() { "промывка" } }
                 };
-
+            
             Func<string, string> basicCleanupNomName = (str) => Regex.Replace(str, @"[^a-zA-Z\p{IsCyrillic}\s]", " ");
             Func<string, string> removeCodes = (str) =>
             {
-                // Remove codes like 091-123 and 0123-123-123-1
-                var result = Regex.Replace(str, @"(^|[\s,.])\d+-[\w-]*\d($|[\s,.])", " ");
+                // Remove codes like 091-123 and 0123-123-123-1, 4-29621-080-4.5
+                var result = Regex.Replace(str, @"(^|[\s,\.])\d+-[\w-]*\d([,\.]\d+)?($|[\s,\.])", " ");
 
                 // Remove codes like XX09ABC and УФ09, etc.
                 result = Regex.Replace(result, @"[\p{Lu}]([\p{Lu}\d])*\d([\p{Lu}\d])*|\d([\p{Lu}\d])*[\p{Lu}]([\p{Lu}\d])*", " ");
