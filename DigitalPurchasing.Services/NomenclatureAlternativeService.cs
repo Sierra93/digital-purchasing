@@ -331,6 +331,7 @@ namespace DigitalPurchasing.Services
             var entity = _db.NomenclatureAlternatives.Find(id);
             if (entity != null)
             {
+                _db.NomenclatureComparisonDatas.RemoveRange(_db.NomenclatureComparisonDatas.Where(cd => cd.NomenclatureAlternativeId == id));
                 _db.NomenclatureAlternatives.Remove(entity);
                 _db.SaveChanges();
             }
