@@ -203,7 +203,7 @@ namespace DigitalPurchasing.Services
                             var allColumns = false;
                             var allMatched = false;
 
-                            var tempFile = Path.GetTempFileName();
+                            var tempFile = Path.GetTempFileName() + Path.GetExtension(attachment.FileName);
                             try
                             {
                                 File.WriteAllBytes(tempFile, attachment.Bytes);
