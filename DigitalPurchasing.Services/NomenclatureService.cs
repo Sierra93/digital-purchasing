@@ -406,18 +406,18 @@ namespace DigitalPurchasing.Services
                                    select g.Key).Distinct();
             var comparisonDataQry = from ncdId in satisfiedNgrams
                                     join ncd in _db.NomenclatureComparisonDatas.Include(_ => _.Nomenclature) on ncdId equals ncd.Id
-                                    select ncd;
+                                    select new
+                                    {
+                                        ncd.Nomenclature,
+                                        ncd.NomenclatureAlternativeId
+                                    };
 
             var ncDataItems = comparisonDataQry.ToList();
 
             var results = from cd in ncDataItems
                           let isAnalog = cd.NomenclatureAlternativeId.HasValue
-                          let distance = _nomenclatureComparisonService.CalculateDistance(compTerms, new NomenclatureComparisonTerms()
-                          {
-                              AdjustedDigits = cd.AdjustedNomenclatureDigits,
-                              AdjustedName = cd.AdjustedNomenclatureName,
-                              NomDimensions = cd.NomenclatureDimensions
-                          })
+                          let nomTerms = _nomenclatureComparisonService.CalculateComparisonTerms(cd.Nomenclature.Name)
+                          let distance = _nomenclatureComparisonService.CalculateDistance(compTerms, nomTerms)
                           orderby distance.CompleteDistance, isAnalog
                           select new
                           {
