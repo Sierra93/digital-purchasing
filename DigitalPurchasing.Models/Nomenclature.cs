@@ -42,5 +42,7 @@ namespace DigitalPurchasing.Models
         public List<NomenclatureAlternative> Alternatives { get; set; }
 
         public List<NomenclatureComparisonData> ComparisonDataItems { get; set; } = new List<NomenclatureComparisonData>();
+
+        public List<NomenclatureComparisonDataNGram> Ngrams { get; set; } = new List<NomenclatureComparisonDataNGram>();
     }
 }

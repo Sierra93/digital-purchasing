@@ -199,6 +199,7 @@ namespace DigitalPurchasing.Services
 
         public void SaveRawItems(Guid id, IEnumerable<RawItemResponse.RawItem> items)
         {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
             var pr = _db.PurchaseRequests.Find(id);
             if (pr == null) return;
 
@@ -220,6 +221,8 @@ namespace DigitalPurchasing.Services
             }
 
             _db.BulkInsert(prItems);
+
+            sw.Stop();
         }
 
         private void Autocomplete(PurchaseRequest pr, PurchaseRequestItem prItem)

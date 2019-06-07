@@ -396,37 +396,54 @@ namespace DigitalPurchasing.Services
             var compTerms = _nomenclatureComparisonService.CalculateComparisonTerms(nomName);
             var ngrams = compTerms.AdjustedName.Ngrams(ngramLen).ToList();
 
-            var satisfiedNgrams = (from item in _db.NomenclatureComparisonDataNGrams
-                                   let nom = item.NomenclatureComparisonData.Nomenclature
-                                   where item.OwnerId == ownerId &&
-                                        ngrams.Contains(item.Gram) &&
-                                        !nom.IsDeleted
-                                   group item by item.NomenclatureComparisonDataId into g
-                                   where g.Count() >= minNgramIntersect
-                                   select g.Key).Distinct();
-            var comparisonDataQry = from ncdId in satisfiedNgrams
-                                    join ncd in _db.NomenclatureComparisonDatas.Include(_ => _.Nomenclature) on ncdId equals ncd.Id
-                                    select new
-                                    {
-                                        ncd.Nomenclature,
-                                        ncd.NomenclatureAlternativeId
-                                    };
+            //var satisfiedNgrams = (from item in _db.NomenclatureComparisonDataNGrams
+            //                       let nom = item.Nomenclature
+            //                       where item.OwnerId == ownerId &&
+            //                            ngrams.Contains(item.Gram) &&
+            //                            !nom.IsDeleted
+            //                       group item by item.NomenclatureId into g
+            //                       where g.Count() >= minNgramIntersect
+            //                       select g.Key);
+            //var comparisonDataQry = from ncdId in satisfiedNgrams
+            //                        join n in _db.Nomenclatures on ncdId equals n.Id
+            //                        select n;
 
-            var ncDataItems = comparisonDataQry.ToList();
+            var inClause = string.Join(", ", ngrams.Select(_ => $"N'{_}'"));
+            var qry = $@"
+with cte (nomId)
+AS
+(
+	SELECT [n.Ngrams].NomenclatureId
+	FROM [AppNGrams] AS [n.Ngrams]
+	WHERE 
+		[n.Ngrams].[Discriminator] = N'NomenclatureComparisonDataNGram'
+		AND [n.Ngrams].[Gram] IN ({inClause})
+		and [n.Ngrams].OwnerId = '{ownerId}'
+	GROUP BY [n.Ngrams].NomenclatureId
+	HAVING COUNT(*) >= {minNgramIntersect}
+)
+select n.*
+from dbo.Nomenclatures n
+join cte on n.Id = cte.nomId
+where n.IsDeleted = 0
+";
+            var q2Res = _db.Nomenclatures.FromSql(qry).ToList();
 
-            var results = from cd in ncDataItems
-                          let isAnalog = cd.NomenclatureAlternativeId.HasValue
-                          let nomTerms = _nomenclatureComparisonService.CalculateComparisonTerms(cd.Nomenclature.Name)
+            //var ncDataItems = comparisonDataQry.ToList();
+
+            var results = from cd in q2Res
+                              //let isAnalog = cd.NomenclatureAlternativeId.HasValue
+                          let nomTerms = _nomenclatureComparisonService.CalculateComparisonTerms(cd.Name)
                           let distance = _nomenclatureComparisonService.CalculateDistance(compTerms, nomTerms)
-                          orderby distance.CompleteDistance, isAnalog
+                          orderby distance.CompleteDistance
                           select new
                           {
-                              isAnalog,
-                              cd.Nomenclature,
+                              //isAnalog,
+                              Nom = cd,
                               distance
                           };
 
-            var match = results.FirstOrDefault()?.Nomenclature.Adapt<NomenclatureVm>();
+            var match = results.FirstOrDefault()?.Nom.Adapt<NomenclatureVm>();
 
             return match;
 
