@@ -129,7 +129,7 @@ namespace DigitalPurchasing.Services
 
         private static List<string> _supportedFormats = new List<string>
         {
-            ".xlsx"
+            ".xlsx", ".xls"
         };
 
         public RFQEmailProcessor(
