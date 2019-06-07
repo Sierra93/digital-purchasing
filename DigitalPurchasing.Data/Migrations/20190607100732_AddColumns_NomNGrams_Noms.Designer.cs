@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190607100732_AddColumns_NomNGrams_Noms")]
+    partial class AddColumns_NomNGrams_Noms
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1479,11 +1481,7 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<Guid>("OwnerId");
 
-                    b.HasIndex("NomenclatureAlternativeId");
-
                     b.HasIndex("NomenclatureComparisonDataId");
-
-                    b.HasIndex("NomenclatureId");
 
                     b.HasIndex("Gram", "OwnerId")
                         .HasName("IX_AppNGrams_Gram_OwnerId_INCL_Discriminator_NomenclatureComparisonDataId")
@@ -2079,18 +2077,9 @@ namespace DigitalPurchasing.Data.Migrations
 
             modelBuilder.Entity("DigitalPurchasing.Models.NomenclatureComparisonDataNGram", b =>
                 {
-                    b.HasOne("DigitalPurchasing.Models.NomenclatureAlternative", "NomenclatureAlternative")
-                        .WithMany()
-                        .HasForeignKey("NomenclatureAlternativeId");
-
                     b.HasOne("DigitalPurchasing.Models.NomenclatureComparisonData", "NomenclatureComparisonData")
                         .WithMany("AdjustedNameNgrams")
                         .HasForeignKey("NomenclatureComparisonDataId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("DigitalPurchasing.Models.Nomenclature", "Nomenclature")
-                        .WithMany()
-                        .HasForeignKey("NomenclatureId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
