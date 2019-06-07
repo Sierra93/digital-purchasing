@@ -39,7 +39,9 @@ namespace DigitalPurchasing.ExcelReader
                 var itemsPerVariantSectionCount = itemsCountByVariants.Sum(q => q.Count > 1 ? q.Count + 1 : 1);
 
                 var colQuantityStart = 8;
+                var colQuantityEnd = colQuantityStart + suppliersCount - 1;
                 var colPriceStart = colQuantityStart + suppliersCount + 1;
+                var colPriceEnd = colPriceStart + suppliersCount - 1;
                 var colTotalPriceStart = colPriceStart + suppliersCount + 1;
                 var colVariantQuantityStart = colTotalPriceStart + suppliersCount + 1;
                 var colVariantQuantityEnd = colVariantQuantityStart + itemsPerVariantSectionCount - 1;
@@ -70,7 +72,7 @@ namespace DigitalPurchasing.ExcelReader
 
                 
                 ws.Cells[4, colQuantityStart].HeaderText("Кол-во КП в ЕИ запроса").AlignLeft();//.NoWrapText();
-                ws.Cells[4, colQuantityStart, 4, colQuantityStart + suppliersCount - 1].Merge = true;
+                ws.Cells[4, colQuantityStart, 4, colQuantityEnd].Merge = true;
                 ws.Cells[rowDataStart, colQuantityStart, rowTotal - 1, colQuantityStart + suppliersCount - 1].ItemBorders();
                 foreach (var supplier in _report.Suppliers.OrderBy(q => q.SOCreatedOn))
                 {
@@ -87,8 +89,8 @@ namespace DigitalPurchasing.ExcelReader
                 }
 
                 ws.Cells[4, colPriceStart].HeaderText("Цены в валюте запроса за ЕИ запроса").AlignLeft();//.NoWrapText();
-                ws.Cells[4, colPriceStart, 4, colPriceStart + suppliersCount - 1].Merge = true;
-                ws.Cells[rowDataStart, colPriceStart, rowTotal - 1, colPriceStart + suppliersCount - 1].ItemBorders();
+                ws.Cells[4, colPriceStart, 4, colPriceEnd].Merge = true;
+                ws.Cells[rowDataStart, colPriceStart, rowTotal - 1, colPriceEnd].ItemBorders();
                 foreach (var supplier in _report.Suppliers.OrderBy(q => q.SOCreatedOn))
                 {
                     var pos = _report.Suppliers.IndexOf(supplier);
@@ -321,6 +323,11 @@ namespace DigitalPurchasing.ExcelReader
                     ws.Cells[i, 5].TableText(data.Uom); 
                     ws.Cells[i, 6].TableText(data.Quantity);
                     ws.Cells[i, 2, i, 6].ItemBorders();
+
+                    var formatting = ws.ConditionalFormatting.AddTwoColorScale(ws.Cells[i, colPriceStart, i, colPriceEnd]);
+                    formatting.LowValue.Color = Color.FromArgb(122,187,129);
+                    formatting.HighValue.Color = Color.FromArgb(252,238,165);
+
                     i++;
                 }
 
