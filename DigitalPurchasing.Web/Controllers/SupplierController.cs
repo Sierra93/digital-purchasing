@@ -246,6 +246,8 @@ namespace DigitalPurchasing.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            var companyId = User.CompanyId();
+
             var fileName = file.FileName;
             var fileExt = Path.GetExtension(fileName);
             var filePath = Path.GetTempFileName() + fileExt;
@@ -267,13 +269,13 @@ namespace DigitalPurchasing.Web.Controllers
 
                     if (!string.IsNullOrWhiteSpace(item.MainCategory))
                     {
-                        category = _nomenclatureCategoryService.CreateOrUpdate(item.MainCategory, null);
+                        category = _nomenclatureCategoryService.CreateOrUpdate(companyId, item.MainCategory, null);
                         if (!string.IsNullOrWhiteSpace(item.SubCategory1))
                         {
-                            category = _nomenclatureCategoryService.CreateOrUpdate(item.SubCategory1, category.Id);
+                            category = _nomenclatureCategoryService.CreateOrUpdate(companyId, item.SubCategory1, category.Id);
                             if (!string.IsNullOrWhiteSpace(item.SubCategory2))
                             {
-                                category = _nomenclatureCategoryService.CreateOrUpdate(item.SubCategory2, category.Id);
+                                category = _nomenclatureCategoryService.CreateOrUpdate(companyId, item.SubCategory2, category.Id);
                             }
                         }
                     }

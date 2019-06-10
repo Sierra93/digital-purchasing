@@ -386,6 +386,8 @@ namespace DigitalPurchasing.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            var companyId = User.CompanyId();
+
             var fileName = file.FileName;
             var fileExt = Path.GetExtension(fileName);
             var filePath = Path.GetTempFileName()+fileExt;
@@ -424,7 +426,7 @@ namespace DigitalPurchasing.Web.Controllers
                 Guid? parentId = null;
                 foreach (var category in categories)
                 {
-                    var result = _nomenclatureCategoryService.CreateOrUpdate(category, parentId);
+                    var result = _nomenclatureCategoryService.CreateOrUpdate(companyId, category, parentId);
                     parentId = result.Id;
                     if (!dbCategories.ContainsKey(result.Id))
                     {
@@ -449,7 +451,7 @@ namespace DigitalPurchasing.Web.Controllers
                 PackUomValue = data.PackUomValue ?? 0
             }).GroupBy(q => q.Name).Select(q => q.First()).ToList();
 
-            var companyId = User.CompanyId();
+            
 
             _nomenclatureService.CreateOrUpdate(nomenclatures, companyId);
 

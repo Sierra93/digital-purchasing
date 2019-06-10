@@ -6,7 +6,7 @@ namespace DigitalPurchasing.Core.Interfaces
     public interface INomenclatureCategoryService
     {
         NomenclatureCategoryIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
-        NomenclatureCategoryVm CreateOrUpdate(string name, Guid? parentId);
+        NomenclatureCategoryVm CreateOrUpdate(Guid ownerId, string name, Guid? parentId);
         IEnumerable<NomenclatureCategoryVm> GetAll(bool includeDeleted = false);
         NomenclatureCategoryVm GetById(Guid id);
         string FullCategoryName(Guid categoryId);
