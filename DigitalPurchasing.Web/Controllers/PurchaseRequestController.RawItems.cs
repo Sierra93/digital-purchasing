@@ -1,4 +1,5 @@
 using System;
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Web.ViewModels.PurchasingRequest;
 using Microsoft.AspNetCore.Mvc;

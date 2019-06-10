@@ -104,7 +104,7 @@ namespace DigitalPurchasing.Services
                     var ssSuppliers = new List<SSSupplier>();
 
                     // supplier items
-                    foreach (var supplierOffer in cl.SupplierOffers)
+                    foreach (var supplierOffer in cl.SupplierOffers.Where(q => q.Supplier != null))
                     {
                         // supplier + so data
                         var ssSupplier = new SSSupplier
@@ -164,7 +164,7 @@ namespace DigitalPurchasing.Services
                         // variant datas
                         foreach (var resultByItem in variantData.ResultsByItem)
                         {
-                            var ssSupplier = ssSuppliers.Find(q => q.SOInternalId == resultByItem.SupplierId);
+                            var ssSupplier = ssSuppliers.Find(q => q.SOInternalId == resultByItem.SupplierOfferId);
 
                             // variant data
                             var ssData = new SSData

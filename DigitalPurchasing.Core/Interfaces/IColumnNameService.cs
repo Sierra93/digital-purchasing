@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DigitalPurchasing.Core.Enums;
 
 namespace DigitalPurchasing.Core.Interfaces
 {

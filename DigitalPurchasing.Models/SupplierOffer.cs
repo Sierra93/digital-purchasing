@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using DigitalPurchasing.Core;
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Interfaces;
 
 namespace DigitalPurchasing.Models

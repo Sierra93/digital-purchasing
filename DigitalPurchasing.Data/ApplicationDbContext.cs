@@ -21,13 +21,18 @@ namespace DigitalPurchasing.Data
 
         [DbFunction("udf_LevenshteinDistance")]
         public static int? LevenshteinDistanceFunc(string str1, string str2, int maxDistance) =>
-            throw new Exception("LevenshteinDistanceFunc scalar function should be in the database");
+            throw new Exception("udf_LevenshteinDistance scalar function should be in the database");
+
+        [DbFunction("udf_LongestCommonSubstringLen")]
+        public static int LongestCommonSubstringLenFunc(string str1, string str2) =>
+            throw new Exception("udf_LongestCommonSubstringLen scalar function should be in the database");
 
         public DbSet<Root> Roots { get; set; }
 
         public DbSet<Company> Companies { get; set; }
         public DbSet<Currency> Currencies { get; set; }
         public DbSet<Nomenclature> Nomenclatures { get; set; }
+        public DbSet<NomenclatureComparisonData> NomenclatureComparisonDatas { get; set; }
         public DbSet<NomenclatureAlternativeLink> NomenclatureAlternativeLinks { get; set; }
         public DbSet<NomenclatureAlternative> NomenclatureAlternatives { get; set; }
         public DbSet<NomenclatureCategory> NomenclatureCategories { get; set; }
@@ -86,6 +91,9 @@ namespace DigitalPurchasing.Data
         public DbSet<SSSupplierItem> SSSupplierItems { get; set; }
 
         #endregion
+
+        public DbSet<AppNGram> AppNGrams { get; set; }
+        public DbSet<NomenclatureComparisonDataNGram> NomenclatureComparisonDataNGrams { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IHttpContextAccessor httpContextAccessor) : base(options)
         {
@@ -147,6 +155,7 @@ namespace DigitalPurchasing.Data
             builder.Entity<Nomenclature>().HasOne(q => q.PackUom).WithMany().HasForeignKey(q => q.PackUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<Nomenclature>().Property(q => q.Name).IsRequired();
             builder.Entity<Nomenclature>().HasIndex(q => new { q.OwnerId, q.Name }).IsUnique().HasFilter($"{nameof(Nomenclature.IsDeleted)} = 0");
+            builder.Entity<Nomenclature>().HasMany(q => q.ComparisonDataItems).WithOne(q => q.Nomenclature).HasForeignKey(q => q.NomenclatureId).OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<NomenclatureAlternative>().HasOne(q => q.Nomenclature).WithMany(q => q.Alternatives).HasForeignKey(q => q.NomenclatureId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<NomenclatureAlternative>().HasOne(q => q.BatchUom).WithMany(q => q.BatchNomenclatureAlternatives).HasForeignKey(q => q.BatchUomId).OnDelete(DeleteBehavior.Restrict);
@@ -154,6 +163,10 @@ namespace DigitalPurchasing.Data
             builder.Entity<NomenclatureAlternative>().HasOne(q => q.ResourceUom).WithMany(q => q.ResourceNomenclatureAlternatives).HasForeignKey(q => q.ResourceUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<NomenclatureAlternative>().HasOne(q => q.ResourceBatchUom).WithMany(q => q.ResourceBatchNomenclatureAlternatives).HasForeignKey(q => q.ResourceBatchUomId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<NomenclatureAlternative>().Property(q => q.Name).IsRequired();
+            builder.Entity<NomenclatureAlternative>().HasOne(q => q.ComparisonData).WithOne().HasForeignKey<NomenclatureComparisonData>(q => q.NomenclatureAlternativeId).OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<NomenclatureComparisonData>().Property(q => q.AdjustedNomenclatureNameWithDimensions)
+                .HasComputedColumnSql($"{nameof(NomenclatureComparisonData.AdjustedNomenclatureName)} + ' ' + {nameof(NomenclatureComparisonData.NomenclatureDimensions)}");
 
             builder.Entity<SupplierCategory>()
                 .HasOne(q => q.NomenclatureCategory).WithMany().HasForeignKey(q => q.NomenclatureCategoryId).OnDelete(DeleteBehavior.Restrict);
@@ -262,6 +275,17 @@ namespace DigitalPurchasing.Data
                     Name = "EUR",
                     CreatedOn = new DateTime(2018, 11, 5)
                 });
+            });
+
+            builder.Entity<AppNGram>(e =>
+            {
+                e.Property(q => q.Gram).IsRequired().HasMaxLength(10);
+            });
+            builder.Entity<NomenclatureComparisonDataNGram>(e =>
+            {
+                e.HasIndex(q => new { q.Gram, q.OwnerId })
+                    .ForSqlServerInclude("Discriminator", nameof(NomenclatureComparisonDataNGram.NomenclatureComparisonDataId))
+                    .HasName("IX_AppNGrams_Gram_OwnerId_INCL_Discriminator_NomenclatureComparisonDataId");
             });
 
             // default filters to show company data

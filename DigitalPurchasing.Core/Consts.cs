@@ -28,6 +28,9 @@ namespace DigitalPurchasing.Core
 
             public static string NomenclatureAutocompleteSearchInAlts(Guid ownerId, Guid clientId)
                 => $"nom_ac_alt_{ownerId:N}_{clientId:N}";
+            
+            public static string NomenclatureCategoryCreateOrUpdate(Guid ownerId, string qry)
+                => $"nc_cou_{ownerId:N}_{qry.ToMD5()}";
         }
 
         public static class Roles

@@ -1,8 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DigitalPurchasing.Analysis2\DigitalPurchasing.Analysis2.csproj" />
+    <ProjectReference Include="..\DigitalPurchasing.Analysis\DigitalPurchasing.Analysis.csproj" />
     <ProjectReference Include="..\DigitalPurchasing.Core\DigitalPurchasing.Core.csproj" />
     <ProjectReference Include="..\DigitalPurchasing.Data\DigitalPurchasing.Data.csproj" />
     <ProjectReference Include="..\DigitalPurchasing.Emails\DigitalPurchasing.Emails.csproj" />

@@ -256,7 +256,7 @@
                     },
                     deleteOk: function(id) {
                         var $this = this;
-                        this.$http.post('@Url.Action("Delete")', { id: $this.modalData.id }).then(function(res) {
+                        this.$http.post('@Url.Action(nameof(NomenclatureController.DeleteAlternative))', { id: $this.modalData.id }).then(function(res) {
                             $this.$refs.vuetableDetails.refresh();
                             $this.modalDelete = false;
                         }, function(res) {
@@ -417,7 +417,7 @@
                     },
                     deleteOk: function(id) {
                         var $this = this;
-                        this.$http.post('@Url.Action("Delete")', { id: $this.modalData.id }).then(function(res) {
+                        this.$http.post('@Url.Action(nameof(NomenclatureController.Delete))', { id: $this.modalData.id }).then(function(res) {
                             $this.$refs.vuetable.refresh();
                             $this.modalDelete = false;
                         }, function(res) {

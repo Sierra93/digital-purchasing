@@ -54,6 +54,29 @@ namespace DigitalPurchasing.Data.Migrations
                     b.ToTable("AnalysisVariants");
                 });
 
+            modelBuilder.Entity("DigitalPurchasing.Models.AppNGram", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<DateTime>("CreatedOn");
+
+                    b.Property<string>("Discriminator")
+                        .IsRequired();
+
+                    b.Property<string>("Gram")
+                        .IsRequired()
+                        .HasMaxLength(10);
+
+                    b.Property<byte>("N");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AppNGrams");
+
+                    b.HasDiscriminator<string>("Discriminator").HasValue("AppNGram");
+                });
+
             modelBuilder.Entity("DigitalPurchasing.Models.ColumnName", b =>
                 {
                     b.Property<Guid>("Id")
@@ -711,6 +734,38 @@ namespace DigitalPurchasing.Data.Migrations
                     b.HasIndex("ParentId");
 
                     b.ToTable("NomenclatureCategories");
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.NomenclatureComparisonData", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("AdjustedNomenclatureDigits");
+
+                    b.Property<string>("AdjustedNomenclatureName");
+
+                    b.Property<string>("AdjustedNomenclatureNameWithDimensions")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasComputedColumnSql("AdjustedNomenclatureName + ' ' + NomenclatureDimensions");
+
+                    b.Property<DateTime>("CreatedOn");
+
+                    b.Property<Guid?>("NomenclatureAlternativeId");
+
+                    b.Property<string>("NomenclatureDimensions");
+
+                    b.Property<Guid>("NomenclatureId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NomenclatureAlternativeId")
+                        .IsUnique()
+                        .HasFilter("[NomenclatureAlternativeId] IS NOT NULL");
+
+                    b.HasIndex("NomenclatureId");
+
+                    b.ToTable("NomenclatureComparisonDatas");
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.PurchaseRequest", b =>
@@ -1412,6 +1467,23 @@ namespace DigitalPurchasing.Data.Migrations
                     b.ToTable("UploadedDocumentHeaders");
                 });
 
+            modelBuilder.Entity("DigitalPurchasing.Models.NomenclatureComparisonDataNGram", b =>
+                {
+                    b.HasBaseType("DigitalPurchasing.Models.AppNGram");
+
+                    b.Property<Guid>("NomenclatureComparisonDataId");
+
+                    b.Property<Guid>("OwnerId");
+
+                    b.HasIndex("NomenclatureComparisonDataId");
+
+                    b.HasIndex("Gram", "OwnerId")
+                        .HasName("IX_AppNGrams_Gram_OwnerId_INCL_Discriminator_NomenclatureComparisonDataId")
+                        .HasAnnotation("SqlServer:Include", new[] { "Discriminator", "NomenclatureComparisonDataId" });
+
+                    b.HasDiscriminator().HasValue("NomenclatureComparisonDataNGram");
+                });
+
             modelBuilder.Entity("DigitalPurchasing.Models.EmailAttachment", b =>
                 {
                     b.HasBaseType("DigitalPurchasing.Models.File");
@@ -1703,6 +1775,19 @@ namespace DigitalPurchasing.Data.Migrations
                         .HasForeignKey("ParentId");
                 });
 
+            modelBuilder.Entity("DigitalPurchasing.Models.NomenclatureComparisonData", b =>
+                {
+                    b.HasOne("DigitalPurchasing.Models.NomenclatureAlternative")
+                        .WithOne("ComparisonData")
+                        .HasForeignKey("DigitalPurchasing.Models.NomenclatureComparisonData", "NomenclatureAlternativeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DigitalPurchasing.Models.Nomenclature", "Nomenclature")
+                        .WithMany("ComparisonDataItems")
+                        .HasForeignKey("NomenclatureId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("DigitalPurchasing.Models.PurchaseRequest", b =>
                 {
                     b.HasOne("DigitalPurchasing.Models.Customer", "Customer")
@@ -1981,6 +2066,14 @@ namespace DigitalPurchasing.Data.Migrations
                     b.HasOne("DigitalPurchasing.Models.UploadedDocumentHeaders", "Headers")
                         .WithMany()
                         .HasForeignKey("UploadedDocumentHeadersId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("DigitalPurchasing.Models.NomenclatureComparisonDataNGram", b =>
+                {
+                    b.HasOne("DigitalPurchasing.Models.NomenclatureComparisonData", "NomenclatureComparisonData")
+                        .WithMany("AdjustedNameNgrams")
+                        .HasForeignKey("NomenclatureComparisonDataId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

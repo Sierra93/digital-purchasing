@@ -116,6 +116,7 @@ namespace DigitalPurchasing.Web
             services.AddScoped<ICompanyService, CompanyService>();
             services.AddScoped<INomenclatureCategoryService, NomenclatureCategoryService>();
             services.AddScoped<IUomService, UomService>();
+            services.AddScoped<INomenclatureComparisonService, NomenclatureComparisonService>();
             services.AddScoped<INomenclatureService, NomenclatureService>();
             services.AddScoped<IDictionaryService, DictionaryService>();
             services.AddScoped<IExcelRequestReader, ExcelRequestReader>();
@@ -170,7 +171,7 @@ namespace DigitalPurchasing.Web
                 app.UseHsts();
             }
 
-            dbContext.Database.Migrate();
+            DatabaseSetup(dbContext);
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
@@ -194,6 +195,17 @@ namespace DigitalPurchasing.Web
             RecurringJob.AddOrUpdate<EmailJobs>("check_robot_emails",
                 q => q.CheckRobotEmails(),
                 Cron.MinuteInterval(5));
+        }
+
+        private void DatabaseSetup(ApplicationDbContext dbContext)
+        {
+            var currentTimeout = dbContext.Database.GetCommandTimeout();
+            dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(15));
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            dbContext.Database.Migrate();
+            DataSeeder.Seed(dbContext);
+            sw.Stop();
+            dbContext.Database.SetCommandTimeout(currentTimeout);
         }
     }
 }

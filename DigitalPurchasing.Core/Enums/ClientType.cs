@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace DigitalPurchasing.Core
+namespace DigitalPurchasing.Core.Enums
 {
     public enum ClientType
     {

@@ -1,3 +1,4 @@
+@using DigitalPurchasing.Core.Enums
 @using DigitalPurchasing.Core.Interfaces
 @model DigitalPurchasing.Core.Interfaces.PurchaseRequestDetailsResponse
 
@@ -71,7 +72,7 @@
                 <tr>
                     @foreach (var column in Model.ExcelTable.Columns)
                     {
-                        <td>@column.Values[i]</td>
+                        <td>@(column.Values.Count > i ? column.Values[i] : "")</td>
                     }
                 </tr>
             }

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27703.2047
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.452
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitalPurchasing.Web", "DigitalPurchasing.Web\DigitalPurchasing.Web.csproj", "{23D4A449-B631-4AEF-ADDF-E0C0A8492072}"
 EndProject
@@ -17,9 +17,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitalPurchasing.ExcelRead
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitalPurchasing.Tests", "DigitalPurchasing.Tests\DigitalPurchasing.Tests.csproj", "{E60563FA-1F30-4D4D-82BB-685748838CFF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitalPurchasing.Analysis2", "DigitalPurchasing.Analysis2\DigitalPurchasing.Analysis2.csproj", "{2DED33CA-E278-43A9-99F0-A7C85EB33C69}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitalPurchasing.Emails", "DigitalPurchasing.Emails\DigitalPurchasing.Emails.csproj", "{352EE6EC-B973-40D3-93E6-956536F0B50D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitalPurchasing.Analysis", "DigitalPurchasing.Analysis\DigitalPurchasing.Analysis.csproj", "{D5098FDA-7FCE-4796-B830-E3913553B7DC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6572F361-A54B-42C1-A053-0C0C35C6F9C6}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,14 +60,14 @@ Global
 		{E60563FA-1F30-4D4D-82BB-685748838CFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E60563FA-1F30-4D4D-82BB-685748838CFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E60563FA-1F30-4D4D-82BB-685748838CFF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2DED33CA-E278-43A9-99F0-A7C85EB33C69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2DED33CA-E278-43A9-99F0-A7C85EB33C69}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2DED33CA-E278-43A9-99F0-A7C85EB33C69}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2DED33CA-E278-43A9-99F0-A7C85EB33C69}.Release|Any CPU.Build.0 = Release|Any CPU
 		{352EE6EC-B973-40D3-93E6-956536F0B50D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{352EE6EC-B973-40D3-93E6-956536F0B50D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{352EE6EC-B973-40D3-93E6-956536F0B50D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{352EE6EC-B973-40D3-93E6-956536F0B50D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5098FDA-7FCE-4796-B830-E3913553B7DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5098FDA-7FCE-4796-B830-E3913553B7DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5098FDA-7FCE-4796-B830-E3913553B7DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5098FDA-7FCE-4796-B830-E3913553B7DC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

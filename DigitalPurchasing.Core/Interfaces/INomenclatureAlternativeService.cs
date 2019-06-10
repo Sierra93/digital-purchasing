@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using DigitalPurchasing.Core.Enums;
 
 namespace DigitalPurchasing.Core.Interfaces
 {
@@ -18,7 +19,7 @@ namespace DigitalPurchasing.Core.Interfaces
         void AddOrUpdateNomenclatureAlts(Guid ownerId, Guid clientId, ClientType clientType,
             List<AddOrUpdateAltDto> alts);
 
-        NomenclatureAlternativeVm FindBestFuzzyMatch(Guid ownerId, string nomName, int maxNameDistance);
+        void Delete(Guid id);
     }
 
     public class AddOrUpdateAltDto

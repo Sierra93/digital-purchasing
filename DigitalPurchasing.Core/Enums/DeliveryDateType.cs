@@ -1,8 +1,6 @@
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using DigitalPurchasing.Core;
 
-namespace DigitalPurchasing.Analysis2.Enums
+namespace DigitalPurchasing.Core.Enums
 {
     public enum DeliveryDateTerms
     {

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using DigitalPurchasing.Core;
+using DigitalPurchasing.Core.Enums;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
@@ -22,17 +24,20 @@ namespace DigitalPurchasing.Services
         private readonly INomenclatureCategoryService _categoryService;
         private readonly IMemoryCache _cache;
         private readonly ILogger _logger;
+        private readonly INomenclatureComparisonService _nomenclatureComparisonService;
 
         public NomenclatureService(
             ApplicationDbContext dbContext,
             INomenclatureCategoryService categoryService,
             IMemoryCache cache,
-            ILogger<NomenclatureService> logger)
+            ILogger<NomenclatureService> logger,
+            INomenclatureComparisonService nomenclatureComparisonService)
         {
             _db = dbContext;
             _categoryService = categoryService;
             _cache = cache;
             _logger = logger;
+            _nomenclatureComparisonService = nomenclatureComparisonService;
         }
 
         public NomenclatureIndexData GetData(
@@ -214,7 +219,7 @@ namespace DigitalPurchasing.Services
             };
         }
 
-        public NomenclatureVm CreateOrUpdate(NomenclatureVm vm)
+        public NomenclatureVm CreateOrUpdate(NomenclatureVm vm, Guid ownerId)
         {
             if (HasSameNomenclatureName(vm.Id == default ? (Guid?)null : vm.Id, vm.Name?.Trim()))
             {
@@ -223,15 +228,26 @@ namespace DigitalPurchasing.Services
 
             var entity = _db.Nomenclatures.FirstOrDefault(q => q.Id == vm.Id);
 
-            if (entity == null)
+            string name = vm.Name?.Trim();
+            var isNew = entity == null;
+            bool nameIsChanged = false;
+
+            if (isNew)
             {
-                entity = new Nomenclature();
+                entity = new Nomenclature()
+                {
+                    OwnerId = ownerId
+                };
                 _db.Nomenclatures.Add(entity);
+            }
+            else
+            {
+                nameIsChanged = entity.Name != name;
             }
 
             entity.CategoryId = vm.CategoryId;
             entity.Code = vm.Code?.Trim();
-            entity.Name = vm.Name?.Trim();
+            entity.Name = name;
             entity.NameEng = vm.NameEng?.Trim();
 
             entity.ResourceUomId = vm.ResourceUomId;
@@ -248,27 +264,90 @@ namespace DigitalPurchasing.Services
 
             _db.SaveChanges();
 
+            var cd = GetComparisonDataByNomenclatureName(entity.Name);
+
+            if (nameIsChanged)
+            {
+                _db.NomenclatureComparisonDatas.Remove(
+                    _db.NomenclatureComparisonDatas.First(_ => _.NomenclatureId == entity.Id && !_.NomenclatureAlternativeId.HasValue));
+                _db.SaveChanges();
+            }
+
+            if (isNew || nameIsChanged)
+            {
+                cd.Id = Guid.NewGuid();
+                cd.NomenclatureId = entity.Id;
+                _db.NomenclatureComparisonDatas.Add(cd);
+                cd.AdjustedNameNgrams.AddRange(GetNgramsForNomComparisonData(cd, ownerId));
+                _db.SaveChanges();
+            }
+
             return entity.Adapt<NomenclatureVm>();
+        }
+
+        private NomenclatureComparisonData GetComparisonDataByNomenclatureName(string nomName)
+        {
+            var terms = _nomenclatureComparisonService.CalculateComparisonTerms(nomName);
+
+            return new NomenclatureComparisonData
+            {
+                AdjustedNomenclatureDigits = terms.AdjustedDigits,
+                AdjustedNomenclatureName = terms.AdjustedName,
+                NomenclatureDimensions = terms.NomDimensions
+            };
         }
 
         public void CreateOrUpdate(List<NomenclatureVm> nomenclatures, Guid ownerId)
         {
-            var allNames = _db.Nomenclatures
-                .AsQueryable()
-                .GroupBy(q => q.Name)
-                .Select(q => new { Name = q.First().Name.ToLowerInvariant(), q.First().Id })
-                .ToList()
-                .DistinctBy(q => q.Name)
-                .ToDictionary(q => q.Name, w => w.Id);
+            var allNames = _db.Nomenclatures.IgnoreQueryFilters()
+                .Where(q => q.OwnerId == ownerId)
+                .Select(q => new
+                {
+                    q.Name,
+                    q.Id
+                })
+                .ToList();
 
+            var newEntities = new List<Nomenclature>();
             var entities = nomenclatures.Adapt<List<Nomenclature>>();
             foreach (var entity in entities)
             {
                 var normName = entity.Name.ToLowerInvariant();
-                entity.Id = allNames.ContainsKey(normName) ? allNames[normName] : Guid.NewGuid();
+                var existed = allNames.FirstOrDefault(i => i.Name.Equals(entity.Name, StringComparison.InvariantCultureIgnoreCase));
+                entity.Id = existed?.Id ?? Guid.NewGuid();
+                if (existed == null)
+                {
+                    newEntities.Add(entity);
+                }
                 entity.OwnerId = ownerId;
             }
             _db.BulkInsertOrUpdate(entities);
+
+            if (newEntities.Any())
+            {
+                var compDataItems = new List<NomenclatureComparisonData>();
+                newEntities.ForEach(n =>
+                {
+                    var compDataItem = GetComparisonDataByNomenclatureName(n.Name);
+                    compDataItem.NomenclatureId = n.Id;
+                    compDataItems.Add(compDataItem);
+                });
+                _db.BulkInsert(compDataItems);
+                _db.BulkInsert(compDataItems.Select(cd => GetNgramsForNomComparisonData(cd, ownerId)).SelectMany(ng => ng).ToList());
+            }
+        }
+
+        private IEnumerable<NomenclatureComparisonDataNGram> GetNgramsForNomComparisonData(NomenclatureComparisonData cd, Guid ownerId)
+        {
+            byte ngramLen = 3;
+            return from ng in cd.AdjustedNomenclatureName.Ngrams(ngramLen)
+                   select new NomenclatureComparisonDataNGram()
+                   {
+                       NomenclatureComparisonDataId = cd.Id,
+                       N = ngramLen,
+                       Gram = ng,
+                       OwnerId = ownerId
+                   };
         }
 
         public NomenclatureVm GetById(Guid id, bool globalSearch = false)
@@ -288,17 +367,90 @@ namespace DigitalPurchasing.Services
             !string.IsNullOrWhiteSpace(name) &&
             _db.Nomenclatures.Any(_ => _.Id != exceptNomenclatureId && _.Name == name);
 
-        public NomenclatureVm FindBestFuzzyMatch(Guid ownerId, string nomName, int maxNameDistance)
+        public NomenclatureVm FindBestFuzzyMatch(Guid ownerId, string nomName)
         {
-            var results = from item in _db.Nomenclatures.IgnoreQueryFilters()
-                          let distance = ApplicationDbContext.LevenshteinDistanceFunc(nomName, item.Name, maxNameDistance)
-                          where item.OwnerId == ownerId &&
-                                !item.IsDeleted &&
-                                distance.HasValue
-                          orderby distance
-                          select item;
+            // Ngrams with specified length should already exist in the database
+            const byte ngramLen = 3;
 
-            return results.FirstOrDefault()?.Adapt<NomenclatureVm>();
+            const int maxNameLevenshteinDistance = 30;
+
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+
+            var match = FindBestFuzzyMatch(ownerId, nomName, maxNameLevenshteinDistance, ngramLen, 15);
+            if (match == null)
+            {
+                match = FindBestFuzzyMatch(ownerId, nomName, maxNameLevenshteinDistance, ngramLen, 10);
+            }
+            if (match == null)
+            {
+                match = FindBestFuzzyMatch(ownerId, nomName, maxNameLevenshteinDistance, ngramLen, 3);
+            }
+            sw.Stop();
+
+            return match;
+        }
+
+        private NomenclatureVm FindBestFuzzyMatch(Guid ownerId, string nomName, int maxNameLevenshteinDistance,
+            byte ngramLen, byte minNgramIntersect)
+        {
+            var compTerms = _nomenclatureComparisonService.CalculateComparisonTerms(nomName);
+            var ngrams = compTerms.AdjustedName.Ngrams(ngramLen).ToList();
+
+            var satisfiedNgrams = (from item in _db.NomenclatureComparisonDataNGrams
+                                   let nom = item.NomenclatureComparisonData.Nomenclature
+                                   where item.OwnerId == ownerId &&
+                                        ngrams.Contains(item.Gram) &&
+                                        !nom.IsDeleted
+                                   group item by item.NomenclatureComparisonDataId into g
+                                   where g.Count() >= minNgramIntersect
+                                   select g.Key).Distinct();
+            var comparisonDataQry = from ncdId in satisfiedNgrams
+                                    join ncd in _db.NomenclatureComparisonDatas.Include(_ => _.Nomenclature) on ncdId equals ncd.Id
+                                    select ncd;
+
+            var ncDataItems = comparisonDataQry.ToList();
+
+            var results = from cd in ncDataItems
+                          let isAnalog = cd.NomenclatureAlternativeId.HasValue
+                          let distance = _nomenclatureComparisonService.CalculateDistance(compTerms, new NomenclatureComparisonTerms()
+                          {
+                              AdjustedDigits = cd.AdjustedNomenclatureDigits,
+                              AdjustedName = cd.AdjustedNomenclatureName,
+                              NomDimensions = cd.NomenclatureDimensions
+                          })
+                          orderby distance.CompleteDistance, isAnalog
+                          select new
+                          {
+                              isAnalog,
+                              cd.Nomenclature,
+                              distance
+                          };
+
+            var match = results.FirstOrDefault()?.Nomenclature.Adapt<NomenclatureVm>();
+
+            return match;
+
+            //var results = compTerms.NomDimensions == null
+            //    ? from cd in comparisonDataQry
+            //      let nameDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedName, cd.AdjustedNomenclatureName, maxNameLevenshteinDistance)
+            //      let digitsDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedDigits, cd.AdjustedNomenclatureDigits, maxNameLevenshteinDistance) ?? maxNameLevenshteinDistance
+            //      //let maxSubstringLen = ApplicationDbContext.LongestCommonSubstringLenFunc(compTerms.AdjustedName, cd.AdjustedNomenclatureName)
+            //      let distance = nameDistance + digitsDistance /*- 2 * maxSubstringLen*/
+            //      where nameDistance.HasValue
+            //      orderby distance
+            //      select cd.Nomenclature
+            //    : from cd in comparisonDataQry
+            //      let nameDistance = string.IsNullOrEmpty(cd.NomenclatureDimensions)
+            //          ? ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedName, cd.AdjustedNomenclatureName, maxNameLevenshteinDistance)
+            //          : ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedNameWithDimensions, cd.AdjustedNomenclatureNameWithDimensions, maxNameLevenshteinDistance)
+            //      let digitsDistance = ApplicationDbContext.LevenshteinDistanceFunc(compTerms.AdjustedDigits, cd.AdjustedNomenclatureDigits, maxNameLevenshteinDistance) ?? maxNameLevenshteinDistance
+            //      //let maxSubstringLen = string.IsNullOrEmpty(cd.NomenclatureDimensions)
+            //      //    ? ApplicationDbContext.LongestCommonSubstringLenFunc(compTerms.AdjustedName, cd.AdjustedNomenclatureName)
+            //      //    : ApplicationDbContext.LongestCommonSubstringLenFunc(compTerms.AdjustedNameWithDimensions, cd.AdjustedNomenclatureNameWithDimensions)
+            //      let distance = nameDistance + digitsDistance /*- 2 * maxSubstringLen*/
+            //      where nameDistance.HasValue
+            //      orderby distance
+            //      select cd.Nomenclature;
         }
 
         public NomenclatureAutocompleteResult Autocomplete(AutocompleteOptions options)
@@ -343,9 +495,9 @@ namespace DigitalPurchasing.Services
 
             var mainResults = ownerNomenclatures
                 .Where(w =>
-                    (!string.IsNullOrEmpty(w.Name) && w.Name.Contains(q, strComparison)) ||
-                    (!string.IsNullOrEmpty(w.NameEng) && w.NameEng.Contains(q, strComparison)) ||
-                    (!string.IsNullOrEmpty(w.Code) && w.Code.Contains(q, strComparison)))
+                    (!string.IsNullOrEmpty(w.Name) && w.Name.Trim().Contains(q, strComparison)) ||
+                    (!string.IsNullOrEmpty(w.NameEng) && w.NameEng.Trim().Contains(q, strComparison)) ||
+                    (!string.IsNullOrEmpty(w.Code) && w.Code.Trim().Contains(q, strComparison)))
                 .ToList();
 
             if (options.SearchInAlts)
@@ -392,13 +544,25 @@ namespace DigitalPurchasing.Services
                 }
             }
 
-            mainResults = mainResults
-                .OrderByDescending(_ => _.Name != null && _.Name.StartsWith(q, StringComparison.InvariantCultureIgnoreCase))
-                .ThenByDescending(_ => _.NameEng != null && _.NameEng.StartsWith(q, StringComparison.InvariantCultureIgnoreCase))
-                .ThenByDescending(_ => _.Code != null && _.Code.StartsWith(q, StringComparison.InvariantCultureIgnoreCase))
-                .ToList();
+            var resultItems = mainResults.Select(n => new NomenclatureAutocompleteResult.AutocompleteResultItem
+            {
+                Id = n.Id,
+                Code = n.Code,
+                Name = n.Name,
+                NameEng = n.NameEng,
+                BatchUomId = n.BatchUom?.Id ?? Guid.Empty,
+                BatchUomName = n.BatchUom?.Name ?? string.Empty,                
+                IsFullMatch = (!string.IsNullOrEmpty(n.Name) && n.Name.Trim().Equals(q, strComparison))
+                    || (!string.IsNullOrEmpty(n.NameEng) && n.NameEng.Trim().Equals(q, strComparison))
+                    || (!string.IsNullOrEmpty(n.Code) && n.Code.Trim().Equals(q, strComparison))
+            })
+            .OrderByDescending(w => w.IsFullMatch)
+            .ThenByDescending(w => !string.IsNullOrEmpty(w.Name) && w.Name.Trim().StartsWith(q, strComparison))
+            .ThenByDescending(w => !string.IsNullOrEmpty(w.NameEng) && w.NameEng.Trim().StartsWith(q, strComparison))
+            .ThenByDescending(w => !string.IsNullOrEmpty(w.Code) && w.Code.Trim().StartsWith(q, strComparison))
+            .ToList();
 
-            result.Items.AddRange(mainResults.Adapt<List<NomenclatureAutocompleteResult.AutocompleteResultItem>>());
+            result.Items.AddRange(resultItems);
 
             return result;
         }

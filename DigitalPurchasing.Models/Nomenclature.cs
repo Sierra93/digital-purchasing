@@ -19,7 +19,7 @@ namespace DigitalPurchasing.Models
 
         [Column(TypeName = "decimal(18, 4)")]
         public decimal MassUomValue { get; set; }
-       
+
         public Guid ResourceUomId { get; set; }
         public UnitsOfMeasurement ResourceUom { get; set; }
 
@@ -40,5 +40,7 @@ namespace DigitalPurchasing.Models
         public bool IsDeleted { get; set; }
 
         public List<NomenclatureAlternative> Alternatives { get; set; }
+
+        public List<NomenclatureComparisonData> ComparisonDataItems { get; set; } = new List<NomenclatureComparisonData>();
     }
 }

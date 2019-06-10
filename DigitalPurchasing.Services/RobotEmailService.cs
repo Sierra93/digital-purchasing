@@ -129,7 +129,7 @@ namespace DigitalPurchasing.Services
 
         private static List<string> _supportedFormats = new List<string>
         {
-            ".xlsx"
+            ".xlsx", ".xls"
         };
 
         public RFQEmailProcessor(
@@ -203,7 +203,7 @@ namespace DigitalPurchasing.Services
                             var allColumns = false;
                             var allMatched = false;
 
-                            var tempFile = Path.GetTempFileName();
+                            var tempFile = Path.GetTempFileName() + Path.GetExtension(attachment.FileName);
                             try
                             {
                                 File.WriteAllBytes(tempFile, attachment.Bytes);

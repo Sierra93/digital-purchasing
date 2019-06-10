@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
-using DigitalPurchasing.Analysis2.Enums;
 using DigitalPurchasing.Core;
+using DigitalPurchasing.Core.Enums;
 
 namespace DigitalPurchasing.Models
 {

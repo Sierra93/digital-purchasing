@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Interfaces;
 using OfficeOpenXml;
 

@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DigitalPurchasing.Core;
-using DigitalPurchasing.Analysis2;
-using DigitalPurchasing.Analysis2.Enums;
-using DigitalPurchasing.Analysis2.Filters;
+using DigitalPurchasing.Analysis;
+using DigitalPurchasing.Core.Enums;
+using DigitalPurchasing.Core.Interfaces.Analysis;
+using DigitalPurchasing.Core.Interfaces.Analysis.VariantOptions;
 using Xunit;
 
 namespace DigitalPurchasing.Tests
@@ -17,57 +17,58 @@ namespace DigitalPurchasing.Tests
             var itemId2 = new Guid("d81e5c867aec40ffadbb8f71994d8443");
             var itemId3 = new Guid("a2141f27aa194b4ea111febcf31df950");
 
-            var customer = new AnalysisCustomer
-            {
-                Id = new Guid("01baea5c472d4b5aace9bf7dbaf013c4"),
-                Date = DateTime.UtcNow.Date.AddDays(10),
-                Items =
+            var customer = new AnalysisCustomer(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                DateTime.UtcNow.Date.AddDays(10),
+                new List<AnalysisCustomerItem>
                 {
-                    new CustomerItem {Id = itemId1, Quantity = 100},
-                    new CustomerItem {Id = itemId2, Quantity = 100},
-                    new CustomerItem {Id = itemId3, Quantity = 100}
-                }
-            };
+                    new AnalysisCustomerItem(itemId1, 100),
+                    new AnalysisCustomerItem(itemId2, 100),
+                    new AnalysisCustomerItem(itemId3, 100)
+                });
 
-            var supplier1 = new AnalysisSupplier
-            {
-                Id = new Guid("b9a46c13564c410f955961ba56210fd4"),
-                Date = DateTime.UtcNow.Date.AddDays(11),
-                DeliveryTerms = DeliveryTerms.CustomerWarehouse,
-                PaymentTerms = PaymentTerms.Prepay,
-                Items =
+            var supplier1 = new AnalysisSupplier(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                DateTime.UtcNow.Date.AddDays(11),
+                DeliveryTerms.CustomerWarehouse,
+                PaymentTerms.Prepay,
+                new List<AnalysisSupplierItem>
                 {
-                    new SupplierItem {Id = itemId1, Quantity = 100, Price = 10},
-                    new SupplierItem {Id = itemId2, Quantity = 100, Price = 11},
-                    new SupplierItem {Id = itemId3, Quantity = 100, Price = 12}
+                    new AnalysisSupplierItem(itemId1, 100, 10),
+                    new AnalysisSupplierItem(itemId2, 100, 11),
+                    new AnalysisSupplierItem(itemId3, 100, 12)
                 }
-            };
+            );
 
             var supplier2 = new AnalysisSupplier
-            {
-                Id = new Guid("e2fe141095f64dc0b062c0f09d136343"),
-                Date = DateTime.UtcNow.Date.AddDays(9),
-                Items =
+            (
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                DateTime.UtcNow.Date.AddDays(9),
+                new List<AnalysisSupplierItem>
                 {
-                    new SupplierItem {Id = itemId1, Quantity = 100, Price = 15},
-                    new SupplierItem {Id = itemId2, Quantity = 100, Price = 10},
-                    new SupplierItem {Id = itemId3, Quantity = 100, Price = 10}
+                    new AnalysisSupplierItem(itemId1, 100, 15),
+                    new AnalysisSupplierItem(itemId2, 100, 10),
+                    new AnalysisSupplierItem(itemId3, 100, 10)
                 }
-            };
+            );
 
             var supplier3 = new AnalysisSupplier
-            {
-                Id = new Guid("febef0cdf07d4c5b81955b541aa31953"),
-                Date = DateTime.UtcNow.Date.AddDays(8),
-                Items =
+            (
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                DateTime.UtcNow.Date.AddDays(8),
+                new List<AnalysisSupplierItem>
                 {
-                    new SupplierItem {Id = itemId1, Quantity = 100, Price = 13},
-                    new SupplierItem {Id = itemId2, Quantity = 100, Price = 9},
-                    new SupplierItem {Id = itemId3, Quantity = 100, Price = 11}
+                    new AnalysisSupplierItem(itemId1, 100, 13),
+                    new AnalysisSupplierItem(itemId2, 100, 9),
+                    new AnalysisSupplierItem(itemId3, 100, 11)
                 }
-            };
+            );
 
-            return ( customer, new List<AnalysisSupplier> {supplier1, supplier2, supplier3} );
+            return (customer, new List<AnalysisSupplier> { supplier1, supplier2, supplier3 });
         }
 
         [Theory]
@@ -78,7 +79,7 @@ namespace DigitalPurchasing.Tests
         {
             var testData = GetTestData();
 
-            var options = new AnalysisCoreVariant
+            var options = new AnalysisVariantData
             {
                 SuppliersCountOptions =
                 {
@@ -99,7 +100,7 @@ namespace DigitalPurchasing.Tests
         [InlineData(3)]
         public void SupplierCount_LessOrEqual(int suppliersCount)
         {
-            var options = new AnalysisCoreVariant
+            var options = new AnalysisVariantData
             {
                 SuppliersCountOptions =
                 {
@@ -120,7 +121,7 @@ namespace DigitalPurchasing.Tests
         [InlineData(DeliveryDateTerms.LessThanInRequest)]
         public void DeliveryDateType_Variants(DeliveryDateTerms deliveryDate)
         {
-            var options = new AnalysisCoreVariant
+            var options = new AnalysisVariantData
             {
                 DeliveryDateTermsOptions =
                 {
@@ -134,7 +135,7 @@ namespace DigitalPurchasing.Tests
             Assert.Equal(3, result.Data.Count);
             if (deliveryDate == DeliveryDateTerms.LessThanInRequest)
             {
-                var validSuppliers = testData.Suppliers.Where(q => q.Date <= testData.Customer.Date).Select(q => q.Id).ToList();
+                var validSuppliers = testData.Suppliers.Where(q => q.DeliveryDate <= testData.Customer.DeliveryDate).Select(q => q.SupplierId).ToList();
                 Assert.All(result.Data.Select(q => q.SupplierId), q =>
                 {
                     Assert.Contains(q, validSuppliers);
@@ -142,17 +143,17 @@ namespace DigitalPurchasing.Tests
             }
             else if (deliveryDate == DeliveryDateTerms.Min)
             {
-                var minDate = testData.Suppliers.Min(q => q.Date);
+                var minDate = testData.Suppliers.Min(q => q.DeliveryDate);
                 Assert.True(result.Data
                     .Select(q => q.SupplierId)
-                    .All(q => testData.Suppliers.Find(w => w.Id == q).Date == minDate));
+                    .All(q => testData.Suppliers.Find(w => w.SupplierId == q).DeliveryDate == minDate));
             }
         }
 
         [Fact]
         public void TotalValue_0()
         {
-            var options = new AnalysisCoreVariant
+            var options = new AnalysisVariantData
             {
                 TotalValueOptions =
                 {
@@ -169,7 +170,7 @@ namespace DigitalPurchasing.Tests
         [Fact]
         public void TotalValue_3000()
         {
-            var options = new AnalysisCoreVariant
+            var options = new AnalysisVariantData
             {
                 TotalValueOptions =
                 {
@@ -188,7 +189,7 @@ namespace DigitalPurchasing.Tests
         [Fact]
         public void PaymentTerms_Prepay()
         {
-            var options = new AnalysisCoreVariant
+            var options = new AnalysisVariantData
             {
                 PaymentTermsOptions =
                 {
@@ -208,7 +209,7 @@ namespace DigitalPurchasing.Tests
         [InlineData(DeliveryTerms.DAP)]
         public void DeliveryTerms_Custom(DeliveryTerms deliveryTerms)
         {
-            var options = new AnalysisCoreVariant
+            var options = new AnalysisVariantData
             {
                 DeliveryTermsOptions =
                 {
@@ -227,7 +228,7 @@ namespace DigitalPurchasing.Tests
         [Fact]
         public void DeliveryTerms_NoRequirements()
         {
-            var options = new AnalysisCoreVariant
+            var options = new AnalysisVariantData
             {
                 DeliveryTermsOptions =
                 {
@@ -251,31 +252,30 @@ namespace DigitalPurchasing.Tests
             var itemId2 = new Guid("d81e5c867aec40ffadbb8f71994d8443");
             var itemId3 = new Guid("a2141f27aa194b4ea111febcf31df950");
 
-            var customer = new AnalysisCustomer
-            {
-                Id = new Guid("01baea5c472d4b5aace9bf7dbaf013c4"),
-                Date = DateTime.UtcNow.Date.AddDays(10),
-                Items =
+            var customer = new AnalysisCustomer(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                DateTime.UtcNow.Date.AddDays(10),
+                new[]
                 {
-                    new CustomerItem {Id = itemId1, Quantity = 100},
-                    new CustomerItem {Id = itemId2, Quantity = 100},
-                    new CustomerItem {Id = itemId3, Quantity = 100}
+                    new AnalysisCustomerItem(itemId1, 100),
+                    new AnalysisCustomerItem(itemId2, 100),
+                    new AnalysisCustomerItem(itemId3, 100)
                 }
-            };
+            );
 
-            var supplier1 = new AnalysisSupplier
-            {
-                Id = new Guid("b9a46c13564c410f955961ba56210fd4"),
-                Date = DateTime.UtcNow.Date.AddDays(11),
-                Items =
+            var supplier1 = new AnalysisSupplier(Guid.NewGuid(),
+                Guid.NewGuid(),
+                DateTime.UtcNow.Date.AddDays(11),
+                new[]
                 {
-                    new SupplierItem {Id = itemId1, Quantity = 1, Price = 10},
-                    new SupplierItem {Id = itemId2, Quantity = 1, Price = 11},
-                    new SupplierItem {Id = itemId3, Quantity = 1, Price = 12}
+                    new AnalysisSupplierItem(itemId1, 1, 10),
+                    new AnalysisSupplierItem(itemId2, 1, 11),
+                    new AnalysisSupplierItem(itemId3, 1, 12)
                 }
-            };
+            );
 
-            var result = new AnalysisCore(customer, new List<AnalysisSupplier> { supplier1 }).Run(new AnalysisCoreVariant());
+            var result = new AnalysisCore(customer, new List<AnalysisSupplier> { supplier1 }).Run(new AnalysisVariantData());
 
             Assert.Empty(result.Data);
         }
@@ -286,45 +286,95 @@ namespace DigitalPurchasing.Tests
             var itemId1 = new Guid("5e654ae674ce4e03be619ec6c5701b21");
             var itemId2 = new Guid("b5f59198455c4646863a3589d2ec2f94");
 
-            var customer = new AnalysisCustomer
-            {
-                Id = new Guid("01baea5c472d4b5aace9bf7dbaf013c4"),
-                Date = DateTime.UtcNow.Date.AddDays(10),
-                Items =
+            var customer = new AnalysisCustomer(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                DateTime.UtcNow.Date.AddDays(10),
+                new[]
                 {
-                    new CustomerItem { Id = itemId1, Quantity = 100},
-                    new CustomerItem { Id = itemId2, Quantity = 100}
+                    new AnalysisCustomerItem(itemId1,100),
+                    new AnalysisCustomerItem(itemId2, 100)
                 }
-            };
+            );
 
-            var supplier1 = new AnalysisSupplier
-            {
-                Id = new Guid("b9a46c13564c410f955961ba56210fd4"),
-                Date = DateTime.UtcNow.Date.AddDays(11),
-                Items =
+            var supplier1 = new AnalysisSupplier(Guid.NewGuid(),
+                Guid.NewGuid(),
+                DateTime.UtcNow.Date.AddDays(11),
+                new[]
                 {
-                    new SupplierItem { Id = itemId1, Quantity = 100, Price = 10}
+                    new AnalysisSupplierItem(itemId1, 100, 10)
                 }
-            };
+                );
 
-            var supplier2 = new AnalysisSupplier
-            {
-                Id = new Guid("01edff1937fc4ef9a0c326e28c41c3d7"),
-                Date = DateTime.UtcNow.Date.AddDays(11),
-                Items =
+            var supplier2 = new AnalysisSupplier(Guid.NewGuid(),
+                Guid.NewGuid(),
+                DateTime.UtcNow.Date.AddDays(11),
+                new[]
                 {
-                    new SupplierItem { Id = itemId2, Quantity = 100, Price = 11}
+                    new AnalysisSupplierItem(itemId2, 100, 11)
                 }
-            };
+            );
 
-            var suppliers = new List<AnalysisSupplier> {supplier1, supplier2};
+            var suppliers = new List<AnalysisSupplier> { supplier1, supplier2 };
 
-            var result = new AnalysisCore(customer, suppliers).Run(new AnalysisCoreVariant());
+            var result = new AnalysisCore(customer, suppliers).Run(new AnalysisVariantData());
 
-            Assert.True(result != null);
             Assert.True(result.IsSuccess);
             Assert.Equal(2, result.SuppliersCount);
         }
+
+        [Fact]
+        public void MixSuppliers_2()
+        {
+            var itemId1 = new Guid("5e654ae674ce4e03be619ec6c5701b21");
+            var itemId2 = new Guid("b5f59198455c4646863a3589d2ec2f94");
+
+            var supplierId1 = Guid.NewGuid();
+            var supplierId2 = Guid.NewGuid();
+
+            var customer = new AnalysisCustomer(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                DateTime.UtcNow.Date.AddDays(10),
+                new[]
+                {
+                    new AnalysisCustomerItem(itemId1, 1),
+                    new AnalysisCustomerItem(itemId2, 1000)
+                }
+            );
+
+            var supplier1 = new AnalysisSupplier(supplierId1,
+                Guid.NewGuid(),
+                DateTime.UtcNow.Date.AddDays(11),
+                new[]
+                {
+                    new AnalysisSupplierItem(itemId1, 1, 5),
+                    new AnalysisSupplierItem(itemId2, 1000, 10)
+                } // = 10005
+            ); 
+
+            var supplier2 = new AnalysisSupplier(supplierId2,
+                Guid.NewGuid(),
+                DateTime.UtcNow.Date.AddDays(11),
+                new[]
+                {
+                    new AnalysisSupplierItem(itemId1, 1, 20),
+                    new AnalysisSupplierItem(itemId2, 1000, 6)
+                } // = 6020 - best offer
+            );
+
+            var suppliers = new List<AnalysisSupplier> { supplier1, supplier2 };
+
+            var result = new AnalysisCore(customer, suppliers).Run(new AnalysisVariantData()
+            {
+                SuppliersCountOptions = new VariantsSuppliersCountOptions { Count = 1, Type = SupplierCountType.Equal }
+            });
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(1, result.SuppliersCount);
+            Assert.True(result.Data.All(q => q.SupplierId == supplierId2));
+        }
+
 
         [Fact]
         public void Supplier_MixQuantity()
@@ -333,45 +383,41 @@ namespace DigitalPurchasing.Tests
 
             var customerQty = 100m;
 
-            var customer = new AnalysisCustomer
-            {
-                Id = new Guid("01baea5c472d4b5aace9bf7dbaf013c4"),
-                Date = DateTime.UtcNow.Date.AddDays(10),
-                Items =
+            var customer = new AnalysisCustomer(Guid.NewGuid(),
+                Guid.NewGuid(),
+                DateTime.UtcNow.Date.AddDays(10),
+                new[]
                 {
-                    new CustomerItem { Id = itemId1, Quantity = customerQty }
+                    new AnalysisCustomerItem (itemId1, customerQty)
                 }
-            };
+            );
 
-            var supplier1 = new AnalysisSupplier
-            {
-                Id = new Guid("b9a46c13564c410f955961ba56210fd4"),
-                Date = DateTime.UtcNow.Date.AddDays(11),
-                Items =
+            var supplier1 = new AnalysisSupplier(Guid.NewGuid(),
+                Guid.NewGuid(),
+                DateTime.UtcNow.Date.AddDays(11),
+                new[]
                 {
-                    new SupplierItem { Id = itemId1, Quantity = 50, Price = 10}
+                    new AnalysisSupplierItem (itemId1, 50, 10)
                 }
-            };
+            );
 
-            var supplier2 = new AnalysisSupplier
-            {
-                Id = new Guid("01edff1937fc4ef9a0c326e28c41c3d7"),
-                Date = DateTime.UtcNow.Date.AddDays(11),
-                Items =
+            var supplier2 = new AnalysisSupplier(Guid.NewGuid(),
+                Guid.NewGuid(),
+                DateTime.UtcNow.Date.AddDays(11),
+                new[]
                 {
-                    new SupplierItem { Id = itemId1, Quantity = 70, Price = 11}
+                    new AnalysisSupplierItem (itemId1, 70, 11)
                 }
-            };
+            );
 
 
-            var suppliers = new List<AnalysisSupplier> {supplier1, supplier2};
+            var suppliers = new List<AnalysisSupplier> { supplier1, supplier2 };
 
-            var result = new AnalysisCore(customer, suppliers).Run(new AnalysisCoreVariant());
+            var result = new AnalysisCore(customer, suppliers).Run(new AnalysisVariantData());
 
-            Assert.True(result != null);
             Assert.True(result.IsSuccess);
             Assert.Equal(suppliers.Count, result.SuppliersCount);
-            Assert.Equal(customerQty, result.Data.Sum(q => q.Item.Quantity));
+            Assert.Equal(customerQty, result.Data.Sum(q => q.Quantity));
         }
 
         [Fact]
@@ -381,47 +427,44 @@ namespace DigitalPurchasing.Tests
             var itemId2 = new Guid("96d9151eb8f24d7b80a2f2b69fc2e1bc");
             var itemId3 = new Guid("8916d8409b32431abefa29ed7fd7b785");
 
-            var customer = new AnalysisCustomer
-            {
-                Id = new Guid("01baea5c472d4b5aace9bf7dbaf013c4"),
-                Items =
+            var customer = new AnalysisCustomer(Guid.NewGuid(),
+                Guid.NewGuid(), null,
+                new[]
                 {
-                    new CustomerItem { Id = itemId1, Quantity = 100 },
-                    new CustomerItem { Id = itemId2, Quantity = 100 },
-                    new CustomerItem { Id = itemId3, Quantity = 100 }
+                    new AnalysisCustomerItem (itemId1, 100 ),
+                    new AnalysisCustomerItem (itemId2, 100 ),
+                    new AnalysisCustomerItem (itemId3, 100 )
                 }
-            };
+            );
 
-            var supplier1 = new AnalysisSupplier
-            {
-                Id = new Guid("f0477905690c44cbbfa185800db1a6ad"),
-                Items =
+            var supplier1 = new AnalysisSupplier(Guid.NewGuid(),
+                Guid.NewGuid(), null,
+                new[]
                 {
-                    new SupplierItem { Id = itemId1, Quantity = 90, Price = 10 },
-                    new SupplierItem { Id = itemId2, Quantity = 90, Price = 10 },
-                    new SupplierItem { Id = itemId3, Quantity = 90, Price = 10 }
+                    new AnalysisSupplierItem (itemId1, 90, 10 ),
+                    new AnalysisSupplierItem (itemId2, 90, 10 ),
+                    new AnalysisSupplierItem (itemId3, 90, 10 )
                 }
-            };
-            
-            var supplier2 = new AnalysisSupplier
-            {
-                Id = new Guid("779add5fdc394cca9bfd7672bce61607"),
-                Items =
-                {
-                    new SupplierItem { Id = itemId1, Quantity = 100, Price = 9 },
-                    new SupplierItem { Id = itemId2, Quantity = 100, Price = 8 },
-                    new SupplierItem { Id = itemId3, Quantity = 100, Price = 7 }
-                }
-            };
+            );
 
-            var result = new AnalysisCore(customer, new List<AnalysisSupplier> { supplier1, supplier2 }).Run(new AnalysisCoreVariant());
+            var supplier2 = new AnalysisSupplier(Guid.NewGuid(),
+                Guid.NewGuid(), null,
+                new[]
+                {
+                    new AnalysisSupplierItem (itemId1, 100, 9 ),
+                    new AnalysisSupplierItem (itemId2, 100, 8),
+                    new AnalysisSupplierItem (itemId3, 100, 7 )
+                }
+            );
+
+            var result = new AnalysisCore(customer, new List<AnalysisSupplier> { supplier1, supplier2 }).Run(new AnalysisVariantData());
 
             Assert.True(result.IsSuccess);
             Assert.All(result.Data, q =>
             {
-                Assert.True(q.Item.Quantity == 90
-                            || q.Item.Quantity == 100
-                            || q.Item.Quantity == 10);
+                Assert.True(q.Quantity == 90
+                            || q.Quantity == 100
+                            || q.Quantity == 10);
             });
         }
 
@@ -431,55 +474,57 @@ namespace DigitalPurchasing.Tests
             var itemId1 = new Guid("5e654ae674ce4e03be619ec6c5701b21");
             var itemId2 = new Guid("96d9151eb8f24d7b80a2f2b69fc2e1bc");
 
-            var customer = new AnalysisCustomer
-            {
-                Id = new Guid("01baea5c472d4b5aace9bf7dbaf013c4"),
-                Items =
+            var customer = new AnalysisCustomer(Guid.NewGuid(),
+            Guid.NewGuid(),
+            null,
+                new[]
                 {
-                    new CustomerItem { Id = itemId1, Quantity = 100 },
-                    new CustomerItem { Id = itemId2, Quantity = 100 },
+                    new AnalysisCustomerItem (itemId1, 100 ),
+                    new AnalysisCustomerItem (itemId2, 100 )
                 }
-            };
+            );
 
-            var supplier1 = new AnalysisSupplier
-            {
-                Id = new Guid("f0477905690c44cbbfa185800db1a6ad"),
-                Items =
-                {
-                    new SupplierItem { Id = itemId1, Quantity = 100, Price = 8 },
-                    new SupplierItem { Id = itemId2, Quantity = 100, Price = 11 },
-                }
-            };
-            
-            var supplier2 = new AnalysisSupplier
-            {
-                Id = new Guid("779add5fdc394cca9bfd7672bce61607"),
-                Items =
-                {
-                    new SupplierItem { Id = itemId1, Quantity = 100, Price = 10 },
-                    new SupplierItem { Id = itemId2, Quantity = 100, Price = 8 },
-                }
-            };
+            var supplier1 = new AnalysisSupplier(Guid.NewGuid(),
+        Guid.NewGuid(),
+        null,
 
-            var suppliers = new List<AnalysisSupplier> {supplier1, supplier2};
+                new[]
+                {
+                    new AnalysisSupplierItem (itemId1, 100, 8 ),
+                    new AnalysisSupplierItem (itemId2, 100, 11 )
+                }
+            );
+
+            var supplier2 = new AnalysisSupplier(Guid.NewGuid(),
+        Guid.NewGuid(), null,
+                new[]
+                {
+                    new AnalysisSupplierItem (itemId1, 100, 10 ),
+                    new AnalysisSupplierItem (itemId2, 100, 8 )
+                }
+            );
+
+            var suppliers = new List<AnalysisSupplier> { supplier1, supplier2 };
 
             var core = new AnalysisCore(customer, suppliers);
 
-            var variant1 = new AnalysisCoreVariant
+            var variant1 = new AnalysisVariantData
             {
                 Id = new Guid("4650979df43843c3874737a2692d8b4d"),
                 SuppliersCountOptions = new VariantsSuppliersCountOptions()
                 {
-                    Count = 1, Type = SupplierCountType.Equal
+                    Count = 1,
+                    Type = SupplierCountType.Equal
                 }
             };
 
-            var variant2 = new AnalysisCoreVariant
+            var variant2 = new AnalysisVariantData
             {
                 Id = new Guid("04a895f1f846495ca363693eba8d4b19"),
                 SuppliersCountOptions = new VariantsSuppliersCountOptions()
                 {
-                    Count = 2, Type = SupplierCountType.Equal
+                    Count = 2,
+                    Type = SupplierCountType.Equal
                 }
             };
 

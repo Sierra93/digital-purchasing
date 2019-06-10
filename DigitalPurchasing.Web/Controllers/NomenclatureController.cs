@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core;
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.ExcelReader;
@@ -123,7 +124,7 @@ namespace DigitalPurchasing.Web.Controllers
             {
                 try
                 {
-                    _nomenclatureService.CreateOrUpdate(vm.Adapt<NomenclatureVm>());
+                    _nomenclatureService.CreateOrUpdate(vm.Adapt<NomenclatureVm>(), User.CompanyId());
                     return RedirectToAction(nameof(Index));
                 }
                 catch (SameNomenclatureNameException)
@@ -171,6 +172,13 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult Delete([FromBody]DeleteVm vm)
         {
             _nomenclatureService.Delete(vm.Id);
+            return Ok();
+        }
+
+        [HttpPost]
+        public IActionResult DeleteAlternative([FromBody]DeleteVm vm)
+        {
+            _nomenclatureAlternativeService.Delete(vm.Id);
             return Ok();
         }
 
@@ -378,6 +386,8 @@ namespace DigitalPurchasing.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            var companyId = User.CompanyId();
+
             var fileName = file.FileName;
             var fileExt = Path.GetExtension(fileName);
             var filePath = Path.GetTempFileName()+fileExt;
@@ -416,7 +426,7 @@ namespace DigitalPurchasing.Web.Controllers
                 Guid? parentId = null;
                 foreach (var category in categories)
                 {
-                    var result = _nomenclatureCategoryService.CreateOrUpdate(category, parentId);
+                    var result = _nomenclatureCategoryService.CreateOrUpdate(companyId, category, parentId);
                     parentId = result.Id;
                     if (!dbCategories.ContainsKey(result.Id))
                     {
@@ -441,7 +451,7 @@ namespace DigitalPurchasing.Web.Controllers
                 PackUomValue = data.PackUomValue ?? 0
             }).GroupBy(q => q.Name).Select(q => q.First()).ToList();
 
-            var companyId = User.CompanyId();
+            
 
             _nomenclatureService.CreateOrUpdate(nomenclatures, companyId);
 

@@ -74,8 +74,8 @@ namespace DigitalPurchasing.Web.Controllers
             var ownerId = User.CompanyId();
 
             await _analysisService.SelectVariant(vm.Id);
-            await _selectedSupplierService.GenerateReportData(ownerId, userId, vm.Id);
-            return Ok();
+            var result = await _selectedSupplierService.GenerateReportData(ownerId, userId, vm.Id);
+            return Ok(new { report = result.IsSuccess });
         }
 
         [HttpPost]

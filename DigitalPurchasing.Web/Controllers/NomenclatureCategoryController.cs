@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Services;
 using DigitalPurchasing.Web.Core;
@@ -59,7 +60,8 @@ namespace DigitalPurchasing.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                _nomenclatureCategoryService.CreateOrUpdate(vm.Name, vm.ParentId);
+                var companyId = User.CompanyId();
+                _nomenclatureCategoryService.CreateOrUpdate(companyId, vm.Name, vm.ParentId);
                 return RedirectToAction("Index");
             }
 
@@ -114,6 +116,8 @@ namespace DigitalPurchasing.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            var companyId = User.CompanyId();
+
             var fileName = file.FileName;
             var fileExt = Path.GetExtension(fileName);
             var filePath = Path.GetTempFileName() + fileExt;
@@ -133,7 +137,7 @@ namespace DigitalPurchasing.Web.Controllers
                     var categoryName = nestedCategories.Dequeue();
                     if (!string.IsNullOrWhiteSpace(categoryName))
                     {
-                        var category = _nomenclatureCategoryService.CreateOrUpdate(categoryName, parentCategoryId);
+                        var category = _nomenclatureCategoryService.CreateOrUpdate(companyId, categoryName, parentCategoryId);
                         createCategoryHierarchy(category.Id, nestedCategories);
                     }
                 }

@@ -32,6 +32,7 @@ namespace DigitalPurchasing.Services
         private readonly IConversionRateService _conversionRateService;
         private readonly IRootService _rootService;
         private readonly INomenclatureAlternativeService _nomenclatureAlternativeService;
+        private readonly INomenclatureComparisonService _nomenclatureComparisonService;
 
         public SupplierOfferService(
             ApplicationDbContext db,
@@ -45,7 +46,8 @@ namespace DigitalPurchasing.Services
             ISupplierService supplierService,
             IConversionRateService conversionRateService,
             IRootService rootService,
-            INomenclatureAlternativeService nomenclatureAlternativeService)
+            INomenclatureAlternativeService nomenclatureAlternativeService,
+            INomenclatureComparisonService nomenclatureComparisonService)
         {
             _db = db;
             _excelRequestReader = excelRequestReader;
@@ -59,6 +61,7 @@ namespace DigitalPurchasing.Services
             _conversionRateService = conversionRateService;
             _rootService = rootService;
             _nomenclatureAlternativeService = nomenclatureAlternativeService;
+            _nomenclatureComparisonService = nomenclatureComparisonService;
         }
 
         public void UpdateStatus(Guid id, SupplierOfferStatus status, bool globalSearch = false)
@@ -213,9 +216,8 @@ namespace DigitalPurchasing.Services
                 item.Request.QtyMod = qtyMod;
                 item.Request.Currency = "RUB"; //TODO
                 item.Request.Uom = requestItem.Nomenclature.BatchUom.Name;
-                
-                var offerItem = offerItems
-                    .FirstOrDefault(q => q.NomenclatureId.HasValue && q.NomenclatureId == requestItem.NomenclatureId);
+
+                var offerItem = FindOfferItem(offerItems, requestItem);
                 if (offerItem == null) continue;
 
                 item.Offer.ItemId = offerItem.Id;
@@ -270,6 +272,20 @@ namespace DigitalPurchasing.Services
             }
 
             return result;
+        }
+
+        // todo: better algorithm to find match between PR and SO items. Add PRId to so item?
+        private SupplierOfferItem FindOfferItem(List<SupplierOfferItem> offerItems, PurchaseRequestItem requestItem)
+        {
+            var items = offerItems.Where(q => q.NomenclatureId.HasValue && q.NomenclatureId == requestItem.NomenclatureId).ToList();
+
+            if (items.Count == 0) return null;
+            if (items.Count == 1)
+            {
+                return items.First();
+            }
+
+            return items.FirstOrDefault(q => q.Position == requestItem.Position);
         }
 
         public SupplierOfferColumnsDataVm GetColumnsData(Guid id, bool globalSearch = false)
@@ -348,13 +364,24 @@ namespace DigitalPurchasing.Services
                     RawUomStr = string.IsNullOrEmpty(supplierOffer.UploadedDocument.Headers.Uom) ? "" : table.GetValue(supplierOffer.UploadedDocument.Headers.Uom, i)
                 };
 
-                Autocomplete(supplierOffer, rawItem);
+                rawItem.RawUomId = FindUomId(rawItem.RawUomStr, supplierOffer.OwnerId);
+                rawItem.NomenclatureId = FindNomenclatureId(rawItem.RawName, supplierOffer.SupplierId.Value, supplierOffer.OwnerId);                
 
                 rawItems.Add(rawItem);
             }
 
             var withUndefinedNoms = rawItems.Where(_ => !_.NomenclatureId.HasValue).ToList();
             FixSoNomenclatureIds(withUndefinedNoms);
+
+            foreach (var item in rawItems)
+            {
+                if (item.NomenclatureId != null && item.RawUomId != null)
+                {
+                    var rate = _conversionRateService.GetRate(item.RawUomId.Value, item.NomenclatureId.Value).Result;
+                    item.CommonFactor = rate.CommonFactor;
+                    item.NomenclatureFactor = rate.NomenclatureFactor;
+                }
+            }
 
             _db.BulkInsert(rawItems);
 
@@ -383,28 +410,6 @@ namespace DigitalPurchasing.Services
                                     item.PurchaseRequest.QuotationRequest.CompetitionList.SupplierOffers.Any(so => so.Id == soId)
                                select item).ToList();
 
-                var word2synonyms = new Dictionary<string, IReadOnlyList<string>>()
-                {
-                    { "очиститель", new List<string>() { "промывка" } }
-                };
-
-                Func<string, string> cleanupNomName = (nomName) => Regex.Replace(nomName, @"[^a-zA-Z\p{IsCyrillic}\s]", " ");
-                Func<string, string> leaveOnlyDigits = (str) => Regex.Replace(str, "[^0-9]", "");
-                Func<string, string> orderWords = (str) => string.Join(' ', str.Split(' ').OrderBy(w => w));
-                Func<string, string> removeNoize = (str) => string.Join(' ', str.Split(' ').Where(w => w.Length > 2));
-                Func<string, string> replaceSynonyms = (str) =>
-                {
-                    var result = new List<string>();
-                    foreach (var word in str.Split(' '))
-                    {
-                        foreach (var w2s in word2synonyms)
-                        {
-                            result.Add(w2s.Value.Any(s => s.Equals(word, StringComparison.InvariantCultureIgnoreCase)) ? w2s.Key : word);
-                        }
-                    }
-                    return string.Join(" ", result);
-                };
-
                 var unlinkedPrItems = prItems.Where(item => !soItems.Any(soItem => soItem.NomenclatureId == item.NomenclatureId))
                     .Select(item => new
                     {
@@ -417,47 +422,36 @@ namespace DigitalPurchasing.Services
 
                 var alg = new Levenshtein();
 
-                var algResults = (from soItem in soItems.Where(_ => !_.NomenclatureId.HasValue)
-                                  let soItemName = removeNoize(cleanupNomName(soItem.RawName).ReplaceSpacesWithOneSpace()).Trim()
-                                  let nameStr1 = orderWords(replaceSynonyms(soItemName.ToLower()))
-                                  let soDigits = leaveOnlyDigits(soItem.RawName)
-                                  from prItem in unlinkedPrItems
-                                  let prItemName = removeNoize(cleanupNomName(prItem.RawName).ReplaceSpacesWithOneSpace()).Trim()
-                                  let nameStr2 = orderWords(replaceSynonyms(prItemName.ToLower()))
-                                  let maxNameLen = Math.Max(nameStr1.Length, nameStr2.Length)
-                                  let prDigits = leaveOnlyDigits(prItem.RawName)
-                                  let isSameUom = soItem.RawUomId == prItem.RawUomMatchId
-                                  let nameIntersect = string.Join("", nameStr1.Split(' ').Intersect(nameStr2.Split(' '))).Length
-                                  let longestNameSubstr = LongestCommonSubstring(nameStr1.RemoveSpaces(), nameStr2.RemoveSpaces())
-                                  let nameDistance = alg.Distance(nameStr1, nameStr2)
-                                  let digitsDistance = alg.Distance(soDigits, prDigits)
-                                  let qtyDiff = isSameUom ? Math.Abs(prItem.RawQty - soItem.RawQty) / (10 * Math.Max(prItem.RawQty, soItem.RawQty)) : 0.1m
-                                  let completeDistance = (nameDistance + digitsDistance - 2 * Math.Max(longestNameSubstr, nameIntersect)) / (2 * maxNameLen) + (double)qtyDiff
-                                  select new
-                                  {
-                                      soItem,
-                                      prItem,
-                                      soDigits,
-                                      prDigits,
-                                      nameDistance,
-                                      nameStr1,
-                                      nameStr2,
-                                      digitsDistance,
-                                      qtyDiff,
-                                      completeDistance,
-                                      nameIntersect,
-                                      longestNameSubstr
-                                  }).ToList();
-
-                algResults = algResults
-                    .OrderBy(el => el.completeDistance).ToList();
-
+                var algResults = from soItem in soItems.Where(_ => !_.NomenclatureId.HasValue)
+                                 let soTerms = _nomenclatureComparisonService.CalculateComparisonTerms(soItem.RawName)
+                                 from prItem in unlinkedPrItems
+                                 let prTerms = _nomenclatureComparisonService.CalculateComparisonTerms(prItem.RawName)
+                                 let isSameUom = soItem.RawUomId == prItem.RawUomMatchId
+                                 let distance = _nomenclatureComparisonService.CalculateDistance(soTerms, prTerms, isSameUom, soItem.RawQty, prItem.RawQty)
+                                 select new
+                                 {
+                                     soItem,
+                                     prItem,
+                                     soDigits = soTerms.AdjustedDigits,
+                                     prDigits = prTerms.AdjustedDigits,
+                                     nameDistance = distance.NameDistance,
+                                     nameWithDims1 = distance.ComparisonName1,
+                                     nameWithDims2 = distance.ComparisonName2,
+                                     digitsDistance = distance.DigitsDistance,
+                                     qtyDiff = distance.QtyDiff,
+                                     completeDistance = distance.CompleteDistance,
+                                     nameIntersect = distance.NamesIntersect,
+                                     longestNameSubstr = distance.NamesLongestSubstringLen,
+                                     soItemDims = soTerms.NomDimensions,
+                                     prItemDims = prTerms.NomDimensions
+                                 };
+                
                 while (algResults.Any())
                 {
-                    algResults[0].soItem.NomenclatureId = algResults[0].prItem.NomenclatureId;
-                    var soItemId = algResults[0].soItem.Id;
-                    var prItemId = algResults[0].prItem.Id;
-                    algResults = algResults.Where(el => el.soItem.Id != soItemId && el.prItem.Id != prItemId).OrderBy(el => el.completeDistance).ToList();
+                    algResults = algResults.OrderBy(el => el.completeDistance);
+                    var bestMatch = algResults.First();
+                    bestMatch.soItem.NomenclatureId = bestMatch.prItem.NomenclatureId;
+                    algResults = algResults.Where(el => el.soItem.Id != bestMatch.soItem.Id && el.prItem.Id != bestMatch.prItem.Id);
                 }
             }
         }
@@ -493,46 +487,30 @@ namespace DigitalPurchasing.Services
             return maxlen;
         }
 
-        private void Autocomplete(SupplierOffer so, SupplierOfferItem soItem)
+        private Guid? FindUomId(string uomName, Guid ownerId)
         {
-            #region Try to find UoM in db
-                
-            var res = _uomService.Autocomplete(soItem.RawUomStr, so.OwnerId);
+            var res = _uomService.Autocomplete(uomName, ownerId);
             var fullMatch = res.Items?.FirstOrDefault(q => q.IsFullMatch);
-            if (fullMatch != null)
-            {
-                soItem.RawUomId = fullMatch.Id;
-            }
+            return fullMatch?.Id;
+        }
 
-            #endregion
-            #region Try to find in nomeclature
-                
+        private Guid? FindNomenclatureId(string nomName, Guid clientId, Guid ownerId)
+        {
             var nomRes = _nomenclatureService.Autocomplete(new AutocompleteOptions
             {
-                Query = soItem.RawName,
-                ClientId = so.SupplierId.Value,
+                Query = nomName,
+                ClientId = clientId,
                 ClientType = ClientType.Supplier,
                 SearchInAlts = true,
-                OwnerId = so.OwnerId
+                OwnerId = ownerId
             });
 
-            if (nomRes.Items.Count == 1)
+            if (nomRes.Items.Count(q => q.IsFullMatch) == 1)
             {
-                soItem.NomenclatureId = nomRes.Items[0].Id;
+                return nomRes.Items.First(q => q.IsFullMatch).Id;
             }
 
-            #endregion
-
-            #region Calc UoMs factor
-
-            if (soItem.NomenclatureId != null && soItem.RawUomId != null)
-            {
-                var rate = _conversionRateService.GetRate(soItem.RawUomId.Value, soItem.NomenclatureId.Value).Result;
-                soItem.CommonFactor = rate.CommonFactor;
-                soItem.NomenclatureFactor = rate.NomenclatureFactor;
-            }
-
-            #endregion
+            return null;
         }
 
         public SOMatchItemsVm MatchItemsData(Guid soId)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DigitalPurchasing.Core.Enums;
 
 namespace DigitalPurchasing.Core.Interfaces
 {
@@ -7,7 +8,7 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         NomenclatureIndexData GetData(int page, int perPage, string sortField, bool sortAsc, string search);
         NomenclatureDetailsData GetDetailsData(Guid nomId, int page, int perPage, string sortField, bool sortAsc, string sortBySearch);
-        NomenclatureVm CreateOrUpdate(NomenclatureVm model);
+        NomenclatureVm CreateOrUpdate(NomenclatureVm model, Guid ownerId);
         void CreateOrUpdate(List<NomenclatureVm> models, Guid ownerId);
         NomenclatureVm GetById(Guid id, bool globalSearch = false);
         IEnumerable<NomenclatureVm> GetByNames(params string[] nomenclatureNames);
@@ -15,7 +16,7 @@ namespace DigitalPurchasing.Core.Interfaces
         BaseResult<NomenclatureAutocompleteResult.AutocompleteResultItem> AutocompleteSingle(Guid id);
         void Delete(Guid id);
         NomenclatureWholeData GetWholeNomenclature();
-        NomenclatureVm FindBestFuzzyMatch(Guid ownerId, string nomName, int maxNameDistance);
+        NomenclatureVm FindBestFuzzyMatch(Guid ownerId, string nomName);
     }
 
     public class NomenclatureWholeData
@@ -150,6 +151,7 @@ namespace DigitalPurchasing.Core.Interfaces
             public string Code { get; set; }
             public string BatchUomName { get; set; }
             public Guid BatchUomId { get; set; }
+            public bool IsFullMatch { get; set; }
         }
 
         public List<AutocompleteResultItem> Items { get; set; } = new List<AutocompleteResultItem>();

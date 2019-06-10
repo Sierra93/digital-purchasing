@@ -2,19 +2,32 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 
 namespace DigitalPurchasing.Services
 {
     public class NomenclatureCategoryService : INomenclatureCategoryService
     {
         private readonly ApplicationDbContext _db;
+        private readonly IMemoryCache _cache;
+        private readonly ILogger _logger;
 
-        public NomenclatureCategoryService(ApplicationDbContext dbContext) => _db = dbContext;
+        public NomenclatureCategoryService(
+            ApplicationDbContext dbContext,
+            IMemoryCache cache,
+            ILogger<NomenclatureCategoryService> logger)
+        {
+            _db = dbContext;
+            _cache = cache;
+            _logger = logger;
+        }
 
         public NomenclatureCategoryIndexData GetData(int page, int perPage, string sortField, bool sortAsc)
         {
@@ -136,26 +149,45 @@ namespace DigitalPurchasing.Services
             return result;
         }
 
-        public NomenclatureCategoryVm CreateOrUpdate(string name, Guid? parentId)
+        public NomenclatureCategoryVm CreateOrUpdate(Guid ownerId, string name, Guid? parentId)
         {
-            var oldEntity = _db.NomenclatureCategories.FirstOrDefault(
-                q => q.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase) && q.ParentId == parentId);
-
-            if (oldEntity != null)
+            if (string.IsNullOrEmpty(name))
             {
-                return oldEntity.Adapt<NomenclatureCategoryVm>();
+                throw new ArgumentNullException(nameof(name));
             }
 
-            var entry = _db.NomenclatureCategories.Add(new NomenclatureCategory
+            name = name.Trim().Trim('>');
+            
+            var cacheQry = name;
+            if (parentId.HasValue)
             {
-                Name = name.Trim().Trim('>'),
-                ParentId = parentId
-            });
+                cacheQry += $"_{parentId.Value:N}";
+            }
+            var cacheKey = Consts.CacheKeys.NomenclatureCategoryCreateOrUpdate(ownerId, cacheQry);
+            var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(30));
 
-            _db.SaveChanges();
-            _db.Entry(entry.Entity).Reference(b => b.Owner).Load();
+            if (!_cache.TryGetValue(cacheKey, out NomenclatureCategory nomenclatureCategory))
+            {
+                nomenclatureCategory = _db.NomenclatureCategories.FirstOrDefault(
+                    q => q.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase) && q.ParentId == parentId);
+            }
 
-            return entry.Entity.Adapt<NomenclatureCategoryVm>();
+            if (nomenclatureCategory == null)
+            {
+                var entry = _db.NomenclatureCategories.Add(new NomenclatureCategory
+                {
+                    Name = name,
+                    ParentId = parentId
+                });
+
+                _db.SaveChanges();
+
+                nomenclatureCategory = entry.Entity;
+            }
+
+            _cache.Set(cacheKey, nomenclatureCategory, cacheEntryOptions);
+            //_db.Entry(entry.Entity).Reference(b => b.Owner).Load();
+            return nomenclatureCategory.Adapt<NomenclatureCategoryVm>();
         }
 
         public IEnumerable<NomenclatureCategoryVm> GetAll(bool includeDeleted = false)
