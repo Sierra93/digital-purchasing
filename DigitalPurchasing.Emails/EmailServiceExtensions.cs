@@ -46,7 +46,7 @@ namespace DigitalPurchasing.Emails
         {
             var subject = $"[{emailUid}] Запрос коммерческого предложения №{quotationRequest.PublicId}";
 
-            var until = DateTime.UtcNow.AddDays(3).ToRussianStandardTime();
+            var until = DateTime.UtcNow.AddHours(1).ToRussianStandardTime();
 
             string toName = supplierContact.FirstName;
 
