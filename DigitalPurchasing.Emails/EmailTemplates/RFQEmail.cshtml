@@ -9,8 +9,9 @@
 </head>
 <body>
     <p>Добрый день, @Model.ToName!</p>
-    <p>Прошу направить коммерческое предложение в формате счета на оплату с соответствии с запросом во вложении</p>
-    <p>Срок и время  отправки коммерческого предложения: @Model.Until.ToString("dd/MM/yyyy") до @Model.Until.ToString("hh:mm") МСК</p>
+    <p>Прошу направить коммерческое предложение в формате счета на оплату в соответствии с запросом во вложении.</p>
+    <p>Счет на оплату просьба направить в формате excel в срок до @Model.Until.ToString("dd/MM/yyyy") до @Model.Until.ToString("HH:mm") МСК.</p>
+    <p>Спасибо</p>
     <p>С уважением,<br/>@Model.From.Name<br />@Model.From.JobTitle<br />@Model.From.Company</p>
 </body>
 </html>
