@@ -11,6 +11,7 @@ namespace DigitalPurchasing.Models
         public Customer Customer { get; set; }
 
         public int PublicId { get; set; }
+        public string ErpCode { get; set; }
 
         public string CompanyName { get; set; }
         public string CustomerName { get; set; }

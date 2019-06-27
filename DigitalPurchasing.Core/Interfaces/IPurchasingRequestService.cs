@@ -26,6 +26,7 @@ namespace DigitalPurchasing.Core.Interfaces
         void SaveCustomerName(Guid prId, string customerName, Guid? modelCustomerId);
         DeleteResultVm Delete(Guid id);
         Guid GetIdByQR(Guid qrId, bool globalSearch = false);
+        Task SaveErpCode(Guid prId, string erpCode);
     }
 
     public class CreateFromFileResponse
@@ -77,6 +78,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public List<RawItem> Items { get; set; }
 
         public string CustomerName { get; set; }
+        public string ErpCode { get; set; }
     }
 
     public class PurchaseRequestColumns
