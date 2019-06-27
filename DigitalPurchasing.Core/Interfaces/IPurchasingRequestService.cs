@@ -59,6 +59,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public int PublicId { get; set; }
         public DateTime CreatedOn { get; set; }
         public string CustomerName { get; set; }
+        public string ErpCode { get; set; }
     }
 
     public class PurchaseRequestIndexData : BaseDataResponse<PurchasingRequestIndexDataItem>
