@@ -20,6 +20,9 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid Id { get; set; }
         public int PublicId { get; set; }
         public DateTime CreatedOn { get; set; }
+        public string QuotationRequestPurchaseRequestCustomerName { get; set; }
+        public string QuotationRequestPurchaseRequestErpCode { get; set; }
+        public string Suppliers { get; set; }
     }
 
     public class CompetitionListIndexData : BaseDataResponse<CompetitionListIndexDataItem>
@@ -42,6 +45,7 @@ namespace DigitalPurchasing.Core.Interfaces
             public int PublicId { get; set; }
             public DateTime CreatedOn { get; set; }
             public string CustomerName { get; set; }
+            public string ErpCode { get; set; }
             public List<PurchaseRequestItemVm> Items { get; set; }
         }
 

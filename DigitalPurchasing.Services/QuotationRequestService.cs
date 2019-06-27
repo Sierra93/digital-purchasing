@@ -58,7 +58,7 @@ namespace DigitalPurchasing.Services
                 sortField = "Id";
             }
 
-            var qry =  _db.QuotationRequests.AsNoTracking();
+            var qry =  _db.QuotationRequests.Include(q => q.PurchaseRequest).AsNoTracking();
             var total = qry.Count();
             var orderedResults = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}");
             var result = orderedResults

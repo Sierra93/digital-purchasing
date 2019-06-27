@@ -25,6 +25,8 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid Id { get; set; }
         public int PublicId { get; set; }
         public DateTime CreatedOn { get; set; }
+        public string PurchaseRequestCustomerName { get; set; }
+        public string PurchaseRequestErpCode { get; set; }
     }
 
     public class QuotationRequestApplicableSupplier

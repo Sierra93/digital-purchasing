@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Web.ViewModels.PurchasingRequest;
@@ -30,6 +31,13 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult SaveCustomerName([FromBody] SaveCustomerNameVm model)
         {
             _purchasingRequestService.SaveCustomerName(model.Id, model.Name, model.CustomerId);
+            return Ok();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SaveErpCode([FromBody] SaveErpCodeVm model)
+        {
+            await _purchasingRequestService.SaveErpCode(model.Id, model.ErpCode);
             return Ok();
         }
     }
