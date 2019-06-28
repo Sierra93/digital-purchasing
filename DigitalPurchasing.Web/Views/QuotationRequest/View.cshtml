@@ -29,10 +29,11 @@
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <td>Код</td>
-                        <td>Название</td>
-                        <td>Кол-во</td>
-                        <td>ЕИ</td>
+                        <th>Код</th>
+                        <th>Название</th>
+                        <th>Кол-во</th>
+                        <th>ЕИ</th>
+                        <th>Поставщики, кому уже отправлен запрос</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -41,6 +42,7 @@
                         <td>{{item.name}}</td>
                         <td>{{item.qty | decimal}}</td>
                         <td>{{item.uom}}</td>
+                        <td>{{sentToSuppliers(item.categoryId)}}</td>
                     </tr>
                 </tbody>
             </table>
@@ -87,6 +89,8 @@
                                 <th>Поставщик</th>
                                 <th>Сотрудник</th>
                                 <th>E-mail</th>
+                                <th>Телефон</th>
+                                <th>Моб.телефон</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -95,6 +99,8 @@
                                 <td>{{req.supplierName}}</td>
                                 <td>{{req.personFullName}}</td>
                                 <td>{{req.email}}</td>
+                                <td>{{req.phoneNumber}}</td>
+                                <td>{{req.mobilePhoneNumber}}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -241,6 +247,14 @@
                     },
                     modalSendEmailsOk: function() {
                         this.modalSendEmails = false;
+                    },
+                    sentToSuppliers(categoryId) {
+                        var requests = _.filter(this.requests, function(item) {
+                            return _.indexOf(item.categoryIds, categoryId) > -1;
+                        });
+                        if (requests.length === 0) return '';
+                        var names = _.map(requests, 'supplierName');
+                        return _.join(names, ', ');
                     }
                 }
             });
