@@ -60,6 +60,7 @@ namespace DigitalPurchasing.Core.Interfaces
             public string Name { get; set; }
             public string Uom { get; set; }
             public string Qty { get; set; }
+            public Guid CategoryId { get; set; }
         }
 
         public QuotationRequestViewData(string company, string customer)
@@ -83,11 +84,11 @@ namespace DigitalPurchasing.Core.Interfaces
 
         private void AddItem(string key, NomenclatureItem item) => Items[key].Add(item);
 
-        public void AddCompanyItem(string name, string code, string uom, string qty)
-            => AddItem(_company, new NomenclatureItem { Code = code, Name = name, Uom = uom, Qty = qty });
+        public void AddCompanyItem(Guid categoryId, string name, string code, string uom, string qty)
+            => AddItem(_company, new NomenclatureItem { Code = code, Name = name, Uom = uom, Qty = qty, CategoryId = categoryId });
 
-        public void AddCustomerItem(string name, string code, string uom, string qty)
-            => AddItem(_customer, new NomenclatureItem { Code = code, Name = name, Uom = uom, Qty = qty });
+        public void AddCustomerItem(Guid categoryId, string name, string code, string uom, string qty)
+            => AddItem(_customer, new NomenclatureItem { Code = code, Name = name, Uom = uom, Qty = qty, CategoryId = categoryId });
 
         public IEnumerable<NomenclatureItem> GetCompanyItems() => Items[_company];
     }
@@ -99,5 +100,8 @@ namespace DigitalPurchasing.Core.Interfaces
         public string PersonFullName { get; set; }
         public string Email { get; set; }
         public DateTime CreatedOn { get; set; }
+        public List<Guid> CategoryIds { get; set; }
+        public string PhoneNumber { get; set; }
+        public string MobilePhoneNumber { get; set; }
     }
 }

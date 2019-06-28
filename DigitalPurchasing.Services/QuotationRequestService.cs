@@ -141,32 +141,33 @@ namespace DigitalPurchasing.Services
                       where qr.Id == qrId
                       select new
                       {
-                          id = item.Id,
-                          companyName = item.CompanyName,
-                          customerName = item.CustomerName
+                          item.Id,
+                          item.CompanyName,
+                          item.CustomerName
                       }).First();
 
-            var data = _purchaseRequestService.MatchItemsData(pr.id);
+            var data = _purchaseRequestService.MatchItemsData(pr.Id);
             var uniqueCategoryIds = data.Items.Select(_ => _.NomenclatureCategoryId).Distinct();
             var sentRequests = GetSentRequests(qrId);
             var suppliersByCategories = _supplierService.GetByCategoryIds(uniqueCategoryIds.ToArray())
                 .Where(s => !sentRequests.Any(sr => sr.SupplierId == s.Id));
-            var result = new QuotationRequestViewData(pr.companyName, pr.customerName)
+            
+            var result = new QuotationRequestViewData(pr.CompanyName, pr.CustomerName)
             {
-                SentRequests = sentRequests,
                 ApplicableSuppliers = suppliersByCategories.Select(q => new QuotationRequestApplicableSupplier
                 {
                     Id = q.Id,
                     Name = q.Name
-                }).ToList()
+                }).ToList(),
+                SentRequests = sentRequests
             };
 
             foreach (var dataItem in data.Items)
             {
                 var factor = dataItem.CommonFactor > 0 ? dataItem.CommonFactor : dataItem.NomenclatureFactor;
                 var companyQty = dataItem.RawQty * factor;
-                result.AddCompanyItem(dataItem.NomenclatureName, dataItem.NomenclatureCode, dataItem.NomenclatureUom, companyQty.ToString(CultureInfo.InvariantCulture));
-                result.AddCustomerItem(dataItem.RawName, dataItem.RawCode, dataItem.RawUom, dataItem.RawQty.ToString(CultureInfo.InvariantCulture));
+                result.AddCompanyItem(dataItem.NomenclatureCategoryId, dataItem.NomenclatureName, dataItem.NomenclatureCode, dataItem.NomenclatureUom, companyQty.ToString(CultureInfo.InvariantCulture));
+                result.AddCustomerItem(dataItem.NomenclatureCategoryId, dataItem.RawName, dataItem.RawCode, dataItem.RawUom, dataItem.RawQty.ToString(CultureInfo.InvariantCulture));
             }
 
             return result;
@@ -292,14 +293,31 @@ namespace DigitalPurchasing.Services
                 .Where(q => q.RequestId == quotationRequestId)
                 .ToList();
 
-            return entities.Select(q => new SentRequest
+            var requests = new List<SentRequest>();
+
+            foreach (var entity in entities)
             {
-                CreatedOn = q.CreatedOn,
-                SupplierId = q.ContactPerson.SupplierId,
-                SupplierName = q.ContactPerson.Supplier.Name,
-                PersonFullName = q.ContactPerson.FullName,
-                Email = q.ContactPerson.Email
-            }).ToList();
+                var categoryIds = _supplierService.GetSupplierNomenclatureCategories(entity.ContactPerson.SupplierId)
+                    .Where(q => q.NomenclatureCategoryId.HasValue)
+                    .Select(q => q.NomenclatureCategoryId.Value)
+                    .ToList();
+
+                var request = new SentRequest
+                {
+                    CreatedOn = entity.CreatedOn,
+                    SupplierId = entity.ContactPerson.SupplierId,
+                    SupplierName = entity.ContactPerson.Supplier.Name,
+                    PersonFullName = entity.ContactPerson.FullName,
+                    Email = entity.ContactPerson.Email,
+                    CategoryIds = categoryIds,
+                    PhoneNumber = entity.ContactPerson.PhoneNumber,
+                    MobilePhoneNumber = entity.ContactPerson.MobilePhoneNumber
+                };
+
+                requests.Add(request);
+            }
+
+            return requests;
         }
 
         public string QuotationRequestToUid(Guid quotationRequestId)
