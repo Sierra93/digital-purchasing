@@ -15,6 +15,7 @@ using DigitalPurchasing.ExcelReader;
 using DigitalPurchasing.Models;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace DigitalPurchasing.Services
 {
@@ -166,8 +167,20 @@ namespace DigitalPurchasing.Services
             {
                 var factor = dataItem.CommonFactor > 0 ? dataItem.CommonFactor : dataItem.NomenclatureFactor;
                 var companyQty = dataItem.RawQty * factor;
-                result.AddCompanyItem(dataItem.NomenclatureCategoryId, dataItem.NomenclatureName, dataItem.NomenclatureCode, dataItem.NomenclatureUom, companyQty.ToString(CultureInfo.InvariantCulture));
-                result.AddCustomerItem(dataItem.NomenclatureCategoryId, dataItem.RawName, dataItem.RawCode, dataItem.RawUom, dataItem.RawQty.ToString(CultureInfo.InvariantCulture));
+
+                result.Items.Add(new QuotationRequestViewData.NomenclatureItem
+                {
+                    Id = dataItem.Id,
+                    CategoryId = dataItem.NomenclatureCategoryId,
+                    CompanyName = dataItem.NomenclatureName,
+                    CompanyCode = dataItem.NomenclatureCode,
+                    CompanyUom = dataItem.NomenclatureUom,
+                    CompanyQty = companyQty,
+                    CustomerName  = dataItem.RawName,
+                    CustomerCode = dataItem.RawCode,
+                    CustomerUom = dataItem.RawUom,
+                    CustomerQty = dataItem.RawQty
+                });
             }
 
             return result;
@@ -206,26 +219,54 @@ namespace DigitalPurchasing.Services
             }
         }
 
-        public async Task SendRequests(Guid userId, Guid quotationRequestId, IReadOnlyList<Guid> suppliers)
+        public async Task SendRequests(
+            Guid userId,
+            Guid quotationRequestId,
+            IReadOnlyList<Guid> suppliers,
+            IReadOnlyList<(Guid SupplierId, Guid ItemId)> itemSuppliers)
         {
             var qr = GetById(quotationRequestId);
             if (qr == null) return;
 
-            foreach (var supplierId in suppliers)
+            var uniqueSuppliers = suppliers.Union(itemSuppliers.Select(q => q.SupplierId)).Distinct().ToList();
+
+            foreach (var supplierId in uniqueSuppliers)
             {
                 var contacts =
                     _supplierService.GetContactPersonsBySupplier(supplierId, whichCouldBeUsedForRequestsOnly: true);
 
                 if (contacts.Any())
                 {
-                    // create excel and save
-                    var categoryIds = _supplierService
-                        .GetSupplierNomenclatureCategories(supplierId)
-                        .Where(q => q.NomenclatureCategoryId.HasValue)
-                        .Select(q => q.NomenclatureCategoryId.Value)
-                        .ToArray();
+                    byte[] excelBytes;
 
-                    var excelBytes = GenerateExcelForQR(quotationRequestId, categoryIds);
+                    var byCategory = suppliers.Contains(supplierId);
+
+                    string data;
+
+                    if (byCategory)
+                    {
+                        var categoryIds = _supplierService
+                            .GetSupplierNomenclatureCategories(supplierId)
+                            .Where(q => q.NomenclatureCategoryId.HasValue)
+                            .Select(q => q.NomenclatureCategoryId.Value)
+                            .ToArray();
+
+                        data = JsonConvert.SerializeObject(categoryIds);
+
+                        excelBytes = GenerateExcelByCategory(quotationRequestId, categoryIds);
+                    }
+                    else
+                    {
+                        var itemIds = itemSuppliers
+                            .Where(q => q.SupplierId == supplierId)
+                            .Select(q => q.ItemId)
+                            .ToArray();
+
+                        data = JsonConvert.SerializeObject(itemIds);
+
+                        excelBytes = GenerateExcelByItem(quotationRequestId, itemIds);
+                    }
+                    
                     var filename = $"RFQ_{qr.CreatedOn:yyyyMMdd}_{qr.PublicId}.xlsx";
                     var filepath = Path.Combine(Path.GetTempPath(), filename);
                     using (var fs = new FileStream(filepath, FileMode.Create, FileAccess.Write))
@@ -242,7 +283,10 @@ namespace DigitalPurchasing.Services
                         await _db.QuotationRequestEmails.AddAsync(new QuotationRequestEmail
                         {
                             RequestId = qr.Id,
-                            ContactPersonId = contact.Id
+                            ContactPersonId = contact.Id,
+                            ByCategory = byCategory,
+                            ByItem = !byCategory,
+                            Data = data
                         });
                         await _db.SaveChangesAsync();
                     }
@@ -253,7 +297,7 @@ namespace DigitalPurchasing.Services
             }
         }
 
-        public byte[] GenerateExcelForQR(Guid quotationRequestId, params Guid[] categoryIds)
+        public byte[] GenerateExcelByCategory(Guid quotationRequestId, params Guid[] categoryIds)
         {
             var qr = _db.QuotationRequests.Find(quotationRequestId);
             var prId = qr.PurchaseRequestId;
@@ -266,6 +310,27 @@ namespace DigitalPurchasing.Services
                     .ToList();
             }
 
+            return GenerateExcel(data);
+        }
+
+        public byte[] GenerateExcelByItem(Guid quotationRequestId, params Guid[] itemIds)
+        {
+            var qr = _db.QuotationRequests.Find(quotationRequestId);
+            var prId = qr.PurchaseRequestId;
+            var data = _purchaseRequestService.MatchItemsData(prId);
+
+            if (itemIds != null && itemIds.Any())
+            {
+                data.Items = data.Items
+                    .Where(q => itemIds.Contains(q.Id))
+                    .ToList();
+            }
+
+            return GenerateExcel(data);
+        }
+
+        private byte[] GenerateExcel(PRMatchItemsResponse data)
+        {
             var items = new List<ExcelQr.DataItem>();
             foreach (var dataItem in data.Items)
             {
@@ -297,11 +362,21 @@ namespace DigitalPurchasing.Services
 
             foreach (var entity in entities)
             {
-                var categoryIds = _supplierService.GetSupplierNomenclatureCategories(entity.ContactPerson.SupplierId)
-                    .Where(q => q.NomenclatureCategoryId.HasValue)
-                    .Select(q => q.NomenclatureCategoryId.Value)
-                    .ToList();
+                var categoryIds = new List<Guid>();
+                if (entity.ByCategory || ( !entity.ByItem && !entity.ByCategory ))
+                {
+                    categoryIds = _supplierService.GetSupplierNomenclatureCategories(entity.ContactPerson.SupplierId)
+                        .Where(q => q.NomenclatureCategoryId.HasValue)
+                        .Select(q => q.NomenclatureCategoryId.Value)
+                        .ToList();
+                }
 
+                var itemIds = new List<Guid>();
+                if (entity.ByItem)
+                {
+                    itemIds = JsonConvert.DeserializeObject<List<Guid>>(entity.Data);
+                }
+                
                 var request = new SentRequest
                 {
                     CreatedOn = entity.CreatedOn,
@@ -309,9 +384,12 @@ namespace DigitalPurchasing.Services
                     SupplierName = entity.ContactPerson.Supplier.Name,
                     PersonFullName = entity.ContactPerson.FullName,
                     Email = entity.ContactPerson.Email,
-                    CategoryIds = categoryIds,
                     PhoneNumber = entity.ContactPerson.PhoneNumber,
-                    MobilePhoneNumber = entity.ContactPerson.MobilePhoneNumber
+                    MobilePhoneNumber = entity.ContactPerson.MobilePhoneNumber,
+                    ByCategory = entity.ByCategory,
+                    CategoryIds = categoryIds,
+                    ByItem = entity.ByItem,
+                    ItemIds = itemIds
                 };
 
                 requests.Add(request);
