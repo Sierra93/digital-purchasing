@@ -13,10 +13,12 @@ namespace DigitalPurchasing.Core.Interfaces
         QuotationRequestVm GetById(Guid id, bool globalSearch = false);
         QuotationRequestViewData GetViewData(Guid qrId);
         DeleteResultVm Delete(Guid id);
-        Task SendRequests(Guid userId, Guid quotationRequestId, IReadOnlyList<Guid> suppliers);
+        Task SendRequests(Guid userId, Guid quotationRequestId, IReadOnlyList<Guid> suppliers,
+            IReadOnlyList<(Guid SupplierId, Guid ItemId)> itemSuppliers);
         string QuotationRequestToUid(Guid quotationRequestId);
         Guid? UidToQuotationRequest(string uid);
-        byte[] GenerateExcelForQR(Guid quotationRequestId, params Guid[] categoryIds);
+        byte[] GenerateExcelByCategory(Guid quotationRequestId, params Guid[] categoryIds);
+        byte[] GenerateExcelByItem(Guid quotationRequestId, params Guid[] itemIds);
         List<SentRequest> GetSentRequests(Guid quotationRequestId);
     }
 
@@ -51,46 +53,39 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class QuotationRequestViewData
     {
-        private readonly string _company;
-        private readonly string _customer;
-
         public class NomenclatureItem
         {
-            public string Code { get; set; }
-            public string Name { get; set; }
-            public string Uom { get; set; }
-            public string Qty { get; set; }
+            public string CompanyCode { get; set; }
+            public string CompanyName { get; set; }
+            public string CompanyUom { get; set; }
+            public decimal CompanyQty { get; set; }
+
+            public string CustomerCode { get; set; }
+            public string CustomerName { get; set; }
+            public string CustomerUom { get; set; }
+            public decimal CustomerQty { get; set; }
+
             public Guid CategoryId { get; set; }
+            public Guid Id { get; set; }
         }
 
         public QuotationRequestViewData(string company, string customer)
         {
             SentRequests = new List<SentRequest>();
             ApplicableSuppliers = new List<QuotationRequestApplicableSupplier>();
-            Items = new Dictionary<string, List<NomenclatureItem>>
-            {
-                { company, new List<NomenclatureItem>() },
-                { customer, new List<NomenclatureItem>() }
-            };
-            _company = company;
-            _customer = customer;
+            Items = new List<NomenclatureItem>();
+            Company = company;
+            Customer = customer;
         }
+
+        public string Company { get; }
+        public string Customer { get; }
 
         public List<QuotationRequestApplicableSupplier> ApplicableSuppliers { get; set; }
 
         public List<SentRequest> SentRequests { get; set; }
 
-        public Dictionary<string, List<NomenclatureItem>> Items { get; set; }
-
-        private void AddItem(string key, NomenclatureItem item) => Items[key].Add(item);
-
-        public void AddCompanyItem(Guid categoryId, string name, string code, string uom, string qty)
-            => AddItem(_company, new NomenclatureItem { Code = code, Name = name, Uom = uom, Qty = qty, CategoryId = categoryId });
-
-        public void AddCustomerItem(Guid categoryId, string name, string code, string uom, string qty)
-            => AddItem(_customer, new NomenclatureItem { Code = code, Name = name, Uom = uom, Qty = qty, CategoryId = categoryId });
-
-        public IEnumerable<NomenclatureItem> GetCompanyItems() => Items[_company];
+        public List<NomenclatureItem> Items { get; set; }
     }
 
     public class SentRequest
@@ -103,5 +98,8 @@ namespace DigitalPurchasing.Core.Interfaces
         public List<Guid> CategoryIds { get; set; }
         public string PhoneNumber { get; set; }
         public string MobilePhoneNumber { get; set; }
+        public bool ByCategory { get; set; }
+        public bool ByItem { get; set; }
+        public List<Guid> ItemIds { get; set; }
     }
 }
