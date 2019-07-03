@@ -41,18 +41,44 @@ namespace DigitalPurchasing.Services
                 sortField = "Id";
             }
 
-            var qry =  _db.CompetitionLists.AsNoTracking();
+            var qry =  _db.CompetitionLists
+                .Include(q => q.QuotationRequest)
+                    .ThenInclude(q => q.PurchaseRequest)
+                .AsNoTracking();
             var total = qry.Count();
             var orderedResults = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}");
-            var result = orderedResults
+            var results = orderedResults
                 .Skip((page-1)*perPage)
                 .Take(perPage)
                 .ProjectToType<CompetitionListIndexDataItem>()
                 .ToList();
 
+            var ids = results
+                .Select(q => q.Id)
+                .ToList();
+
+            var clSuppliers = _db.SupplierOffers
+                .Include(q => q.Supplier)
+                .Where(q => ids.Contains(q.CompetitionListId))
+                .Select(q => new
+                {
+                    CLId = q.CompetitionListId,
+                    SupplierName = q.Supplier.Name
+                })
+                .ToList();
+
+            foreach (var resultItem in results)
+            {
+                var itemSuppliers = clSuppliers.Where(q => q.CLId == resultItem.Id).ToList();
+                if (itemSuppliers.Any())
+                {
+                    resultItem.Suppliers = string.Join(", ", itemSuppliers.Select(q => q.SupplierName));
+                }
+            }
+
             return new CompetitionListIndexData
             {
-                Data = result,
+                Data = results,
                 Total = total
             };
         }

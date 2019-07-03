@@ -14,8 +14,8 @@
             <div class="form-group">
                 <label>Номенклатура предприятия:&nbsp;</label>
                 <select v-model="selectedCompany" class="form-control">
-                    <option v-bind:value="keys[0]">{{keys[0]}}</option>
-                    <option v-bind:value="keys[1]">{{keys[1]}}</option>
+                    <option value="0">{{companyName}}</option>
+                    <option value="1">{{customerName}}</option>
                 </select>
             </div>
         </div>
@@ -29,18 +29,47 @@
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <td>Код</td>
-                        <td>Название</td>
-                        <td>Кол-во</td>
-                        <td>ЕИ</td>
+                        <th>Код</th>
+                        <th>Название</th>
+                        <th>Кол-во</th>
+                        <th>ЕИ</th>
+                        <th>Поставщики, кому уже отправлен запрос</th>
+                        <th>Поставщики, кому будет отправлен запрос</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="item in selectedItems">
-                        <td>{{item.code}}</td>
-                        <td>{{item.name}}</td>
-                        <td>{{item.qty | decimal}}</td>
-                        <td>{{item.uom}}</td>
+                    <tr v-for="(item, index) in items">
+                        <td>{{selectedCompany == 0 ? item.companyCode : item.customerCode}}</td>
+                        <td>{{selectedCompany == 0 ? item.companyName : item.customerName }}</td>
+                        <td>{{(selectedCompany == 0 ? item.companyQty : item.customerQty) | decimal}}</td>
+                        <td>{{selectedCompany == 0 ? item.companyUom : item.customerUom}}</td>
+                        <td>{{sentToSuppliers(item)}}</td>
+                        <td>
+                            <item-request v-for="request in item.requests"
+                                          :key="(request.itemId+request.supplierId)"
+                                          :item-id="request.itemId"
+                                          :supplier-id="request.supplierId"
+                                          :supplier-name="request.supplierName"
+                                          v-on:remove-item="removeItemRequest">
+                            </item-request>
+                        </td>
+                        <td>
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="" v-model.trim="item.requestName" v-bind:id="('item-request-supplier-'+index)" autocomplete="off" />
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" type="button" v-on:click="addItemRequest(item)">Добавить</button>
+                                </span>
+                            </div>
+                            <typeahead v-model="item.requestAutocomplete"
+                                       force-select
+                                       force-clear
+                                       v-bind:target="('#item-request-supplier-'+index)"
+                                       async-src="@Url.Action("Autocomplete", "Supplier")?q="
+                                       async-key="items"
+                                       item-key="name">
+                            </typeahead>
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -87,6 +116,8 @@
                                 <th>Поставщик</th>
                                 <th>Сотрудник</th>
                                 <th>E-mail</th>
+                                <th>Телефон</th>
+                                <th>Моб.телефон</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -95,6 +126,8 @@
                                 <td>{{req.supplierName}}</td>
                                 <td>{{req.personFullName}}</td>
                                 <td>{{req.email}}</td>
+                                <td>{{req.phoneNumber}}</td>
+                                <td>{{req.mobilePhoneNumber}}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -114,7 +147,11 @@
 {
     <partial name="~/Views/Shared/Delivery/_AddressFormComponent.cshtml" />
     <script>
-        (function() {
+        (function () {
+            Vue.component('item-request', {
+                props: ['supplierName', 'supplierId', 'itemId'],
+                template: '<div style="display: inline-block; margin-right: 10px;"><span>{{supplierName}}</span>&nbsp;<button v-on:click="$emit(\'remove-item\', itemId, supplierId)"><i class="far fa-trash-alt"></i></button></div>'
+            });
             var app = new Vue({
                 el: '#app',
                 data: function() {
@@ -122,24 +159,21 @@
                         qrId: '@Model.Id',
                         items: [],
                         requests: [],
-                        selectedCompany: '',
                         suppliers: [],
+                        selectedCompany: 0,
                         sendingInProgress: false,
-                        modalSendEmails: false
+                        modalSendEmails: false,
+                        companyName: '',
+                        customerName: ''
                     };
                 },
                 created: function() {
                     this.load();
                 },
                 computed: {
-                    keys: function() {
-                        return Object.keys(this.items);
-                    },
-                    selectedItems: function() {
-                        return this.items[this.selectedCompany];
-                    },
                     canSendEmails: function() {
-                        return !this.sendingInProgress && this.suppliersIds.length > 0;
+                        return !this.sendingInProgress &&
+                            (this.suppliersIds.length > 0 || this.itemsSuppliersIds.length > 0);
                     },
                     suppliersIds: function() {
                         var validSuppliers = _.filter(this.suppliers, function(supplier) {
@@ -154,6 +188,18 @@
                         });
 
                         return _.uniq(ids);
+                    },
+                    itemsSuppliersIds: function () {
+                        var result = [];
+                        _.each(this.items, function (item) {
+                            _.each(item.requests, function(req) {
+                                result.push({
+                                    supplierId: req.supplierId,
+                                    itemId: req.itemId
+                                });
+                            });
+                        });
+                        return result;
                     },
                     sendEmailsText: function() {
                         return this.sendingInProgress ? 'Отправка...' : 'Отправить запрос КП';
@@ -190,10 +236,13 @@
                 methods: {
                     load: function () {
                         var vm = this;
-                        this.$http.get('@Url.Action(nameof(QuotationRequestController.ViewDData))?qrId=' + this.qrId).then(function(res) {
-                            vm.items = res.data.items;
+                        this.$http.get('@Url.Action(nameof(QuotationRequestController.ViewDData))?qrId=' + this.qrId).then(function (res) {
+                            vm.companyName = res.data.company;
+                            vm.customerName = res.data.customer;
+                            vm.items = _.map(res.data.items, function (item) {
+                                return _.extend(item, { requests: [], requestName: null, requestAutocomplete: null });
+                            });
                             vm.requests = res.data.sentRequests;
-                            vm.selectedCompany = vm.keys[0];
                             _.each(res.data.applicableSuppliers, function (supplier) {
                                 vm.suppliers.push({
                                     autocomplete: supplier,
@@ -227,8 +276,13 @@
                     sendEmailsToSupplier: function() {
                         var vm = this;
                         vm.sendingInProgress = true;
+                        var postData = {
+                            id: vm.qrId,
+                            suppliers: vm.suppliersIds,
+                            itemSuppliers: vm.itemsSuppliersIds
+                        };
                         vm.$http
-                            .post('@Url.Action(nameof(QuotationRequestController.SentRequests))', { id: vm.qrId, suppliers: vm.suppliersIds })
+                            .post('@Url.Action(nameof(QuotationRequestController.SentRequests))', postData)
                             .then(function(res) {
                                 var data = res.data;
                                 vm.requests = data;
@@ -241,6 +295,50 @@
                     },
                     modalSendEmailsOk: function() {
                         this.modalSendEmails = false;
+                    },
+                    sentToSuppliers: function (item) {
+                        var requestsByCategory = _.filter(this.requests, function(request) {
+                            return _.indexOf(request.categoryIds, item.categoryId) > -1;
+                        });
+                        var requestsByItem = _.filter(this.requests, function(request) {
+                            return _.indexOf(request.itemIds, item.id) > -1;
+                        });
+                        if (requestsByCategory.length === 0 && requestsByItem.length === 0) return '';
+                        var requestsByCategoryNames = _.map(requestsByCategory, 'supplierName');
+                        var requestsByItemNames = _.map(requestsByItem, 'supplierName');
+
+                        var names = _.union(requestsByCategoryNames, requestsByItemNames);
+
+                        return _.join(names, ', ');
+                    },
+                    addItemRequest: function (item) {
+                        if (!item.requestAutocomplete) return;
+
+                        var index = _.findIndex(item.requests, function(r) {
+                            return r.supplierId === item.requestAutocomplete.id
+                                && r.itemId === item.itemId;
+                        });
+
+                        if (index > -1) return;
+
+                        item.requests.push({
+                            supplierId: item.requestAutocomplete.id,
+                            supplierName: item.requestAutocomplete.name,
+                            itemId: item.id
+                        });
+
+                        item.requestAutocomplete = null;
+                        item.requestName = null;
+                    },
+                    removeItemRequest: function (itemId, supplierId) {
+                        _.each(this.items, function (item) {
+                            var index = _.findIndex(item.requests, function(r) {
+                                return r.itemId === itemId && r.supplierId === supplierId;
+                            });
+                            if (index > -1) {
+                                item.requests = _.slice(item.requests, index, index);
+                            }
+                        });
                     }
                 }
             });

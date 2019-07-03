@@ -12,11 +12,17 @@
     <div class="row">
         <div class="col-md-4">
             <div class="form-group" v-bind:class="customerNameClass">
-                <label for="customer">Клиент</label>
+                <label for="customerName">Клиент</label>
                 <input type="text" class="form-control" placeholder="" v-model.trim="customerName" v-on:input="updateCustomerName" id="customerName">
                 <typeahead v-model="customerAutocomplete" target="#customerName" :async-function="customerAutocompleteFunc" item-key="name"></typeahead>
                 <span class="help-block" v-show="customerNameHasError">Укажите имя клиента</span>
                 <span class="help-block" v-show="isNewCustomer">Новый клиент</span>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="form-group">
+                <label for="erp-code">№ заявки в ERP</label>
+                <input type="text" class="form-control" id="erp-code" v-model.trim="erpCode" v-on:input="updateErpCode" />
             </div>
         </div>
         @*<div class="col-md-4">
@@ -89,6 +95,7 @@
                         customerName: '',
                         customerId: null,
                         customerAutocomplete: null,
+                        erpCode: null,
                         // { code: '123-321', name: 'Болт 123-321 XYZ', uom: 'шт.', qty: 100 }
                         rows: [],
                         saveRawItemsStarted: false
@@ -101,6 +108,7 @@
                         vm.rows = data.items;
                         vm.customerName = data.customerName;
                         vm.customerId = data.customerId;
+                        vm.erpCode = data.erpCode;
                     }, response => {
                         alert('error');
                     });
@@ -173,6 +181,13 @@
                     updateCustomerName: _.debounce(function (e) {
                         var data = { name: this.customerName, id: this.prId, customerId: this.customerId  };
                         this.$http.post('@Url.Action("SaveCustomerName", "PurchaseRequest")', data).then(function(res) {
+                        }, function(res) {
+                            alert('error');
+                        });
+                    }, 300),
+                    updateErpCode: _.debounce(function (e) {
+                        var data = { id: this.prId, erpCode: this.erpCode  };
+                        this.$http.post('@Url.Action("SaveErpCode", "PurchaseRequest")', data).then(function(res) {
                         }, function(res) {
                             alert('error');
                         });

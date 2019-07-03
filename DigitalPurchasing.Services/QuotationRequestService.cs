@@ -15,6 +15,7 @@ using DigitalPurchasing.ExcelReader;
 using DigitalPurchasing.Models;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace DigitalPurchasing.Services
 {
@@ -58,7 +59,7 @@ namespace DigitalPurchasing.Services
                 sortField = "Id";
             }
 
-            var qry =  _db.QuotationRequests.AsNoTracking();
+            var qry =  _db.QuotationRequests.Include(q => q.PurchaseRequest).AsNoTracking();
             var total = qry.Count();
             var orderedResults = qry.OrderBy($"{sortField}{(sortAsc?"":" DESC")}");
             var result = orderedResults
@@ -141,32 +142,45 @@ namespace DigitalPurchasing.Services
                       where qr.Id == qrId
                       select new
                       {
-                          id = item.Id,
-                          companyName = item.CompanyName,
-                          customerName = item.CustomerName
+                          item.Id,
+                          item.CompanyName,
+                          item.CustomerName
                       }).First();
 
-            var data = _purchaseRequestService.MatchItemsData(pr.id);
+            var data = _purchaseRequestService.MatchItemsData(pr.Id);
             var uniqueCategoryIds = data.Items.Select(_ => _.NomenclatureCategoryId).Distinct();
             var sentRequests = GetSentRequests(qrId);
             var suppliersByCategories = _supplierService.GetByCategoryIds(uniqueCategoryIds.ToArray())
                 .Where(s => !sentRequests.Any(sr => sr.SupplierId == s.Id));
-            var result = new QuotationRequestViewData(pr.companyName, pr.customerName)
+            
+            var result = new QuotationRequestViewData(pr.CompanyName, pr.CustomerName)
             {
-                SentRequests = sentRequests,
-                ApplicableSuppliers = suppliersByCategories.Select(_ => new QuotationRequestApplicableSupplier
+                ApplicableSuppliers = suppliersByCategories.Select(q => new QuotationRequestApplicableSupplier
                 {
-                    Id = _.Id,
-                    Name = _.Name
-                }).ToList()
+                    Id = q.Id,
+                    Name = q.Name
+                }).ToList(),
+                SentRequests = sentRequests
             };
 
             foreach (var dataItem in data.Items)
             {
                 var factor = dataItem.CommonFactor > 0 ? dataItem.CommonFactor : dataItem.NomenclatureFactor;
                 var companyQty = dataItem.RawQty * factor;
-                result.AddCompanyItem(dataItem.NomenclatureName, dataItem.NomenclatureCode, dataItem.NomenclatureUom, companyQty.ToString(CultureInfo.InvariantCulture));
-                result.AddCustomerItem(dataItem.RawName, dataItem.RawCode, dataItem.RawUom, dataItem.RawQty.ToString(CultureInfo.InvariantCulture));
+
+                result.Items.Add(new QuotationRequestViewData.NomenclatureItem
+                {
+                    Id = dataItem.Id,
+                    CategoryId = dataItem.NomenclatureCategoryId,
+                    CompanyName = dataItem.NomenclatureName,
+                    CompanyCode = dataItem.NomenclatureCode,
+                    CompanyUom = dataItem.NomenclatureUom,
+                    CompanyQty = companyQty,
+                    CustomerName  = dataItem.RawName,
+                    CustomerCode = dataItem.RawCode,
+                    CustomerUom = dataItem.RawUom,
+                    CustomerQty = dataItem.RawQty
+                });
             }
 
             return result;
@@ -205,52 +219,118 @@ namespace DigitalPurchasing.Services
             }
         }
 
-        public async Task SendRequests(Guid userId, Guid quotationRequestId, IReadOnlyList<Guid> suppliers)
+        public async Task SendRequests(
+            Guid userId,
+            Guid quotationRequestId,
+            IReadOnlyList<Guid> suppliers,
+            IReadOnlyList<(Guid SupplierId, Guid ItemId)> itemSuppliers)
         {
             var qr = GetById(quotationRequestId);
             if (qr == null) return;
 
-            // get supplier contacts
-            var contacts = suppliers.Select(supplierId => _supplierService.GetContactPersonsBySupplier(supplierId, whichCouldBeUsedForRequestsOnly: true))
-                .SelectMany(q => q)
-                .ToList();
+            var uniqueSuppliers = suppliers.Union(itemSuppliers.Select(q => q.SupplierId)).Distinct().ToList();
 
-            if (contacts.Any())
+            foreach (var supplierId in uniqueSuppliers)
             {
-                // create excel and save
-                var excelBytes = GenerateExcelForQR(quotationRequestId);
-                var filename = $"RFQ_{qr.CreatedOn:yyyyMMdd}_{qr.PublicId}.xlsx";
-                var filepath = Path.Combine(Path.GetTempPath(), filename);
-                using (var fs = new FileStream(filepath, FileMode.Create, FileAccess.Write))
-                {
-                    fs.Write(excelBytes, 0, excelBytes.Length);
-                }
+                var contacts =
+                    _supplierService.GetContactPersonsBySupplier(supplierId, whichCouldBeUsedForRequestsOnly: true);
 
-                // send emails for each contact
-                var emailUid = QuotationRequestToUid(quotationRequestId);
-                var userInfo = _userService.GetUserInfo(userId);
-                foreach (var contact in contacts)
+                if (contacts.Any())
                 {
-                    await _emailService.SendRFQEmail(qr, userInfo, contact, emailUid, filepath);
-                    await _db.QuotationRequestEmails.AddAsync(new QuotationRequestEmail
+                    byte[] excelBytes;
+
+                    var byCategory = suppliers.Contains(supplierId);
+
+                    string data;
+
+                    if (byCategory)
                     {
-                        RequestId = qr.Id,
-                        ContactPersonId = contact.Id
-                    });
-                    await _db.SaveChangesAsync();
-                }
+                        var categoryIds = _supplierService
+                            .GetSupplierNomenclatureCategories(supplierId)
+                            .Where(q => q.NomenclatureCategoryId.HasValue)
+                            .Select(q => q.NomenclatureCategoryId.Value)
+                            .ToArray();
 
-                var rootId = await _rootService.GetIdByQR(quotationRequestId);
-                await _rootService.SetStatus(rootId, RootStatus.QuotationRequestSent);
+                        data = JsonConvert.SerializeObject(categoryIds);
+
+                        excelBytes = GenerateExcelByCategory(quotationRequestId, categoryIds);
+                    }
+                    else
+                    {
+                        var itemIds = itemSuppliers
+                            .Where(q => q.SupplierId == supplierId)
+                            .Select(q => q.ItemId)
+                            .ToArray();
+
+                        data = JsonConvert.SerializeObject(itemIds);
+
+                        excelBytes = GenerateExcelByItem(quotationRequestId, itemIds);
+                    }
+                    
+                    var filename = $"RFQ_{qr.CreatedOn:yyyyMMdd}_{qr.PublicId}.xlsx";
+                    var filepath = Path.Combine(Path.GetTempPath(), filename);
+                    using (var fs = new FileStream(filepath, FileMode.Create, FileAccess.Write))
+                    {
+                        fs.Write(excelBytes, 0, excelBytes.Length);
+                    }
+
+                    // send emails for each contact
+                    var emailUid = QuotationRequestToUid(quotationRequestId);
+                    var userInfo = _userService.GetUserInfo(userId);
+                    foreach (var contact in contacts)
+                    {
+                        await _emailService.SendRFQEmail(qr, userInfo, contact, emailUid, filepath);
+                        await _db.QuotationRequestEmails.AddAsync(new QuotationRequestEmail
+                        {
+                            RequestId = qr.Id,
+                            ContactPersonId = contact.Id,
+                            ByCategory = byCategory,
+                            ByItem = !byCategory,
+                            Data = data
+                        });
+                        await _db.SaveChangesAsync();
+                    }
+
+                    var rootId = await _rootService.GetIdByQR(quotationRequestId);
+                    await _rootService.SetStatus(rootId, RootStatus.QuotationRequestSent);
+                }
             }
         }
 
-        public byte[] GenerateExcelForQR(Guid quotationRequestId)
+        public byte[] GenerateExcelByCategory(Guid quotationRequestId, params Guid[] categoryIds)
         {
             var qr = _db.QuotationRequests.Find(quotationRequestId);
             var prId = qr.PurchaseRequestId;
-            var data = _purchaseRequestService.MatchItemsData(prId);;
+            var data = _purchaseRequestService.MatchItemsData(prId);
 
+            if (categoryIds != null && categoryIds.Any())
+            {
+                data.Items = data.Items
+                    .Where(q => categoryIds.Contains(q.NomenclatureCategoryId))
+                    .ToList();
+            }
+
+            return GenerateExcel(data);
+        }
+
+        public byte[] GenerateExcelByItem(Guid quotationRequestId, params Guid[] itemIds)
+        {
+            var qr = _db.QuotationRequests.Find(quotationRequestId);
+            var prId = qr.PurchaseRequestId;
+            var data = _purchaseRequestService.MatchItemsData(prId);
+
+            if (itemIds != null && itemIds.Any())
+            {
+                data.Items = data.Items
+                    .Where(q => itemIds.Contains(q.Id))
+                    .ToList();
+            }
+
+            return GenerateExcel(data);
+        }
+
+        private byte[] GenerateExcel(PRMatchItemsResponse data)
+        {
             var items = new List<ExcelQr.DataItem>();
             foreach (var dataItem in data.Items)
             {
@@ -278,14 +358,44 @@ namespace DigitalPurchasing.Services
                 .Where(q => q.RequestId == quotationRequestId)
                 .ToList();
 
-            return entities.Select(q => new SentRequest
+            var requests = new List<SentRequest>();
+
+            foreach (var entity in entities)
             {
-                CreatedOn = q.CreatedOn,
-                SupplierId = q.ContactPerson.SupplierId,
-                SupplierName = q.ContactPerson.Supplier.Name,
-                PersonFullName = q.ContactPerson.FullName,
-                Email = q.ContactPerson.Email
-            }).ToList();
+                var categoryIds = new List<Guid>();
+                if (entity.ByCategory || ( !entity.ByItem && !entity.ByCategory ))
+                {
+                    categoryIds = _supplierService.GetSupplierNomenclatureCategories(entity.ContactPerson.SupplierId)
+                        .Where(q => q.NomenclatureCategoryId.HasValue)
+                        .Select(q => q.NomenclatureCategoryId.Value)
+                        .ToList();
+                }
+
+                var itemIds = new List<Guid>();
+                if (entity.ByItem)
+                {
+                    itemIds = JsonConvert.DeserializeObject<List<Guid>>(entity.Data);
+                }
+                
+                var request = new SentRequest
+                {
+                    CreatedOn = entity.CreatedOn,
+                    SupplierId = entity.ContactPerson.SupplierId,
+                    SupplierName = entity.ContactPerson.Supplier.Name,
+                    PersonFullName = entity.ContactPerson.FullName,
+                    Email = entity.ContactPerson.Email,
+                    PhoneNumber = entity.ContactPerson.PhoneNumber,
+                    MobilePhoneNumber = entity.ContactPerson.MobilePhoneNumber,
+                    ByCategory = entity.ByCategory,
+                    CategoryIds = categoryIds,
+                    ByItem = entity.ByItem,
+                    ItemIds = itemIds
+                };
+
+                requests.Add(request);
+            }
+
+            return requests;
         }
 
         public string QuotationRequestToUid(Guid quotationRequestId)

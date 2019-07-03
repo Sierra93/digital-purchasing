@@ -463,7 +463,7 @@ namespace DigitalPurchasing.Web.Controllers
 
         private Guid FindCategoryId(Dictionary<Guid, string> categories, string categoryFullName)
         {
-            var name = categoryFullName.Split('>', StringSplitOptions.RemoveEmptyEntries).Last();
+            var name = categoryFullName.Split('>', StringSplitOptions.RemoveEmptyEntries).Select(q => q.Trim()).Last();
             return categories.First(q => q.Value.Equals(name, StringComparison.InvariantCultureIgnoreCase)).Key;
         }
     }

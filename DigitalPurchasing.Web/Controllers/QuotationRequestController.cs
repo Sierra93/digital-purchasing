@@ -18,9 +18,16 @@ namespace DigitalPurchasing.Web.Controllers
     {
         public class SentRequestsModel
         {
+            public class ItemSupplier
+            {
+                public Guid ItemId { get; set; }
+                public Guid SupplierId { get; set; }
+            }
+
             [JsonProperty("id")]
             public Guid QuotationRequestId { get; set; }
             public List<Guid> Suppliers { get; set; }
+            public List<ItemSupplier> ItemSuppliers { get; set; }
         }
 
         private readonly IQuotationRequestService _quotationRequestService;
@@ -68,7 +75,7 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult Download([FromQuery]Guid qrId)
         {
             var qr = _quotationRequestService.GetById(qrId);
-            var bytes = _quotationRequestService.GenerateExcelForQR(qrId);
+            var bytes = _quotationRequestService.GenerateExcelByCategory(qrId);
             var filename = $"RFQ_{qr.CreatedOn:yyyyMMdd}_{qr.PublicId}.xlsx";
             return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
         }
@@ -83,7 +90,13 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> SentRequests([FromBody] SentRequestsModel model)
         {
-            await _quotationRequestService.SendRequests(User.Id(), model.QuotationRequestId, model.Suppliers);
+            await _quotationRequestService.SendRequests(
+                User.Id(),
+                model.QuotationRequestId,
+                model.Suppliers,
+                model.ItemSuppliers
+                    .Select(q => (SupplierId: q.SupplierId, ItemId: q.ItemId))
+                    .ToList());
             var sentRequests = _quotationRequestService.GetSentRequests(model.QuotationRequestId);
             return Ok(sentRequests);
         }

@@ -194,7 +194,7 @@ namespace DigitalPurchasing.Services
                 .ProjectToType<RawItemResponse.RawItem>()
                 .ToList();
 
-            return new RawItemResponse { Items = items, CustomerName = pr.CustomerName };
+            return new RawItemResponse { Items = items, CustomerName = pr.CustomerName, ErpCode = pr.ErpCode };
         }
 
         public void SaveRawItems(Guid id, IEnumerable<RawItemResponse.RawItem> items)
@@ -375,6 +375,13 @@ namespace DigitalPurchasing.Services
             var qry = _db.QuotationRequests.AsQueryable();
             if (globalSearch) qry = qry.IgnoreQueryFilters();
             return qry.FirstOrDefault(q => q.Id == qrId)?.PurchaseRequestId ?? Guid.Empty;
+        }
+
+        public async Task SaveErpCode(Guid prId, string erpCode)
+        {
+            var pr = await _db.PurchaseRequests.FindAsync(prId);
+            pr.ErpCode = erpCode;
+            await _db.SaveChangesAsync();
         }
 
         public PurchaseRequestIndexData GetData(int page, int perPage, string sortField, bool sortAsc)

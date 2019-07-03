@@ -4,6 +4,7 @@
 
 @{
     var cl = Model.CompetitionList;
+    var hasErpCode = !string.IsNullOrEmpty(cl.PurchaseRequest.ErpCode);
     var reports = Model.Reports;
     ViewBag.Title = $"Конкурентный лист № {cl.PublicId} от {cl.CreatedOn:dd.MM.yyyy HH:mm}";
     Layout = "_Layout";
@@ -28,6 +29,7 @@
                         <b>Клиент: @cl.PurchaseRequest.CustomerName</b>&nbsp;
                         <a asp-action="Edit" asp-controller="PurchaseRequest" asp-route-id="@cl.PurchaseRequest.Id">@($"Заявка № {cl.PurchaseRequest.PublicId} от {cl.PurchaseRequest.CreatedOn:dd.MM.yyyy HH:mm}")</a>
                     </p>
+                    @if (hasErpCode) { <p>Номер заявки в ERP - @cl.PurchaseRequest.ErpCode</p> }
                 </div>
                 <table class="table table-striped">
                     <thead>
@@ -76,6 +78,7 @@
                             <b>Поставщик: @(so.SupplierName ?? "Не указан")</b>&nbsp;
                             <a asp-action="Edit" asp-controller="SupplierOffer" asp-route-id="@so.Id">@soTitle</a>
                         </p>
+                        @if (hasErpCode) { <p>&nbsp;</p> }
                     </div>
                     <table class="table table-striped with-left-border">
                         <thead>
