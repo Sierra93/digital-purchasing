@@ -303,7 +303,9 @@ namespace DigitalPurchasing.Services
             var prId = qr.PurchaseRequestId;
             var data = _purchaseRequestService.MatchItemsData(prId);
 
-            if (categoryIds != null && categoryIds.Any())
+            if (categoryIds != null
+                && categoryIds.Any()
+                && data.Items.Any(q => categoryIds.Contains(q.NomenclatureCategoryId)))
             {
                 data.Items = data.Items
                     .Where(q => categoryIds.Contains(q.NomenclatureCategoryId))
