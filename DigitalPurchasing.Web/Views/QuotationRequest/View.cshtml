@@ -291,7 +291,10 @@
                             }, function (res) {
                                 vm.sendingInProgress = false;
                                 alert('error');
-                            });
+                                });
+                        _.each(this.items, function (item) {
+                            item.requests = [];
+                        });
                     },
                     modalSendEmailsOk: function() {
                         this.modalSendEmails = false;
