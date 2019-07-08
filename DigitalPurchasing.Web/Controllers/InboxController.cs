@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Web.Core;
@@ -38,7 +36,7 @@ namespace DigitalPurchasing.Web.Controllers
 
         public IActionResult View(Guid id)
         {
-            var soEmail = _receivedEmailService.GetSoEmail(id);
+            var soEmail = _receivedEmailService.GetEmail(id);
 
             if (soEmail == null) return NotFound();
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,18 +15,18 @@ namespace DigitalPurchasing.Services
 
         private const string AppName = "DigitalPurchasing.com";
         private const string NotificationsEmail = "notifications@digitalpurchasing.com"; // only for sending (from)
-        private const string RobotEmail = "robot@digitalpurchasing.com";
+        private string RobotEmail(Guid companyId) => $"robot+{companyId:N}@digitalpurchasing.com";
         private const string DefaultEmail = "hello@digitalpurchasing.com";
 
         public EmailService(IMandrillMessagesApi messages)
             => _messages = messages;
 
-        public async Task SendFromRobotAsync(string toEmail, string subject, string htmlMessage, IReadOnlyList<string> attachments = null)
+        public async Task SendFromRobotAsync(Guid companyId, string toEmail, string subject, string htmlMessage, IReadOnlyList<string> attachments = null)
         {
             var mailMessage = CreateMailMessage(
                 toEmail,
-                NotificationsEmail, $"{AppName}", // from
-                RobotEmail, $"{AppName} Robot", // reply to
+                RobotEmail(companyId), $"{AppName} Robot", // from
+                RobotEmail(companyId), $"{AppName} Robot", // reply to
                 subject,
                 htmlMessage, attachments);
 
