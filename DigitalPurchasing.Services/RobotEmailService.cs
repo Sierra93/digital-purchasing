@@ -80,8 +80,8 @@ namespace DigitalPurchasing.Services
         private Guid SaveEmail(UniqueId messageId, MimeMessage message)
         {
             var body = message.GetTextBody(TextFormat.Html);
-            var toEmail = message.To.Mailboxes.First().Address;
-            var fromEmail = message.From.Mailboxes.First(q => q.Address.Contains("@digitalpurchasing.com")).Address;
+            var toEmail = message.To.Mailboxes.First(q => q.Address.Contains("@digitalpurchasing.com")).Address;
+            var fromEmail = message.From.Mailboxes.First().Address;
 
             Guid? ownerId = null;
 
