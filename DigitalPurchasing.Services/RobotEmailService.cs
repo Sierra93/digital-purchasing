@@ -204,6 +204,8 @@ namespace DigitalPurchasing.Services
             {
                 var clId = await _competitionListService.GetIdByQR(email.QuotationRequestId, true);
 
+                if (clId == Guid.Empty) return false;
+
                 foreach (var attachment in email.Attachments.Where(a => IsSupportedFile(a.FileName)))
                 {
                     var allColumns = false;
