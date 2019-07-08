@@ -45,10 +45,8 @@ namespace DigitalPurchasing.Emails
             string attachment)
         {
             var subject = $"[{emailUid}] Запрос коммерческого предложения №{quotationRequest.PublicId}";
-
             var until = DateTime.UtcNow.AddHours(1).ToRussianStandardTime();
-
-            string toName = supplierContact.FirstName;
+            var toName = supplierContact.FirstName;
 
             if (!string.IsNullOrWhiteSpace(supplierContact.Patronymic))
             {
@@ -68,7 +66,7 @@ namespace DigitalPurchasing.Emails
             };
 
             var htmlResult = await GetHtmlString(model);
-            await emailService.SendFromRobotAsync(supplierContact.Email, subject, htmlResult, new List<string> { attachment });
+            await emailService.SendFromRobotAsync(quotationRequest.OwnerId, supplierContact.Email, subject, htmlResult, new List<string> { attachment });
         }
 
         public static async Task SendSOPartiallyProcessedEmail(this IEmailService emailService,
@@ -85,7 +83,7 @@ namespace DigitalPurchasing.Emails
             };
 
             var htmlResult = await GetHtmlString(model);
-            await emailService.SendFromRobotAsync(email, subject, htmlResult);
+            await emailService.SendEmailAsync(email, subject, htmlResult);
         }
 
         public static async Task SendSoNotProcessedEmail(this IEmailService emailService,
@@ -102,7 +100,7 @@ namespace DigitalPurchasing.Emails
             };
 
             var htmlResult = await GetHtmlString(model);
-            await emailService.SendFromRobotAsync(email, subject, htmlResult);
+            await emailService.SendEmailAsync(email, subject, htmlResult);
         }
 
         public static async Task SendEmailConfirmationEmail(this IEmailService emailService, string email, string url)

@@ -40,6 +40,17 @@ namespace DigitalPurchasing.Services
             }
         }
 
+        public bool IsSaved(uint uid) => _db.ReceivedEmails.Any(q => q.UniqueId == uid);
+
+        public EmailStatus GetStatus(uint uid)
+        {
+            var email = _db.ReceivedEmails.FirstOrDefault(q => q.UniqueId == uid);
+            if (email == null) return new EmailStatus(uid, Guid.Empty,  false, false);
+            return email.IsProcessed
+                ? new EmailStatus(uid, email.Id, true, true)
+                : new EmailStatus(uid, email.Id, true, false);
+        }
+
         public void MarkProcessed(uint uid)
         {
             var email = GetByUid(uid);
@@ -53,36 +64,38 @@ namespace DigitalPurchasing.Services
 
         private ReceivedEmail GetByUid(uint uid) => _db.ReceivedEmails.FirstOrDefault(q => q.UniqueId == uid);
 
-        public Guid SaveSoEmail(uint uid, Guid qrId, string subject, string body,
-            string fromEmail, DateTimeOffset messageDate, IReadOnlyList<(string fileName, string contentType, byte[] fileBytes)> attachments)
+        public Guid SaveEmail(uint uid, string subject, string body,
+            string fromEmail, string toEmail, DateTimeOffset messageDate,
+            IReadOnlyList<(string fileName, string contentType, byte[] fileBytes)> attachments, Guid? ownerId = null)
         {
             var email = GetByUid(uid);
-            if (email == null)
+            if (email != null) return email.Id;
+
+            email = new ReceivedEmail
             {
-                email = new ReceivedSoEmail
+                OwnerId = ownerId,
+                UniqueId = uid,
+                IsProcessed = false,
+                Subject = subject,
+                Body = body,
+                FromEmail = fromEmail,
+                ToEmail = toEmail,
+                MessageDate = messageDate,
+                Attachments = attachments.Select(a => new EmailAttachment
                 {
-                    UniqueId = uid,
-                    IsProcessed = false,
-                    Subject = subject,
-                    Body = body,
-                    FromEmail = fromEmail,
-                    MessageDate = messageDate,
-                    Attachments = attachments.Select(a => new EmailAttachment()
-                    {
-                        FileName = a.fileName,
-                        Bytes = a.fileBytes,
-                        ContentType = a.contentType
-                    }).ToList(),
-                    QuotationRequestId = qrId
-                };
-                _db.ReceivedEmails.Add(email);
-                _db.SaveChanges();
-            }
+                    FileName = a.fileName,
+                    Bytes = a.fileBytes,
+                    ContentType = a.contentType
+                }).ToList()
+            };
+
+            _db.ReceivedEmails.Add(email);
+            _db.SaveChanges();
 
             return email.Id;
         }
 
-        public SoEmailVm GetSoEmail(Guid emailId, bool includeAttachments = true)
+        public EmailDto GetEmail(Guid emailId, bool includeAttachments = true)
         {
             var qry = _db.ReceivedEmails.AsQueryable();
 
@@ -91,7 +104,7 @@ namespace DigitalPurchasing.Services
                 qry = qry.Include(e => e.Attachments);
             }
 
-            return qry.OfType<ReceivedSoEmail>().FirstOrDefault(e => e.Id == emailId)?.Adapt<SoEmailVm>();
+            return qry.FirstOrDefault(e => e.Id == emailId)?.Adapt<EmailDto>();
         }
 
         public InboxIndexData GetData(Guid ownerId, bool unhandledSupplierOffersOnly, int page, int perPage, string sortField, bool sortAsc, string search)
@@ -101,8 +114,8 @@ namespace DigitalPurchasing.Services
                 sortField = nameof(ReceivedEmail.MessageDate);
             }
 
-            var qry = from item in _db.ReceivedSoEmails
-                      where item.QuotationRequest.OwnerId == ownerId
+            var qry = from item in _db.ReceivedEmails
+                      where item.OwnerId == ownerId
                       select item;
 
             if (unhandledSupplierOffersOnly)
@@ -120,7 +133,7 @@ namespace DigitalPurchasing.Services
                                  item.Id,
                                  item.Subject,
                                  item.FromEmail,
-                                 item.QuotationRequest.OwnerId,
+                                 item.OwnerId,
                                  item.Body,
                                  attachments = item.Attachments.Select(a => new
                                  {
@@ -130,11 +143,11 @@ namespace DigitalPurchasing.Services
                              }).ToList();
 
             var result = (from item in qryResult
-                          let supplierId = _supplierService.GetSupplierByEmail(item.OwnerId, item.FromEmail)
-                          let supplier = _supplierService.GetById(supplierId, true)
+                          //let supplierId = _supplierService.GetSupplierByEmail(item.OwnerId, item.FromEmail)
+                          //let supplier = _supplierService.GetById(supplierId, true)
                           select new InboxIndexDataItem
                           {
-                              SupplierName = supplier?.Name,
+                              SupplierName = "",//supplier?.Name,
                               Id = item.Id,
                               MessageDate = item.MessageDate,
                               Subject = item.Subject,
@@ -153,7 +166,7 @@ namespace DigitalPurchasing.Services
             };
         }
 
-        public EmailAttachmentVm GetAttachment(Guid attachmentId) =>
-            _db.EmailAttachments.FirstOrDefault(a => a.Id == attachmentId)?.Adapt<EmailAttachmentVm>();
+        public EmailAttachmentDto GetAttachment(Guid attachmentId) =>
+            _db.EmailAttachments.FirstOrDefault(a => a.Id == attachmentId)?.Adapt<EmailAttachmentDto>();
     }
 }
