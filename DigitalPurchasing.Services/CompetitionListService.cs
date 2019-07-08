@@ -102,7 +102,12 @@ namespace DigitalPurchasing.Services
 
         private async Task<Guid> CreateFromQR(Guid qrId)
         {
-            var qr = await _db.QuotationRequests.IgnoreQueryFilters().FirstAsync(q => q.Id == qrId);
+            var qr = await _db.QuotationRequests
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(q => q.Id == qrId);
+
+            if (qr == null) return Guid.Empty;
+
             var entity = new CompetitionList
             {
                 PublicId = _counterService.GetCLNextId(qr.OwnerId),
