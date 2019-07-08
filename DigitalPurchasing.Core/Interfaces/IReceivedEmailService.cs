@@ -47,7 +47,6 @@ namespace DigitalPurchasing.Core.Interfaces
         public string Subject { get; set; }
         public string Body { get; set; }
         public string FromEmail { get; set; }
-        public Guid QuotationRequestId { get; set; }
         public int ProcessingTries { get; set; }
         public DateTimeOffset MessageDate { get; set; }
 

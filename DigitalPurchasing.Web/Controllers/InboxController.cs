@@ -37,16 +37,14 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult View(Guid id)
         {
             var soEmail = _receivedEmailService.GetEmail(id);
-
             if (soEmail == null) return NotFound();
 
-            var qr = _quotationRequestService.GetById(soEmail.QuotationRequestId);
-            var supplierId = _supplierService.GetSupplierIdByEmail(qr.OwnerId, soEmail.FromEmail);
-            var supplier = _supplierService.GetById(supplierId, true);
+            var ownerId = User.CompanyId();
+            var supplierName = _supplierService.GetSupplierNameByEmail(ownerId, soEmail.FromEmail);
 
             return View(new InboxViewVm
             {
-                SupplierName = supplier?.Name,
+                SupplierName = supplierName,
                 EmailBody = soEmail.Body,
                 EmailDate = soEmail.MessageDate,
                 EmailSubject = soEmail.Subject,
