@@ -126,7 +126,7 @@ namespace DigitalPurchasing.Services
             var total = qry.Count();
             var orderedResults = qry.OrderBy($"{sortField}{(sortAsc ? "" : " DESC")}");
             var query = orderedResults.Skip((page - 1) * perPage).Take(perPage);
-            var qryResult = (from item in query
+            var qryResults = (from item in query
                              select new
                              {
                                  item.MessageDate,
@@ -135,6 +135,7 @@ namespace DigitalPurchasing.Services
                                  item.FromEmail,
                                  item.OwnerId,
                                  item.Body,
+                                 item.IsProcessed,
                                  attachments = item.Attachments.Select(a => new
                                  {
                                      a.FileName,
@@ -142,27 +143,38 @@ namespace DigitalPurchasing.Services
                                  })
                              }).ToList();
 
-            var result = (from item in qryResult
-                          //let supplierId = _supplierService.GetSupplierByEmail(item.OwnerId, item.FromEmail)
-                          //let supplier = _supplierService.GetById(supplierId, true)
-                          select new InboxIndexDataItem
-                          {
-                              SupplierName = "",//supplier?.Name,
-                              Id = item.Id,
-                              MessageDate = item.MessageDate,
-                              Subject = item.Subject,
-                              Body = item.Body,
-                              Attachments = item.attachments.Select(a => new InboxIndexAttachment
-                              {
-                                  FileName = a.FileName,
-                                  Id = a.Id
-                              }).ToList()
-                          }).ToList();
+            var data = new List<InboxIndexDataItem>();
+
+            foreach (var item in qryResults)
+            {
+                var supplierName = "";
+
+                if (item.OwnerId.HasValue)
+                {
+                    supplierName = _supplierService.GetSupplierNameByEmail(item.OwnerId.Value, item.FromEmail);
+                }
+
+                data.Add(new InboxIndexDataItem
+                {
+                    SupplierName = supplierName,
+                    Id = item.Id,
+                    MessageDate = item.MessageDate,
+                    Subject = item.Subject,
+                    Body = item.Body,
+                    FromEmail = item.FromEmail,
+                    IsProcessed = item.IsProcessed,
+                    Attachments = item.attachments.Select(a => new InboxIndexAttachment
+                    {
+                        FileName = a.FileName,
+                        Id = a.Id
+                    }).ToList()
+                });
+            }
 
             return new InboxIndexData
             {
                 Total = total,
-                Data = result
+                Data = data
             };
         }
 

@@ -41,7 +41,7 @@ namespace DigitalPurchasing.Web.Controllers
             if (soEmail == null) return NotFound();
 
             var qr = _quotationRequestService.GetById(soEmail.QuotationRequestId);
-            var supplierId = _supplierService.GetSupplierByEmail(qr.OwnerId, soEmail.FromEmail);
+            var supplierId = _supplierService.GetSupplierIdByEmail(qr.OwnerId, soEmail.FromEmail);
             var supplier = _supplierService.GetById(supplierId, true);
 
             return View(new InboxViewVm

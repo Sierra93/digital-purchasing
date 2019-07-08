@@ -197,7 +197,7 @@ namespace DigitalPurchasing.Services
             var soHandled = false;
 
             // detect supplier by contact email
-            var supplierId = _supplierService.GetSupplierByEmail(qr.OwnerId, email.FromEmail);
+            var supplierId = _supplierService.GetSupplierIdByEmail(qr.OwnerId, email.FromEmail);
 
             // upload supplier offer
             if (supplierId != Guid.Empty)

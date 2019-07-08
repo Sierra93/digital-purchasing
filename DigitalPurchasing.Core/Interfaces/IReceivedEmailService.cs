@@ -79,6 +79,8 @@ namespace DigitalPurchasing.Core.Interfaces
         public string Subject { get; set; }
         public string SupplierName { get; set; }
         public string Body { get; set; }
+        public string FromEmail { get; set; }
+        public bool IsProcessed { get; set; }
         public IReadOnlyList<InboxIndexAttachment> Attachments { get; set; } = new List<InboxIndexAttachment>();
     }
 }
