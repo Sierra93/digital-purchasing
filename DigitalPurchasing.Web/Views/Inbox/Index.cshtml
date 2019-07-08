@@ -10,7 +10,10 @@
     <div>
         <div class="checkbox">
             <label>
-                <input type="checkbox" v-model="unhandledSupplierOffersOnly" v-on:change="reloadData"> Показывать только необработанные КП
+                <input type="checkbox"
+                       v-model="unhandledSupplierOffersOnly"
+                       v-on:change="reloadData">
+                &nbsp;Показывать только необработанные
             </label>
         </div>
     </div>
@@ -100,6 +103,13 @@
                         css: cssTable,
                         fields: [
                             {
+                                title: 'Обработана?',
+                                name: 'isProcessed',
+                                sortField: 'IsProcessed',
+                                formatter: this.formatBool,
+                                titleClass: 'w-140px'
+                            },
+                            {
                                 title: 'Дата',
                                 name: 'messageDate',
                                 sortField: 'messageDate',
@@ -108,6 +118,11 @@
                             {
                                 title: 'Поставщик',
                                 name: 'supplierName',
+                                titleClass: 'w-140px'
+                            },
+                            {
+                                title: 'От',
+                                name: 'fromEmail',
                                 titleClass: 'w-140px'
                             },
                             {
@@ -152,6 +167,10 @@
                     },
                     reloadData: function () {
                         this.$refs.vuetable.reload();
+                    },
+                    formatBool: function (value) {
+                        if (value === null) return '';
+                        return value ? 'Да' : 'Нет';
                     }
                 }
             });

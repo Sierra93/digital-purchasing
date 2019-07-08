@@ -197,12 +197,12 @@ namespace DigitalPurchasing.Services
             var soHandled = false;
 
             // detect supplier by contact email
-            var supplierId = _supplierService.GetSupplierByEmail(qr.OwnerId, email.FromEmail);
+            var supplierId = _supplierService.GetSupplierIdByEmail(qr.OwnerId, email.FromEmail);
 
             // upload supplier offer
             if (supplierId != Guid.Empty)
             {
-                var clId = await _competitionListService.GetIdByQR(email.QuotationRequestId, true);
+                var clId = await _competitionListService.GetIdByQR(qr.Id, true);
 
                 if (clId == Guid.Empty) return false;
 
@@ -243,7 +243,7 @@ namespace DigitalPurchasing.Services
                                     _supplierOfferService.UpdateStatus(soId, SupplierOfferStatus.MatchItems, true);
 
                                     allMatched = _supplierOfferService.IsAllMatched(soId);
-                                    var rootId = await _rootService.GetIdByQR(email.QuotationRequestId);
+                                    var rootId = await _rootService.GetIdByQR(qr.Id);
                                     await _rootService.SetStatus(rootId, allMatched
                                         ? RootStatus.EverythingMatches
                                         : RootStatus.MatchingRequired);
