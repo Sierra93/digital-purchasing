@@ -191,8 +191,13 @@ namespace DigitalPurchasing.Services
 
             var qr = _quotationRequestService.GetById(qrId.Value, true);
             if (qr == null) return false;
+
+            var requestOwnerEmail = _quotationRequestService.RequestSentBy(qr.Id, email.FromEmail);
             
-            var ownerEmail = _companyService.GetContactEmailByOwner(qr.OwnerId);
+            if (string.IsNullOrEmpty(requestOwnerEmail))
+            {
+                requestOwnerEmail = _companyService.GetContactEmailByOwner(qr.OwnerId);
+            }
 
             var soHandled = false;
 
@@ -251,7 +256,7 @@ namespace DigitalPurchasing.Services
 
                                 if (!allColumns || !allMatched)
                                 {
-                                    PartiallyProcessedEmail(ownerEmail, qr.PublicId, createOfferResult.Id /* SO Id */);
+                                    PartiallyProcessedEmail(requestOwnerEmail, qr.PublicId, createOfferResult.Id /* SO Id */);
                                 }
 
                                 soHandled = true;
@@ -282,7 +287,7 @@ namespace DigitalPurchasing.Services
 
             if (email.ProcessingTries == 0)
             {
-                SendSoNotProcessedNotification(ownerEmail, qr.PublicId, email.Id);
+                SendSoNotProcessedNotification(requestOwnerEmail, qr.PublicId, email.Id);
             }
 
             return false;

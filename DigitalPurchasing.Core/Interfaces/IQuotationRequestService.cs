@@ -20,6 +20,7 @@ namespace DigitalPurchasing.Core.Interfaces
         byte[] GenerateExcelByCategory(Guid quotationRequestId, params Guid[] categoryIds);
         byte[] GenerateExcelByItem(Guid quotationRequestId, params Guid[] itemIds);
         List<SentRequest> GetSentRequests(Guid quotationRequestId);
+        string RequestSentBy(Guid quotationRequestId, string fromEmail);
     }
 
     public class QuotationRequestIndexDataItem

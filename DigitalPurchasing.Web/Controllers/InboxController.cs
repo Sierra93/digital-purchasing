@@ -29,10 +29,7 @@ namespace DigitalPurchasing.Web.Controllers
             _supplierService = supplierService;
         }
 
-        public IActionResult Index()
-        {
-            return View();
-        }
+        public IActionResult Index() => View();
 
         public IActionResult View(Guid id)
         {
@@ -44,10 +41,11 @@ namespace DigitalPurchasing.Web.Controllers
 
             return View(new InboxViewVm
             {
-                SupplierName = supplierName,
+                SupplierName = string.IsNullOrEmpty(supplierName) ? "Не определен" : supplierName,
                 EmailBody = soEmail.Body,
                 EmailDate = soEmail.MessageDate,
                 EmailSubject = soEmail.Subject,
+                EmailFrom = soEmail.FromEmail,
                 Attachments = soEmail.Attachments.Select(a => new InboxViewVm.EmailAttachment()
                 {
                     FileName = a.FileName,
