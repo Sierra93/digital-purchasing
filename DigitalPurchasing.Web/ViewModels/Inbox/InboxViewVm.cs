@@ -18,5 +18,6 @@ namespace DigitalPurchasing.Web.ViewModels.Inbox
         public string EmailBody { get; set; }
         public DateTimeOffset EmailDate { get; set; }
         public IReadOnlyList<EmailAttachment> Attachments { get; set; } = new List<EmailAttachment>();
+        public string EmailFrom { get; set; }
     }
 }
