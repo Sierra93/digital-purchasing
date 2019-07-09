@@ -286,7 +286,8 @@ namespace DigitalPurchasing.Services
                             ContactPersonId = contact.Id,
                             ByCategory = byCategory,
                             ByItem = !byCategory,
-                            Data = data
+                            Data = data,
+                            UserId = userId
                         });
                         await _db.SaveChangesAsync();
                     }
@@ -295,6 +296,20 @@ namespace DigitalPurchasing.Services
                     await _rootService.SetStatus(rootId, RootStatus.QuotationRequestSent);
                 }
             }
+        }
+
+        public string RequestSentBy(Guid quotationRequestId, string fromEmail)
+        {
+            if (quotationRequestId == Guid.Empty)
+                throw new ArgumentOutOfRangeException(nameof(quotationRequestId));
+
+            var quotationRequestEmail = _db.QuotationRequestEmails
+                .IgnoreQueryFilters()
+                .Include(q => q.ContactPerson)
+                .Include(q => q.User)
+                .FirstOrDefault(q => q.ContactPerson.Email.Equals(fromEmail, StringComparison.InvariantCultureIgnoreCase));
+
+            return quotationRequestEmail?.User?.Email;
         }
 
         public byte[] GenerateExcelByCategory(Guid quotationRequestId, params Guid[] categoryIds)
