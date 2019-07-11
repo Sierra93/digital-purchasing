@@ -115,7 +115,8 @@ namespace DigitalPurchasing.Services
                 Status = SupplierOfferStatus.MatchColumns,
                 OwnerId = ownerId,
                 PublicId = _counterService.GetSONextId(ownerId),
-                CurrencyId = _currencyService.GetDefaultCurrency(ownerId).Id
+                CurrencyId = _currencyService.GetDefaultCurrency(ownerId).Id,
+                InvoiceData = result.InvoiceData,
             });
 
             await _db.SaveChangesAsync();
