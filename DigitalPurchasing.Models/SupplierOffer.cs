@@ -22,6 +22,8 @@ namespace DigitalPurchasing.Models
         public Guid? UploadedDocumentId { get; set; }
         public UploadedDocument UploadedDocument { get; set; }
 
+        public string InvoiceData { get; set; }
+
         public SupplierOfferStatus Status { get; set; }
 
         public ICollection<SupplierOfferItem> Items = new List<SupplierOfferItem>();
