@@ -7,6 +7,7 @@ using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
 using Mapster;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 
 namespace DigitalPurchasing.Services
@@ -15,13 +16,16 @@ namespace DigitalPurchasing.Services
     {
         private readonly ApplicationDbContext _db;
         private readonly ISupplierService _supplierService;
+        private readonly LinkGenerator _linkGenerator;
 
         public ReceivedEmailService(
             ApplicationDbContext db,
-            ISupplierService supplierService)
+            ISupplierService supplierService,
+            LinkGenerator linkGenerator)
         {
             _db = db;
             _supplierService = supplierService;
+            _linkGenerator = linkGenerator;
         }
 
         public bool IsProcessed(uint uid)
@@ -38,6 +42,13 @@ namespace DigitalPurchasing.Services
                 email.ProcessingTries++;
                 _db.SaveChanges();
             }
+        }
+
+        public void SetRoot(Guid emailId, Guid? rootId)
+        {
+            var email = _db.ReceivedEmails.Find(emailId);
+            email.RootId = rootId;
+            _db.SaveChanges();
         }
 
         public bool IsSaved(uint uid) => _db.ReceivedEmails.Any(q => q.UniqueId == uid);
@@ -114,9 +125,12 @@ namespace DigitalPurchasing.Services
                 sortField = nameof(ReceivedEmail.MessageDate);
             }
 
-            var qry = from item in _db.ReceivedEmails
-                      where item.OwnerId == ownerId
-                      select item;
+            var qry = _db.ReceivedEmails
+                .Include(q => q.Root.PurchaseRequest)
+                .Include(q => q.Root.QuotationRequest)
+                .Include(q => q.Root.CompetitionList)
+                .Include(q => q.Attachments)
+                .Where(q => q.OwnerId == ownerId);
 
             if (unhandledSupplierOffersOnly)
             {
@@ -126,22 +140,29 @@ namespace DigitalPurchasing.Services
             var total = qry.Count();
             var orderedResults = qry.OrderBy($"{sortField}{(sortAsc ? "" : " DESC")}");
             var query = orderedResults.Skip((page - 1) * perPage).Take(perPage);
-            var qryResults = (from item in query
-                             select new
-                             {
-                                 item.MessageDate,
-                                 item.Id,
-                                 item.Subject,
-                                 item.FromEmail,
-                                 item.OwnerId,
-                                 item.Body,
-                                 item.IsProcessed,
-                                 attachments = item.Attachments.Select(a => new
-                                 {
-                                     a.FileName,
-                                     a.Id
-                                 })
-                             }).ToList();
+            var qryResults = query.Select(item => new
+            {
+                item.MessageDate,
+                item.Id,
+                item.Subject,
+                item.FromEmail,
+                item.OwnerId,
+                item.Body,
+                item.IsProcessed,
+                PRErp = item.Root != null && item.Root.PurchaseRequest != null ? item.Root.PurchaseRequest.ErpCode : null,
+                CustomerName = item.Root != null && item.Root.PurchaseRequest != null && item.Root.PurchaseRequest.Customer != null ? item.Root.PurchaseRequest.Customer.Name : null,
+                PRId = item.Root != null ? item.Root.PurchaseRequestId : null,
+                QRId = item.Root != null ? item.Root.QuotationRequestId : null,
+                CLId = item.Root != null ? item.Root.CompetitionListId : null,
+                PRPublicId = item.Root != null && item.Root.PurchaseRequest != null ? item.Root.PurchaseRequest.PublicId : (int?)null,
+                QRPublicId = item.Root != null && item.Root.QuotationRequest != null ? item.Root.QuotationRequest.PublicId : (int?)null,
+                CLPublicId = item.Root != null && item.Root.CompetitionList != null ? item.Root.CompetitionList.PublicId : (int?)null,
+                Attachments = item.Attachments.Select(a => new
+                {
+                    a.FileName,
+                    a.Id
+                })
+            }).ToList();
 
             var data = new List<InboxIndexDataItem>();
 
@@ -154,6 +175,16 @@ namespace DigitalPurchasing.Services
                     supplierName = _supplierService.GetSupplierNameByEmail(item.OwnerId.Value, item.FromEmail);
                 }
 
+                var prUrl = item.PRId.HasValue
+                    ? _linkGenerator.GetPathByAction("Edit", "PurchaseRequest", new {id = item.PRId.Value})
+                    : null;
+                var qrUrl = item.QRId.HasValue
+                    ? _linkGenerator.GetPathByAction("View", "QuotationRequest", new {id = item.QRId.Value})
+                    : null;
+                var clUrl = item.CLId.HasValue
+                    ? _linkGenerator.GetPathByAction("Edit", "CompetitionList", new {id = item.CLId.Value})
+                    : null;
+
                 data.Add(new InboxIndexDataItem
                 {
                     SupplierName = supplierName,
@@ -163,11 +194,16 @@ namespace DigitalPurchasing.Services
                     Body = item.Body,
                     FromEmail = item.FromEmail,
                     IsProcessed = item.IsProcessed,
-                    Attachments = item.attachments.Select(a => new InboxIndexAttachment
+                    Attachments = item.Attachments.Select(a => new InboxIndexAttachment
                     {
                         FileName = a.FileName,
                         Id = a.Id
-                    }).ToList()
+                    }).ToList(),
+                    PRLink = prUrl != null ? $"<a href=\"{prUrl}\">{item.PRPublicId}</a>" : null,
+                    QRLink = qrUrl != null ? $"<a href=\"{qrUrl}\">{item.QRPublicId}</a>" : null,
+                    CLLink = clUrl != null ? $"<a href=\"{clUrl}\">{item.CLPublicId}</a>" : null,
+                    CustomerName = item.CustomerName,
+                    PRErp = item.PRErp
                 });
             }
 

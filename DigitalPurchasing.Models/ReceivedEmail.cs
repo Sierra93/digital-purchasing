@@ -18,5 +18,8 @@ namespace DigitalPurchasing.Models
 
         public ICollection<EmailAttachment> Attachments { get; set; }
         public string ToEmail { get; set; }
+
+        public Root Root { get; set; }
+        public Guid? RootId { get; set; }
     }
 }

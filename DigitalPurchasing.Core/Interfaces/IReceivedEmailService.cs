@@ -8,6 +8,7 @@ namespace DigitalPurchasing.Core.Interfaces
         bool IsProcessed(uint uid);
         void MarkProcessed(uint uid);
         void IncProcessingTries(uint uid);
+        void SetRoot(Guid emailId, Guid? rootId);
 
         bool IsSaved(uint uid);
 
@@ -81,5 +82,10 @@ namespace DigitalPurchasing.Core.Interfaces
         public string FromEmail { get; set; }
         public bool IsProcessed { get; set; }
         public IReadOnlyList<InboxIndexAttachment> Attachments { get; set; } = new List<InboxIndexAttachment>();
+        public string PRLink { get; set; }
+        public string QRLink { get; set; }
+        public string CLLink { get; set; }
+        public string PRErp { get; set; }
+        public string CustomerName { get; set; }
     }
 }
