@@ -14,7 +14,8 @@
     <table class="table table-striped">
         <thead>
             <tr>
-                <th style="padding-left: 38px">Варианты</th>
+                <th style="width: 50px">&nbsp;</th>
+                <th style="width: 200px">Варианты</th>
                 <th class="align-right" v-for="supplier in orderedSuppliers">{{supplier.name}}</th>
                 <th class="align-right">ИТОГО</th>
                 <th class="align-right">Кол-во<br />поставщиков</th>
@@ -22,36 +23,42 @@
         </thead>
         <tfoot>
             <tr>
+                <td></td>
                 <th></th>
                 <td v-for="supplier in orderedSuppliers"></td>
                 <td></td>
                 <td></td>
             </tr>
             <tr>
+                <td></td>
                 <th>Отсрочка, дней</th>
                 <td class="align-right" v-for="supplier in orderedSuppliers">{{supplier.payWithinDays}}</td>
                 <td></td>
                 <td></td>
             </tr>
             <tr>
+                <td></td>
                 <th>Условия доставки</th>
                 <td class="align-right" v-for="supplier in orderedSuppliers">{{supplier.deliveryTermsStr}}</td>
                 <td></td>
                 <td></td>
             </tr>
             <tr>
+                <td></td>
                 <th>Срок поставки не позже, чем в запросе?</th>
                 <td class="align-right" v-for="supplier in orderedSuppliers">{{isDeliveryDataLessOrEqual(supplier.deliveryDate, customerDeliveryDate) | formatBool}}</td>
                 <td></td>
                 <td></td>
             </tr>
             <tr>
+                <td></td>
                 <th>Срок поставки в КП</th>
                 <td class="align-right" v-for="supplier in orderedSuppliers">{{supplier.deliveryDate | formatDate}}</td>
                 <td></td>
                 <td></td>
             </tr>
             <tr>
+                <td></td>
                 <th>Срок поставки в запросе</th>
                 <td class="align-right" v-for="supplier in orderedSuppliers">{{customerDeliveryDate | formatDate}}</td>
                 <td></td>
@@ -60,20 +67,12 @@
         </tfoot>
         <tbody>
             <tr v-for="(variant, index) in orderedVariants" v-if="orderedVariants.length>0 && !noVariants && !isLoading">
+                <td class="text-center">
+                    <input type="radio" :id="('selected-variant-'+index)" :value="variant.id" v-model="currentSelectedVariant" class="radio-1_2" />
+                </td>
                 <td>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td style="padding-right: 16px">
-                                    <input type="radio" :id="('selected-variant-'+index)" :value="variant.id" v-model="currentSelectedVariant">
-                                </td>
-                                <td>
-                                    <p><span>Вариант {{(index+1)}}</span></p>
-                                    <p class="help-block">Доля в итого, %</p>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <p><b>Вариант {{(index+1)}}</b></p>
+                    <span class="help-block m-0">Доля в итого, %</span>
                 </td>
                 <td class="align-right" v-if="isSuccess(variant)" v-for="result in getOrderedVariantResults(variant.results)">
                     <p>{{result.total | formatMoney}}</p>
@@ -81,15 +80,15 @@
                 </td>
                 <td class="align-right" v-if="isSuccess(variant)">{{suppliersTotal(variant.results) | formatMoney}}</td>
                 <td class="align-right" v-if="isSuccess(variant)">{{suppliersCount(variant.results)}}</td>
-                <td v-if="!isSuccess(variant)" :colspan="variant.results.length+2">
-                    <p class="text-center">Предложенные условия не соответствуют параметрам выбора</p>
+                <td v-if="!isSuccess(variant)" class="text-center" :colspan="variant.results.length + 3">
+                    Предложенные условия не соответствуют параметрам выбора
                 </td>
             </tr>
             <tr v-if="noVariants" class="text-center">
-                <td colspan="6"><button type="button" class="btn btn-primary" v-on:click="variantAdded">Добавить вариант</button></td>
+                <td colspan="7"><button type="button" class="btn btn-primary" v-on:click="variantAdded">Добавить вариант</button></td>
             </tr>
             <tr v-if="isLoading" class="text-center">
-                <td colspan="6">Загрузка...</td>
+                <td colspan="7">Загрузка...</td>
             </tr>
         </tbody>
     </table>
