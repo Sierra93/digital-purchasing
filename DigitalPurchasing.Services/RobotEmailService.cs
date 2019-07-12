@@ -192,6 +192,9 @@ namespace DigitalPurchasing.Services
             var qr = _quotationRequestService.GetById(qrId.Value, true);
             if (qr == null) return false;
 
+            var rootId = await _rootService.GetIdByQR(qr.Id);
+            _receivedEmails.SetRoot(emailId, rootId);
+            
             var requestOwnerEmail = _quotationRequestService.RequestSentBy(qr.Id, email.FromEmail);
             
             if (string.IsNullOrEmpty(requestOwnerEmail))
@@ -248,7 +251,6 @@ namespace DigitalPurchasing.Services
                                     _supplierOfferService.UpdateStatus(soId, SupplierOfferStatus.MatchItems, true);
 
                                     allMatched = _supplierOfferService.IsAllMatched(soId);
-                                    var rootId = await _rootService.GetIdByQR(qr.Id);
                                     await _rootService.SetStatus(rootId, allMatched
                                         ? RootStatus.EverythingMatches
                                         : RootStatus.MatchingRequired);
