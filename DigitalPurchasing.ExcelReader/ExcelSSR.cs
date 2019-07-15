@@ -145,8 +145,8 @@ namespace DigitalPurchasing.ExcelReader
                     ws.Cells[6 + index, colMinPriceStart + 4].TableText(withMinPrice.Name);
                     ws.Cells[6 + index, colMinPriceStart + 4].Style.WrapText = true;
                     ws.Cells[6 + index, colMinPriceStart + 5].TableText(withMinPrice.Quantity);
-                    ws.Cells[6 + index, colMinPriceStart + 6].TableText("zzzzzzz");
-                    ws.Cells[6 + index, colMinPriceStart + 7].TableText("nnnnnnn");
+                    ws.Cells[6 + index, colMinPriceStart + 6].TableText(withMinPrice.UomStr);
+                    ws.Cells[6 + index, colMinPriceStart + 7].TableText(withMinPrice.OfferInvoiceData);
                 }
 
                 ws.Cells[5, colLastPriceStart].HeaderText("Последняя цена закупки");
