@@ -4,16 +4,27 @@ using System.Linq;
 using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
+using Moq;
 using Xunit;
 
 namespace DigitalPurchasing.Tests
 {
     public class ExcelTests
     {
+        private IUomService GetTestUomService()
+        {
+            var uomServiceMock = new Mock<IUomService>();
+            uomServiceMock
+                .Setup(q => q.GetAllNormalizedNames(It.IsAny<Guid>()))
+                .Returns(new[] { "шт" });
+
+            return uomServiceMock.Object;
+        }
+
         [Fact]
         public void ExcelRequestReaderTest()
         {
-            var c1 = new ExcelRequestReader(new TestColumnNameService());
+            var c1 = new ExcelRequestReader(new TestColumnNameService(), GetTestUomService());
             var result = c1.ToTable(@"c:\ru1.xlsx", Guid.Empty);
             Assert.True(result != null);
         }
@@ -21,7 +32,7 @@ namespace DigitalPurchasing.Tests
         [Fact]
         public void CanReadBinaryFormat()
         {
-            var c1 = new ExcelRequestReader(new TestColumnNameService());
+            var c1 = new ExcelRequestReader(new TestColumnNameService(), GetTestUomService());
             var result = c1.ToTable(@"W:\DP\T1\req1.xls", Guid.Empty);
             Assert.True(result != null);
             Assert.True(result.IsSuccess);
@@ -30,7 +41,7 @@ namespace DigitalPurchasing.Tests
         [Fact]
         public void CanReadBinaryFormat_BigFiles()
         {
-            var c1 = new ExcelRequestReader(new TestColumnNameService());
+            var c1 = new ExcelRequestReader(new TestColumnNameService(), GetTestUomService());
             var result = c1.ToTable(@"W:\DP\big.xls", Guid.Empty);
             Assert.True(result != null);
             Assert.True(result.IsSuccess);
