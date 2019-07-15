@@ -33,9 +33,13 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         [Route("competitionlist/{clId}/analysis")]
-        public IActionResult Index(Guid clId)
+        public async Task<IActionResult> Index(Guid clId)
         {
-            var vm = new AnalysisIndexVm {ClId = clId};
+            var vm = new AnalysisIndexVm
+            {
+                ClId = clId,
+                Reports = await _selectedSupplierService.GetReports(clId)
+            };
             return View(vm);
         }
 
