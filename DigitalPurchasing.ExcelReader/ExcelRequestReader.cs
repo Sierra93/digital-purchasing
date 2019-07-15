@@ -133,6 +133,7 @@ namespace DigitalPurchasing.ExcelReader
                         if (distinctValues.All(q => normalizedUomNames.Contains(q) || string.IsNullOrEmpty(q)))
                         {
                             tempColumnData.Type = TableColumnType.Uom;
+                            header = "ЕИ";
                         }
                     }
 
