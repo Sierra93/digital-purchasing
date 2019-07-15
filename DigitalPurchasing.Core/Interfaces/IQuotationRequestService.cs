@@ -40,11 +40,25 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class QuotationRequestVm
     {
+        public class PurchaseRequestDto
+        {
+            public class CustomerDto
+            {
+                public string Name { get; set; }
+            }
+
+            public Guid Id { get; set; }
+            public int PublicId { get; set; }
+            public string ErpCode { get; set; }
+            public DateTime CreatedOn { get; set; }
+            public CustomerDto Customer { get; set; }
+        }
+
         public Guid Id { get; set; }
         public int PublicId { get; set; }
         public DateTime CreatedOn { get; set; }
         public Guid OwnerId { get; set; }
-        public Guid PurchaseRequestId { get; set; }
+        public PurchaseRequestDto PurchaseRequest { get; set; }
     }
 
     public class QuotationRequestIndexData : BaseDataResponse<QuotationRequestIndexDataItem>
