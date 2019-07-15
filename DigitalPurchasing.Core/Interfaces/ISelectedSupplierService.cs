@@ -92,6 +92,10 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public decimal ConvertedQuantity { get; set; }
         public decimal ConvertedPrice { get; set; }
+
+        public string UomStr { get; set; }
+
+        public string OfferInvoiceData { get; set; }
     }
 
     public class SSVariantDto
