@@ -60,18 +60,24 @@
                             {
                                 title: 'Номер',
                                 name: 'publicId',
-                                sortField: 'PublicId'
+                                sortField: 'PublicId',
+                                titleClass: 'text-center w-140',
+                                dataClass: 'text-center'
                             },
                             {
                                 title: 'Дата создания',
                                 name: 'createdOn',
                                 sortField: 'CreatedOn',
-                                formatter: this.formatDate
+                                formatter: this.formatDate,
+                                titleClass: 'text-center w-180',
+                                dataClass: 'text-center'
                             },
                             {
                                 title: 'Номер заявки в ERP',
                                 name: 'purchaseRequestErpCode',
-                                sortField: 'PurchaseRequest.ErpCode'
+                                sortField: 'PurchaseRequest.ErpCode',
+                                titleClass: 'text-center w-180',
+                                dataClass: 'text-center'
                             },
                             {
                                 title: 'Клиент',
@@ -81,7 +87,7 @@
                             {
                                 name: 'slot-actions',
                                 title: 'Действия',
-                                titleClass: 'text-center',
+                                titleClass: 'text-center w-140',
                                 dataClass: 'text-center'
                             }
                         ],

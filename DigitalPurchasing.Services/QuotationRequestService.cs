@@ -122,6 +122,7 @@ namespace DigitalPurchasing.Services
         public QuotationRequestVm GetById(Guid id, bool globalSearch = false)
         {
             var qry = _db.QuotationRequests
+                .Include(q => q.PurchaseRequest.Customer)
                 .AsNoTracking()
                 .AsQueryable();
 
