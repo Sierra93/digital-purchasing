@@ -60,12 +60,9 @@ namespace DigitalPurchasing.Web.Controllers
             var cl = _competitionListService.GetById(id);
             if (cl == null) return NotFound();
 
-            var reports = await _selectedSupplierService.GetReports(id);
-
             var vm = new CompetitionListEditVm
             {
-                CompetitionList = cl,
-                Reports = reports.ToList()
+                CompetitionList = cl
             };
             return View(vm);
         }

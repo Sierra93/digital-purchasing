@@ -1,0 +1,36 @@
+@using DigitalPurchasing.Core.Interfaces;
+@using DigitalPurchasing.Web.Controllers
+@model IEnumerable<SSReportSimple>
+
+@if (Model.Any())
+{
+    <div class="row">
+        <div class="col-md-6">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Дата и время подтверждения</th>
+                        <th>Вариант выбора</th>
+                        <th>Общая сумма</th>
+                        <th>Валюта</th>
+                        <th>Выбор подтвердил</th>
+                        <th>Отчет о выборе поставщиков</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var report in Model)
+                    {
+                        <tr>
+                            <td>@report.CreatedOn.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>@report.SelectedVariantNumber</td>
+                            <td>@report.SelectedVariantTotalPrice.ToString("N")</td>
+                            <td>@report.Currency</td>
+                            <td>@report.SelectedBy</td>
+                            <td><a href="@Url.Action(nameof(CompetitionListController.Report), new { reportId = report.ReportId })">Скачать</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
