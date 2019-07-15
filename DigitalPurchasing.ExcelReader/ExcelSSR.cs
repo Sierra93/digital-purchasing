@@ -85,8 +85,8 @@ namespace DigitalPurchasing.ExcelReader
                 {
                     var pos = _report.Suppliers.IndexOf(supplier);
                     var col = colQuantityStart + pos;
-                    ws.Cells[5, colQuantityStart + pos]
-                        .HeaderBorders().BackgroundLight().HeaderText(supplier.Name);
+                    ws.Cells[5, colQuantityStart + pos].HeaderBorders().BackgroundLight().HeaderText(supplier.Name);
+                    ws.Column(col).Width = 15;
                     ws.Cells[rowTotal, colQuantityStart + pos].HeaderBorders().BackgroundLight();
                     foreach (var item in _report.SSSupplierItems.Where(q => q.SupplierId == supplier.Id))
                     {
@@ -102,9 +102,9 @@ namespace DigitalPurchasing.ExcelReader
                 {
                     var pos = _report.Suppliers.IndexOf(supplier);
                     var col = colPriceStart + pos;
-                    ws.Cells[5, col]
-                        .HeaderBorders().BackgroundLight().HeaderText(supplier.Name);
+                    ws.Cells[5, col].HeaderBorders().BackgroundLight().HeaderText(supplier.Name);
                     ws.Cells[rowTotal, col].HeaderBorders().BackgroundLight();
+                    ws.Column(col).Width = 15;
                     foreach (var item in _report.SSSupplierItems.Where(q => q.SupplierId == supplier.Id))
                     {
                         var nomPos = GetPositionByNomenclature(item.NomenclatureId);
@@ -177,9 +177,8 @@ namespace DigitalPurchasing.ExcelReader
                 {
                     var pos = _report.Suppliers.IndexOf(supplier);
                     var col = colTotalPriceStart + pos;
-                    ws.Column(col).AutoFit();
-                    ws.Cells[5, colTotalPriceStart + pos]
-                        .HeaderBorders().BackgroundLight().HeaderText(supplier.Name);
+                    ws.Cells[5, col].HeaderBorders().BackgroundLight().HeaderText(supplier.Name);
+                    ws.Column(col).Width = 15;
                     ws.Cells[rowTotal, colTotalPriceStart + pos].HeaderBorders().BackgroundLight();
                     var supplierItems = _report.SSSupplierItems.Where(q => q.SupplierId == supplier.Id).ToList();
                     foreach (var item in supplierItems)
@@ -251,6 +250,7 @@ namespace DigitalPurchasing.ExcelReader
                         var colSupplier = colSectionStart + supplierIndex;
                         var cellSupplierName = ws.Cells[rowDataStart - 1, colSupplier];
                         cellSupplierName.HeaderText(variantSupplier.Name);
+                        ws.Column(colSupplier).Width = 15;
                         var sumCellStart = ws.Cells[rowDataStart, colSupplier];
                         var sumCellEnd = ws.Cells[rowTotal - 1, colSupplier];
                         var sumCellResult = ws.Cells[rowTotal, colSupplier];
@@ -335,6 +335,7 @@ namespace DigitalPurchasing.ExcelReader
                         var colSupplier = colSectionStart + supplierIndex;
                         var cellSupplierName = ws.Cells[rowDataStart - 1, colSupplier];
                         cellSupplierName.HeaderText(variantSupplier.Name);
+                        ws.Column(colSupplier).Width = 15;
                         var sumCellStart = ws.Cells[rowDataStart, colSupplier];
                         var sumCellEnd = ws.Cells[rowTotal - 1, colSupplier];
                         var sumCellResult = ws.Cells[rowTotal, colSupplier];
