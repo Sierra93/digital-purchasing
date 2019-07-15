@@ -135,7 +135,7 @@ namespace DigitalPurchasing.ExcelReader
                             .Select(q => q.ToLower().CustomNormalize())
                             .Distinct();
 
-                        if (distinctValues.All(q => _defaultUoms.Contains(q) || q == null))
+                        if (distinctValues.All(q => _defaultUoms.Contains(q) || string.IsNullOrEmpty(q)))
                         {
                             tempColumnData.Type = TableColumnType.Uom;
                         }
