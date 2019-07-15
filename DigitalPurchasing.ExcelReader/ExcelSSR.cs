@@ -42,7 +42,10 @@ namespace DigitalPurchasing.ExcelReader
                 var colQuantityEnd = colQuantityStart + suppliersCount - 1;
                 var colPriceStart = colQuantityStart + suppliersCount + 1;
                 var colPriceEnd = colPriceStart + suppliersCount - 1;
-                var colTotalPriceStart = colPriceStart + suppliersCount + 1;
+                var colMinPriceStart = colPriceStart + suppliersCount + 1;
+                var colLastPriceStart = colMinPriceStart + 9;
+                var colMinPriceDiffStart = colLastPriceStart + 4;
+                var colTotalPriceStart = colMinPriceDiffStart + 3;
                 var colVariantQuantityStart = colTotalPriceStart + suppliersCount + 1;
                 var colVariantQuantityEnd = colVariantQuantityStart + itemsPerVariantSectionCount - 1;
                 var colVariantTotalPriceStart = colVariantQuantityStart + itemsPerVariantSectionCount + 1;
@@ -51,17 +54,21 @@ namespace DigitalPurchasing.ExcelReader
                 var rowDataStart = 6;
                 var rowTotal = rowDataStart + orderedCustomerItems.Count;
 
+                const double separatorWidth = 0.73;
                 ws.Column(1).Width = 1.33;
                 ws.Column(2).AutoFit();
                 ws.Column(3).Width = 14.67;
                 ws.Column(4).Width = 27.67;
                 ws.Column(5).Width = 10;
                 ws.Column(6).Width = 10;
-                ws.Column(colQuantityStart - 1).Width = 0.73; // separator 1
-                ws.Column(colPriceStart - 1).Width = 0.73; // separator 2
-                ws.Column(colTotalPriceStart - 1).Width = 0.73; // separator 3
-                ws.Column(colVariantQuantityStart - 1).Width = 0.73; // separator 4
-                ws.Column(colVariantTotalPriceStart - 1).Width = 0.73; // separator 5
+                ws.Column(colQuantityStart - 1).Width = separatorWidth; // separator 1
+                ws.Column(colPriceStart - 1).Width = separatorWidth; // separator 2
+                ws.Column(colMinPriceStart - 1).Width = separatorWidth; // separator 3
+                ws.Column(colLastPriceStart - 1).Width = separatorWidth; // separator 4
+                ws.Column(colMinPriceDiffStart - 1).Width = separatorWidth; // separator 5
+                ws.Column(colTotalPriceStart - 1).Width = separatorWidth; // separator 6
+                ws.Column(colVariantQuantityStart - 1).Width = separatorWidth; // separator 7
+                ws.Column(colVariantTotalPriceStart - 1).Width = separatorWidth; // separator 8
 
                 ws.Cells[1, 2].HeaderText("Анализ коммерческих предложений, приведенных к единицам измерения запроса")
                     .AlignLeft().NoWrapText();
