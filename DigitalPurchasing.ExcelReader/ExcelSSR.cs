@@ -115,21 +115,18 @@ namespace DigitalPurchasing.ExcelReader
                 ws.Cells[5, colMinPriceStart].HeaderText("Минимальная цена за ЕИ запроса");
                 ws.Column(colMinPriceStart).Width = 15;
                 ws.Cells[5, colMinPriceStart + 1].HeaderText("ЕИ запроса");
-                ws.Cells[5, colMinPriceStart + 2].HeaderText("Количество, предложенное Поставщиком, ЕИ запроса");
-                ws.Column(colMinPriceStart + 2).Width = 25;
+                ws.Cells[5, colMinPriceStart + 2].HeaderText("Кол-во, предложенное Поставщиком, ЕИ запроса");
+                ws.Column(colMinPriceStart + 2).Width = 22;
                 ws.Cells[5, colMinPriceStart + 3].HeaderText("Поставщик, предложивший минимальную цену");
                 ws.Column(colMinPriceStart + 3).Width = 20;
                 ws.Cells[5, colMinPriceStart + 4].HeaderText("Наименование товара у поставщика");
                 ws.Column(colMinPriceStart + 4).Width = 20;
-                ws.Cells[5, colMinPriceStart + 5].HeaderText("Количество, предложенное Поставщиком, ЕИ поставщика");
-                ws.Column(colMinPriceStart + 5).Width = 25;
+                ws.Cells[5, colMinPriceStart + 5].HeaderText("Кол-во, предложенное Поставщиком, ЕИ поставщика");
+                ws.Column(colMinPriceStart + 5).Width = 22;
                 ws.Cells[5, colMinPriceStart + 6].HeaderText("ЕИ поставщика");
                 ws.Column(colMinPriceStart + 6).Width = 12;
                 ws.Cells[5, colMinPriceStart + 7].HeaderText("No КП/ Счета у поставщика");
                 ws.Column(colMinPriceStart + 7).Width = 15;
-                //ws.Cells[5, colMinPriceStart + 1].HeaderText("111111111111111");
-                //ws.Cells[5, colMinPriceStart + 1].HeaderText("111111111111111");
-                //ws.Cells[5, colMinPriceStart + 1].HeaderText("111111111111111");
 
                 ws.Cells[5, colMinPriceStart, 5, colLastPriceStart - 2].BackgroundLight().HeaderBorders();
                 ws.Cells[rowDataStart, colMinPriceStart, rowTotal - 1, colLastPriceStart - 2].ItemBorders();
@@ -148,6 +145,24 @@ namespace DigitalPurchasing.ExcelReader
                     ws.Cells[6 + index, colMinPriceStart + 5].TableText(withMinPrice.Quantity);
                     //ws.Cells[6 + index, colMinPriceStart + 6].TableText(withMinPrice.);
                 }
+
+                ws.Cells[5, colLastPriceStart].HeaderText("Последняя цена закупки");
+                ws.Column(colLastPriceStart).Width = 12;
+                ws.Cells[5, colLastPriceStart + 1].HeaderText("Последний поставщик");
+                ws.Column(colLastPriceStart + 1).Width = 12;
+                ws.Cells[5, colLastPriceStart + 2].HeaderText("Дата последней закупки");
+                ws.Column(colLastPriceStart + 2).Width = 12;
+                ws.Cells[5, colLastPriceStart, 5, colMinPriceDiffStart - 2].BackgroundLight().HeaderBorders();
+                ws.Cells[rowDataStart, colLastPriceStart, rowTotal - 1, colMinPriceDiffStart - 2].ItemBorders();
+                ws.Cells[rowTotal, colLastPriceStart, rowTotal, colMinPriceDiffStart - 2].BackgroundLight().HeaderBorders();
+
+                ws.Cells[5, colMinPriceDiffStart].HeaderText("Отклонение минимальной цены от последней");
+                ws.Column(colMinPriceDiffStart).Width = 20;
+                ws.Cells[5, colMinPriceDiffStart + 1].HeaderText("Отклонение минимальной цены от последней");
+                ws.Column(colMinPriceDiffStart + 1).Width = 20;
+                ws.Cells[5, colMinPriceDiffStart, 5, colMinPriceDiffStart + 1].BackgroundLight().HeaderBorders();
+                ws.Cells[rowDataStart, colMinPriceDiffStart, rowTotal - 1, colMinPriceDiffStart + 1].ItemBorders();
+                ws.Cells[rowTotal, colMinPriceDiffStart, rowTotal, colMinPriceDiffStart + 1].BackgroundLight().HeaderBorders();
 
                 ws.Cells[4, colTotalPriceStart].HeaderText("Стоимость в валюте запроса").AlignLeft();//.NoWrapText();
                 ws.Cells[4, colTotalPriceStart, 4, colTotalPriceStart + suppliersCount - 1].Merge = true;
