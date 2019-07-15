@@ -13,7 +13,7 @@
 
     <p>{{emailDate}}</p>
     <p>@Model.EmailSubject</p>
-    <p>Поставщик: @Model.SupplierName</p>
+    <p>Поставщик: @Model.SupplierName (@Model.EmailFrom)</p>
 
     @if (Model.Attachments.Any())
     {

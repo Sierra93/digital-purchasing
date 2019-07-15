@@ -8,28 +8,53 @@ namespace DigitalPurchasing.Core.Interfaces
         bool IsProcessed(uint uid);
         void MarkProcessed(uint uid);
         void IncProcessingTries(uint uid);
-        Guid SaveSoEmail(uint uid, Guid qrId, string subject, string body, string fromEmail, DateTimeOffset messageDate,
-            IReadOnlyList<(string fileName, string contentType, byte[] fileBytes)> attachments);
-        SoEmailVm GetSoEmail(Guid emailId, bool includeAttachments = true);
-        EmailAttachmentVm GetAttachment(Guid attachmentId);
+        void SetRoot(Guid emailId, Guid? rootId);
+
+        bool IsSaved(uint uid);
+
+        EmailStatus GetStatus(uint uid);
+
+        Guid SaveEmail(uint uid, string subject, string body,
+            string fromEmail, string toEmail, DateTimeOffset messageDate,
+            IReadOnlyList<(string fileName, string contentType, byte[] fileBytes)> attachments,
+            Guid? ownerId = null);
+
+        EmailDto GetEmail(Guid emailId, bool includeAttachments = true);
+
+        EmailAttachmentDto GetAttachment(Guid attachmentId);
         InboxIndexData GetData(Guid ownerId, bool unhandledSupplierOffersOnly,
             int page, int perPage, string sortField, bool sortAsc, string search);
     }
 
-    public class SoEmailVm
+    public readonly struct EmailStatus
+    {
+        public EmailStatus(uint uid, Guid emailId, bool isSaved, bool isProcessed)
+        {
+            Uid = uid;
+            EmailId = emailId;
+            IsSaved = isSaved;
+            IsProcessed = isProcessed;
+        }
+
+        public uint Uid { get; }
+        public Guid EmailId { get; }
+        public bool IsProcessed { get; }
+        public bool IsSaved { get; }
+    }
+
+    public class EmailDto
     {
         public Guid Id { get; set; }
         public string Subject { get; set; }
         public string Body { get; set; }
         public string FromEmail { get; set; }
-        public Guid QuotationRequestId { get; set; }
         public int ProcessingTries { get; set; }
         public DateTimeOffset MessageDate { get; set; }
 
-        public IReadOnlyList<EmailAttachmentVm> Attachments { get; set; }
+        public IReadOnlyList<EmailAttachmentDto> Attachments { get; set; }
     }
 
-    public class EmailAttachmentVm
+    public class EmailAttachmentDto
     {
         public byte[] Bytes { get; set; }
         public string FileName { get; set; }
@@ -54,6 +79,13 @@ namespace DigitalPurchasing.Core.Interfaces
         public string Subject { get; set; }
         public string SupplierName { get; set; }
         public string Body { get; set; }
+        public string FromEmail { get; set; }
+        public bool IsProcessed { get; set; }
         public IReadOnlyList<InboxIndexAttachment> Attachments { get; set; } = new List<InboxIndexAttachment>();
+        public string PRLink { get; set; }
+        public string QRLink { get; set; }
+        public string CLLink { get; set; }
+        public string PRErp { get; set; }
+        public string CustomerName { get; set; }
     }
 }

@@ -25,5 +25,9 @@ namespace DigitalPurchasing.Models.SSR
 
         [Column(TypeName = "decimal(38, 17)")]
         public decimal ConvertedPrice { get; set; }
+
+        public string UomStr { get; set; }
+
+        public string OfferInvoiceData { get; set; }
     }
 }

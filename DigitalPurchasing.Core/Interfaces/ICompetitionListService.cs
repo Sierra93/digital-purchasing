@@ -75,6 +75,7 @@ namespace DigitalPurchasing.Core.Interfaces
             public int PublicId { get; set; }
             public DateTime CreatedOn { get; set; }
             public string SupplierName { get; set; }
+            public string InvoiceData { get; set; }
             public List<SupplierOfferItemVm> Items { get; set; }
             public CurrencyVm Currency { get; set; }
             public DeliveryTerms DeliveryTerms { get; set; }

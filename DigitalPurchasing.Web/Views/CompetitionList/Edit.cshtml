@@ -1,11 +1,10 @@
 @using DigitalPurchasing.Core
-@using DigitalPurchasing.Web.Controllers
 @model DigitalPurchasing.Web.ViewModels.CompetitionList.CompetitionListEditVm
 
 @{
     var cl = Model.CompetitionList;
     var hasErpCode = !string.IsNullOrEmpty(cl.PurchaseRequest.ErpCode);
-    var reports = Model.Reports;
+    var hasInvoiceData = cl.SupplierOffers.Any(q => !string.IsNullOrEmpty(q.InvoiceData));
     ViewBag.Title = $"Конкурентный лист № {cl.PublicId} от {cl.CreatedOn:dd.MM.yyyy HH:mm}";
     Layout = "_Layout";
 }
@@ -29,43 +28,46 @@
                         <b>Клиент: @cl.PurchaseRequest.CustomerName</b>&nbsp;
                         <a asp-action="Edit" asp-controller="PurchaseRequest" asp-route-id="@cl.PurchaseRequest.Id">@($"Заявка № {cl.PurchaseRequest.PublicId} от {cl.PurchaseRequest.CreatedOn:dd.MM.yyyy HH:mm}")</a>
                     </p>
-                    @if (hasErpCode) { <p>Номер заявки в ERP - @cl.PurchaseRequest.ErpCode</p> }
+                    @if (hasErpCode)
+                    {<p>Номер заявки в ERP - @cl.PurchaseRequest.ErpCode</p>}
+                    @if (!hasErpCode && hasInvoiceData)
+                    {<p>&nbsp;</p>}
                 </div>
                 <table class="table table-striped">
                     <thead>
-                    <tr>
-                        <td>№</td>
-                        <td>Код</td>
-                        <td>Наименование</td>
-                        <td>ЕИ</td>
-                        <td>Кол-во для<br />заказа, ЕИ</td>
-                    </tr>
+                        <tr>
+                            <td>№</td>
+                            <td>Код</td>
+                            <td>Наименование</td>
+                            <td>ЕИ</td>
+                            <td>Кол-во для<br />заказа, ЕИ</td>
+                        </tr>
                     </thead>
                     <tfoot>
-                    <tr>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td>@cl.PurchaseRequest.Items.Sum(q => q.RawQty).ToString(Consts.Format.Qty)</td>
-                    </tr>
-                    <tr>
-                        <td colspan="5">
-                            <p>&nbsp;</p>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td>@cl.PurchaseRequest.Items.Sum(q => q.RawQty).ToString(Consts.Format.Qty)</td>
+                        </tr>
+                        <tr>
+                            <td colspan="5">
+                                <p>&nbsp;</p>
+                            </td>
+                        </tr>
                     </tfoot>
                     <tbody>
-                    @foreach (var item in cl.PurchaseRequest.Items)
-                    {
-                        <tr>
-                            <td>@item.Position</td>
-                            <td>@item.RawCode</td>
-                            <td>@item.RawName</td>
-                            <td>@item.RawUom</td>
-                            <td>@item.RawQty.ToString(Consts.Format.Qty)</td>
-                        </tr>
-                    }
+                        @foreach (var item in cl.PurchaseRequest.Items)
+                        {
+                            <tr>
+                                <td>@item.Position</td>
+                                <td>@item.RawCode</td>
+                                <td>@item.RawName</td>
+                                <td>@item.RawUom</td>
+                                <td>@item.RawQty.ToString(Consts.Format.Qty)</td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
@@ -78,96 +80,68 @@
                             <b>Поставщик: @(so.SupplierName ?? "Не указан")</b>&nbsp;
                             <a asp-action="Edit" asp-controller="SupplierOffer" asp-route-id="@so.Id">@soTitle</a>
                         </p>
-                        @if (hasErpCode) { <p>&nbsp;</p> }
+                        @if (hasErpCode || (hasInvoiceData && string.IsNullOrEmpty(so.InvoiceData)))
+                        {<p>&nbsp;</p>}
+                        @if (!string.IsNullOrEmpty(so.InvoiceData))
+                        {<p>№ КП/cчета у поставщика - @so.InvoiceData</p>}
                     </div>
                     <table class="table table-striped with-left-border">
                         <thead>
-                        <tr>
-                            <td>Код</td>
-                            <td>Наименование</td>
-                            <td>ЕИ</td>
-                            <td>Кол-во,<br />ЕИ</td>
-                            <td>Цена за ЕИ,<br />валюта</td>
-                            <td>Валюта</td>
-                            <td>Стоимость,<br />валюта</td>
-                        </tr>
+                            <tr>
+                                <td>Код</td>
+                                <td>Наименование</td>
+                                <td>ЕИ</td>
+                                <td>Кол-во,<br />ЕИ</td>
+                                <td>Цена за ЕИ,<br />валюта</td>
+                                <td>Валюта</td>
+                                <td>Стоимость,<br />валюта</td>
+                            </tr>
                         </thead>
                         <tfoot>
-                        <tr>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td>@so.Items.Where(q => q != null).Sum(q => q.RawQty).ToString(Consts.Format.Qty)</td>
-                            <td></td>
-                            <td></td>
-                            <td>@so.Items.Where(q => q != null).Sum(q => q.TotalPrice).ToString(Consts.Format.Money2)</td>
-                        </tr>
-                        <tr>
-                            <td colspan="7">
-                                <so-terms :so="'@so.Id'"></so-terms>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td>@so.Items.Where(q => q != null).Sum(q => q.RawQty).ToString(Consts.Format.Qty)</td>
+                                <td></td>
+                                <td></td>
+                                <td>@so.Items.Where(q => q != null).Sum(q => q.TotalPrice).ToString(Consts.Format.Money2)</td>
+                            </tr>
+                            <tr>
+                                <td colspan="7">
+                                    <so-terms :so="'@so.Id'"></so-terms>
+                                </td>
+                            </tr>
                         </tfoot>
                         <tbody>
-                        @foreach (var item in so.Items)
-                        {
-                            if (item != null)
+                            @foreach (var item in so.Items)
                             {
-                                <tr>
-                                    <td>@item.RawCode</td>
-                                    <td>@item.RawName</td>
-                                    <td>@item.RawUom</td>
-                                    <td>@item.RawQty.ToString(Consts.Format.Qty)</td>
-                                    <td>@item.RawPrice.ToString(Consts.Format.Money2)</td>
-                                    <td>@so.Currency.Name</td>
-                                    <td>@item.TotalPrice.ToString(Consts.Format.Money2)</td>
-                                </tr>
+                                if (item != null)
+                                {
+                                    <tr>
+                                        <td>@item.RawCode</td>
+                                        <td>@item.RawName</td>
+                                        <td>@item.RawUom</td>
+                                        <td>@item.RawQty.ToString(Consts.Format.Qty)</td>
+                                        <td>@item.RawPrice.ToString(Consts.Format.Money2)</td>
+                                        <td>@so.Currency.Name</td>
+                                        <td>@item.TotalPrice.ToString(Consts.Format.Money2)</td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="7" style="text-align: center;">Не сопоставлено</td>
+                                    </tr>
+                                }
                             }
-                            else
-                            {
-                                <tr>
-                                    <td colspan="7" style="text-align: center;">Не сопоставлено</td>
-                                </tr>
-                            }
-                        }
                         </tbody>
                     </table>
                 </div>
             }
         </div>
     </div>
-    @if (reports.Any())
-    {
-        <div class="row">
-            <div class="col-md-6">
-                <table class="table">
-                    <thead>
-                    <tr>
-                        <th>Дата и время подтверждения</th>
-                        <th>Вариант выбора</th>
-                        <th>Общая сумма</th>
-                        <th>Валюта</th>
-                        <th>Выбор подтвердил</th>
-                        <th>Отчет о выборе поставщиков</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach (var report in reports)
-                    {
-                        <tr>
-                            <td>@report.CreatedOn.ToString("dd.MM.yyyy HH:mm")</td>
-                            <td>@report.SelectedVariantNumber</td>
-                            <td>@report.SelectedVariantTotalPrice.ToString("N")</td>
-                            <td>@report.Currency</td>
-                            <td>@report.SelectedBy</td>
-                            <td><a href="@Url.Action(nameof(CompetitionListController.Report), new { reportId = report.ReportId })">Скачать</a></td>
-                        </tr>
-                    }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    }
+    <vc:competition-list-report cl-id="Model.CompetitionList.Id"></vc:competition-list-report>
 </div>
 
 @section Scripts

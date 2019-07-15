@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Web.Core;
@@ -31,27 +29,23 @@ namespace DigitalPurchasing.Web.Controllers
             _supplierService = supplierService;
         }
 
-        public IActionResult Index()
-        {
-            return View();
-        }
+        public IActionResult Index() => View();
 
         public IActionResult View(Guid id)
         {
-            var soEmail = _receivedEmailService.GetSoEmail(id);
-
+            var soEmail = _receivedEmailService.GetEmail(id);
             if (soEmail == null) return NotFound();
 
-            var qr = _quotationRequestService.GetById(soEmail.QuotationRequestId);
-            var supplierId = _supplierService.GetSupplierByEmail(qr.OwnerId, soEmail.FromEmail);
-            var supplier = _supplierService.GetById(supplierId, true);
+            var ownerId = User.CompanyId();
+            var supplierName = _supplierService.GetSupplierNameByEmail(ownerId, soEmail.FromEmail);
 
             return View(new InboxViewVm
             {
-                SupplierName = supplier?.Name,
+                SupplierName = string.IsNullOrEmpty(supplierName) ? "Не определен" : supplierName,
                 EmailBody = soEmail.Body,
                 EmailDate = soEmail.MessageDate,
                 EmailSubject = soEmail.Subject,
+                EmailFrom = soEmail.FromEmail,
                 Attachments = soEmail.Attachments.Select(a => new InboxViewVm.EmailAttachment()
                 {
                     FileName = a.FileName,

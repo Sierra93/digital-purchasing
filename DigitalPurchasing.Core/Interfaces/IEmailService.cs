@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -8,7 +9,7 @@ namespace DigitalPurchasing.Core.Interfaces
         Task SendEmailAsync(string toEmail, string subject, string htmlMessage,
             IReadOnlyList<string> attachments = null);
 
-        Task SendFromRobotAsync(string toEmail, string subject, string htmlMessage,
+        Task SendFromRobotAsync(Guid companyId, string toEmail, string subject, string htmlMessage,
             IReadOnlyList<string> attachments = null);
     }
 }

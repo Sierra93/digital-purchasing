@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190705133909_ReceivedEmail_v2")]
+    partial class ReceivedEmail_v2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -893,15 +895,11 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<Guid>("RequestId");
 
-                    b.Property<Guid?>("UserId");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ContactPersonId");
 
                     b.HasIndex("RequestId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("QuotationRequestEmails");
                 });
@@ -925,8 +923,6 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<int>("ProcessingTries");
 
-                    b.Property<Guid?>("RootId");
-
                     b.Property<string>("Subject");
 
                     b.Property<string>("ToEmail");
@@ -936,8 +932,6 @@ namespace DigitalPurchasing.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OwnerId");
-
-                    b.HasIndex("RootId");
 
                     b.ToTable("ReceivedEmails");
                 });
@@ -1119,8 +1113,6 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<Guid>("NomenclatureId");
 
-                    b.Property<string>("OfferInvoiceData");
-
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(38, 17)");
 
@@ -1128,8 +1120,6 @@ namespace DigitalPurchasing.Data.Migrations
                         .HasColumnType("decimal(18, 4)");
 
                     b.Property<Guid>("SupplierId");
-
-                    b.Property<string>("UomStr");
 
                     b.HasKey("Id");
 
@@ -1308,8 +1298,6 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<DateTime>("DeliveryDate");
 
                     b.Property<int>("DeliveryTerms");
-
-                    b.Property<string>("InvoiceData");
 
                     b.Property<Guid>("OwnerId");
 
@@ -1870,10 +1858,6 @@ namespace DigitalPurchasing.Data.Migrations
                         .WithMany("Emails")
                         .HasForeignKey("RequestId")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("DigitalPurchasing.Models.Identity.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.ReceivedEmail", b =>
@@ -1881,10 +1865,6 @@ namespace DigitalPurchasing.Data.Migrations
                     b.HasOne("DigitalPurchasing.Models.Company", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerId");
-
-                    b.HasOne("DigitalPurchasing.Models.Root", "Root")
-                        .WithMany()
-                        .HasForeignKey("RootId");
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.Root", b =>

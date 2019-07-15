@@ -66,7 +66,9 @@ namespace DigitalPurchasing.Core.Interfaces
         public ExcelTable Table { get; set; }
         public string Message { get; set; }
 
-        public static ExcelTableResponse Success(ExcelTable table) => new ExcelTableResponse { Table = table, IsSuccess = true };
+        public string InvoiceData { get; set; }
+
+        public static ExcelTableResponse Success(ExcelTable table, string invoiceData = null) => new ExcelTableResponse { Table = table, IsSuccess = true, InvoiceData = invoiceData };
         public static ExcelTableResponse Error(string message) => new ExcelTableResponse { IsSuccess = false, Message = message };
     }
 }

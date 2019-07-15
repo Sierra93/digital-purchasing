@@ -35,7 +35,10 @@ namespace DigitalPurchasing.Web.Controllers
         [Route("competitionlist/{clId}/analysis")]
         public IActionResult Index(Guid clId)
         {
-            var vm = new AnalysisIndexVm {ClId = clId};
+            var vm = new AnalysisIndexVm
+            {
+                ClId = clId
+            };
             return View(vm);
         }
 

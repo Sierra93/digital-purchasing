@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190711171955_ReceivedEmail_Root")]
+    partial class ReceivedEmail_Root
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1119,8 +1121,6 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<Guid>("NomenclatureId");
 
-                    b.Property<string>("OfferInvoiceData");
-
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(38, 17)");
 
@@ -1128,8 +1128,6 @@ namespace DigitalPurchasing.Data.Migrations
                         .HasColumnType("decimal(18, 4)");
 
                     b.Property<Guid>("SupplierId");
-
-                    b.Property<string>("UomStr");
 
                     b.HasKey("Id");
 

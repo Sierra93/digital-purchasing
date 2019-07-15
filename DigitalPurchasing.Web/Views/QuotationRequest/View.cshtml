@@ -6,8 +6,17 @@
     Layout = "_Layout";
 }
 
-<h2>@ViewBag.Title</h2>
-
+<h2 class="with-button">@ViewBag.Title</h2>
+<div class="btn-group">
+    <a asp-action="Download" asp-route-qrId="@Model.Id" class="btn btn-default">Скачать в формате excel</a>
+    <a asp-controller="CompetitionList" asp-action="Create" asp-route-qrId="@Model.Id" class="btn btn-primary">Создать КЛ</a>
+</div>
+<p class="h4">Клиент: @Model.PurchaseRequest.Customer.Name</p>
+<p class="h4">Заявка № @Model.PurchaseRequest.PublicId от @Model.PurchaseRequest.CreatedOn.ToString("dd.MM.yyyy HH:mm")</p>
+@if (!string.IsNullOrEmpty(Model.PurchaseRequest.ErpCode))
+{
+    <p class="h4">Номер заявки в ERP - @Model.PurchaseRequest.ErpCode</p>
+}
 <div id="app">
     <div class="row">
         <div class="col-md-6 form-inline">
@@ -19,10 +28,7 @@
                 </select>
             </div>
         </div>
-        <div class="col-md-6">
-            <a asp-action="Download" asp-route-qrId="@Model.Id" class="btn btn-primary">Скачать в формате excel</a>
-            <a asp-controller="CompetitionList" asp-action="Create" asp-route-qrId="@Model.Id" class="btn btn-primary">Создать КЛ</a>
-        </div>
+        <div class="col-md-6"></div>
     </div>
     <div class="row">
         <div class="col-md-12">
@@ -291,7 +297,10 @@
                             }, function (res) {
                                 vm.sendingInProgress = false;
                                 alert('error');
-                            });
+                                });
+                        _.each(this.items, function (item) {
+                            item.requests = [];
+                        });
                     },
                     modalSendEmailsOk: function() {
                         this.modalSendEmails = false;

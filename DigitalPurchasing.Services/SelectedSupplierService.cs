@@ -135,7 +135,9 @@ namespace DigitalPurchasing.Services
                                 NomenclatureId = q.NomenclatureId,
                                 InternalId = q.Id,
                                 ConvertedQuantity = detailsItem.Conversion.OfferQty,
-                                ConvertedPrice = detailsItem.Conversion.OfferPrice
+                                ConvertedPrice = detailsItem.Conversion.OfferPrice,
+                                UomStr = q.RawUom,
+                                OfferInvoiceData = supplierOffer.InvoiceData
                             };
                         }).ToList();
                         await _db.SSSupplierItems.AddRangeAsync(ssSupplierItems);

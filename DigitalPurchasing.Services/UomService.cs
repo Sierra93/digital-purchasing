@@ -249,6 +249,26 @@ namespace DigitalPurchasing.Services
             return settings.PackagingUomId;
         }
 
+        public IEnumerable<string> GetAllNormalizedNames(Guid ownerId)
+        {
+            var cacheKey = Consts.CacheKeys.UomAllNormalizedNames(ownerId);
+
+            if (!_cache.TryGetValue(cacheKey, out List<string> names))
+            {
+                names = _db.UnitsOfMeasurements
+                    .IgnoreQueryFilters()
+                    .AsNoTracking()
+                    .Where(q => q.OwnerId == ownerId).Select(q => q.NormalizedName).Distinct().ToList();
+
+                var cacheEntryOptions = new MemoryCacheEntryOptions()
+                    .SetSlidingExpiration(TimeSpan.FromSeconds(5));
+
+                _cache.Set(cacheKey, names, cacheEntryOptions);
+            }
+
+            return names;
+        }
+
         private async Task<DefaultUom> GetDefaultUomSettings(Guid ownerId)
         {
             var settings = await _db.DefaultUoms

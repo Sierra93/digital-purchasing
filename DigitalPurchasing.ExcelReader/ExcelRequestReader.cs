@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using DigitalPurchasing.Core.Enums;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using OfficeOpenXml;
 
@@ -26,9 +27,13 @@ namespace DigitalPurchasing.ExcelReader
         private const string CantOpenFile = "Не удается открыть файл";
 
         private readonly IColumnNameService _columnNameService;
+        private readonly IUomService _uomService;
 
-        public ExcelRequestReader(IColumnNameService columnNameService)
-            => _columnNameService = columnNameService;
+        public ExcelRequestReader(IColumnNameService columnNameService, IUomService uomService)
+        {
+            _columnNameService = columnNameService;
+            _uomService = uomService;
+        }
 
         public ExcelTableResponse ToTable(string path, Guid ownerId)
         {
@@ -42,6 +47,7 @@ namespace DigitalPurchasing.ExcelReader
             }
 
             var result = new ExcelTable();
+            var invoiceData = "";
             
             using (var package = new ExcelPackage(new FileInfo(path)))
             {
@@ -110,10 +116,27 @@ namespace DigitalPurchasing.ExcelReader
                     }
                 }
 
+                var normalizedUomNames = _uomService.GetAllNormalizedNames(ownerId);
+
                 foreach (var tempColumnData in tempColumnDatas)
                 {
                     var header = ws.Cells[tempColumnData.HeaderAddr.Address].Text;
                     var values = SearchValues(ws, tempColumnData.HeaderAddr, valueRow, tempColumnData.Type == TableColumnType.Name);
+
+                    // try to detect type by values
+                    if (tempColumnData.Type == TableColumnType.Unknown)
+                    {
+                        var distinctValues = values
+                            .Select(q => q.ToLower().CustomNormalize())
+                            .Distinct();
+
+                        if (distinctValues.All(q => normalizedUomNames.Contains(q) || string.IsNullOrEmpty(q)))
+                        {
+                            tempColumnData.Type = TableColumnType.Uom;
+                            header = "ЕИ";
+                        }
+                    }
+
                     AddColumn(result.Columns, tempColumnData.Type, header, values);
                 }
 
@@ -126,9 +149,14 @@ namespace DigitalPurchasing.ExcelReader
                     }
                 }
 
+                var invoiceDataResult = SearchInvoiceData(ws);
+                if (invoiceDataResult.IsInvoice)
+                {
+                    invoiceData = invoiceDataResult.InvoiceData;
+                }
             }
 
-            return ExcelTableResponse.Success(result);
+            return ExcelTableResponse.Success(result, invoiceData);
         }
 
         private ExcelWorksheet GetDefaultWorksheet(ExcelPackage package) => package.Workbook.Worksheets.First();
@@ -152,6 +180,51 @@ namespace DigitalPurchasing.ExcelReader
             }
 
             return addresses;
+        }
+
+        private (bool IsInvoice, string InvoiceData) SearchInvoiceData(ExcelWorksheet ws)
+        {
+            var parts = new []
+            { "счет", "на", "оплату", "№", "от" };
+            
+            var invoiceData = ws
+                .Cells[ws.Dimension.Address]
+                .Where(q => !string.IsNullOrEmpty(q.Text)
+                    && parts.Any(p => q.Text.IndexOf(p, StringComparison.CurrentCultureIgnoreCase) > -1))
+                .Select(q => new {
+                    Range = q,
+                    Count = parts.Count(
+                        p => q.Text.IndexOf(p, StringComparison.CurrentCultureIgnoreCase) > -1
+                    )
+                })
+                .OrderByDescending(q => q.Count)
+                .FirstOrDefault();
+
+            if (invoiceData != null)
+            {
+                var range = invoiceData.Range;
+                var text = range.Text;
+
+                var cleanText = text;
+
+                foreach (var part in new []{ "г.", "договор", "заказа", "счет", "на", "оплату", "№" })
+                {
+                    cleanText = cleanText.Replace(part, "",
+                        StringComparison.InvariantCultureIgnoreCase);
+                }
+
+                cleanText = cleanText.Trim().Trim('-').Trim();
+                
+                return (
+                    IsInvoice: true,
+                    InvoiceData: cleanText
+                );
+            }
+
+            return (
+                IsInvoice: false,
+                InvoiceData: null
+            );
         }
 
         private List<ExcelCellAddress> SearchOtherHeaderAddresses(ExcelWorksheet ws, int row, IEnumerable<ExcelCellAddress> headerAddresses)

@@ -50,65 +50,64 @@ namespace DigitalPurchasing.Services
 
                 foreach (var uniqueId in client.Inbox.Search(query))
                 {
-                    if (!_receivedEmails.IsProcessed(uniqueId.Id))
+                    var status = _receivedEmails.GetStatus(uniqueId.Id);
+                    if (status.IsProcessed) continue;
+
+                    var emailId = status.EmailId;
+
+                    if (!status.IsSaved)
                     {
                         var message = client.Inbox.GetMessage(uniqueId);
-                        Guid? emailId = null;
+                        emailId = SaveEmail(uniqueId, message);
+                    }
 
-                        if (RFQEmailProcessor.IsSupplierOfferEmail(message))
-                        {
-                            emailId = SaveSoEmail(uniqueId, message);
-                        }
-                        else
-                        {
-                            // todo
-                        }
+                    var processTasks = _emailProcessors.Select(q => q.Process(emailId));
+                    var processResults = await Task.WhenAll(processTasks);
 
-                        if (emailId.HasValue)
-                        {
-                            var processTasks = _emailProcessors.Select(q => q.Process(emailId.Value));
-                            var processResults = await Task.WhenAll(processTasks);
-
-                            var isProcessed = processResults.Any(q => q);
-                            if (isProcessed)
-                            {
-                                _receivedEmails.MarkProcessed(uniqueId.Id);
-                            }
-                            else
-                            {
-                                _receivedEmails.IncProcessingTries(uniqueId.Id);
-
-                                // try to detect
-                                // todo: resend email
-                            }
-                        }
+                    var isProcessed = processResults.Any(q => q);
+                    if (isProcessed)
+                    {
+                        _receivedEmails.MarkProcessed(uniqueId.Id);
+                    }
+                    else
+                    {
+                        _receivedEmails.IncProcessingTries(uniqueId.Id);
                     }
                 }
             }
         }
 
-        private Guid? SaveSoEmail(UniqueId messageId, MimeMessage message)
+        private Guid SaveEmail(UniqueId messageId, MimeMessage message)
         {
-            string rfqUid = RFQEmailProcessor.GetRfqEmailUid(message);
-            var qrId = _quotationRequestService.UidToQuotationRequest(rfqUid);
-            if (qrId.HasValue)
-            {
-                var body = message.GetTextBody(TextFormat.Html);
-                var fromEmail = message.From.Mailboxes.First().Address;
+            var body = message.GetTextBody(TextFormat.Html);
+            var toEmail = message.To.Mailboxes.First(q => q.Address.Contains("@digitalpurchasing.com")).Address;
+            var fromEmail = message.From.Mailboxes.First().Address;
 
-                return _receivedEmails.SaveSoEmail(messageId.Id, qrId.Value, message.Subject, body, fromEmail, message.Date,
-                    message.Attachments.Where(a => !(a is MessagePart)).Select(a =>
-                    {
-                        var part = (MimePart)a;
-                        using (var ms = new MemoryStream())
-                        {
-                            part.Content.DecodeTo(ms);
-                            return (part.FileName, part.ContentType.MimeType, ms.ToArray());
-                        }
-                    }).ToList());
+            Guid? ownerId = null;
+
+            var inbox = toEmail.Split("@").First();
+            if (inbox.StartsWith("robot+"))
+            {
+                var strOwner = inbox.Replace("robot+", "");
+                if (Guid.TryParse(strOwner, out var id))
+                {
+                    ownerId = id;
+                }
             }
 
-            return null;
+            var attachments = message.Attachments.Where(a => !(a is MessagePart)).Select(a =>
+            {
+                var part = (MimePart)a;
+                using (var ms = new MemoryStream())
+                {
+                    part.Content.DecodeTo(ms);
+                    return (part.FileName, part.ContentType.MimeType, ms.ToArray());
+                }
+            }).ToList();
+
+            return _receivedEmails.SaveEmail(
+                messageId.Id, message.Subject, body, fromEmail, toEmail, message.Date,
+                attachments, ownerId);
         }
     }
 
@@ -170,115 +169,127 @@ namespace DigitalPurchasing.Services
                 message.Subject.Contains("[RFQ");
         }
 
-        internal static string GetRfqEmailUid(MimeMessage message)
+        private string GetRfqEmailUid(string subject)
         {
-            var uidStartIndex = message.Subject.IndexOf("[RFQ", StringComparison.Ordinal);
-            var uidEndEnd = message.Subject.IndexOf(']', uidStartIndex);
-            return message.Subject.Substring(uidStartIndex + 1, uidEndEnd - uidStartIndex - 1);
+            var uidStartIndex = subject.IndexOf("[RFQ", StringComparison.Ordinal);
+            if (uidStartIndex == -1) return null;
+            var uidEndEnd = subject.IndexOf(']', uidStartIndex);
+            if (uidEndEnd == -1) return null;
+            return subject.Substring(uidStartIndex + 1, uidEndEnd - uidStartIndex - 1);
         }
 
         public async Task<bool> Process(Guid emailId)
         {
-            var soEmail = _receivedEmails.GetSoEmail(emailId);
+            var email = _receivedEmails.GetEmail(emailId);
+            if (email == null) return false;
 
-            if (soEmail != null)
+            var rfqUid = GetRfqEmailUid(email.Subject);
+            if (string.IsNullOrEmpty(rfqUid)) return false;
+
+            var qrId = _quotationRequestService.UidToQuotationRequest(rfqUid);
+            if (!qrId.HasValue) return false;
+
+            var qr = _quotationRequestService.GetById(qrId.Value, true);
+            if (qr == null) return false;
+
+            var rootId = await _rootService.GetIdByQR(qr.Id);
+            _receivedEmails.SetRoot(emailId, rootId);
+            
+            var requestOwnerEmail = _quotationRequestService.RequestSentBy(qr.Id, email.FromEmail);
+            
+            if (string.IsNullOrEmpty(requestOwnerEmail))
             {
-                var qr = _quotationRequestService.GetById(soEmail.QuotationRequestId, true);
-                if (qr != null)
+                requestOwnerEmail = _companyService.GetContactEmailByOwner(qr.OwnerId);
+            }
+
+            var soHandled = false;
+
+            // detect supplier by contact email
+            var supplierId = _supplierService.GetSupplierIdByEmail(qr.OwnerId, email.FromEmail);
+
+            // upload supplier offer
+            if (supplierId != Guid.Empty)
+            {
+                var clId = await _competitionListService.GetIdByQR(qr.Id, true);
+
+                if (clId == Guid.Empty) return false;
+
+                foreach (var attachment in email.Attachments.Where(a => IsSupportedFile(a.FileName)))
                 {
-                    var ownerEmail = _companyService.GetContactEmailByOwner(qr.OwnerId);
+                    var allColumns = false;
+                    var allMatched = false;
 
-                    var soHandled = false;
-
-                    // detect supplier by contact email
-                    var supplierId = _supplierService.GetSupplierByEmail(qr.OwnerId, soEmail.FromEmail);
-
-                    // upload supplier offer
-                    if (supplierId != Guid.Empty)
+                    var tempFile = Path.GetTempFileName() + Path.GetExtension(attachment.FileName);
+                    try
                     {
-                        var clId = await _competitionListService.GetIdByQR(soEmail.QuotationRequestId, true);
+                        File.WriteAllBytes(tempFile, attachment.Bytes);
 
-                        foreach (var attachment in soEmail.Attachments.Where(a => IsSupportedFile(a.FileName)))
+                        var createOfferResult = await _supplierOfferService.CreateFromFile(clId, tempFile);
+                        if (createOfferResult.IsSuccess)
                         {
-                            var allColumns = false;
-                            var allMatched = false;
-
-                            var tempFile = Path.GetTempFileName() + Path.GetExtension(attachment.FileName);
                             try
                             {
-                                File.WriteAllBytes(tempFile, attachment.Bytes);
+                                // set supplier name
+                                var soId = createOfferResult.Id;
+                                var supplier = _supplierService.GetById(supplierId, true);
+                                _supplierOfferService.UpdateSupplierName(soId, supplier.Name, supplier.Id, true);
 
-                                var createOfferResult = await _supplierOfferService.CreateFromFile(clId, tempFile);
-                                if (createOfferResult.IsSuccess)
+                                // detect columns
+                                var columns = _supplierOfferService.GetColumnsData(soId, true);
+                                _supplierOfferService.UpdateStatus(soId, SupplierOfferStatus.MatchColumns, true);
+
+                                allColumns = !string.IsNullOrEmpty(columns.Name) &&
+                                             !string.IsNullOrEmpty(columns.Uom) &&
+                                             !string.IsNullOrEmpty(columns.Price) &&
+                                             !string.IsNullOrEmpty(columns.Qty);
+
+                                if (allColumns)
                                 {
-                                    try
-                                    {
-                                        // set supplier name
-                                        var soId = createOfferResult.Id;
-                                        var supplier = _supplierService.GetById(supplierId, true);
-                                        _supplierOfferService.UpdateSupplierName(soId, supplier.Name, supplier.Id, true);
+                                    _supplierOfferService.SaveColumns(soId, columns, true);
+                                    // raw items + match
+                                    _supplierOfferService.GenerateRawItems(soId, true);
+                                    _supplierOfferService.UpdateStatus(soId, SupplierOfferStatus.MatchItems, true);
 
-                                        // detect columns
-                                        var columns = _supplierOfferService.GetColumnsData(soId, true);
-                                        _supplierOfferService.UpdateStatus(soId, SupplierOfferStatus.MatchColumns, true);
-
-                                        allColumns = !string.IsNullOrEmpty(columns.Name) &&
-                                                     !string.IsNullOrEmpty(columns.Uom) &&
-                                                     !string.IsNullOrEmpty(columns.Price) &&
-                                                     !string.IsNullOrEmpty(columns.Qty);
-
-                                        if (allColumns)
-                                        {
-                                            _supplierOfferService.SaveColumns(soId, columns, true);
-                                            // raw items + match
-                                            _supplierOfferService.GenerateRawItems(soId, true);
-                                            _supplierOfferService.UpdateStatus(soId, SupplierOfferStatus.MatchItems, true);
-
-                                            allMatched = _supplierOfferService.IsAllMatched(soId);
-                                            var rootId = await _rootService.GetIdByQR(soEmail.QuotationRequestId);
-                                            await _rootService.SetStatus(rootId, allMatched
-                                                ? RootStatus.EverythingMatches
-                                                : RootStatus.MatchingRequired);
-                                        }
-
-                                        if (!allColumns || !allMatched)
-                                        {
-                                            PartiallyProcessedEmail(ownerEmail, qr.PublicId, createOfferResult.Id /* SO Id */);
-                                        }
-
-                                        soHandled = true;
-                                        break;
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        _logger.LogError(e, "Error during processing RFQ email");
-                                    }
+                                    allMatched = _supplierOfferService.IsAllMatched(soId);
+                                    await _rootService.SetStatus(rootId, allMatched
+                                        ? RootStatus.EverythingMatches
+                                        : RootStatus.MatchingRequired);
                                 }
-                                else
+
+                                if (!allColumns || !allMatched)
                                 {
-                                    // unable parse excel file
-                                    // todo: send email with attachment?
+                                    PartiallyProcessedEmail(requestOwnerEmail, qr.PublicId, createOfferResult.Id /* SO Id */);
                                 }
+
+                                soHandled = true;
+                                break;
                             }
-                            finally
+                            catch (Exception e)
                             {
-                                TryDeleteFile(tempFile);
+                                _logger.LogError(e, "Error during processing RFQ email");
                             }
                         }
-                    }
-
-                    if (soHandled)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        if (soEmail.ProcessingTries == 0)
+                        else
                         {
-                            SendSoNotProcessedNotification(ownerEmail, qr.PublicId, soEmail.Id);
+                            // unable parse excel file
+                            // todo: send email with attachment?
                         }
+                    }
+                    finally
+                    {
+                        TryDeleteFile(tempFile);
                     }
                 }
+            }
+
+            if (soHandled)
+            {
+                return true;
+            }
+
+            if (email.ProcessingTries == 0)
+            {
+                SendSoNotProcessedNotification(requestOwnerEmail, qr.PublicId, email.Id);
             }
 
             return false;
@@ -292,7 +303,7 @@ namespace DigitalPurchasing.Services
             }
             catch
             {
-
+                // ignored
             }
         }
 

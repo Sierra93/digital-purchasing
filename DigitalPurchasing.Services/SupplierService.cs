@@ -183,7 +183,7 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
         }
 
-        public Guid GetSupplierByEmail(Guid ownerId, string email)
+        public Guid GetSupplierIdByEmail(Guid ownerId, string email)
         {
             var supplierContactPerson = _db.SupplierContactPersons
                 .IgnoreQueryFilters()
@@ -193,6 +193,19 @@ namespace DigitalPurchasing.Services
                     q.Supplier.OwnerId == ownerId);
 
             return supplierContactPerson?.SupplierId ?? Guid.Empty;
+        }
+
+        public string GetSupplierNameByEmail(Guid ownerId, string email)
+        {
+            var supplierContactPerson = _db.SupplierContactPersons
+                .IgnoreQueryFilters()
+                .Include(q => q.Supplier)
+                .FirstOrDefault(q =>
+                    q.Email.Equals(email) &&
+                    q.UseForRequests &&
+                    q.Supplier.OwnerId == ownerId);
+
+            return supplierContactPerson?.Supplier.Name ?? string.Empty;
         }
 
         public void Update(SupplierVm model)
