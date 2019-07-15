@@ -133,6 +133,12 @@ namespace DigitalPurchasing.Services
             return companies.Adapt<List<CompanyDto>>();
         }
 
+        public bool IsValidOwnerId(Guid ownerId)
+        {
+            var company = _db.Companies.FirstOrDefault(q => q.Id == ownerId);
+            return company != null;
+        }
+
         private async Task SeedCompanyData(Guid companyId)
         {
             var psc1 = await _uomService.Create(companyId, "шт", 1);

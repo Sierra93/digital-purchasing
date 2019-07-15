@@ -26,15 +26,18 @@ namespace DigitalPurchasing.Services
         private readonly IEnumerable<IEmailProcessor> _emailProcessors;
         private readonly IReceivedEmailService _receivedEmails;
         private readonly IQuotationRequestService _quotationRequestService;
+        private readonly ICompanyService _companyService;
 
         public RobotEmailService(
             IEnumerable<IEmailProcessor> emailProcessors,
             IReceivedEmailService receivedEmails,
-            IQuotationRequestService quotationRequestService)
+            IQuotationRequestService quotationRequestService,
+            ICompanyService companyService)
         {
             _emailProcessors = emailProcessors;
             _receivedEmails = receivedEmails;
             _quotationRequestService = quotationRequestService;
+            _companyService = companyService;
         }
 
         public async Task CheckRobotEmails()
@@ -91,7 +94,10 @@ namespace DigitalPurchasing.Services
                 var strOwner = inbox.Replace("robot+", "");
                 if (Guid.TryParse(strOwner, out var id))
                 {
-                    ownerId = id;
+                    if (_companyService.IsValidOwnerId(id))
+                    {
+                        ownerId = id;
+                    }
                 }
             }
 
