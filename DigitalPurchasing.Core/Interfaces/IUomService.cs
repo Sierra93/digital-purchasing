@@ -38,6 +38,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
         Task SetPackagingUom(Guid ownerId, Guid uomId);
         Task<Guid> GetPackagingUom(Guid ownerId);
+        IEnumerable<string> GetAllNormalizedNames(Guid ownerId);
     }
 
     public class UomDto

@@ -23,6 +23,9 @@ namespace DigitalPurchasing.Core
             public static string UomAutocomplete(Guid ownerId, string qry)
                 => $"uom_ac_{ownerId:N}_{qry.ToMD5()}";
 
+            public static string UomAllNormalizedNames(Guid ownerId)
+                => $"uom_all_normalized_names_{ownerId:N}";
+
             public static string NomenclatureAutocomplete(Guid ownerId)
                 => $"nom_ac_{ownerId:N}";
 

@@ -27,20 +27,13 @@ namespace DigitalPurchasing.ExcelReader
         private const string CantOpenFile = "Не удается открыть файл";
 
         private readonly IColumnNameService _columnNameService;
+        private readonly IUomService _uomService;
 
-        private static List<string> _defaultUoms = new List<string>
+        public ExcelRequestReader(IColumnNameService columnNameService, IUomService uomService)
         {
-            "кг".CustomNormalize(),
-            "т".CustomNormalize(),
-            "шт".CustomNormalize(),
-            "тыс. шт".CustomNormalize(),
-            "упаковка".CustomNormalize(),
-            "упак".CustomNormalize(),
-            "ед".CustomNormalize(),
-        };
-
-        public ExcelRequestReader(IColumnNameService columnNameService)
-            => _columnNameService = columnNameService;
+            _columnNameService = columnNameService;
+            _uomService = uomService;
+        }
 
         public ExcelTableResponse ToTable(string path, Guid ownerId)
         {
@@ -123,6 +116,8 @@ namespace DigitalPurchasing.ExcelReader
                     }
                 }
 
+                var normalizedUomNames = _uomService.GetAllNormalizedNames(ownerId);
+
                 foreach (var tempColumnData in tempColumnDatas)
                 {
                     var header = ws.Cells[tempColumnData.HeaderAddr.Address].Text;
@@ -135,7 +130,7 @@ namespace DigitalPurchasing.ExcelReader
                             .Select(q => q.ToLower().CustomNormalize())
                             .Distinct();
 
-                        if (distinctValues.All(q => _defaultUoms.Contains(q) || string.IsNullOrEmpty(q)))
+                        if (distinctValues.All(q => normalizedUomNames.Contains(q) || string.IsNullOrEmpty(q)))
                         {
                             tempColumnData.Type = TableColumnType.Uom;
                         }
