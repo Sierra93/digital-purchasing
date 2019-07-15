@@ -18,6 +18,7 @@ namespace DigitalPurchasing.Core.Interfaces
         Task<List<CompanyUserDto>> GetCompanyUsers(Guid companyId);
         Task<int> Count();
         Task<List<CompanyDto>> GetAll();
+        bool IsValidOwnerId(Guid ownerId);
     }
 
     public class CompanyDto
