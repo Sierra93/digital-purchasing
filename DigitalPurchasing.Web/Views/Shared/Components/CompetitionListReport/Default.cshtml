@@ -26,7 +26,7 @@
                             <td>@report.SelectedVariantTotalPrice.ToString("N")</td>
                             <td>@report.Currency</td>
                             <td>@report.SelectedBy</td>
-                            <td><a href="@Url.Action(nameof(CompetitionListController.Report), new { reportId = report.ReportId })">Скачать</a></td>
+                            <td><a href="@Url.Action(nameof(CompetitionListController.Report), "CompetitionList", new { reportId = report.ReportId })">Скачать</a></td>
                         </tr>
                     }
                 </tbody>
