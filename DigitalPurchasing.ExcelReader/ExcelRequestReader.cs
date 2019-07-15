@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using DigitalPurchasing.Core.Enums;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using OfficeOpenXml;
 
@@ -26,6 +27,17 @@ namespace DigitalPurchasing.ExcelReader
         private const string CantOpenFile = "Не удается открыть файл";
 
         private readonly IColumnNameService _columnNameService;
+
+        private static List<string> _defaultUoms = new List<string>
+        {
+            "кг".CustomNormalize(),
+            "т".CustomNormalize(),
+            "шт".CustomNormalize(),
+            "тыс. шт".CustomNormalize(),
+            "упаковка".CustomNormalize(),
+            "упак".CustomNormalize(),
+            "ед".CustomNormalize(),
+        };
 
         public ExcelRequestReader(IColumnNameService columnNameService)
             => _columnNameService = columnNameService;
@@ -115,6 +127,20 @@ namespace DigitalPurchasing.ExcelReader
                 {
                     var header = ws.Cells[tempColumnData.HeaderAddr.Address].Text;
                     var values = SearchValues(ws, tempColumnData.HeaderAddr, valueRow, tempColumnData.Type == TableColumnType.Name);
+
+                    // try to detect type by values
+                    if (tempColumnData.Type == TableColumnType.Unknown)
+                    {
+                        var distinctValues = values
+                            .Select(q => q.ToLower().CustomNormalize())
+                            .Distinct();
+
+                        if (distinctValues.All(q => _defaultUoms.Contains(q) || q == null))
+                        {
+                            tempColumnData.Type = TableColumnType.Uom;
+                        }
+                    }
+
                     AddColumn(result.Columns, tempColumnData.Type, header, values);
                 }
 
