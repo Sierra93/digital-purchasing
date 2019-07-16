@@ -109,7 +109,20 @@ namespace DigitalPurchasing.Services
                 {
                     supplierCategoryIds.Add(defaultCategoryId.Value);
                 }
-                item.MainCategoriesCsv = string.Join(", ", supplierCategoryIds.Select(cId => _categoryService.GetTopParentCategory(cId).Name));
+
+                var uniqueCategoryIds = new List<Guid>();
+
+                foreach (var categoryHierarchy in supplierCategoryIds.Select(cId => _categoryService.GetCategoryHierarchy(cId)))
+                {
+                    foreach (var categoryInfo in categoryHierarchy)
+                    {
+                        if (uniqueCategoryIds.Contains(categoryInfo.Id)) continue;
+                        uniqueCategoryIds.Add(categoryInfo.Id);
+                        break;
+                    }
+                }
+
+                item.MainCategoriesCsv = string.Join(", ", uniqueCategoryIds.Select(cId => _categoryService.GetById(cId).Name));
             }
 
             return new SupplierIndexData

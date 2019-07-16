@@ -113,7 +113,7 @@ namespace DigitalPurchasing.Services
             return hierarchy.FirstOrDefault()?.Adapt<NomenclatureCategoryBasicInfo>();
         }
 
-        private IEnumerable<NomenclatureCategoryBasicInfo> GetCategoryHierarchy(Guid categoryId)
+        public IEnumerable<NomenclatureCategoryBasicInfo> GetCategoryHierarchy(Guid categoryId)
         {
             var category = _db.NomenclatureCategories.Find(categoryId);
 
