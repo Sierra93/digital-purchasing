@@ -99,6 +99,6 @@ namespace DigitalPurchasing.Core.Interfaces
         public DateTime CreatedOn { get; set; }
 
         public PurchaseRequestVm PurchaseRequest { get; set; }
-        public IEnumerable<SupplierOfferVm> SupplierOffers { get; set; }
+        public List<SupplierOfferDetailsVm> SupplierOffers { get; set; }
     }
 }

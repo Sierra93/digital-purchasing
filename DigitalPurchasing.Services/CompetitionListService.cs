@@ -125,7 +125,6 @@ namespace DigitalPurchasing.Services
         public CompetitionListVm GetById(Guid id)
         {
             var competitionList = _db.CompetitionLists
-                .Include(q => q.SupplierOffers)
                 .FirstOrDefault(q => q.Id == id);
             
             var vm = competitionList?.Adapt<CompetitionListVm>();
@@ -140,28 +139,20 @@ namespace DigitalPurchasing.Services
                             .ThenInclude(q => q.BatchUom)
                     .First(q => q.Id == quotationRequest.PurchaseRequestId);
 
-                var nomIds = purchaseRequest.Items.Where(q => q.NomenclatureId.HasValue).Select(q => q.NomenclatureId.Value).ToList();
-
                 vm.PurchaseRequest = purchaseRequest.Adapt<CompetitionListVm.PurchaseRequestVm>();
                 vm.PurchaseRequest.Items = vm.PurchaseRequest.Items.OrderBy(q => q.NomenclatureId).ToList();
 
-                var supplierOffers = _db.SupplierOffers
+                var supplierOffersIds = _db.SupplierOffers
                     .AsNoTracking()
-                    .Include(q => q.Supplier)
-                    .Include(q => q.Currency)
                     .Where(q => q.CompetitionListId == id)
+                    .Select(q => q.Id)
                     .ToList();
-
-                foreach (var supplierOffer in supplierOffers)
-                {
-                    supplierOffer.Items = _db.SupplierOfferItems.Include(q => q.RawUom)
-                        .Where(q => q.NomenclatureId.HasValue && nomIds.Contains(q.NomenclatureId.Value) &&
-                                    q.RawUomId.HasValue &&
-                                    q.SupplierOfferId == supplierOffer.Id)
-                        .ToList();
-                }
+                
                 // mappings for items - SupplierOfferItemMappings
-                vm.SupplierOffers = supplierOffers.Adapt<IEnumerable<CompetitionListVm.SupplierOfferVm>>().OrderBy(q => q.CreatedOn).ToList();
+                var supplierOffers = supplierOffersIds.Select(q
+                    => _supplierOfferService.GetDetailsById(q)).ToList();
+
+                vm.SupplierOffers = supplierOffers;
 
                 foreach (var supplierOffer in vm.SupplierOffers)
                 {

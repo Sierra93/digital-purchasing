@@ -8,7 +8,7 @@
     var deliveryCost = JsonConvert.SerializeObject(Model.DeliveryCost);
 }
 
-<partial name="_Header" model="@((string)ViewBag.Title, Model.CompetitionList.Id, (Guid?)Model.Id)" />
+<partial name="_Header" model="@((string)ViewBag.Title, Model.CompetitionListId, (Guid?)Model.Id)" />
 
 <h3>Подбор соответствия номенклатуры в предложении поставщика номенклатуре предприятия</h3>
 

@@ -102,10 +102,10 @@
                                 <td></td>
                                 <td></td>
                                 <td></td>
-                                <td>@so.Items.Where(q => q != null).Sum(q => q.RawQty).ToString(Consts.Format.Qty)</td>
+                                <td>@so.Items.Sum(q => q.Offer.Qty).ToString(Consts.Format.Qty)</td>
                                 <td></td>
                                 <td></td>
-                                <td>@so.Items.Where(q => q != null).Sum(q => q.TotalPrice).ToString(Consts.Format.Money2)</td>
+                                <td>@so.Items.Sum(q => q.Offer.TotalPrice).ToString(Consts.Format.Money2)</td>
                             </tr>
                             <tr>
                                 <td colspan="7">
@@ -116,16 +116,16 @@
                         <tbody>
                             @foreach (var item in so.Items)
                             {
-                                if (item != null)
+                                if (item.Offer.Qty > 0)
                                 {
                                     <tr>
-                                        <td>@item.RawCode</td>
-                                        <td>@item.RawName</td>
-                                        <td>@item.RawUom</td>
-                                        <td>@item.RawQty.ToString(Consts.Format.Qty)</td>
-                                        <td>@item.RawPrice.ToString(Consts.Format.Money2)</td>
-                                        <td>@so.Currency.Name</td>
-                                        <td>@item.TotalPrice.ToString(Consts.Format.Money2)</td>
+                                        <td>@item.Offer.Code</td>
+                                        <td>@item.Offer.Name</td>
+                                        <td>@item.Offer.Uom</td>
+                                        <td>@item.Offer.Qty.ToString(Consts.Format.Qty)</td>
+                                        <td>@item.Offer.Price.ToString(Consts.Format.Money2)</td>
+                                        <td>@item.Offer.Currency</td>
+                                        <td>@item.Offer.TotalPrice.ToString(Consts.Format.Money2)</td>
                                     </tr>
                                 }
                                 else
