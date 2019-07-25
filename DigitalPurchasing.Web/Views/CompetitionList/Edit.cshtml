@@ -139,6 +139,59 @@
                     </table>
                 </div>
             }
+            <div class="long-table-item">
+                <div>
+                    <p>Расчет целевых цен для отправки запроса на понижение</p>
+                </div>
+                <table class="table table-striped with-left-border">
+                    <thead>
+                        <tr>
+                            <td>Минимальная<br />цена</td>
+                            <td>Целевая цена,<br />валюта за ЕИ поставщика</td>
+                            <td>Целевая скидка<br />к минимальной цене, %</td>
+                            <td v-for="supplier in prSuppliers" class="text-center">
+                                <div>{{supplier.name}}</div>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox"
+                                           v-model="supplier.isChecked"
+                                           v-on:change="prToggleSupplier(supplier.id, !supplier.isChecked)" />
+                                </label>
+                            </td>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td v-for="supplier in prSuppliers"></td>
+                        </tr>
+                    </tfoot>
+                    <tbody>
+                        <tr v-for="item in prItems" v-if="item.minPrice > 0">
+                            <td class="align-right">{{item.minPrice | formatMoney}}</td>
+                            <td>
+                                <input class="form-control input-sm h-20" type="number" min="0"
+                                       v-model="item.targetPrice" v-on:change="onChangeTargetPrice($event, item)" />
+                            </td>
+                            <td>
+                                <input class="form-control input-sm h-20" type="number" min="0"
+                                       v-model="item.discount" v-on:change="onChangeDiscount($event, item)" />
+                            </td>
+                            <td v-for="itemSupplier in item.suppliers" class="text-center">
+                                <div class="checkbox m-0">
+                                    <label class="checkbox-inline" v-if="itemSupplier.isEnabled">
+                                        <input type="checkbox" v-model="itemSupplier.isChecked">
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr v-else>
+                            <td colspan="7" style="text-align: center;">Не сопоставлено</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
     <vc:competition-list-report cl-id="Model.CompetitionList.Id"></vc:competition-list-report>
@@ -150,7 +203,64 @@
     <script>
         (function() {
             var vue = new Vue({
-                el: '#app'
+                el: '#app',
+                data: function() {
+                    return {
+                        prItems: [],
+                        prSuppliers: [],
+                        prRequests: []
+                    }
+                },
+                created: function() {
+                    var vm = this;
+                    var getUrl = '@Url.Action("PriceReductionData", new {id = Model.CompetitionList.Id})';
+                    vm.$http.get(getUrl).then( function(res) {
+                        var data = res.body;
+                        vm.prItems = data.items;
+                        vm.prSuppliers = data.suppliers;
+                    }, function(res) {
+                        alert('error');
+                    });
+                },
+                watch: {
+                },
+                filters: {
+                    formatMoney: function(value) {
+                        if (isNumber(value)) {
+                            if (value === 0) return '';
+                            return numeral(value).format('0,0');
+                        }
+                        return value;
+                    }
+                },
+                methods: {
+                    supplierChangeEnabled(itemId, supplierId) {
+                        var vm = this;
+                        var itemIndex = _.findIndex(vm.prItems, ['id', itemId]);
+                        var supplierIndex = vm.prItems[itemIndex].suppliers.indexOf(supplierId);
+                        return supplierIndex !== -1;
+                    },
+                    prToggleSupplier: function (supplierId, value) {
+                        var vm = this;
+                        _.each(vm.prItems, function(i) {
+                            _.each(i.suppliers, function(s) {
+                                if (s.id === supplierId) {
+                                    s.isChecked = !value;
+                                }
+                            });
+                        });
+                    },
+                    onChangeTargetPrice(event, item) {
+                        var targetPrice = event.target.value;
+                        var discount = (1 - (targetPrice/item.minPrice)) * 100;
+                        item.discount = _.round(discount, 2);
+                    },
+                    onChangeDiscount(event, item) {
+                        var discount = event.target.value;
+                        var targetPrice = item.minPrice * (1 - (discount / 100));
+                        item.targetPrice = _.round(targetPrice, 2);
+                    }
+                }
             });
         })();
     </script>

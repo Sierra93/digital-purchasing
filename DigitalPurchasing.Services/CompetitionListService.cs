@@ -140,7 +140,7 @@ namespace DigitalPurchasing.Services
                     .First(q => q.Id == quotationRequest.PurchaseRequestId);
 
                 vm.PurchaseRequest = purchaseRequest.Adapt<CompetitionListVm.PurchaseRequestVm>();
-                vm.PurchaseRequest.Items = vm.PurchaseRequest.Items.OrderBy(q => q.NomenclatureId).ToList();
+                vm.PurchaseRequest.Items = vm.PurchaseRequest.Items.OrderBy(q => q.Position).ToList();
 
                 var supplierOffersIds = _db.SupplierOffers
                     .AsNoTracking()
@@ -156,7 +156,7 @@ namespace DigitalPurchasing.Services
 
                 foreach (var supplierOffer in vm.SupplierOffers)
                 {
-                    supplierOffer.Items = supplierOffer.Items.OrderBy(q => q.NomenclatureId).ToList();
+                    supplierOffer.Items = supplierOffer.Items.OrderBy(q => q.Position).ToList();
 
                     if (supplierOffer.Items.Count < vm.PurchaseRequest.Items.Count)
                     {
