@@ -138,8 +138,18 @@ td.align-right, th.align-right {
   font-weight: bold;
 }
 .long-table-item {
-  display: inline-block;
+  display: inline-grid;
   margin-right: 12px;
+}
+
+/*.long-table-item .header {
+  min-height: 64px;
+  height: 64px;
+}*/
+
+.long-table-item tbody tr
+{
+  height: 38px;
 }
 
 .m-0 {

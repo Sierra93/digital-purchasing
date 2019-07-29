@@ -23,15 +23,13 @@
     <div class="long-table-wrap">
         <div class="long-table">
             <div class="long-table-item">
-                <div>
+                <div class="header">
                     <p>
                         <b>Клиент: @cl.PurchaseRequest.CustomerName</b>&nbsp;
                         <a asp-action="Edit" asp-controller="PurchaseRequest" asp-route-id="@cl.PurchaseRequest.Id">@($"Заявка № {cl.PurchaseRequest.PublicId} от {cl.PurchaseRequest.CreatedOn:dd.MM.yyyy HH:mm}")</a>
                     </p>
                     @if (hasErpCode)
                     {<p>Номер заявки в ERP - @cl.PurchaseRequest.ErpCode</p>}
-                    @if (!hasErpCode && hasInvoiceData)
-                    {<p>&nbsp;</p>}
                 </div>
                 <table class="table table-striped">
                     <thead>
@@ -71,19 +69,32 @@
                     </tbody>
                 </table>
             </div>
-            @foreach (var so in cl.SupplierOffers)
+            @foreach (var group in cl.GroupBySupplier().OrderBy(q => q.Key.CreatedOn))
             {
-                var soTitle = $"КП № {so.PublicId} от {so.CreatedOn:dd.MM.yyyy HH:mm}";
+                var index = 1;
+                var baseOffer = group.Value.First();
+                var lastOffer = group.Value.Last();
+                var colCount = 5 + group.Value.Count;
+                var currencies = group.Value
+                    .SelectMany(q => q.Items
+                        .Where(w => !string.IsNullOrEmpty(w.Offer.Currency))
+                        .Select(w => w.Offer.Currency))
+                    .Distinct();
                 <div class="long-table-item">
-                    <div>
+                    <div class="header">
                         <p>
-                            <b>Поставщик: @(so.SupplierName ?? "Не указан")</b>&nbsp;
-                            <a asp-action="Edit" asp-controller="SupplierOffer" asp-route-id="@so.Id">@soTitle</a>
+                            <b>Поставщик: @(baseOffer.SupplierName ?? "Не указан")</b>
                         </p>
-                        @if (hasErpCode || (hasInvoiceData && string.IsNullOrEmpty(so.InvoiceData)))
-                        {<p>&nbsp;</p>}
-                        @if (!string.IsNullOrEmpty(so.InvoiceData))
-                        {<p>№ КП/cчета у поставщика - @so.InvoiceData</p>}
+                        <p>Валюта: @string.Join(", ", currencies)</p>
+                        <ul>
+                        @foreach (var so in group.Value)
+                        {
+                            <li>
+                                <span>Раунд @(index++)</span>&nbsp;
+                                <a asp-action="Edit" asp-controller="SupplierOffer" asp-route-id="@so.Id">@so.Title</a>
+                            </li>
+                        }
+                        </ul>
                     </div>
                     <table class="table table-striped with-left-border">
                         <thead>
@@ -92,9 +103,14 @@
                                 <td>Наименование</td>
                                 <td>ЕИ</td>
                                 <td>Кол-во,<br />ЕИ</td>
-                                <td>Цена за ЕИ,<br />валюта</td>
-                                <td>Валюта</td>
-                                <td>Стоимость,<br />валюта</td>
+                                @for (int i = 0; i < group.Value.Count; i++)
+                                {
+                                    <td>
+                                        Цена за ЕИ<br />
+                                        РАУНД @(i + 1)
+                                    </td>
+                                }
+                                <td>Cтоимость по последней<br />цене, валюта</td>                                
                             </tr>
                         </thead>
                         <tfoot>
@@ -102,19 +118,22 @@
                                 <td></td>
                                 <td></td>
                                 <td></td>
-                                <td>@so.Items.Sum(q => q.Offer.Qty).ToString(Consts.Format.Qty)</td>
-                                <td></td>
-                                <td></td>
-                                <td>@so.Items.Sum(q => q.Offer.TotalPrice).ToString(Consts.Format.Money2)</td>
+                                <td>@baseOffer.Items.Sum(q => q.Offer.Qty).ToString(Consts.Format.Qty)</td>
+                                @foreach (var so in group.Value)
+                                {
+                                    <td></td>
+                                }
+
+                                <td>@baseOffer.Items.Sum(q => q.Offer.TotalPrice).ToString(Consts.Format.Money2)</td>
                             </tr>
                             <tr>
-                                <td colspan="7">
-                                    <so-terms :so="'@so.Id'"></so-terms>
+                                <td colspan="@colCount">
+                                    <so-terms :so="'@baseOffer.Id'"></so-terms>
                                 </td>
                             </tr>
                         </tfoot>
                         <tbody>
-                            @foreach (var item in so.Items)
+                            @foreach (var item in baseOffer.Items)
                             {
                                 if (item.Offer.Qty > 0)
                                 {
@@ -123,15 +142,20 @@
                                         <td>@item.Offer.Name</td>
                                         <td>@item.Offer.Uom</td>
                                         <td>@item.Offer.Qty.ToString(Consts.Format.Qty)</td>
-                                        <td>@item.Offer.Price.ToString(Consts.Format.Money2)</td>
-                                        <td>@item.Offer.Currency</td>
-                                        <td>@item.Offer.TotalPrice.ToString(Consts.Format.Money2)</td>
+                                        @foreach (var offer in group.Value)
+                                        {
+                                            var price = offer.Items
+                                                .First(q => q.NomenclatureId == item.NomenclatureId)
+                                                .Offer.Price;
+                                            <td>@price.ToString(Consts.Format.Money2)</td>
+                                        }
+                                        <td>@lastOffer.Items.First(q => q.NomenclatureId == item.NomenclatureId).Offer.TotalPrice.ToString(Consts.Format.Money2)</td>
                                     </tr>
                                 }
                                 else
                                 {
                                     <tr>
-                                        <td colspan="7" style="text-align: center;">Не сопоставлено</td>
+                                        <td colspan="@colCount" style="text-align: center;">Не сопоставлено</td>
                                     </tr>
                                 }
                             }
@@ -140,8 +164,8 @@
                 </div>
             }
             <div class="long-table-item">
-                <div>
-                    <p>Расчет целевых цен для отправки запроса на понижение</p>
+                <div class="header">
+                    <p><b>Расчет целевых цен для отправки запроса на понижение</b></p>
                 </div>
                 <table class="table table-striped with-left-border">
                     <thead>
@@ -161,10 +185,7 @@
                     </thead>
                     <tfoot>
                         <tr>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td v-for="supplier in prSuppliers"></td>
+                            <td :colspan="(prSuppliers.length + 2)"><p>&nbsp;</p></td>
                         </tr>
                     </tfoot>
                     <tbody>
@@ -201,7 +222,13 @@
 {
     <partial name="~/Views/CompetitionList/_EditSOTermsComponent.cshtml"/>
     <script>
-        (function() {
+        (function () {
+            var maxHeight = Math.max.apply(null, $(".header").map(function ()
+            {
+                return $(this).height();
+            }).get());
+            $('.header').height(maxHeight);
+
             var vue = new Vue({
                 el: '#app',
                 data: function() {

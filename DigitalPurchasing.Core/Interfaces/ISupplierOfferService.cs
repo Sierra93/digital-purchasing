@@ -209,6 +209,19 @@ namespace DigitalPurchasing.Core.Interfaces
         public DateTime DeliveryDate { get; set; }
         public string SupplierName { get; set; }
         public string InvoiceData { get; set; }
+
+        public string Title
+        {
+            get
+            {
+                var title = $"КП №{PublicId} от {CreatedOn:dd.MM.yyyy HH:mm}";
+                if (!string.IsNullOrEmpty(InvoiceData))
+                {
+                    title += $" (№ у поставщика {InvoiceData})";
+                }
+                return title;
+            }
+        }
     }
 
     public class SoTermsVm

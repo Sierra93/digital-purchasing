@@ -657,13 +657,8 @@ namespace DigitalPurchasing.Services
     public class SupplierOfferItemMappings : IRegister
     {
         public void Register(TypeAdapterConfig config)
-        {
-            config.NewConfig<SupplierOfferItem, SOMatchItemsVm.Item>()
+            => config.NewConfig<SupplierOfferItem, SOMatchItemsVm.Item>()
                 .Map(d => d.NomenclatureUom, s => s.NomenclatureId.HasValue ? s.Nomenclature.BatchUom.Name : null)
                 .Map(q => q.RawUomStr, q => q.RawUomId.HasValue ? q.RawUom.Name : q.RawUomStr);
-
-            config.NewConfig<SupplierOfferItem, CompetitionListVm.SupplierOfferItemVm>()
-                .Map(q => q.RawUom, q => q.RawUomId.HasValue ? q.RawUom.Name : q.RawUomStr);
-        }
     }
 }
