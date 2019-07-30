@@ -192,6 +192,7 @@ namespace DigitalPurchasing.Core.Interfaces
             public ImportAndDeliveryData ImportAndDelivery { get; set; } 
             public ConversionData Conversion { get; set; }
             public ResourceConversionData ResourceConversion { get; set; }
+            public Guid NomenclatureId { get; set; }
         }
 
         #endregion
@@ -201,6 +202,26 @@ namespace DigitalPurchasing.Core.Interfaces
         public DateTime CreatedOn { get; set; }
 
         public List<Item> Items { get; set; } = new List<Item>();
+        public Guid? SupplierId { get; set; }
+        public DeliveryTerms DeliveryTerms { get; set; }
+        public PaymentTerms PaymentTerms { get; set; }
+        public int PayWithinDays { get; set; }
+        public DateTime DeliveryDate { get; set; }
+        public string SupplierName { get; set; }
+        public string InvoiceData { get; set; }
+
+        public string Title
+        {
+            get
+            {
+                var title = $"КП №{PublicId} от {CreatedOn:dd.MM.yyyy HH:mm}";
+                if (!string.IsNullOrEmpty(InvoiceData))
+                {
+                    title += $" (№ у поставщика {InvoiceData})";
+                }
+                return title;
+            }
+        }
     }
 
     public class SoTermsVm
@@ -252,7 +273,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public int PublicId { get; set; }
         public DateTime CreatedOn { get; set; }
 
-        public CompetitionListVm CompetitionList { get; set; }
+        //public CompetitionListVm CompetitionList { get; set; }
         public UploadedDocumentVm UploadedDocument { get; set; }
         public SupplierOfferStatus Status { get; set; }
         public ExcelTable ExcelTable { get; set; }
@@ -261,6 +282,8 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid? SupplierId { get; set; }
         public string CompanyName { get; set; }
         public decimal DeliveryCost { get; set; }
+        public Guid PurchaseRequestId { get; set; }
+        public Guid CompetitionListId { get; set; }
     }
 
     public class SupplierOfferColumnsVm

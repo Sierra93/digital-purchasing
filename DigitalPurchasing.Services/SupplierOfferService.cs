@@ -132,24 +132,32 @@ namespace DigitalPurchasing.Services
             var qry = _db.SupplierOffers
                 .Include(q => q.Supplier)
                 .Include(q => q.UploadedDocument)
-                .ThenInclude(q => q.Headers)
-                .Include(q => q.CompetitionList)
-                .ThenInclude(q => q.QuotationRequest)
+                    .ThenInclude(q => q.Headers)
                 .AsQueryable();
 
-            if (globalSearch) qry = qry.IgnoreQueryFilters();
+            var rootsQry = _db.Roots.AsQueryable();
+
+            if (globalSearch)
+            {
+                qry = qry.IgnoreQueryFilters();
+                rootsQry = rootsQry.IgnoreQueryFilters();
+            }
 
             var entity = qry.FirstOrDefault(q => q.Id == id);
+
+            var root = rootsQry.First(q => q.CompetitionListId == entity.CompetitionListId);
             
             var vm = entity?.Adapt<SupplierOfferVm>();
             if (vm != null)
             {
-                vm.ExcelTable =  vm.UploadedDocument?.Data != null ? JsonConvert.DeserializeObject<ExcelTable>(vm.UploadedDocument?.Data) : null;
+                vm.PurchaseRequestId = root.PurchaseRequestId ?? Guid.Empty;
+                vm.CompetitionListId = root.CompetitionListId ?? Guid.Empty;
+                vm.ExcelTable = vm.UploadedDocument?.Data != null ? JsonConvert.DeserializeObject<ExcelTable>(vm.UploadedDocument?.Data) : null;
                 var pr = _db.PurchaseRequests
                     .IgnoreQueryFilters()
-                    .First(q => q.Id == entity.CompetitionList.QuotationRequest.PurchaseRequestId);
+                    .First(q => q.Id == vm.PurchaseRequestId);
                 vm.CompanyName = pr.CompanyName;
-                vm.CompetitionList.PurchaseRequest = pr.Adapt<CompetitionListVm.PurchaseRequestVm>();
+
                 if (entity.Supplier != null)
                 {
                     vm.SupplierName = entity.Supplier.Name;
@@ -163,6 +171,7 @@ namespace DigitalPurchasing.Services
         {
             var supplierOffer = _db.SupplierOffers
                 .Include(q => q.Currency)
+                .Include(q => q.Supplier)
                 .Include(q => q.CompetitionList)
                 .ThenInclude(q => q.QuotationRequest)
                 .First(q => q.Id == id);
@@ -198,7 +207,14 @@ namespace DigitalPurchasing.Services
             {
                 Id = id,
                 PublicId = supplierOffer.PublicId,
-                CreatedOn = supplierOffer.CreatedOn
+                CreatedOn = supplierOffer.CreatedOn,
+                SupplierId = supplierOffer.SupplierId,
+                DeliveryTerms = supplierOffer.DeliveryTerms,
+                PaymentTerms = supplierOffer.PaymentTerms,
+                PayWithinDays = supplierOffer.PayWithinDays,
+                DeliveryDate = supplierOffer.DeliveryDate,
+                SupplierName = supplierOffer.Supplier?.Name,
+                InvoiceData = supplierOffer.InvoiceData
             };
 
             foreach (var requestItem in requestItems)
@@ -206,6 +222,7 @@ namespace DigitalPurchasing.Services
                 var item = new SupplierOfferDetailsVm.Item(result.Items);
                 result.Items.Add(item);
 
+                item.NomenclatureId = requestItem.Nomenclature.Id;
                 item.Position = requestItem.Position;
                 item.Request.ItemId = requestItem.Id;
                 item.Request.Code = requestItem.RawCode;
@@ -640,13 +657,8 @@ namespace DigitalPurchasing.Services
     public class SupplierOfferItemMappings : IRegister
     {
         public void Register(TypeAdapterConfig config)
-        {
-            config.NewConfig<SupplierOfferItem, SOMatchItemsVm.Item>()
+            => config.NewConfig<SupplierOfferItem, SOMatchItemsVm.Item>()
                 .Map(d => d.NomenclatureUom, s => s.NomenclatureId.HasValue ? s.Nomenclature.BatchUom.Name : null)
                 .Map(q => q.RawUomStr, q => q.RawUomId.HasValue ? q.RawUom.Name : q.RawUomStr);
-
-            config.NewConfig<SupplierOfferItem, CompetitionListVm.SupplierOfferItemVm>()
-                .Map(q => q.RawUom, q => q.RawUomId.HasValue ? q.RawUom.Name : q.RawUomStr);
-        }
     }
 }

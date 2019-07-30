@@ -129,5 +129,81 @@ namespace DigitalPurchasing.Web.Controllers
             _supplierOfferService.SaveTerms(req, soId.Value);
             return Ok();
         }
+
+        public class PriceReductionDataVm
+        {
+            public class Supplier
+            {
+                public Guid Id { get; set; }
+                public string Name { get; set; }
+                public DateTime CreatedOn { get; set; }
+                public bool IsChecked { get; set; }
+            }
+
+            public class ItemSupplier
+            {
+                public Guid Id { get; set; }
+                public bool IsChecked { get; set; }
+                public bool IsEnabled { get; set; }
+            }
+
+            public class Item
+            {
+                public int Position { get; set; }
+                public decimal MinPrice { get; set; }
+                public decimal TargetPrice => MinPrice > 0 ? Math.Round(MinPrice * ( 1 - Discount/100), 2) : -1;
+                public decimal Discount { get; set; }
+                public List<ItemSupplier> Suppliers { get; set; }
+                public Guid Id { get; set; }
+            }
+
+            public List<Supplier> Suppliers { get; set; }
+            public List<Item> Items { get; set; }
+        }
+
+        [HttpGet]
+        public IActionResult PriceReductionData([FromRoute]Guid id)
+        {
+            var cl = _competitionListService.GetById(id);
+
+            var vm = new PriceReductionDataVm
+            {
+                Suppliers = cl.SupplierOffers.OrderBy(q => q.CreatedOn).Select(q => new PriceReductionDataVm.Supplier
+                {
+                    Id = q.Id,
+                    Name = q.SupplierName,
+                    CreatedOn = q.CreatedOn,
+                    IsChecked = true
+                }).ToList(),
+
+                Items = cl.PurchaseRequest.Items.Select(pri =>
+                {
+                    var soItems = cl.SupplierOffers
+                        .SelectMany(so
+                            => so.Items.Where(soi
+                                => soi.Request.ItemId == pri.Id && soi.Offer.Price > 0))
+                        .ToList();
+
+                    return new PriceReductionDataVm.Item
+                    {
+                        Id = pri.Id,
+                        Position = pri.Position,
+                        Discount = 5m,
+                        MinPrice = soItems.Any()
+                            ? soItems.Min(soi => soi.ResourceConversion.OfferPrice)
+                            : -1,
+                        Suppliers = cl.SupplierOffers.OrderBy(q => q.CreatedOn).Select(so => new PriceReductionDataVm.ItemSupplier
+                        {
+                            Id = so.Id,
+                            IsChecked = true,
+                            IsEnabled = so.Items.Any(soi
+                                => soi.Request.ItemId == pri.Id && soi.Offer.Price > 0)
+                        }).ToList(),
+                    };
+                }).ToList()
+            };
+
+            return Json(vm);
+        }
     }
 }
