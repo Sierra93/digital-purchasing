@@ -114,5 +114,21 @@ namespace DigitalPurchasing.Emails
             var htmlResult = await GetHtmlString(model);
             await emailService.SendEmailAsync(email, subject, htmlResult);
         }
+
+        public static async Task PriceReductionEmail(this IEmailService emailService, string email, string attachment)
+        {
+            var subject = "!!TODO!! Запрос на понижение";
+            var model = new PriceReductionEmail
+            {
+                From = new PriceReductionEmail.FromData
+                {
+                    Company = "company",
+                    Name = "name",
+                    Phone = "+7 123 123 12 12"
+                }
+            };
+            var htmlResult = await GetHtmlString(model);
+            await emailService.SendEmailAsync(email, subject, htmlResult);
+        }
     }
 }

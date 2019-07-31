@@ -103,6 +103,45 @@ namespace DigitalPurchasing.Web.Controllers
             return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }
 
+        [HttpGet]
+        public IActionResult PriceReductionDownload(Guid clId, Guid supplierId)
+        {
+            var cl = _competitionListService.GetById(clId);//todo: use supplierId
+            if (cl == null) return NotFound();
+
+            var offers = cl.GroupBySupplier().First(q => q.Value.First().SupplierId == supplierId);
+            var lastOffer = offers.Value.Last();
+            var reportData = new PriceReductionData
+            {
+                InvoiceData = lastOffer.InvoiceData,
+                Currency = lastOffer.Items.First(q => q.Offer.Qty > 0).Offer.Currency
+            };
+
+            foreach (var item in lastOffer.Items.Where(q => q.Offer.Qty > 0))
+            {
+                reportData.Items.Add(new PriceReductionData.DataItem
+                {
+                    Position = item.Position,
+                    RequestCode = item.Request.Code,
+                    RequestName = item.Request.Name,
+                    RequestQuantity = item.Request.Qty,
+                    RequestUom = item.Request.Uom,
+                    OfferCode = item.Offer.Code,
+                    OfferName = item.Offer.Name,
+                    OfferQuantity = item.Offer.Qty,
+                    OfferPrice = item.Offer.Price,
+                    OfferUom = item.Offer.Uom,
+                    TargetDiscount = 0.05m
+                });
+            }
+
+            var report = new PriceReductionWriter(reportData);
+            var fileBytes = report.Build();
+            var fileName = $"{cl.CreatedOn:yyyyMMdd}_КЛ_{cl.PublicId}_{lastOffer.SupplierName}_Запрос_на_изменение_условий.xlsx";
+
+            return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+        }
+
         [HttpPost]
         public IActionResult Delete([FromBody]DeleteVm vm)
         {
