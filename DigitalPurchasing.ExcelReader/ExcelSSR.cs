@@ -538,9 +538,9 @@ namespace DigitalPurchasing.ExcelReader
             return cell;
         }
 
-        public static ExcelRange BoldFont(this ExcelRange cell)
+        public static ExcelRange BoldFont(this ExcelRange cell, bool isBold = true)
         {
-            cell.Style.Font.Bold = true;
+            cell.Style.Font.Bold = isBold;
             return cell;
         }
 

@@ -87,14 +87,20 @@
                         </p>
                         <p>Валюта: @string.Join(", ", currencies)</p>
                         <ul>
-                        @foreach (var so in group.Value)
-                        {
-                            <li>
-                                <span>Раунд @(index++)</span>&nbsp;
-                                <a asp-action="Edit" asp-controller="SupplierOffer" asp-route-id="@so.Id">@so.Title</a>
-                            </li>
-                        }
+                            @foreach (var so in group.Value)
+                            {
+                                <li>
+                                    <span>Раунд @(index++)</span>&nbsp;
+                                    <a asp-action="Edit" asp-controller="SupplierOffer" asp-route-id="@so.Id">@so.Title</a>
+                                </li>
+                            }
                         </ul>
+                        @if (baseOffer.SupplierId.HasValue)
+                        {
+                            <a href="@Url.Action("PriceReductionDownload", new {clId = Model.CompetitionList.Id, supplierId = baseOffer.SupplierId.Value })">
+                                <span>Скачать запрос на понижение</span>
+                            </a>
+                        }
                     </div>
                     <table class="table table-striped with-left-border">
                         <thead>
