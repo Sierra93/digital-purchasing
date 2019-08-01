@@ -76,8 +76,8 @@ namespace DigitalPurchasing.ExcelReader
                 ws.Cells[5, 15].HeaderText("Целевая цена, валюта за ЕИ поставщика");
                 ws.Cells[5, 16].HeaderText("Целевая скидка к первой цене, %");
                 ws.Cells[5, 17].HeaderText("Целевая скидка к первой цене");
-                ws.Cells[5, 18].HeaderText("Целевая сумма");
-                ws.Cells[5, 19].HeaderText("Итого сумма скидка");
+                ws.Cells[5, 18].HeaderText("Целевая сумма, валюта");
+                ws.Cells[5, 19].HeaderText("Итого сумма скидки");
                 ws.Cells[5, 15, 5, 19].BackgroundLight().HeaderBorders();
 
                 var row = 5;
