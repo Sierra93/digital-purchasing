@@ -46,12 +46,7 @@ namespace DigitalPurchasing.Emails
         {
             var subject = $"[{emailUid}] Запрос коммерческого предложения №{quotationRequest.PublicId}";
             var until = DateTime.UtcNow.AddHours(1).ToRussianStandardTime();
-            var toName = supplierContact.FirstName;
-
-            if (!string.IsNullOrWhiteSpace(supplierContact.Patronymic))
-            {
-                toName += $" {supplierContact.Patronymic}";
-            }
+            var toName = supplierContact.ToName();
 
             var model = new RFQEmail
             {
@@ -115,20 +110,26 @@ namespace DigitalPurchasing.Emails
             await emailService.SendEmailAsync(email, subject, htmlResult);
         }
 
-        public static async Task PriceReductionEmail(this IEmailService emailService, string email, string attachment)
+        public static async Task PriceReductionEmail(this IEmailService emailService,
+            string attachment,
+            SupplierContactPersonVm supplierContactPerson,
+            UserInfoDto userInfo,
+            DateTime until)
         {
-            var subject = "!!TODO!! Запрос на понижение";
+            var subject = "Запрос на изменение условий КП/cчета";
             var model = new PriceReductionEmail
             {
+                ToName = supplierContactPerson.ToName(),
+                Until = until.ToRussianStandardTime(),
                 From = new PriceReductionEmail.FromData
                 {
-                    Company = "company",
-                    Name = "name",
-                    Phone = "+7 123 123 12 12"
+                    Company = userInfo.Company,
+                    Name = $"{userInfo.LastName} {userInfo.FirstName}",
+                    PhoneNumber = userInfo.PhoneNumber
                 }
             };
             var htmlResult = await GetHtmlString(model);
-            await emailService.SendEmailAsync(email, subject, htmlResult);
+            await emailService.SendEmailAsync(supplierContactPerson.Email, subject, htmlResult);
         }
     }
 }
