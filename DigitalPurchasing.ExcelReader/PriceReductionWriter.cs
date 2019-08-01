@@ -25,8 +25,9 @@ namespace DigitalPurchasing.ExcelReader
             public decimal OfferPrice { get; set; }
             public decimal OfferTotal => OfferQuantity * OfferPrice;
 
+            public decimal MinimalPrice { get; set; }
             public decimal TargetDiscount { get; set; }
-            public decimal TargetPrice => OfferPrice * (1 - TargetDiscount);
+            public decimal TargetPrice => MinimalPrice * (1 - TargetDiscount);
             public decimal TargetDiff => OfferPrice - TargetPrice;
             public decimal TargetTotal => OfferQuantity * TargetPrice;
             public decimal TargetTotalDiscount => OfferTotal - TargetTotal;
@@ -76,8 +77,8 @@ namespace DigitalPurchasing.ExcelReader
                 ws.Cells[5, 15].HeaderText("Целевая цена, валюта за ЕИ поставщика");
                 ws.Cells[5, 16].HeaderText("Целевая скидка к первой цене, %");
                 ws.Cells[5, 17].HeaderText("Целевая скидка к первой цене");
-                ws.Cells[5, 18].HeaderText("Целевая сумма");
-                ws.Cells[5, 19].HeaderText("Итого сумма скидка");
+                ws.Cells[5, 18].HeaderText("Целевая сумма, валюта");
+                ws.Cells[5, 19].HeaderText("Итого сумма скидки");
                 ws.Cells[5, 15, 5, 19].BackgroundLight().HeaderBorders();
 
                 var row = 5;

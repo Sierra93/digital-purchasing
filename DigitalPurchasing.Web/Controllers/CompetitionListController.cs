@@ -131,7 +131,8 @@ namespace DigitalPurchasing.Web.Controllers
                     OfferQuantity = item.Offer.Qty,
                     OfferPrice = item.Offer.Price,
                     OfferUom = item.Offer.Uom,
-                    TargetDiscount = 0.05m
+                    TargetDiscount = 0.05m,
+                    MinimalPrice = cl.GetMinimalOfferPrice(item.Request.ItemId)
                 });
             }
 
@@ -217,27 +218,19 @@ namespace DigitalPurchasing.Web.Controllers
 
                 Items = cl.PurchaseRequest.Items.Select(pri =>
                 {
-                    var soItems = cl.SupplierOffers
-                        .SelectMany(so
-                            => so.Items.Where(soi
-                                => soi.Request.ItemId == pri.Id && soi.Offer.Price > 0))
-                        .ToList();
-
                     return new PriceReductionDataVm.Item
                     {
                         Id = pri.Id,
                         Position = pri.Position,
                         Discount = 5m,
-                        MinPrice = soItems.Any()
-                            ? soItems.Min(soi => soi.ResourceConversion.OfferPrice)
-                            : -1,
+                        MinPrice = cl.GetMinimalOfferPrice(pri.Id),
                         Suppliers = cl.SupplierOffers.OrderBy(q => q.CreatedOn).Select(so => new PriceReductionDataVm.ItemSupplier
                         {
                             Id = so.Id,
                             IsChecked = true,
                             IsEnabled = so.Items.Any(soi
                                 => soi.Request.ItemId == pri.Id && soi.Offer.Price > 0)
-                        }).ToList(),
+                        }).ToList()
                     };
                 }).ToList()
             };

@@ -99,6 +99,18 @@ namespace DigitalPurchasing.Core.Interfaces
         public bool UseForRequests { get; set; }
 
         public string FullName => $"{LastName??""} {FirstName??""} {Patronymic??""}".Trim();
+
+        public string ToName()
+        {
+            var toName = FirstName;
+
+            if (!string.IsNullOrWhiteSpace(Patronymic))
+            {
+                toName += $" {Patronymic}";
+            }
+
+            return toName;
+        }
     }
 
     public class SupplierNomenclatureCategory
