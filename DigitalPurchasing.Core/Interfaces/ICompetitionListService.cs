@@ -96,5 +96,18 @@ namespace DigitalPurchasing.Core.Interfaces
 
             return result;
         }
+
+        public decimal GetMinimalOfferPrice(Guid prItemId)
+        {
+            var soItems = SupplierOffers
+                .SelectMany(so
+                    => so.Items.Where(soi
+                        => soi.Request.ItemId == prItemId && soi.Offer.Price > 0))
+                .ToList();
+
+            return soItems.Any()
+                ? soItems.Min(soi => soi.ResourceConversion.OfferPrice)
+                : -1;
+        }
     }
 }

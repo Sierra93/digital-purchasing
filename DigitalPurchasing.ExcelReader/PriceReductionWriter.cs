@@ -25,8 +25,9 @@ namespace DigitalPurchasing.ExcelReader
             public decimal OfferPrice { get; set; }
             public decimal OfferTotal => OfferQuantity * OfferPrice;
 
+            public decimal MinimalPrice { get; set; }
             public decimal TargetDiscount { get; set; }
-            public decimal TargetPrice => OfferPrice * (1 - TargetDiscount);
+            public decimal TargetPrice => MinimalPrice * (1 - TargetDiscount);
             public decimal TargetDiff => OfferPrice - TargetPrice;
             public decimal TargetTotal => OfferQuantity * TargetPrice;
             public decimal TargetTotalDiscount => OfferTotal - TargetTotal;
