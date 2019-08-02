@@ -132,7 +132,8 @@ namespace DigitalPurchasing.Web.Controllers
                     OfferPrice = item.Offer.Price,
                     OfferUom = item.Offer.Uom,
                     TargetDiscount = 0.05m,
-                    MinimalPrice = cl.GetMinimalOfferPrice(item.Request.ItemId)
+                    MinimalPrice = item.Conversion.ToFinalCostCostPer1(
+                        cl.GetMinimalOfferPrice(item.Request.ItemId))
                 });
             }
 
