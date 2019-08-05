@@ -171,7 +171,12 @@
             }
             <div class="long-table-item">
                 <div class="header">
-                    <p><b>Расчет целевых цен для отправки запроса на понижение</b></p>
+                    <p>
+                        <b>Расчет целевых цен для отправки запроса на понижение</b>
+                    </p>
+                    <button class="btn bg-primary"
+                            v-on:click="sendPRRequests"
+                            :disabled="!sendingPRRequestsEnabled">Отправить запрос на понижение цен</button>
                 </div>
                 <table class="table table-striped with-left-border">
                     <thead>
@@ -241,7 +246,25 @@
                     return {
                         prItems: [],
                         prSuppliers: [],
-                        prRequests: []
+                        isSendingPRRequests: false
+                    }
+                },
+                computed: {
+                    sendingPRRequestsEnabled: function() {
+                        return !this.isSendingPRRequests && this.prRequests.length > 0;
+                    },
+                    prRequests: function() {
+                        return _.flatMap(this.prItems, function (item) {
+                            var suppliers = _.filter(item.suppliers, { 'isEnabled': true, 'isChecked': true });
+                            return _.map(suppliers, function (supplier) {
+                                return {
+                                    itemId: item.id,
+                                    supplierId: supplier.id,
+                                    minPrice: item.minPrice,
+                                    discount: item.discount
+                                };
+                            });
+                        });
                     }
                 },
                 created: function() {
@@ -267,7 +290,7 @@
                     }
                 },
                 methods: {
-                    supplierChangeEnabled(itemId, supplierId) {
+                    supplierChangeEnabled: function(itemId, supplierId) {
                         var vm = this;
                         var itemIndex = _.findIndex(vm.prItems, ['id', itemId]);
                         var supplierIndex = vm.prItems[itemIndex].suppliers.indexOf(supplierId);
@@ -283,15 +306,28 @@
                             });
                         });
                     },
-                    onChangeTargetPrice(event, item) {
+                    onChangeTargetPrice: function(event, item) {
                         var targetPrice = event.target.value;
                         var discount = (1 - (targetPrice/item.minPrice)) * 100;
                         item.discount = _.round(discount, 2);
                     },
-                    onChangeDiscount(event, item) {
+                    onChangeDiscount: function(event, item) {
                         var discount = event.target.value;
                         var targetPrice = item.minPrice * (1 - (discount / 100));
                         item.targetPrice = _.round(targetPrice, 2);
+                    },
+                    sendPRRequests: function () {
+                        var vm = this;
+                        vm.isSendingPRRequests = true;
+                        var postUrl = '@Url.Action("SendPriceReductionRequests", new { id = Model.CompetitionList.Id })';
+                        vm.$http.post(postUrl, { items: vm.prRequests }).then(function (res) {
+                            var data = res.body;
+                            console.info('sentPRRequests', postUrl, data);
+                            vm.isSendingPRRequests = false;
+                        }, function(res) {
+                            alert('error');
+                            vm.isSendingPRRequests = false;
+                        });                                               
                     }
                 }
             });

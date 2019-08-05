@@ -110,7 +110,7 @@ namespace DigitalPurchasing.Emails
             await emailService.SendEmailAsync(email, subject, htmlResult);
         }
 
-        public static async Task PriceReductionEmail(this IEmailService emailService,
+        public static async Task SendPriceReductionEmail(this IEmailService emailService,
             string attachment,
             SupplierContactPersonVm supplierContactPerson,
             UserInfoDto userInfo,

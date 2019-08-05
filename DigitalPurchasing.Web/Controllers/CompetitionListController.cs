@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
+using DigitalPurchasing.Emails;
 using DigitalPurchasing.ExcelReader;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
@@ -19,15 +21,24 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly ICompetitionListService _competitionListService;
         private readonly ISupplierOfferService _supplierOfferService;
         private readonly ISelectedSupplierService _selectedSupplierService;
+        private readonly IEmailService _emailService;
+        private readonly IUserService _userService;
+        private readonly ISupplierService _supplierService;
 
         public CompetitionListController(
             ICompetitionListService competitionListService,
             ISupplierOfferService supplierOfferService,
-            ISelectedSupplierService selectedSupplierService)
+            ISelectedSupplierService selectedSupplierService,
+            IEmailService emailService,
+            IUserService userService,
+            ISupplierService supplierService)
         {
             _competitionListService = competitionListService;
             _supplierOfferService = supplierOfferService;
             _selectedSupplierService = selectedSupplierService;
+            _emailService = emailService;
+            _userService = userService;
+            _supplierService = supplierService;
         }
 
         public IActionResult Index() => View();
@@ -111,31 +122,8 @@ namespace DigitalPurchasing.Web.Controllers
 
             var offers = cl.GroupBySupplier().First(q => q.Value.First().SupplierId == supplierId);
             var lastOffer = offers.Value.Last();
-            var reportData = new PriceReductionData
-            {
-                InvoiceData = lastOffer.InvoiceData,
-                Currency = lastOffer.Items.First(q => q.Offer.Qty > 0).Offer.Currency
-            };
 
-            foreach (var item in lastOffer.Items.Where(q => q.Offer.Qty > 0))
-            {
-                reportData.Items.Add(new PriceReductionData.DataItem
-                {
-                    Position = item.Position,
-                    RequestCode = item.Request.Code,
-                    RequestName = item.Request.Name,
-                    RequestQuantity = item.Request.Qty,
-                    RequestUom = item.Request.Uom,
-                    OfferCode = item.Offer.Code,
-                    OfferName = item.Offer.Name,
-                    OfferQuantity = item.Offer.Qty,
-                    OfferPrice = item.Offer.Price,
-                    OfferUom = item.Offer.Uom,
-                    TargetDiscount = 0.05m,
-                    MinimalPrice = item.Conversion.ToFinalCostCostPer1(
-                        cl.GetMinimalOfferPrice(item.Request.ItemId))
-                });
-            }
+            var reportData = CreatePriceReductionData(lastOffer, cl); 
 
             var report = new PriceReductionWriter(reportData);
             var fileBytes = report.Build();
@@ -237,6 +225,113 @@ namespace DigitalPurchasing.Web.Controllers
             };
 
             return Json(vm);
+        }
+
+        public class SendPriceReductionRequestsVm
+        {
+            public class Item
+            {
+                public Guid SupplierId { get; set; }
+                public Guid ItemId { get; set; }
+                public decimal Discount { get; set; }
+                public decimal MinPrice { get; set; }
+            }
+
+            public List<Item> Items { get; set; }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SendPriceReductionRequests(
+            [FromRoute] Guid id,
+            [FromBody] SendPriceReductionRequestsVm model)
+        {
+            var cl = _competitionListService.GetById(id);
+            if (cl == null) return NotFound();
+
+            var userId = User.Id();
+            var userInfo = _userService.GetUserInfo(userId);
+
+            var suppliersIds = model.Items.Select(q => q.SupplierId).Distinct().ToList();
+
+            var offersBySupplier = cl.GroupBySupplier();
+
+            foreach (var supplierId in suppliersIds)
+            {
+                // todo: get person which sent offer
+                var supplierContactPerson = _supplierService
+                    .GetContactPersonsBySupplier(supplierId, true)
+                    .FirstOrDefault();
+
+                if (supplierContactPerson == null) continue;
+
+                var offers = offersBySupplier.First(q => q.Value.First().SupplierId == supplierId);
+                var lastOffer = offers.Value.Last();
+                var reportData = CreatePriceReductionData(lastOffer, cl, model);
+                if (!reportData.Items.Any())
+                {
+                    continue;
+                }
+
+                var report = new PriceReductionWriter(reportData);
+                var fileBytes = report.Build();
+                var fileName = $"{cl.CreatedOn:yyyyMMdd}_КЛ_{cl.PublicId}_{lastOffer.SupplierName}_Запрос_на_изменение_условий.xlsx";
+                var filePath = Path.Combine(Path.GetTempPath(), fileName);
+
+                System.IO.File.WriteAllBytes(filePath, fileBytes);
+
+                await _emailService.SendPriceReductionEmail(
+                    filePath,
+                    supplierContactPerson,
+                    userInfo,
+                    DateTime.UtcNow.AddMinutes(30));
+            }
+
+            return Ok();
+        }
+
+        private PriceReductionData CreatePriceReductionData(SupplierOfferDetailsVm offer, CompetitionListVm cl,
+            SendPriceReductionRequestsVm model = null)
+        {
+            var reportData = new PriceReductionData
+            {
+                InvoiceData = offer.InvoiceData,
+                Currency = offer.Items.First(q => q.Offer.Qty > 0).Offer.Currency
+            };
+
+            foreach (var item in offer.Items.Where(q => q.Offer.Qty > 0))
+            {
+                SendPriceReductionRequestsVm.Item prData = null;
+
+                if (model != null)
+                {
+                    prData = model.Items?.FirstOrDefault(q =>
+                        q.SupplierId == offer.SupplierId
+                        && q.ItemId == item.Request.ItemId);
+                    if (prData == null) continue;
+                }
+                
+                var targetDiscount = prData?.Discount ?? 0.05m;
+                var minimalPrice = prData?.MinPrice ?? item.Conversion.ToFinalCostCostPer1(
+                    cl.GetMinimalOfferPrice(item.Request.ItemId));
+
+                reportData.Items.Add(new PriceReductionData.DataItem
+                {
+                    Position = item.Position,
+                    RequestCode = item.Request.Code,
+                    RequestName = item.Request.Name,
+                    RequestQuantity = item.Request.Qty,
+                    RequestUom = item.Request.Uom,
+                    OfferCode = item.Offer.Code,
+                    OfferName = item.Offer.Name,
+                    OfferQuantity = item.Offer.Qty,
+                    OfferPrice = item.Offer.Price,
+                    OfferUom = item.Offer.Uom,
+                    TargetDiscount = targetDiscount,
+                    MinimalPrice = minimalPrice
+                });
+            }
+
+            return reportData;
         }
     }
 }
