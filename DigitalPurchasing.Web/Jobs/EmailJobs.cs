@@ -22,11 +22,13 @@ namespace DigitalPurchasing.Web.Jobs
             => _robotEmail.CheckRobotEmails();
 
         public async Task SendPriceReductionEmail(
+            Guid ownerId,
             string attachment,
             SupplierContactPersonVm supplierContactPerson,
             UserInfoDto userInfo,
             DateTime until)
             => await _emailService.SendPriceReductionEmail(
+                ownerId,
                 attachment,
                 supplierContactPerson,
                 userInfo,

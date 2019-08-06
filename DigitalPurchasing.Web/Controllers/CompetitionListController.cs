@@ -250,6 +250,7 @@ namespace DigitalPurchasing.Web.Controllers
             if (cl == null) return NotFound();
 
             var userId = User.Id();
+            var ownerId = User.CompanyId();
             var userInfo = _userService.GetUserInfo(userId);
 
             var supplierOffersIds = model.Items.Select(q => q.SupplierOfferId).Distinct().ToList();
@@ -295,7 +296,7 @@ namespace DigitalPurchasing.Web.Controllers
                 System.IO.File.WriteAllBytes(filePath, fileBytes);
 
                 Hangfire.BackgroundJob.Enqueue<EmailJobs>(q
-                    => q.SendPriceReductionEmail(filePath, supplierContactPerson, userInfo,
+                    => q.SendPriceReductionEmail(ownerId, filePath, supplierContactPerson, userInfo,
                         DateTime.UtcNow.AddMinutes(30)));
             }
 
