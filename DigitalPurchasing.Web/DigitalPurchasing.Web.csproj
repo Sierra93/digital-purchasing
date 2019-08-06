@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\DigitalPurchasing.Core\DigitalPurchasing.Core.csproj" />
     <ProjectReference Include="..\DigitalPurchasing.Data\DigitalPurchasing.Data.csproj" />
+    <ProjectReference Include="..\DigitalPurchasing.Emails\DigitalPurchasing.Emails.csproj" />
     <ProjectReference Include="..\DigitalPurchasing.ExcelReader\DigitalPurchasing.ExcelReader.csproj" />
     <ProjectReference Include="..\DigitalPurchasing.Models\DigitalPurchasing.Models.csproj" />
     <ProjectReference Include="..\DigitalPurchasing.Services\DigitalPurchasing.Services.csproj" />

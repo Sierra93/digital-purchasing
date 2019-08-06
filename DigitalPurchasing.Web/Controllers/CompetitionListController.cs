@@ -8,6 +8,7 @@ using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Emails;
 using DigitalPurchasing.ExcelReader;
 using DigitalPurchasing.Web.Core;
+using DigitalPurchasing.Web.Jobs;
 using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.CompetitionList;
 using Mapster;
@@ -231,7 +232,7 @@ namespace DigitalPurchasing.Web.Controllers
         {
             public class Item
             {
-                public Guid SupplierId { get; set; }
+                public Guid SupplierOfferId { get; set; }
                 public Guid ItemId { get; set; }
                 public decimal Discount { get; set; }
                 public decimal MinPrice { get; set; }
@@ -251,26 +252,31 @@ namespace DigitalPurchasing.Web.Controllers
             var userId = User.Id();
             var userInfo = _userService.GetUserInfo(userId);
 
-            var suppliersIds = model.Items.Select(q => q.SupplierId).Distinct().ToList();
+            var supplierOffersIds = model.Items.Select(q => q.SupplierOfferId).Distinct().ToList();
 
             var offersBySupplier = cl.GroupBySupplier();
 
-            foreach (var supplierId in suppliersIds)
+            foreach (var supplierOfferId in supplierOffersIds)
             {
-                // todo: get person which sent offer
-                var supplierContactPerson = _supplierService
-                    .GetContactPersonsBySupplier(supplierId, true)
-                    .FirstOrDefault();
+                var so = _supplierOfferService.GetById(supplierOfferId);
 
-                if (supplierContactPerson == null) continue;
+                if (!so.SupplierId.HasValue) continue;
 
-                var offers = offersBySupplier.First(q => q.Value.First().SupplierId == supplierId);
+                var supplierId = so.SupplierId.Value;
+
+                var offers = offersBySupplier.First(q => q.Key.SupplierId == so.SupplierId.Value);
                 var lastOffer = offers.Value.Last();
                 var reportData = CreatePriceReductionData(lastOffer, cl, model);
                 if (!reportData.Items.Any())
                 {
                     continue;
                 }
+
+                var supplierContactPerson = _supplierService
+                    .GetContactPersonsBySupplier(supplierId, true)
+                    .FirstOrDefault();
+
+                if (supplierContactPerson == null) continue;
 
                 var report = new PriceReductionWriter(reportData);
                 var fileBytes = report.Build();
@@ -279,11 +285,15 @@ namespace DigitalPurchasing.Web.Controllers
 
                 System.IO.File.WriteAllBytes(filePath, fileBytes);
 
-                await _emailService.SendPriceReductionEmail(
-                    filePath,
-                    supplierContactPerson,
-                    userInfo,
-                    DateTime.UtcNow.AddMinutes(30));
+                Hangfire.BackgroundJob.Enqueue<EmailJobs>(q
+                    => q.SendPriceReductionEmail(filePath, supplierContactPerson, userInfo,
+                        DateTime.UtcNow.AddMinutes(30)));
+
+                //await _emailService.SendPriceReductionEmail(
+                //    filePath,
+                //    supplierContactPerson,
+                //    userInfo,
+                //    DateTime.UtcNow.AddMinutes(30));
             }
 
             return Ok();
@@ -305,12 +315,12 @@ namespace DigitalPurchasing.Web.Controllers
                 if (model != null)
                 {
                     prData = model.Items?.FirstOrDefault(q =>
-                        q.SupplierId == offer.SupplierId
+                        q.SupplierOfferId == offer.Id
                         && q.ItemId == item.Request.ItemId);
                     if (prData == null) continue;
                 }
                 
-                var targetDiscount = prData?.Discount ?? 0.05m;
+                var targetDiscount = prData?.Discount / 100 ?? 0.05m;
                 var minimalPrice = prData?.MinPrice ?? item.Conversion.ToFinalCostCostPer1(
                     cl.GetMinimalOfferPrice(item.Request.ItemId));
 

@@ -256,10 +256,10 @@
                     prRequests: function() {
                         return _.flatMap(this.prItems, function (item) {
                             var suppliers = _.filter(item.suppliers, { 'isEnabled': true, 'isChecked': true });
-                            return _.map(suppliers, function (supplier) {
+                            return _.map(suppliers, function (supplierOffer) {
                                 return {
                                     itemId: item.id,
-                                    supplierId: supplier.id,
+                                    supplierOfferId: supplierOffer.id,
                                     minPrice: item.minPrice,
                                     discount: item.discount
                                 };
