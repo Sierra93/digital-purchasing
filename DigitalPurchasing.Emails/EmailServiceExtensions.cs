@@ -111,6 +111,7 @@ namespace DigitalPurchasing.Emails
         }
 
         public static async Task SendPriceReductionEmail(this IEmailService emailService,
+            Guid ownerId,
             string attachment,
             SupplierContactPersonVm supplierContactPerson,
             UserInfoDto userInfo,
@@ -131,7 +132,7 @@ namespace DigitalPurchasing.Emails
 
             var htmlMessage = await GetHtmlString(model);
             var attachments = new[] { attachment };
-            await emailService.SendEmailAsync(supplierContactPerson.Email, subject, htmlMessage, attachments);
+            await emailService.SendFromRobotAsync(ownerId, supplierContactPerson.Email, subject, htmlMessage, attachments);
         }
     }
 }
