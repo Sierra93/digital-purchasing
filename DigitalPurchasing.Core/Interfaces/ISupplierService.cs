@@ -20,7 +20,7 @@ namespace DigitalPurchasing.Core.Interfaces
         Guid EditContactPerson(SupplierContactPersonVm vm);
         SupplierContactPersonVm GetContactPersonsById(Guid personId);
         void DeleteContactPerson(Guid personId);
-        Guid GetSupplierIdByEmail(Guid ownerId, string email);
+        (Guid SupplierId, Guid ContactPersonId) GetSupplierIdByEmail(Guid ownerId, string email);
         string GetSupplierNameByEmail(Guid ownerId, string email);
         List<SupplierNomenclatureCategory> GetSupplierNomenclatureCategories(Guid supplierId);
         IEnumerable<SupplierVm> GetByCategoryIds(params Guid[] nomenclatureCategoryIds);

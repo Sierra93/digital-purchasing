@@ -95,6 +95,12 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
         }
 
+        public void UpdateContactPerson(Guid supplierOfferId, Guid? contactPersonId)
+        {
+            _db.SupplierOffers.Find(supplierOfferId).ContactPersonId = contactPersonId;
+            _db.SaveChanges();
+        }
+
         public async Task<CreateFromFileResponse> CreateFromFile(Guid competitionListId, string filePath)
         {
             var competitionList = _db.CompetitionLists.IgnoreQueryFilters().First(q => q.Id == competitionListId);

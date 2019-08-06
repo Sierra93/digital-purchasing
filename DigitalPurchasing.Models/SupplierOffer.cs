@@ -34,6 +34,9 @@ namespace DigitalPurchasing.Models
         [Column(TypeName = "decimal(18, 4)")]
         public decimal DeliveryCost { get; set; }
 
+        public Guid? ContactPersonId { get; set; }
+        public SupplierContactPerson ContactPerson { get; set; }
+
         #region Terms
 
         public DateTime ConfirmationDate { get; set; }

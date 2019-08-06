@@ -184,7 +184,10 @@ namespace DigitalPurchasing.Services
 
         public SupplierContactPersonVm GetContactPersonsById(Guid personId)
         {
-            var entity = _db.SupplierContactPersons.Find(personId);
+            var entity = _db.SupplierContactPersons
+                .IgnoreQueryFilters()
+                .FirstOrDefault(q => q.Id == personId);
+
             return entity?.Adapt<SupplierContactPersonVm>();
         }
 
@@ -196,7 +199,7 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
         }
 
-        public Guid GetSupplierIdByEmail(Guid ownerId, string email)
+        public (Guid SupplierId, Guid ContactPersonId) GetSupplierIdByEmail(Guid ownerId, string email)
         {
             var supplierContactPerson = _db.SupplierContactPersons
                 .IgnoreQueryFilters()
@@ -205,7 +208,9 @@ namespace DigitalPurchasing.Services
                     q.UseForRequests &&
                     q.Supplier.OwnerId == ownerId);
 
-            return supplierContactPerson?.SupplierId ?? Guid.Empty;
+            return (
+                SupplierId: supplierContactPerson?.SupplierId ?? Guid.Empty,
+                ContactPersonId: supplierContactPerson?.Id ?? Guid.Empty);
         }
 
         public string GetSupplierNameByEmail(Guid ownerId, string email)
