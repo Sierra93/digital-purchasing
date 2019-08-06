@@ -128,8 +128,10 @@ namespace DigitalPurchasing.Emails
                     PhoneNumber = userInfo.PhoneNumber
                 }
             };
-            var htmlResult = await GetHtmlString(model);
-            await emailService.SendEmailAsync(supplierContactPerson.Email, subject, htmlResult);
+
+            var htmlMessage = await GetHtmlString(model);
+            var attachments = new[] { attachment };
+            await emailService.SendEmailAsync(supplierContactPerson.Email, subject, htmlMessage, attachments);
         }
     }
 }
