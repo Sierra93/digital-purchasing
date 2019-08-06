@@ -112,12 +112,14 @@ namespace DigitalPurchasing.Emails
 
         public static async Task SendPriceReductionEmail(this IEmailService emailService,
             Guid ownerId,
+            string emailUid,
             string attachment,
             SupplierContactPersonVm supplierContactPerson,
             UserInfoDto userInfo,
             DateTime until)
         {
-            var subject = "Запрос на изменение условий КП/cчета";
+
+            var subject = $"[{emailUid}] Запрос на изменение условий КП/cчета";
             var model = new PriceReductionEmail
             {
                 ToName = supplierContactPerson.ToName(),

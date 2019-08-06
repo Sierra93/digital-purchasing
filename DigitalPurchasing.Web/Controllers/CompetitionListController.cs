@@ -25,6 +25,8 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly IEmailService _emailService;
         private readonly IUserService _userService;
         private readonly ISupplierService _supplierService;
+        private readonly IQuotationRequestService _quotationRequestService;
+        private readonly IRootService _rootService;
 
         public CompetitionListController(
             ICompetitionListService competitionListService,
@@ -32,7 +34,9 @@ namespace DigitalPurchasing.Web.Controllers
             ISelectedSupplierService selectedSupplierService,
             IEmailService emailService,
             IUserService userService,
-            ISupplierService supplierService)
+            ISupplierService supplierService,
+            IQuotationRequestService quotationRequestService,
+            IRootService rootService)
         {
             _competitionListService = competitionListService;
             _supplierOfferService = supplierOfferService;
@@ -40,6 +44,8 @@ namespace DigitalPurchasing.Web.Controllers
             _emailService = emailService;
             _userService = userService;
             _supplierService = supplierService;
+            _quotationRequestService = quotationRequestService;
+            _rootService = rootService;
         }
 
         public IActionResult Index() => View();
@@ -295,8 +301,11 @@ namespace DigitalPurchasing.Web.Controllers
 
                 System.IO.File.WriteAllBytes(filePath, fileBytes);
 
+                var root = _rootService.GetByCL(cl.Id).Result;
+                var emailUid = _quotationRequestService.QuotationRequestToUid(root.QuotationRequestId.Value);
+
                 Hangfire.BackgroundJob.Enqueue<EmailJobs>(q
-                    => q.SendPriceReductionEmail(ownerId, filePath, supplierContactPerson, userInfo,
+                    => q.SendPriceReductionEmail(ownerId, emailUid, filePath, supplierContactPerson, userInfo,
                         DateTime.UtcNow.AddMinutes(30)));
             }
 
