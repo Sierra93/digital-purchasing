@@ -23,12 +23,14 @@ namespace DigitalPurchasing.Web.Jobs
 
         public async Task SendPriceReductionEmail(
             Guid ownerId,
+            string emailUid,
             string attachment,
             SupplierContactPersonVm supplierContactPerson,
             UserInfoDto userInfo,
             DateTime until)
             => await _emailService.SendPriceReductionEmail(
                 ownerId,
+                emailUid,
                 attachment,
                 supplierContactPerson,
                 userInfo,
