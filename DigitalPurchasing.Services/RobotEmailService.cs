@@ -211,10 +211,10 @@ namespace DigitalPurchasing.Services
             var soHandled = false;
 
             // detect supplier by contact email
-            var supplierId = _supplierService.GetSupplierIdByEmail(qr.OwnerId, email.FromEmail);
+            var supplierData = _supplierService.GetSupplierIdByEmail(qr.OwnerId, email.FromEmail);
 
             // upload supplier offer
-            if (supplierId != Guid.Empty)
+            if (supplierData.SupplierId != Guid.Empty)
             {
                 var clId = await _competitionListService.GetIdByQR(qr.Id, true);
 
@@ -237,9 +237,13 @@ namespace DigitalPurchasing.Services
                             {
                                 // set supplier name
                                 var soId = createOfferResult.Id;
-                                var supplier = _supplierService.GetById(supplierId, true);
+                                var supplier = _supplierService.GetById(supplierData.SupplierId, true);
                                 _supplierOfferService.UpdateSupplierName(soId, supplier.Name, supplier.Id, true);
+                                var contactPersonId = supplierData.ContactPersonId != Guid.Empty
+                                    ? (Guid?)supplierData.ContactPersonId
+                                    : null;
 
+                                _supplierOfferService.UpdateContactPerson(soId, contactPersonId);
                                 // detect columns
                                 var columns = _supplierOfferService.GetColumnsData(soId, true);
                                 _supplierOfferService.UpdateStatus(soId, SupplierOfferStatus.MatchColumns, true);

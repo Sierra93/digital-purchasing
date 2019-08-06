@@ -272,9 +272,18 @@ namespace DigitalPurchasing.Web.Controllers
                     continue;
                 }
 
-                var supplierContactPerson = _supplierService
-                    .GetContactPersonsBySupplier(supplierId, true)
-                    .FirstOrDefault();
+                SupplierContactPersonVm supplierContactPerson;
+
+                if (so.ContactPersonId.HasValue)
+                {
+                    supplierContactPerson = _supplierService.GetContactPersonsById(so.ContactPersonId.Value);
+                }
+                else
+                {
+                    supplierContactPerson = _supplierService
+                        .GetContactPersonsBySupplier(supplierId, true)
+                        .FirstOrDefault();
+                }
 
                 if (supplierContactPerson == null) continue;
 
@@ -288,12 +297,6 @@ namespace DigitalPurchasing.Web.Controllers
                 Hangfire.BackgroundJob.Enqueue<EmailJobs>(q
                     => q.SendPriceReductionEmail(filePath, supplierContactPerson, userInfo,
                         DateTime.UtcNow.AddMinutes(30)));
-
-                //await _emailService.SendPriceReductionEmail(
-                //    filePath,
-                //    supplierContactPerson,
-                //    userInfo,
-                //    DateTime.UtcNow.AddMinutes(30));
             }
 
             return Ok();

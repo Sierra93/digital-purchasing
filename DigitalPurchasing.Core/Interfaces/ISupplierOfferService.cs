@@ -11,6 +11,7 @@ namespace DigitalPurchasing.Core.Interfaces
         void UpdateStatus(Guid id, SupplierOfferStatus status, bool globalSearch = false);
         void UpdateSupplierName(Guid id, string name, Guid? supplierId, bool globalSearch = false);
         void UpdateDeliveryCost(Guid id, decimal deliveryCost);
+        void UpdateContactPerson(Guid supplierOfferId, Guid? contactPersonId);
 
         Task<CreateFromFileResponse> CreateFromFile(Guid competitionListId, string filePath);
 
@@ -287,6 +288,8 @@ namespace DigitalPurchasing.Core.Interfaces
         public decimal DeliveryCost { get; set; }
         public Guid PurchaseRequestId { get; set; }
         public Guid CompetitionListId { get; set; }
+
+        public Guid? ContactPersonId { get; set; }
     }
 
     public class SupplierOfferColumnsVm
