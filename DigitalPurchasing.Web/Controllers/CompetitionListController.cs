@@ -202,9 +202,14 @@ namespace DigitalPurchasing.Web.Controllers
         {
             var cl = _competitionListService.GetById(id);
 
+            var offers = cl.GroupBySupplier()
+                .Where(q => q.Key.SupplierId.HasValue)
+                .Select(q => q.Value.Last())
+                .ToList();
+
             var vm = new PriceReductionDataVm
             {
-                Suppliers = cl.SupplierOffers.OrderBy(q => q.CreatedOn).Select(q => new PriceReductionDataVm.Supplier
+                Suppliers = offers.OrderBy(q => q.CreatedOn).Select(q => new PriceReductionDataVm.Supplier
                 {
                     Id = q.Id,
                     Name = q.SupplierName,
@@ -220,7 +225,7 @@ namespace DigitalPurchasing.Web.Controllers
                         Position = pri.Position,
                         Discount = 5m,
                         MinPrice = cl.GetMinimalOfferPrice(pri.Id),
-                        Suppliers = cl.SupplierOffers.OrderBy(q => q.CreatedOn).Select(so => new PriceReductionDataVm.ItemSupplier
+                        Suppliers = offers.OrderBy(q => q.CreatedOn).Select(so => new PriceReductionDataVm.ItemSupplier
                         {
                             Id = so.Id,
                             IsChecked = true,

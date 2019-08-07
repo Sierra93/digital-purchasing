@@ -141,13 +141,18 @@
                         <tbody>
                             @foreach (var item in baseOffer.Items)
                             {
-                                if (item.Offer.Qty > 0)
+                                var offerWItem = group.Value
+                                    .FirstOrDefault(q => q.Items
+                                        .Any(w => w.Offer.Qty > 0 && w.Request.ItemId == item.Request.ItemId));
+                                
+                                if (offerWItem != null)
                                 {
+                                    var baseItem = offerWItem.Items.Find(q => q.Request.ItemId == item.Request.ItemId);
                                     <tr>
-                                        <td>@item.Offer.Code</td>
-                                        <td>@item.Offer.Name</td>
-                                        <td>@item.Offer.Uom</td>
-                                        <td>@item.Offer.Qty.ToString(Consts.Format.Qty)</td>
+                                        <td>@baseItem.Offer.Code</td>
+                                        <td>@baseItem.Offer.Name</td>
+                                        <td>@baseItem.Offer.Uom</td>
+                                        <td>@baseItem.Offer.Qty.ToString(Consts.Format.Qty)</td>
                                         @foreach (var offer in group.Value)
                                         {
                                             var price = offer.Items
