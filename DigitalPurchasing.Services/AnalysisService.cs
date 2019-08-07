@@ -127,19 +127,21 @@ namespace DigitalPurchasing.Services
                 CustomerDeliveryDate = qrDelivery.DeliverAt == DateTime.MinValue ? (DateTime?)null : qrDelivery.DeliverAt
             };
 
+            var offers = cl.GroupBySupplier().Where(q => q.Key.SupplierId.HasValue).Select(q => q.Value.Last());
+
             var order = 0;
-            foreach (var q in cl.SupplierOffers.Where(q => q.SupplierId.HasValue))
+            foreach (var lastOffer in offers)
             {
                 data.SupplierOffers.Add(new AnalysisDataVm.SupplierOfferData
                 {
-                    Id  = q.Id,
-                    Name = q.SupplierName,
+                    Id  = lastOffer.Id,
+                    Name = lastOffer.SupplierName,
                     Order = order++,
-                    DeliveryTerms = q.DeliveryTerms,
-                    PayWithinDays = q.PayWithinDays,
-                    PaymentTerms = q.PaymentTerms,
-                    DeliveryDate = q.DeliveryDate == DateTime.MinValue ? (DateTime?)null : q.DeliveryDate,
-                    SupplierId = q.SupplierId ?? Guid.Empty
+                    DeliveryTerms = lastOffer.DeliveryTerms,
+                    PayWithinDays = lastOffer.PayWithinDays,
+                    PaymentTerms = lastOffer.PaymentTerms,
+                    DeliveryDate = lastOffer.DeliveryDate == DateTime.MinValue ? (DateTime?)null : lastOffer.DeliveryDate,
+                    SupplierId = lastOffer.SupplierId ?? Guid.Empty
                 });
             }
 
@@ -156,7 +158,9 @@ namespace DigitalPurchasing.Services
                     .Select(q => new AnalysisCustomerItem(q.NomenclatureId, q.RawQty))
             );
 
-            var suppliers = cl.SupplierOffers.Where(q => q.SupplierId.HasValue).Select(q =>
+            var offers = cl.GroupBySupplier().Where(q => q.Key.SupplierId.HasValue).Select(q => q.Value.Last());
+
+            var suppliers = offers.Select(q =>
             {
                 return new AnalysisSupplier(
                     q.SupplierId.Value,
