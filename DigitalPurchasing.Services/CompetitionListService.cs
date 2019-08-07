@@ -63,16 +63,23 @@ namespace DigitalPurchasing.Services
                 .Select(q => new
                 {
                     CLId = q.CompetitionListId,
+                    SupplierId = q.SupplierId,
                     SupplierName = q.Supplier.Name
                 })
                 .ToList();
 
             foreach (var resultItem in results)
             {
-                var itemSuppliers = clSuppliers.Where(q => q.CLId == resultItem.Id).ToList();
+                var itemSuppliers = clSuppliers
+                    .Where(q => q.CLId == resultItem.Id && q.SupplierId.HasValue)
+                    .GroupBy(q => q.SupplierId)
+                    .Select(q => q.FirstOrDefault())
+                    .ToList();
+
                 if (itemSuppliers.Any())
                 {
-                    resultItem.Suppliers = string.Join(", ", itemSuppliers.Select(q => q.SupplierName));
+                    resultItem.Suppliers = string.Join(", ",
+                        itemSuppliers.Select(q => q.SupplierName).OrderBy(q => q));
                 }
             }
 
