@@ -179,6 +179,10 @@ namespace DigitalPurchasing.Core.Interfaces
 
             public int Position { get; set; }
 
+            public Item()
+            {
+            }
+
             public Item(List<Item> items)
             {
                 Items = items;
