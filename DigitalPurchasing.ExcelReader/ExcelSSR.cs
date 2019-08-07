@@ -136,19 +136,19 @@ namespace DigitalPurchasing.ExcelReader
                     var index = orderedCustomerItems.IndexOf(customerItem);
                     var nomSupplierItems = _report.SSSupplierItems.Where(si => si.NomenclatureId == customerItem.NomenclatureId);
 
-                    var withMinPrice = nomSupplierItems.OrderBy(si => si.ConvertedPrice).First();
-                    ws.Cells[6 + index, colMinPriceStart].TableText(withMinPrice.ConvertedPrice);
+                    var withMinPrice = nomSupplierItems.OrderBy(si => si.ConvertedPrice).FirstOrDefault();
+                    ws.Cells[6 + index, colMinPriceStart].TableText(withMinPrice?.ConvertedPrice ?? 0);
                     ws.Cells[6 + index, colMinPriceStart + 1].TableText(customerItem.Uom);
-                    ws.Cells[6 + index, colMinPriceStart + 2].TableText(withMinPrice.ConvertedQuantity);
-                    ws.Cells[6 + index, colMinPriceStart + 3].TableText(withMinPrice.Supplier.Name);
+                    ws.Cells[6 + index, colMinPriceStart + 2].TableText(withMinPrice?.ConvertedQuantity ?? 0);
+                    ws.Cells[6 + index, colMinPriceStart + 3].TableText(withMinPrice?.Supplier.Name ?? "");
                     ws.Cells[6 + index, colMinPriceStart + 3].Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
                     ws.Cells[6 + index, colMinPriceStart + 3].Style.WrapText = true;
-                    ws.Cells[6 + index, colMinPriceStart + 4].TableText(withMinPrice.Name);
+                    ws.Cells[6 + index, colMinPriceStart + 4].TableText(withMinPrice?.Name ?? "");
                     ws.Cells[6 + index, colMinPriceStart + 4].Style.WrapText = true;
                     ws.Cells[6 + index, colMinPriceStart + 4].Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
-                    ws.Cells[6 + index, colMinPriceStart + 5].TableText(withMinPrice.Quantity);
-                    ws.Cells[6 + index, colMinPriceStart + 6].TableText(withMinPrice.UomStr);
-                    ws.Cells[6 + index, colMinPriceStart + 7].TableText(withMinPrice.OfferInvoiceData);
+                    ws.Cells[6 + index, colMinPriceStart + 5].TableText(withMinPrice?.Quantity ?? 0);
+                    ws.Cells[6 + index, colMinPriceStart + 6].TableText(withMinPrice?.UomStr ?? "");
+                    ws.Cells[6 + index, colMinPriceStart + 7].TableText(withMinPrice?.OfferInvoiceData ?? "");
                     ws.Cells[6 + index, colMinPriceStart + 7].Style.WrapText = true;
                 }
 
