@@ -337,10 +337,9 @@ namespace DigitalPurchasing.Web.Controllers
                         && q.ItemId == item.Request.ItemId);
                     if (prData == null) continue;
                 }
-                
-                var targetDiscount = prData?.Discount / 100 ?? 0.05m;
-                var minimalPrice = prData?.MinPrice ?? item.Conversion.ToFinalCostCostPer1(
-                    cl.GetMinimalOfferPrice(item.Request.ItemId));
+
+                var convertedMinimalPrice = prData?.MinPrice ?? cl.GetMinimalOfferPrice(item.Request.ItemId);
+                var baseMinimalPrice = item.Conversion.ToFinalCostCostPer1(convertedMinimalPrice);
 
                 reportData.Items.Add(new PriceReductionData.DataItem
                 {
@@ -354,8 +353,7 @@ namespace DigitalPurchasing.Web.Controllers
                     OfferQuantity = item.Offer.Qty,
                     OfferPrice = item.Offer.Price,
                     OfferUom = item.Offer.Uom,
-                    TargetDiscount = targetDiscount,
-                    MinimalPrice = minimalPrice
+                    MinimalPrice = baseMinimalPrice
                 });
             }
 

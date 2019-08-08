@@ -26,7 +26,7 @@ namespace DigitalPurchasing.ExcelReader
             public decimal OfferTotal => OfferQuantity * OfferPrice;
 
             public decimal MinimalPrice { get; set; }
-            public decimal TargetDiscount { get; set; }
+            public decimal TargetDiscount => 1 - MinimalPrice / OfferPrice;
             public decimal TargetPrice => MinimalPrice * (1 - TargetDiscount);
             public decimal TargetDiff => OfferPrice - TargetPrice;
             public decimal TargetTotal => OfferQuantity * TargetPrice;
@@ -55,8 +55,8 @@ namespace DigitalPurchasing.ExcelReader
                 //[row, col]
                 ws.Cells[1, 2].HeaderText("Запрос на изменение условий коммерческого предложения (КП)/ Счета")
                     .AlignLeft().NoWrapText();
-                ws.Cells[4, 8].HeaderText("Номер КП/Счета: " + _data.InvoiceData).NoWrapText().BoldFont(false);
-                ws.Cells[4, 10].HeaderText("Валюта КП/счета: " + _data.Currency).NoWrapText().BoldFont(false);
+                ws.Cells[4, 8].HeaderText("Номер КП/Счета: " + _data.InvoiceData).NoWrapText().BoldFont(false).AlignLeft();
+                ws.Cells[4, 10].HeaderText("Валюта КП/счета: " + _data.Currency).NoWrapText().BoldFont(false).AlignLeft();
 
                 ws.Row(5).Height = 64;
                 ws.Cells[5, 2].HeaderText("№"); 	    
@@ -102,7 +102,7 @@ namespace DigitalPurchasing.ExcelReader
                     ws.Cells[row, 8, row, 13].ItemBorders();
                     //14
                     ws.Cells[row, 15].TableText(item.TargetPrice);
-                    ws.Cells[row, 16].Percentage(item.TargetDiscount);
+                    ws.Cells[row, 16].Percentage(item.TargetDiscount).BoldFont().AlignRight();
                     ws.Cells[row, 17].TableText(item.TargetDiff);
                     ws.Cells[row, 18].TableText(item.TargetTotal);
                     ws.Cells[row, 19].TableText(item.TargetTotalDiscount);
@@ -131,12 +131,26 @@ namespace DigitalPurchasing.ExcelReader
 
             ws.Column(1).Width = separatorWidth * 2;
             //ws.Column(2).AutoFit();
-            ws.Column(3).AutoFit();
+            if (_data.Items.Any(q => !string.IsNullOrEmpty(q.RequestCode)))
+            {
+                ws.Column(3).AutoFit();
+            }
+            else
+            {
+                ws.Column(3).Width = 8.33;
+            }
             ws.Column(4).AutoFit();
             ws.Column(5).AutoFit();
             ws.Column(6).AutoFit();
             ws.Column(7).Width = separatorWidth;
-            ws.Column(8).AutoFit();
+            if (_data.Items.Any(q => !string.IsNullOrEmpty(q.OfferCode)))
+            {
+                ws.Column(8).AutoFit();
+            }
+            else
+            {
+                ws.Column(8).Width = 8.33;
+            }
             ws.Column(9).AutoFit();
             ws.Column(10).Width = 16;
             ws.Column(11).AutoFit();
