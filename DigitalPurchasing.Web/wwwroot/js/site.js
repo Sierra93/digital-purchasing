@@ -68,4 +68,4 @@ $(document).on('change', ':file', function () {
   $(this).parents('form').submit();
 });
 
-numeral.locale('ru');
+//numeral.locale('ru');
