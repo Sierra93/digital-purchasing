@@ -311,7 +311,7 @@ namespace DigitalPurchasing.Web.Controllers
 
                 Hangfire.BackgroundJob.Enqueue<EmailJobs>(q
                     => q.SendPriceReductionEmail(ownerId, emailUid, filePath, supplierContactPerson, userInfo,
-                        DateTime.UtcNow.AddMinutes(30)));
+                        DateTime.UtcNow.AddMinutes(30), lastOffer.InvoiceData));
             }
 
             return Ok();

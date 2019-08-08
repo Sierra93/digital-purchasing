@@ -116,12 +116,14 @@ namespace DigitalPurchasing.Emails
             string attachment,
             SupplierContactPersonVm supplierContactPerson,
             UserInfoDto userInfo,
-            DateTime until)
+            DateTime until,
+            string invoiceData)
         {
 
             var subject = $"[{emailUid}] Запрос на изменение условий КП/cчета";
             var model = new PriceReductionEmail
             {
+                InvoiceData = invoiceData,
                 ToName = supplierContactPerson.ToName(),
                 Until = until.ToRussianStandardTime(),
                 From = new PriceReductionEmail.FromData

@@ -27,13 +27,15 @@ namespace DigitalPurchasing.Web.Jobs
             string attachment,
             SupplierContactPersonVm supplierContactPerson,
             UserInfoDto userInfo,
-            DateTime until)
+            DateTime until,
+            string invoiceData)
             => await _emailService.SendPriceReductionEmail(
                 ownerId,
                 emailUid,
                 attachment,
                 supplierContactPerson,
                 userInfo,
-                until);
+                until,
+                invoiceData);
     }
 }
