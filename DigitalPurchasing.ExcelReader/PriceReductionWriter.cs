@@ -55,7 +55,7 @@ namespace DigitalPurchasing.ExcelReader
                 //[row, col]
                 ws.Cells[1, 2].HeaderText("Запрос на изменение условий коммерческого предложения (КП)/ Счета")
                     .AlignLeft().NoWrapText();
-                ws.Cells[4, 8].HeaderText("Номер КП/Счета: " + _data.InvoiceData).NoWrapText().BoldFont(false).AlignLeft();
+                ws.Cells[4, 8].HeaderText("Номер КП/Счета: " + _data.InvoiceData).NoWrapText().BoldFont().AlignLeft();
                 ws.Cells[4, 10].HeaderText("Валюта КП/счета: " + _data.Currency).NoWrapText().BoldFont(false).AlignLeft();
 
                 ws.Row(5).Height = 64;
@@ -102,7 +102,7 @@ namespace DigitalPurchasing.ExcelReader
                     ws.Cells[row, 8, row, 13].ItemBorders();
                     //14
                     ws.Cells[row, 15].TableText(item.TargetPrice);
-                    ws.Cells[row, 16].Percentage(item.TargetDiscount).BoldFont().AlignRight();
+                    ws.Cells[row, 16].Percentage(item.TargetDiscount, "#0.00%").BoldFont().AlignRight();
                     ws.Cells[row, 17].TableText(item.TargetDiff);
                     ws.Cells[row, 18].TableText(item.TargetTotal);
                     ws.Cells[row, 19].TableText(item.TargetTotalDiscount);

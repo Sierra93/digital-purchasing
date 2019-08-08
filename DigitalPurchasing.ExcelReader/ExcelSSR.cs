@@ -568,10 +568,10 @@ namespace DigitalPurchasing.ExcelReader
             return cell;
         }
 
-        public static ExcelRange Percentage(this ExcelRange cell, decimal value)
+        public static ExcelRange Percentage(this ExcelRange cell, decimal value, string percentageFormat = PercentageFormat)
         {
             cell.Value = value;
-            cell.Style.Numberformat.Format = PercentageFormat;
+            cell.Style.Numberformat.Format = percentageFormat;
             cell.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
             cell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
             return cell;
