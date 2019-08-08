@@ -124,13 +124,13 @@
                                 <td></td>
                                 <td></td>
                                 <td></td>
-                                <td>@baseOffer.Items.Sum(q => q.Offer.Qty).ToString(Consts.Format.Qty)</td>
+                                <td>@lastOffer.Items.Sum(q => q.Offer.Qty).ToString(Consts.Format.Qty)</td>
                                 @foreach (var so in group.Value)
                                 {
                                     <td></td>
                                 }
 
-                                <td>@baseOffer.Items.Sum(q => q.Offer.TotalPrice).ToString(Consts.Format.Money2)</td>
+                                <td>@lastOffer.Items.Sum(q => q.Offer.TotalPrice).ToString(Consts.Format.Money2)</td>
                             </tr>
                             <tr>
                                 <td colspan="@colCount">
@@ -139,10 +139,10 @@
                             </tr>
                         </tfoot>
                         <tbody>
-                            @foreach (var item in baseOffer.Items)
+                            @foreach (var item in lastOffer.Items)
                             {
                                 var offerWItem = group.Value
-                                    .FirstOrDefault(q => q.Items
+                                    .LastOrDefault(q => q.Items
                                         .Any(w => w.Offer.Qty > 0 && w.Request.ItemId == item.Request.ItemId));
                                 
                                 if (offerWItem != null)
