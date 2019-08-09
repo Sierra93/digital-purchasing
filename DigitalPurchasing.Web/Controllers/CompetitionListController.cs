@@ -245,8 +245,7 @@ namespace DigitalPurchasing.Web.Controllers
             {
                 public Guid SupplierOfferId { get; set; }
                 public Guid ItemId { get; set; }
-                public decimal Discount { get; set; }
-                public decimal MinPrice { get; set; }
+                public decimal TargetPrice { get; set; }
             }
 
             public List<Item> Items { get; set; }
@@ -338,23 +337,38 @@ namespace DigitalPurchasing.Web.Controllers
                     if (prData == null) continue;
                 }
 
-                var convertedMinimalPrice = prData?.MinPrice ?? cl.GetMinimalOfferPrice(item.Request.ItemId);
-                var baseMinimalPrice = item.Conversion.ToFinalCostCostPer1(convertedMinimalPrice);
+                var haveTargetPrice = prData != null;
+                decimal targetPrice;
 
-                reportData.Items.Add(new PriceReductionData.DataItem
+                if (haveTargetPrice)
                 {
-                    Position = item.Position,
-                    RequestCode = item.Request.Code,
-                    RequestName = item.Request.Name,
-                    RequestQuantity = item.Request.Qty,
-                    RequestUom = item.Request.Uom,
-                    OfferCode = item.Offer.Code,
-                    OfferName = item.Offer.Name,
-                    OfferQuantity = item.Offer.Qty,
-                    OfferPrice = item.Offer.Price,
-                    OfferUom = item.Offer.Uom,
-                    MinimalPrice = baseMinimalPrice
-                });
+                    targetPrice = prData.TargetPrice;
+                }
+                else
+                {
+                    var minimalPrice = cl.GetMinimalOfferPrice(item.Request.ItemId);
+                    var defaultDiscount = 0.05m; // todo: get from database
+                    var convertedTargetPrice = minimalPrice * (1 - defaultDiscount);
+                    targetPrice = item.Conversion.ToFinalCostCostPer1(convertedTargetPrice);
+                }
+                
+                var dataItem = new PriceReductionData.DataItem();
+                dataItem
+                    .SetPosition(item.Position)
+                    .SetRequest(
+                        item.Request.Code,
+                        item.Request.Name,
+                        item.Request.Uom,
+                        item.Request.Qty)
+                    .SetOffer(
+                        item.Offer.Code,
+                        item.Offer.Name,
+                        item.Offer.Uom,
+                        item.Offer.Qty,
+                        item.Offer.Price)
+                    .SetTargetPrice(targetPrice);
+
+                reportData.Items.Add(dataItem);
             }
 
             return reportData;
