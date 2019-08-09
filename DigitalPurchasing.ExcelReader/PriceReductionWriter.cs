@@ -12,25 +12,65 @@ namespace DigitalPurchasing.ExcelReader
     {
         public class DataItem
         {
-            public int Position { get; set; }
-            public string RequestCode { get; set; }
-            public string RequestName { get; set; }
-            public string RequestUom { get; set; }
-            public decimal RequestQuantity { get; set; }
+            public int Position { get; private set; }
 
-            public string OfferCode { get; set; }
-            public string OfferName { get; set; }
-            public string OfferUom { get; set; }
-            public decimal OfferQuantity { get; set; }
-            public decimal OfferPrice { get; set; }
+            public string RequestCode { get; private set; }
+            public string RequestName { get; private set; }
+            public string RequestUom { get; private set; }
+            public decimal RequestQuantity { get; private set; }
+
+            public string OfferCode { get; private set; }
+            public string OfferName { get; private set; }
+            public string OfferUom { get; private set; }
+            public decimal OfferQuantity { get; private set; }
+            public decimal OfferPrice { get; private set; }
             public decimal OfferTotal => OfferQuantity * OfferPrice;
 
-            public decimal MinimalPrice { get; set; }
-            public decimal TargetDiscount => 1 - MinimalPrice / OfferPrice;
-            public decimal TargetPrice => MinimalPrice * (1 - TargetDiscount);
+            public decimal TargetDiscount => 1 - TargetPrice / OfferPrice;
+            public decimal TargetPrice { get; set; }
             public decimal TargetDiff => OfferPrice - TargetPrice;
             public decimal TargetTotal => OfferQuantity * TargetPrice;
             public decimal TargetTotalDiscount => OfferTotal - TargetTotal;
+
+            public DataItem SetPosition(int position)
+            {
+                Position = position;
+                return this;
+            }
+
+            public DataItem SetRequest(
+                string code,
+                string name,
+                string uom,
+                decimal quantity)
+            {
+                RequestCode = code;
+                RequestName = name;
+                RequestUom = uom;
+                RequestQuantity = quantity;
+                return this;
+            }
+
+            public DataItem SetOffer(
+                string code,
+                string name,
+                string uom,
+                decimal quantity,
+                decimal price)
+            {
+                OfferCode = code;
+                OfferName = name;
+                OfferUom = uom;
+                OfferQuantity = quantity;
+                OfferPrice = price;
+                return this;
+            }
+
+            public DataItem SetTargetPrice(decimal targetPrice)
+            {
+                TargetPrice = targetPrice;
+                return this;
+            }
         }
 
         public List<DataItem> Items { get; set; } = new List<DataItem>();
