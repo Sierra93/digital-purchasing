@@ -23,15 +23,13 @@
     <div class="long-table-wrap">
         <div class="long-table">
             <div class="long-table-item">
-                <div>
+                <div class="header">
                     <p>
                         <b>Клиент: @cl.PurchaseRequest.CustomerName</b>&nbsp;
                         <a asp-action="Edit" asp-controller="PurchaseRequest" asp-route-id="@cl.PurchaseRequest.Id">@($"Заявка № {cl.PurchaseRequest.PublicId} от {cl.PurchaseRequest.CreatedOn:dd.MM.yyyy HH:mm}")</a>
                     </p>
                     @if (hasErpCode)
                     {<p>Номер заявки в ERP - @cl.PurchaseRequest.ErpCode</p>}
-                    @if (!hasErpCode && hasInvoiceData)
-                    {<p>&nbsp;</p>}
                 </div>
                 <table class="table table-striped">
                     <thead>
@@ -71,19 +69,38 @@
                     </tbody>
                 </table>
             </div>
-            @foreach (var so in cl.SupplierOffers)
+            @foreach (var group in cl.GroupBySupplier().OrderBy(q => q.Key.CreatedOn))
             {
-                var soTitle = $"КП № {so.PublicId} от {so.CreatedOn:dd.MM.yyyy HH:mm}";
+                var index = 1;
+                var baseOffer = group.Value.First();
+                var lastOffer = group.Value.Last();
+                var colCount = 5 + group.Value.Count;
+                var currencies = group.Value
+                    .SelectMany(q => q.Items
+                        .Where(w => !string.IsNullOrEmpty(w.Offer.Currency))
+                        .Select(w => w.Offer.Currency))
+                    .Distinct();
                 <div class="long-table-item">
-                    <div>
+                    <div class="header">
                         <p>
-                            <b>Поставщик: @(so.SupplierName ?? "Не указан")</b>&nbsp;
-                            <a asp-action="Edit" asp-controller="SupplierOffer" asp-route-id="@so.Id">@soTitle</a>
+                            <b>Поставщик: @(baseOffer.SupplierName ?? "Не указан")</b>
                         </p>
-                        @if (hasErpCode || (hasInvoiceData && string.IsNullOrEmpty(so.InvoiceData)))
-                        {<p>&nbsp;</p>}
-                        @if (!string.IsNullOrEmpty(so.InvoiceData))
-                        {<p>№ КП/cчета у поставщика - @so.InvoiceData</p>}
+                        <p>Валюта: @string.Join(", ", currencies)</p>
+                        <ul>
+                            @foreach (var so in group.Value)
+                            {
+                                <li>
+                                    <span>Раунд @(index++)</span>&nbsp;
+                                    <a asp-action="Edit" asp-controller="SupplierOffer" asp-route-id="@so.Id">@so.Title</a>
+                                </li>
+                            }
+                        </ul>
+                        @if (baseOffer.SupplierId.HasValue)
+                        {
+                            <a href="@Url.Action("PriceReductionDownload", new {clId = Model.CompetitionList.Id, supplierId = baseOffer.SupplierId.Value })">
+                                <span>Скачать запрос на понижение</span>
+                            </a>
+                        }
                     </div>
                     <table class="table table-striped with-left-border">
                         <thead>
@@ -92,9 +109,14 @@
                                 <td>Наименование</td>
                                 <td>ЕИ</td>
                                 <td>Кол-во,<br />ЕИ</td>
-                                <td>Цена за ЕИ,<br />валюта</td>
-                                <td>Валюта</td>
-                                <td>Стоимость,<br />валюта</td>
+                                @for (int i = 0; i < group.Value.Count; i++)
+                                {
+                                    <td>
+                                        Цена за ЕИ<br />
+                                        РАУНД @(i + 1)
+                                    </td>
+                                }
+                                <td>Cтоимость по последней<br />цене, валюта</td>                                
                             </tr>
                         </thead>
                         <tfoot>
@@ -102,36 +124,49 @@
                                 <td></td>
                                 <td></td>
                                 <td></td>
-                                <td>@so.Items.Where(q => q != null).Sum(q => q.RawQty).ToString(Consts.Format.Qty)</td>
-                                <td></td>
-                                <td></td>
-                                <td>@so.Items.Where(q => q != null).Sum(q => q.TotalPrice).ToString(Consts.Format.Money2)</td>
+                                <td>@lastOffer.Items.Sum(q => q.Offer.Qty).ToString(Consts.Format.Qty)</td>
+                                @foreach (var so in group.Value)
+                                {
+                                    <td></td>
+                                }
+
+                                <td>@lastOffer.Items.Sum(q => q.Offer.TotalPrice).ToString(Consts.Format.Money2)</td>
                             </tr>
                             <tr>
-                                <td colspan="7">
-                                    <so-terms :so="'@so.Id'"></so-terms>
+                                <td colspan="@colCount">
+                                    <so-terms :so="'@baseOffer.Id'"></so-terms>
                                 </td>
                             </tr>
                         </tfoot>
                         <tbody>
-                            @foreach (var item in so.Items)
+                            @foreach (var item in lastOffer.Items)
                             {
-                                if (item != null)
+                                var offerWItem = group.Value
+                                    .LastOrDefault(q => q.Items
+                                        .Any(w => w.Offer.Qty > 0 && w.Request.ItemId == item.Request.ItemId));
+                                
+                                if (offerWItem != null)
                                 {
+                                    var baseItem = offerWItem.Items.Find(q => q.Request.ItemId == item.Request.ItemId);
                                     <tr>
-                                        <td>@item.RawCode</td>
-                                        <td>@item.RawName</td>
-                                        <td>@item.RawUom</td>
-                                        <td>@item.RawQty.ToString(Consts.Format.Qty)</td>
-                                        <td>@item.RawPrice.ToString(Consts.Format.Money2)</td>
-                                        <td>@so.Currency.Name</td>
-                                        <td>@item.TotalPrice.ToString(Consts.Format.Money2)</td>
+                                        <td>@baseItem.Offer.Code</td>
+                                        <td>@baseItem.Offer.Name</td>
+                                        <td>@baseItem.Offer.Uom</td>
+                                        <td>@baseItem.Offer.Qty.ToString(Consts.Format.Qty)</td>
+                                        @foreach (var offer in group.Value)
+                                        {
+                                            var price = offer.Items
+                                                .First(q => q.NomenclatureId == item.NomenclatureId)
+                                                .Offer.Price;
+                                            <td>@price.ToString(Consts.Format.Money2)</td>
+                                        }
+                                        <td>@lastOffer.Items.First(q => q.NomenclatureId == item.NomenclatureId).Offer.TotalPrice.ToString(Consts.Format.Money2)</td>
                                     </tr>
                                 }
                                 else
                                 {
                                     <tr>
-                                        <td colspan="7" style="text-align: center;">Не сопоставлено</td>
+                                        <td colspan="@colCount" style="text-align: center;">Не сопоставлено</td>
                                     </tr>
                                 }
                             }
@@ -139,6 +174,61 @@
                     </table>
                 </div>
             }
+            <div class="long-table-item">
+                <div class="header">
+                    <p>
+                        <b>Расчет целевых цен для отправки запроса на понижение</b>
+                    </p>
+                    <button class="btn bg-primary"
+                            v-on:click="sendPRRequests"
+                            :disabled="!sendingPRRequestsEnabled">Отправить запрос на понижение цен</button>
+                </div>
+                <table class="table table-striped with-left-border">
+                    <thead>
+                        <tr>
+                            <td>Минимальная<br />цена</td>
+                            <td>Целевая цена,<br />валюта за ЕИ поставщика</td>
+                            <td>Целевая скидка<br />к минимальной цене, %</td>
+                            <td v-for="supplier in prSuppliers" class="text-center">
+                                <div>{{supplier.name}}</div>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox"
+                                           v-model="supplier.isChecked"
+                                           v-on:change="prToggleSupplier(supplier.id, !supplier.isChecked)" />
+                                </label>
+                            </td>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <td :colspan="(prSuppliers.length + 2)"><p>&nbsp;</p></td>
+                        </tr>
+                    </tfoot>
+                    <tbody>
+                        <tr v-for="item in prItems" v-if="item.minPrice > 0">
+                            <td class="align-right">{{item.minPrice | formatMoney}}</td>
+                            <td>
+                                <input class="form-control input-sm h-20" type="number" min="0"
+                                       v-model="item.targetPrice" v-on:change="onChangeTargetPrice($event, item)" />
+                            </td>
+                            <td>
+                                <input class="form-control input-sm h-20" type="number" min="0"
+                                       v-model="item.discount" v-on:change="onChangeDiscount($event, item)" />
+                            </td>
+                            <td v-for="itemSupplier in item.suppliers" class="text-center">
+                                <div class="checkbox m-0">
+                                    <label class="checkbox-inline" v-if="itemSupplier.isEnabled">
+                                        <input type="checkbox" v-model="itemSupplier.isChecked">
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr v-else>
+                            <td colspan="7" style="text-align: center;">Не сопоставлено</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
     <vc:competition-list-report cl-id="Model.CompetitionList.Id"></vc:competition-list-report>
@@ -148,9 +238,102 @@
 {
     <partial name="~/Views/CompetitionList/_EditSOTermsComponent.cshtml"/>
     <script>
-        (function() {
+        (function () {
+            var maxHeight = Math.max.apply(null, $(".header").map(function ()
+            {
+                return $(this).height();
+            }).get());
+            $('.header').height(maxHeight);
+
             var vue = new Vue({
-                el: '#app'
+                el: '#app',
+                data: function() {
+                    return {
+                        prItems: [],
+                        prSuppliers: [],
+                        isSendingPRRequests: false
+                    }
+                },
+                computed: {
+                    sendingPRRequestsEnabled: function() {
+                        return !this.isSendingPRRequests && this.prRequests.length > 0;
+                    },
+                    prRequests: function() {
+                        return _.flatMap(this.prItems, function (item) {
+                            var suppliers = _.filter(item.suppliers, { 'isEnabled': true, 'isChecked': true });
+                            return _.map(suppliers, function (supplierOffer) {
+                                return {
+                                    itemId: item.id,
+                                    supplierOfferId: supplierOffer.id,
+                                    targetPrice: item.targetPrice
+                                };
+                            });
+                        });
+                    }
+                },
+                created: function() {
+                    var vm = this;
+                    var getUrl = '@Url.Action("PriceReductionData", new {id = Model.CompetitionList.Id})';
+                    vm.$http.get(getUrl).then( function(res) {
+                        var data = res.body;
+                        vm.prItems = data.items;
+                        vm.prSuppliers = data.suppliers;
+                    }, function(res) {
+                        alert('error');
+                    });
+                },
+                watch: {
+                },
+                filters: {
+                    formatMoney: function(value) {
+                        if (isNumber(value)) {
+                            if (value === 0) return '';
+                            return numeral(value).format('0,0.00');
+                        }
+                        return value;
+                    }
+                },
+                methods: {
+                    supplierChangeEnabled: function(itemId, supplierId) {
+                        var vm = this;
+                        var itemIndex = _.findIndex(vm.prItems, ['id', itemId]);
+                        var supplierIndex = vm.prItems[itemIndex].suppliers.indexOf(supplierId);
+                        return supplierIndex !== -1;
+                    },
+                    prToggleSupplier: function (supplierId, value) {
+                        var vm = this;
+                        _.each(vm.prItems, function(i) {
+                            _.each(i.suppliers, function(s) {
+                                if (s.id === supplierId) {
+                                    s.isChecked = !value;
+                                }
+                            });
+                        });
+                    },
+                    onChangeTargetPrice: function(event, item) {
+                        var targetPrice = event.target.value;
+                        var discount = (1 - (targetPrice/item.minPrice)) * 100;
+                        item.discount = _.round(discount, 2);
+                    },
+                    onChangeDiscount: function(event, item) {
+                        var discount = event.target.value;
+                        var targetPrice = item.minPrice * (1 - (discount / 100));
+                        item.targetPrice = _.round(targetPrice, 2);
+                    },
+                    sendPRRequests: function () {
+                        var vm = this;
+                        vm.isSendingPRRequests = true;
+                        var postUrl = '@Url.Action("SendPriceReductionRequests", new { id = Model.CompetitionList.Id })';
+                        vm.$http.post(postUrl, { items: vm.prRequests }).then(function (res) {
+                            var data = res.body;
+                            console.info('sentPRRequests', postUrl, data);
+                            vm.isSendingPRRequests = false;
+                        }, function(res) {
+                            alert('error');
+                            vm.isSendingPRRequests = false;
+                        });                                               
+                    }
+                }
             });
         })();
     </script>

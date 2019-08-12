@@ -104,13 +104,13 @@ namespace DigitalPurchasing.Services
                     var ssSuppliers = new List<SSSupplier>();
 
                     // supplier items
-                    foreach (var supplierOffer in cl.SupplierOffers.Where(q => q.Supplier != null))
+                    foreach (var supplierOffer in cl.SupplierOffers.Where(q => q.SupplierId.HasValue))
                     {
                         // supplier + so data
                         var ssSupplier = new SSSupplier
                         {
-                            Name = supplierOffer.Supplier.Name,
-                            InternalId = supplierOffer.Supplier.Id,
+                            Name = supplierOffer.SupplierName,
+                            InternalId = supplierOffer.SupplierId.Value,
                             SOCreatedOn = supplierOffer.CreatedOn,
                             SONumber = supplierOffer.PublicId,
                             SOInternalId = supplierOffer.Id
@@ -121,22 +121,21 @@ namespace DigitalPurchasing.Services
 
                         ssSuppliers.Add(ssSupplier);
 
-                        var soDetails = _supplierOfferService.GetDetailsById(supplierOffer.Id);
+                        //var soDetails = _supplierOfferService.GetDetailsById(supplierOffer.Id);
 
-                        var ssSupplierItems = supplierOffer.Items.Where(q => q != null).Select(q =>
+                        var ssSupplierItems = supplierOffer.Items.Where(q => q.Offer.Qty > 0).Select(q =>
                         {
-                            var detailsItem = soDetails.Items.Find(i => i.Offer.ItemId == q.Id);
                             return new SSSupplierItem
                             {
                                 SupplierId = ssSupplier.Id,
-                                Name = q.RawName,
-                                Quantity = q.RawQty,
-                                Price = q.RawPrice,
+                                Name = q.Offer.Name,
+                                Quantity = q.Offer.Qty,
+                                Price = q.Offer.Price,
                                 NomenclatureId = q.NomenclatureId,
-                                InternalId = q.Id,
-                                ConvertedQuantity = detailsItem.Conversion.OfferQty,
-                                ConvertedPrice = detailsItem.Conversion.OfferPrice,
-                                UomStr = q.RawUom,
+                                InternalId = q.Offer.ItemId,
+                                ConvertedQuantity = q.Conversion.OfferQty,
+                                ConvertedPrice = q.Conversion.OfferPrice,
+                                UomStr = q.Offer.Uom,
                                 OfferInvoiceData = supplierOffer.InvoiceData
                             };
                         }).ToList();

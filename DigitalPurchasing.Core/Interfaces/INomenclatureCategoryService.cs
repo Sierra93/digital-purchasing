@@ -13,6 +13,7 @@ namespace DigitalPurchasing.Core.Interfaces
         void Delete(Guid id);
         NomenclatureCategoryVm Update(Guid id, string name, Guid? parentId);
         NomenclatureCategoryBasicInfo GetTopParentCategory(Guid categoryId);
+        IEnumerable<NomenclatureCategoryBasicInfo> GetCategoryHierarchy(Guid categoryId);
     }
 
     public class NomenclatureCategoryVm : NomenclatureCategoryBasicInfo

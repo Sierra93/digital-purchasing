@@ -40,7 +40,8 @@ namespace DigitalPurchasing.Services
                 LastName = user.LastName,
                 FirstName = user.FirstName,
                 Patronymic = user.Patronymic,
-                JobTitle = user.JobTitle
+                JobTitle = user.JobTitle,
+                PhoneNumber = user.PhoneNumber
             };
         }
 

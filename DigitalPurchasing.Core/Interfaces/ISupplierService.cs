@@ -20,7 +20,7 @@ namespace DigitalPurchasing.Core.Interfaces
         Guid EditContactPerson(SupplierContactPersonVm vm);
         SupplierContactPersonVm GetContactPersonsById(Guid personId);
         void DeleteContactPerson(Guid personId);
-        Guid GetSupplierIdByEmail(Guid ownerId, string email);
+        (Guid SupplierId, Guid ContactPersonId) GetSupplierIdByEmail(Guid ownerId, string email);
         string GetSupplierNameByEmail(Guid ownerId, string email);
         List<SupplierNomenclatureCategory> GetSupplierNomenclatureCategories(Guid supplierId);
         IEnumerable<SupplierVm> GetByCategoryIds(params Guid[] nomenclatureCategoryIds);
@@ -99,6 +99,18 @@ namespace DigitalPurchasing.Core.Interfaces
         public bool UseForRequests { get; set; }
 
         public string FullName => $"{LastName??""} {FirstName??""} {Patronymic??""}".Trim();
+
+        public string ToName()
+        {
+            var toName = FirstName;
+
+            if (!string.IsNullOrWhiteSpace(Patronymic))
+            {
+                toName += $" {Patronymic}";
+            }
+
+            return toName;
+        }
     }
 
     public class SupplierNomenclatureCategory

@@ -76,7 +76,7 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult NomenclatureMappingAutocomplete(Guid supplierOfferId, string q)
         {
             var so = _supplierOfferService.GetById(supplierOfferId);
-            var pr = _purchaseRequestService.MatchItemsData(so.CompetitionList.PurchaseRequest.Id);
+            var pr = _purchaseRequestService.MatchItemsData(so.PurchaseRequestId);
             var autocompleteResult = _nomenclatureService.Autocomplete(new AutocompleteOptions { Query = q, OwnerId = User.CompanyId() });
             var noms2InPr = from item in autocompleteResult.Items
                             select new

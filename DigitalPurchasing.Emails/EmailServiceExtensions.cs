@@ -46,12 +46,7 @@ namespace DigitalPurchasing.Emails
         {
             var subject = $"[{emailUid}] Запрос коммерческого предложения №{quotationRequest.PublicId}";
             var until = DateTime.UtcNow.AddHours(1).ToRussianStandardTime();
-            var toName = supplierContact.FirstName;
-
-            if (!string.IsNullOrWhiteSpace(supplierContact.Patronymic))
-            {
-                toName += $" {supplierContact.Patronymic}";
-            }
+            var toName = supplierContact.ToName();
 
             var model = new RFQEmail
             {
@@ -113,6 +108,35 @@ namespace DigitalPurchasing.Emails
 
             var htmlResult = await GetHtmlString(model);
             await emailService.SendEmailAsync(email, subject, htmlResult);
+        }
+
+        public static async Task SendPriceReductionEmail(this IEmailService emailService,
+            Guid ownerId,
+            string emailUid,
+            string attachment,
+            SupplierContactPersonVm supplierContactPerson,
+            UserInfoDto userInfo,
+            DateTime until,
+            string invoiceData)
+        {
+
+            var subject = $"[{emailUid}] Запрос на изменение условий КП/cчета";
+            var model = new PriceReductionEmail
+            {
+                InvoiceData = invoiceData,
+                ToName = supplierContactPerson.ToName(),
+                Until = until.ToRussianStandardTime(),
+                From = new PriceReductionEmail.FromData
+                {
+                    Company = userInfo.Company,
+                    Name = $"{userInfo.LastName} {userInfo.FirstName}",
+                    PhoneNumber = userInfo.PhoneNumber
+                }
+            };
+
+            var htmlMessage = await GetHtmlString(model);
+            var attachments = new[] { attachment };
+            await emailService.SendFromRobotAsync(ownerId, supplierContactPerson.Email, subject, htmlMessage, attachments);
         }
     }
 }

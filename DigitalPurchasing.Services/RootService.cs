@@ -7,6 +7,7 @@ using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 
 namespace DigitalPurchasing.Services
@@ -41,6 +42,15 @@ namespace DigitalPurchasing.Services
             if (root == null) return Guid.Empty;
 
             return root.Id;
+        }
+
+        public async Task<RootDto> GetByCL(Guid competitionListId)
+        {
+            var root = await _db.Roots
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(q => q.CompetitionListId == competitionListId);
+
+            return root?.Adapt<RootDto>();
         }
 
         public async Task AssignQR(Guid ownerId, Guid rootId, Guid qrId)
