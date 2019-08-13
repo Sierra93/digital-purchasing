@@ -181,6 +181,7 @@ namespace DigitalPurchasing.Web.Controllers
                 public Guid Id { get; set; }
                 public bool IsChecked { get; set; }
                 public bool IsEnabled { get; set; }
+                public bool IsSent { get; set; }
             }
 
             public class Item
@@ -198,7 +199,7 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         [HttpGet]
-        public IActionResult PriceReductionData([FromRoute]Guid id)
+        public async Task<IActionResult> PriceReductionData([FromRoute]Guid id)
         {
             var cl = _competitionListService.GetById(id);
 
@@ -206,6 +207,8 @@ namespace DigitalPurchasing.Web.Controllers
                 .Where(q => q.Key.SupplierId.HasValue)
                 .Select(q => q.Value.Last())
                 .ToList();
+
+            var emails = await _competitionListService.GetPriceReductionEmailsByCL(id);
 
             var vm = new PriceReductionDataVm
             {
@@ -230,7 +233,8 @@ namespace DigitalPurchasing.Web.Controllers
                             Id = so.Id,
                             IsChecked = true,
                             IsEnabled = so.Items.Any(soi
-                                => soi.Request.ItemId == pri.Id && soi.Offer.Price > 0)
+                                => soi.Request.ItemId == pri.Id && soi.Offer.Price > 0),
+                            IsSent = true
                         }).ToList()
                     };
                 }).ToList()
@@ -311,6 +315,16 @@ namespace DigitalPurchasing.Web.Controllers
                 Hangfire.BackgroundJob.Enqueue<EmailJobs>(q
                     => q.SendPriceReductionEmail(ownerId, emailUid, filePath, supplierContactPerson, userInfo,
                         DateTime.UtcNow.AddMinutes(30), lastOffer.InvoiceData));
+
+                var itemIds = model.Items
+                    .Where(q => q.SupplierOfferId == supplierOfferId)
+                    .Select(q => q.ItemId)
+                    .ToList();
+
+                await _competitionListService.SavePriceReductionEmail(
+                    cl.Id,
+                    supplierContactPerson.Id,
+                    userId, itemIds);
             }
 
             return Ok();

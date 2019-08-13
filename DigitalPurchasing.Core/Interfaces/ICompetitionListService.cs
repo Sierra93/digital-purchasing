@@ -14,6 +14,14 @@ namespace DigitalPurchasing.Core.Interfaces
         Task<Guid> GetIdByQR(Guid qrId, bool globalSearch);
         CompetitionListVm GetById(Guid id);
         DeleteResultVm Delete(Guid id);
+
+        Task SavePriceReductionEmail(
+            Guid competitionListId,
+            Guid supplierContactPersonId,
+            Guid? userId,
+            List<Guid> ids);
+
+        Task<IEnumerable<PriceReductionEmailDto>> GetPriceReductionEmailsByCL(Guid competitionListId);
     }
 
     public class CompetitionListIndexDataItem
@@ -109,5 +117,16 @@ namespace DigitalPurchasing.Core.Interfaces
                 ? soItems.Min(soi => soi.ResourceConversion.OfferPrice)
                 : -1;
         }
+    }
+
+    public class PriceReductionEmailDto
+    {
+        public Guid CompetitionListId { get; set; }
+
+        public Guid ContactPersonId { get; set; }
+
+        public Guid? UserId { get; set; }
+
+        public List<Guid> Data { get; set; }
     }
 }
