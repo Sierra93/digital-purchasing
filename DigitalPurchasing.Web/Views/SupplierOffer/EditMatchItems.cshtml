@@ -156,6 +156,7 @@
                     return {
                         prId: '@Model.Id',
                         supplierName: '',
+                        supplierId: null,
                         matchModal: false,
                         currentItem: null,
                         selectedNomenclature: null,
@@ -174,6 +175,7 @@
                         var dataRes = res.body;
                         vm.items = dataRes.items;
                         vm.supplierName = dataRes.supplierName;
+                        vm.supplierId = dataRes.supplierId;
                     }, function(res) {
 
                     });
@@ -288,7 +290,8 @@
                             nomenclatureId: $this.selectedNomenclature.id,
                             uomId: $this.selectedUom.id,
                             factorC: $this.factor === 'c' ? $this.currentItem.commonFactor : 0,
-                            factorN: $this.factor === 'n' ? $this.currentItem.nomenclatureFactor : 0
+                            factorN: $this.factor === 'n' ? $this.currentItem.nomenclatureFactor : 0,
+                            supplierId: $this.supplierId
                         };
                         console.info('saveMatch', data);
                         this.$http.post('@Url.Action("SaveMatchItem")', data).then(function(res) {
@@ -337,7 +340,8 @@
                             var from = this.selectedUom.id;
                             var to = this.selectedNomenclature.batchUomId;
                             var nom = this.selectedNomenclature.id;
-                            this.$http.post('@Url.Action("Factor", "Uom")', { from, to, nom }).then(function (res) {
+                            var supplierId = $this.supplierId;
+                            this.$http.post('@Url.Action("Factor", "Uom")', { from, to, nom, supplierId }).then(function (res) {
                                 var dataRes = res.body;
                                 $this.currentItem.commonFactor = dataRes.commonFactor;
                                 $this.currentItem.nomenclatureFactor = dataRes.nomenclatureFactor;

@@ -13,41 +13,67 @@ namespace DigitalPurchasing.Services
         private readonly ApplicationDbContext _db;
         private readonly IUomService _uomService;
         private readonly INomenclatureService _nomenclatureService;
+        private readonly INomenclatureAlternativeService _nomenclatureAlternativeService;
 
         public ConversionRateService(
             ApplicationDbContext db,
             IUomService uomService,
-            INomenclatureService nomenclatureService)
+            INomenclatureService nomenclatureService,
+            INomenclatureAlternativeService nomenclatureAlternativeService)
         {
             _db = db;
             _uomService = uomService;
             _nomenclatureService = nomenclatureService;
+            _nomenclatureAlternativeService = nomenclatureAlternativeService;
         }
 
-        private async Task<UomConversionRateResponse> GetConversionRate(Guid fromUomId, NomenclatureVm nomenclature)
+        private async Task<UomConversionRateResponse> GetConversionRate(
+            Guid fromUomId,
+            NomenclatureVm nomenclature,
+            NomenclatureAlternativeVm nomenclatureAlternative)
         {
             var result = new UomConversionRateResponse { CommonFactor = 0, NomenclatureFactor = 0 };
 
             var toUomId = nomenclature.BatchUomId;
 
             // kg -> ...
-            var calcFromUom = fromUomId == nomenclature.MassUomId && nomenclature.MassUomValue > 0;
+            var calcFromUom = fromUomId == nomenclature.MassUomId || fromUomId == nomenclatureAlternative?.MassUomId;
             if (calcFromUom)
             {
-                result.CommonFactor = 1 / nomenclature.MassUomValue;
+                if (nomenclatureAlternative?.MassUomValue > 0)
+                {
+                    result.CommonFactor = 1 / nomenclatureAlternative.MassUomValue;
+                }
+                else if (nomenclature.MassUomValue > 0)
+                {
+                    result.CommonFactor = 1 / nomenclature.MassUomValue;
+                }
             }
 
             // packaging -> ...
-            var calcFromPack = fromUomId == await _uomService.GetPackagingUom(nomenclature.OwnerId)
-                               && nomenclature.PackUomId.HasValue
-                               && nomenclature.PackUomValue > 0;
+            var packagingUom = await _uomService.GetPackagingUom(nomenclature.OwnerId);
+
+            var calcFromPack = fromUomId == packagingUom;
             if (calcFromPack)
             {
-                var packUom = _uomService.GetById(nomenclature.PackUomId.Value);
-                var toUom = _uomService.GetById(toUomId);
-                if (toUom.Quantity.HasValue && packUom.Quantity.HasValue)
+                if (nomenclatureAlternative?.PackUomId != null
+                    && nomenclatureAlternative.PackUomValue.HasValue
+                    && nomenclatureAlternative.PackUomValue.Value > 0)
                 {
-                    result.CommonFactor = toUom.Quantity.Value / (nomenclature.PackUomValue * packUom.Quantity.Value);
+                    var packUom = _uomService.GetById(nomenclatureAlternative.PackUomId.Value);
+                    var toUom = _uomService.GetById(toUomId);
+                    if (toUom.Quantity.HasValue && packUom.Quantity.HasValue)
+                    {
+                        result.CommonFactor = toUom.Quantity.Value / (nomenclatureAlternative.PackUomValue.Value * packUom.Quantity.Value);
+                    }
+                } else if (nomenclature.PackUomId.HasValue && nomenclature.PackUomValue > 0)
+                {
+                    var packUom = _uomService.GetById(nomenclature.PackUomId.Value);
+                    var toUom = _uomService.GetById(toUomId);
+                    if (toUom.Quantity.HasValue && packUom.Quantity.HasValue)
+                    {
+                        result.CommonFactor = toUom.Quantity.Value / (nomenclature.PackUomValue * packUom.Quantity.Value);
+                    }
                 }
             }
 
@@ -66,8 +92,7 @@ namespace DigitalPurchasing.Services
 
             if (result.CommonFactor == 0) /* don't overwrite conversion rate from mass */
             {
-                var commonConversionRate = conversionRates.FirstOrDefault(q => q.NomenclatureId == null);
-                
+                var commonConversionRate = conversionRates.FirstOrDefault(q => q.NomenclatureId == null && q.NomenclatureAlternativeId == null);
                 if (commonConversionRate != null)
                 {
                     result.CommonFactor = commonConversionRate.FromUomId == fromUomId
@@ -76,20 +101,46 @@ namespace DigitalPurchasing.Services
                 }
             }
 
-            var nomenclatureConversionRate = conversionRates.FirstOrDefault(q => q.NomenclatureId == nomenclature.Id);
-            if (nomenclatureConversionRate != null)
+            if (nomenclatureAlternative != null)
             {
-                result.NomenclatureFactor = nomenclatureConversionRate.FromUomId == fromUomId
-                    ? nomenclatureConversionRate.Factor
-                    : 1m / nomenclatureConversionRate.Factor;
+                var nomenclatureConversionRate = conversionRates.FirstOrDefault(q => q.NomenclatureAlternativeId == nomenclatureAlternative.Id);
+                if (nomenclatureConversionRate != null)
+                {
+                    result.NomenclatureFactor = nomenclatureConversionRate.FromUomId == fromUomId
+                        ? nomenclatureConversionRate.Factor
+                        : 1m / nomenclatureConversionRate.Factor;
+                }
+            }
+
+            if (result.NomenclatureFactor == 0) /* don't overwrite conversion rate from alt nomenclature */
+            {
+                var nomenclatureConversionRate = conversionRates.FirstOrDefault(q => q.NomenclatureId == nomenclature.Id);
+                if (nomenclatureConversionRate != null)
+                {
+                    result.NomenclatureFactor = nomenclatureConversionRate.FromUomId == fromUomId
+                        ? nomenclatureConversionRate.Factor
+                        : 1m / nomenclatureConversionRate.Factor;
+                }
             }
 
             return result;
         }
 
-        public async Task<UomConversionRateResponse> GetRate(Guid fromUomId, Guid nomenclatureId)
+        public async Task<UomConversionRateResponse> GetRate(Guid fromUomId, Guid nomenclatureId, Guid? customerId, Guid? supplierId)
         {
             var nomenclature = _nomenclatureService.GetById(nomenclatureId, true);
+
+            NomenclatureAlternativeVm nomenclatureAlternative = null;
+
+            if (customerId.HasValue)
+            {
+                nomenclatureAlternative = _nomenclatureAlternativeService.GetForCustomer(customerId.Value);
+            }
+
+            if (supplierId.HasValue)
+            {
+                nomenclatureAlternative = _nomenclatureAlternativeService.GetForSupplier(supplierId.Value);
+            }
 
             var toUomId = nomenclature.BatchUomId;
             if (fromUomId == toUomId)
@@ -97,7 +148,7 @@ namespace DigitalPurchasing.Services
                 return new UomConversionRateResponse { CommonFactor = 1, NomenclatureFactor = 0 };
             }
 
-            return await GetConversionRate(fromUomId, nomenclature);
+            return await GetConversionRate(fromUomId, nomenclature, nomenclatureAlternative);
         }
     }
 }

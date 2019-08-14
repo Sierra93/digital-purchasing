@@ -98,13 +98,24 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult AutocompleteSingle([FromQuery] Guid id) => Json(_uomService.AutocompleteSingle(id));
 
         [HttpPost]
-        public async Task<IActionResult> Factor([FromBody]UomFactorVm vm) => Json(await _conversionRateService.GetRate(vm.FromId, vm.NomenclatureId));
+        public async Task<IActionResult> Factor([FromBody]UomFactorVm vm)
+        {
+            var result = await _conversionRateService
+                .GetRate(vm.FromId, vm.NomenclatureId, vm.CustomerId, vm.SupplierId);
+
+            return Json(result);
+        }
 
         [HttpPost]
         public IActionResult SaveFactor([FromBody]UomSaveFactorVm vm)
         {
             var companyId = User.CompanyId();
-            _uomService.SaveConversionRate(companyId, vm.FromUomId, vm.ToUomId, vm.NomenclatureId ?? Guid.Empty, vm.FactorC, vm.FactorN);
+            _uomService.SaveConversionRate(
+                companyId,
+                vm.FromUomId,
+                vm.ToUomId,
+                vm.NomenclatureId ?? Guid.Empty, //todo: NomenclatureAltId
+                vm.FactorC, vm.FactorN);
             return Ok();
         }
 

@@ -170,7 +170,9 @@
                             toId: data.toId,
                             factorN: data.nomenclatureId ? data.factor : 0,
                             factorC: !data.nomenclatureId ? data.factor : 0,
-                            nomenclatureId: data.nomenclatureId
+                            nomenclatureId: data.nomenclatureId,
+                            customerId: null,
+                            supplierId: null
                         }
                         this.$http.post('@Url.Action("SaveFactor")', postData).then(function(res) {});
                         console.info(postData);

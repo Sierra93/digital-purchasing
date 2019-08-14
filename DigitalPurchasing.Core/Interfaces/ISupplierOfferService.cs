@@ -315,6 +315,7 @@ namespace DigitalPurchasing.Core.Interfaces
     public class SOMatchItemsVm
     {
         public string SupplierName { get; set; }
+        public Guid? SupplierId { get; set; }
 
         public class Item
         {

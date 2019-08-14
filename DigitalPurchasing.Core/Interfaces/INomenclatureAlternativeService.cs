@@ -10,16 +10,18 @@ namespace DigitalPurchasing.Core.Interfaces
         NomenclatureAlternativeVm GetAlternativeById(Guid id);
         void UpdateAlternative(NomenclatureAlternativeVm model);
 
-        void AddNomenclatureForCustomer(Guid prItemId);
-        void AddNomenclatureForSupplier(Guid soItemId);
+        Guid? AddNomenclatureForCustomer(Guid prItemId);
+        Guid? AddNomenclatureForSupplier(Guid soItemId);
 
-        void AddOrUpdateNomenclatureAlts(Guid ownerId, Guid clientId, ClientType clientType,
+        Guid AddOrUpdateNomenclatureAlts(Guid ownerId, Guid clientId, ClientType clientType,
             Guid nomenclatureId, string name, string code, Guid? batchUomId);
 
-        void AddOrUpdateNomenclatureAlts(Guid ownerId, Guid clientId, ClientType clientType,
+        List<Guid> AddOrUpdateNomenclatureAlts(Guid ownerId, Guid clientId, ClientType clientType,
             List<AddOrUpdateAltDto> alts);
 
         void Delete(Guid id);
+        NomenclatureAlternativeVm GetForCustomer(Guid customerId);
+        NomenclatureAlternativeVm GetForSupplier(Guid supplierId);
     }
 
     public class AddOrUpdateAltDto

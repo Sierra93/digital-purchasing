@@ -177,7 +177,12 @@ namespace DigitalPurchasing.Services
             return new BaseResult<UomAutocompleteResponse.AutocompleteItem>(data);
         }
 
-        public void SaveConversionRate(Guid ownerId, Guid fromUomId, Guid toUomId, Guid? nomenclatureId, decimal factorC, decimal factorN)
+        public void SaveConversionRate(
+            Guid ownerId,
+            Guid fromUomId,
+            Guid toUomId,
+            Guid? nomenclatureAlternativeId,
+            decimal factorC, decimal factorN)
         {
             if (fromUomId == toUomId) return; // don't store in database, factor = 1
 
@@ -188,7 +193,9 @@ namespace DigitalPurchasing.Services
 
             var isCommon = factorC > 0;
 
-            var rate = isCommon ? rateQry.FirstOrDefault() : rateQry.FirstOrDefault(q => q.NomenclatureId == nomenclatureId);
+            var rate = isCommon
+                ? rateQry.FirstOrDefault()
+                : rateQry.FirstOrDefault(q => q.NomenclatureAlternativeId == nomenclatureAlternativeId);
             if (rate == null)
             {
                 var newRate = new UomConversionRate { FromUomId = fromUomId, ToUomId = toUomId, OwnerId = ownerId };
@@ -199,7 +206,7 @@ namespace DigitalPurchasing.Services
                 else
                 {
                     newRate.Factor = factorN;
-                    newRate.NomenclatureId = nomenclatureId;
+                    newRate.NomenclatureAlternativeId = nomenclatureAlternativeId;
                 }
                 _db.UomConversionRates.Add(newRate);
             }
