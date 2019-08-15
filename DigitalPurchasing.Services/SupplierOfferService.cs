@@ -401,7 +401,7 @@ namespace DigitalPurchasing.Services
             {
                 if (item.NomenclatureId != null && item.RawUomId != null)
                 {
-                    var rate = _conversionRateService.GetRate(item.RawUomId.Value, item.NomenclatureId.Value).Result;
+                    var rate = _conversionRateService.GetRate(item.RawUomId.Value, item.NomenclatureId.Value, null, supplierOffer.SupplierId).Result;
                     item.CommonFactor = rate.CommonFactor;
                     item.NomenclatureFactor = rate.NomenclatureFactor;
                 }
@@ -552,7 +552,12 @@ namespace DigitalPurchasing.Services
                 .OrderBy(q => q.Position).ToList();
 
             // Mappings - SupplierOfferItemMappings
-            var res = new SOMatchItemsVm { Items = entities.Adapt<List<SOMatchItemsVm.Item>>(), SupplierName = supplierOffer.SupplierName };
+            var res = new SOMatchItemsVm
+            {
+                Items = entities.Adapt<List<SOMatchItemsVm.Item>>(),
+                SupplierName = supplierOffer.SupplierName,
+                SupplierId = supplierOffer.SupplierId
+            };
 
             return res;
         }

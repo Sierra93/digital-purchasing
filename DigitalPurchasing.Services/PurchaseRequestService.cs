@@ -264,7 +264,7 @@ namespace DigitalPurchasing.Services
 
             if (prItem.NomenclatureId != null && prItem.RawUomMatchId != null)
             {
-                var rate = _conversionRateService.GetRate(prItem.RawUomMatchId.Value, prItem.NomenclatureId.Value).Result;
+                var rate = _conversionRateService.GetRate(prItem.RawUomMatchId.Value, prItem.NomenclatureId.Value, pr.CustomerId, null).Result;
                 prItem.CommonFactor = rate.CommonFactor;
                 prItem.NomenclatureFactor = rate.NomenclatureFactor;
             }
@@ -297,7 +297,7 @@ namespace DigitalPurchasing.Services
             var res = new PRMatchItemsResponse
             {
                 Items = entities.Adapt<List<PRMatchItemsResponse.Item>>(),
-                CustomerName = pr.CustomerName
+                CustomerName = pr.CustomerName, CustomerId = pr.CustomerId
             };
 
             return res;

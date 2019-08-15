@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190814104803_UomConversionRate_NomenclatureAlternative")]
+    partial class UomConversionRate_NomenclatureAlternative
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -766,32 +768,6 @@ namespace DigitalPurchasing.Data.Migrations
                     b.HasIndex("NomenclatureId");
 
                     b.ToTable("NomenclatureComparisonDatas");
-                });
-
-            modelBuilder.Entity("DigitalPurchasing.Models.PriceReductionEmail", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<Guid>("CompetitionListId");
-
-                    b.Property<Guid>("ContactPersonId");
-
-                    b.Property<DateTime>("CreatedOn");
-
-                    b.Property<string>("Data");
-
-                    b.Property<Guid?>("UserId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CompetitionListId");
-
-                    b.HasIndex("ContactPersonId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("PriceReductionEmails");
                 });
 
             modelBuilder.Entity("DigitalPurchasing.Models.PurchaseRequest", b =>
@@ -1831,24 +1807,6 @@ namespace DigitalPurchasing.Data.Migrations
                     b.HasOne("DigitalPurchasing.Models.Nomenclature", "Nomenclature")
                         .WithMany("ComparisonDataItems")
                         .HasForeignKey("NomenclatureId")
-                        .OnDelete(DeleteBehavior.Restrict);
-                });
-
-            modelBuilder.Entity("DigitalPurchasing.Models.PriceReductionEmail", b =>
-                {
-                    b.HasOne("DigitalPurchasing.Models.CompetitionList", "CompetitionList")
-                        .WithMany()
-                        .HasForeignKey("CompetitionListId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("DigitalPurchasing.Models.SupplierContactPerson", "ContactPerson")
-                        .WithMany()
-                        .HasForeignKey("ContactPersonId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("DigitalPurchasing.Models.Identity.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 

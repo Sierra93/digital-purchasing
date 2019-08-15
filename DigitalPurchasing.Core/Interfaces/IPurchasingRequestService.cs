@@ -122,5 +122,6 @@ namespace DigitalPurchasing.Core.Interfaces
         public List<Item> Items { get; set; } = new List<Item>();
 
         public string CustomerName { get; set; }
+        public Guid? CustomerId { get; set; }
     }
 }

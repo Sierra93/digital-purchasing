@@ -14,5 +14,11 @@ namespace DigitalPurchasing.Web.ViewModels.Uom
         public Guid ToId { get; set; }
         [JsonProperty("nom")]
         public Guid NomenclatureId { get; set; }
+
+        [JsonProperty("customerId")]
+        public Guid? CustomerId { get; set; }
+
+        [JsonProperty("supplierId")]
+        public Guid? SupplierId { get; set; }
     }
 }

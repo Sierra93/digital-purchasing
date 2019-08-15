@@ -17,6 +17,7 @@ namespace DigitalPurchasing.Web.Controllers
             public Guid UomId { get; set; }
             public decimal FactorN { get; set; }
             public decimal FactorC { get; set; }
+            public Guid CustomerId { get; set; }
         }
 
         [HttpGet]
@@ -31,9 +32,16 @@ namespace DigitalPurchasing.Web.Controllers
         {
             var companyId = User.CompanyId();
             var nomenclature = _nomenclatureService.AutocompleteSingle(model.NomenclatureId);
-            _uomService.SaveConversionRate(companyId, model.UomId, nomenclature.Data.BatchUomId, nomenclature.Data.Id, model.FactorC, model.FactorN);
+            var nomenclatureAlternativeId =
+                _nomenclatureAlternativeService.AddNomenclatureForCustomer(model.ItemId);
+            _uomService.SaveConversionRate(
+                companyId,
+                model.UomId,
+                nomenclature.Data.BatchUomId,
+                nomenclatureAlternativeId,
+                model.FactorC,
+                model.FactorN);
             _purchasingRequestService.SaveMatch(model.ItemId, model.NomenclatureId, model.UomId, model.FactorC, model.FactorN);
-            _nomenclatureAlternativeService.AddNomenclatureForCustomer(model.ItemId);
             return Ok();
         }
     }

@@ -50,6 +50,8 @@ namespace DigitalPurchasing.Services
         public UomFactorData GetFactorData(Guid uomId, int page, int perPage, string sortField, bool sortAsc)
         {
             var qry = _db.UomConversionRates
+                .Include(q => q.NomenclatureAlternative.Link.Customer)
+                .Include(q => q.NomenclatureAlternative.Link.Supplier)
                 .Include(q => q.Nomenclature)
                 .Include(q => q.ToUom)
                 .Include(q => q.FromUom)
@@ -59,15 +61,35 @@ namespace DigitalPurchasing.Services
             var orderedResults = qry.OrderBy(q => q.Id);
             var entities = orderedResults.Skip((page-1)*perPage).Take(perPage).ToList();
 
-            var result = entities.Select(q => new UomFactorDataItem
+            var result = entities.Select(q =>
             {
-                Id = q.Id,
-                Factor = q.FromUomId == uomId ? q.Factor : 1m / q.Factor,
-                Nomenclature = q.Nomenclature?.Name,
-                Uom = q.FromUomId == uomId ? q.ToUom.Name : q.FromUom.Name,
-                FromId = q.FromUomId == uomId ? q.FromUomId : q.ToUomId,
-                ToId = q.FromUomId == uomId ? q.ToUomId : q.FromUomId,
-                NomenclatureId = q.NomenclatureId
+                var nomenclature = "";
+
+                if (q.NomenclatureAlternativeId.HasValue)
+                {
+                    var clientName = q.NomenclatureAlternative?.Link.Customer != null
+                        ? q.NomenclatureAlternative?.Link.Customer?.Name
+                        : q.NomenclatureAlternative?.Link.Supplier?.Name;
+
+                    nomenclature = $"{clientName}: {q.NomenclatureAlternative?.Name}";
+                }
+
+                if (q.NomenclatureId.HasValue)
+                {
+                    nomenclature = q.Nomenclature.Name;
+                }
+
+                return new UomFactorDataItem
+                {
+                    Id = q.Id,
+                    Factor = q.FromUomId == uomId ? q.Factor : 1m / q.Factor,
+                    Nomenclature = nomenclature,
+                    Uom = q.FromUomId == uomId ? q.ToUom.Name : q.FromUom.Name,
+                    FromId = q.FromUomId == uomId ? q.FromUomId : q.ToUomId,
+                    ToId = q.FromUomId == uomId ? q.ToUomId : q.FromUomId,
+                    NomenclatureAlternativeId = q.NomenclatureAlternativeId,
+                    NomenclatureId = q.NomenclatureId
+                };
             }).ToList();
 
             return new UomFactorData
@@ -177,7 +199,12 @@ namespace DigitalPurchasing.Services
             return new BaseResult<UomAutocompleteResponse.AutocompleteItem>(data);
         }
 
-        public void SaveConversionRate(Guid ownerId, Guid fromUomId, Guid toUomId, Guid? nomenclatureId, decimal factorC, decimal factorN)
+        public void SaveConversionRate(
+            Guid ownerId,
+            Guid fromUomId,
+            Guid toUomId,
+            Guid? nomenclatureAlternativeId,
+            decimal factorC, decimal factorN)
         {
             if (fromUomId == toUomId) return; // don't store in database, factor = 1
 
@@ -188,7 +215,9 @@ namespace DigitalPurchasing.Services
 
             var isCommon = factorC > 0;
 
-            var rate = isCommon ? rateQry.FirstOrDefault() : rateQry.FirstOrDefault(q => q.NomenclatureId == nomenclatureId);
+            var rate = isCommon
+                ? rateQry.FirstOrDefault()
+                : rateQry.FirstOrDefault(q => q.NomenclatureAlternativeId == nomenclatureAlternativeId);
             if (rate == null)
             {
                 var newRate = new UomConversionRate { FromUomId = fromUomId, ToUomId = toUomId, OwnerId = ownerId };
@@ -199,7 +228,7 @@ namespace DigitalPurchasing.Services
                 else
                 {
                     newRate.Factor = factorN;
-                    newRate.NomenclatureId = nomenclatureId;
+                    newRate.NomenclatureAlternativeId = nomenclatureAlternativeId;
                 }
                 _db.UomConversionRates.Add(newRate);
             }

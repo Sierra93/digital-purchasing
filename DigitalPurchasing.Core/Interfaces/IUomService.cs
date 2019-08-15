@@ -7,7 +7,8 @@ namespace DigitalPurchasing.Core.Interfaces
 {
     public interface IConversionRateService
     {
-        Task<UomConversionRateResponse> GetRate(Guid fromUomId, Guid nomenclatureId);
+        Task<UomConversionRateResponse> GetRate(Guid fromUomId, Guid nomenclatureId, Guid? customerId,
+            Guid? supplierId);
     }
 
     public class GetRateOptions
@@ -30,7 +31,13 @@ namespace DigitalPurchasing.Core.Interfaces
         IEnumerable<UomDto> GetByNames(params string[] uomNames);
         UomAutocompleteResponse Autocomplete(string s, Guid ownerId);
         BaseResult<UomAutocompleteResponse.AutocompleteItem> AutocompleteSingle(Guid id);
-        void SaveConversionRate(Guid ownerId, Guid fromUomId, Guid toUomId, Guid? nomenclatureId, decimal factorC, decimal factorN);
+        void SaveConversionRate(
+            Guid ownerId,
+            Guid fromUomId,
+            Guid toUomId,
+            Guid? nomenclatureAlternativeId,
+            decimal factorC,
+            decimal factorN);
         void Delete(Guid id);
         UomDto GetById(Guid id);
         UomDto Update(Guid id, string name);
@@ -58,6 +65,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid FromId { get; set; }
         public Guid ToId { get; set; }
         public Guid? NomenclatureId { get; set; }
+        public Guid? NomenclatureAlternativeId { get; set; }
     }
 
     public class UomFactorData : BaseDataResponse<UomFactorDataItem>
