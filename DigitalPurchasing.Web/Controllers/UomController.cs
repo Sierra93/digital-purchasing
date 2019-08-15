@@ -114,7 +114,7 @@ namespace DigitalPurchasing.Web.Controllers
                 companyId,
                 vm.FromUomId,
                 vm.ToUomId,
-                vm.NomenclatureId ?? Guid.Empty, //todo: NomenclatureAltId
+                vm.NomenclatureAlternativeId,
                 vm.FactorC, vm.FactorN);
             return Ok();
         }

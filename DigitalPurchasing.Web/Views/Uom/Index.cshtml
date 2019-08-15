@@ -168,9 +168,9 @@
                         var postData =  {
                             fromId: data.fromId,
                             toId: data.toId,
-                            factorN: data.nomenclatureId ? data.factor : 0,
-                            factorC: !data.nomenclatureId ? data.factor : 0,
-                            nomenclatureId: data.nomenclatureId,
+                            factorN: data.nomenclatureAlternativeId ? data.factor : 0,
+                            factorC: !data.nomenclatureAlternativeId ? data.factor : 0,
+                            nomenclatureAlternativeId: data.nomenclatureAlternativeId,
                             customerId: null,
                             supplierId: null
                         }
@@ -181,7 +181,7 @@
                 computed: {
                     getDetailsUrl: function () {
                         var id = this.rowData.id;
-                        return '@Url.Action("FactorData")/'+id;
+                        return '/uom/factordata/'+id;
                     }
                 },
             });

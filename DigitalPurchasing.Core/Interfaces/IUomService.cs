@@ -65,6 +65,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid FromId { get; set; }
         public Guid ToId { get; set; }
         public Guid? NomenclatureId { get; set; }
+        public Guid? NomenclatureAlternativeId { get; set; }
     }
 
     public class UomFactorData : BaseDataResponse<UomFactorDataItem>
