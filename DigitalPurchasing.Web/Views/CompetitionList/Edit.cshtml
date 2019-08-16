@@ -277,15 +277,7 @@
                     }
                 },
                 created: function() {
-                    var vm = this;
-                    var getUrl = '@Url.Action(nameof(CompetitionListController.PriceReductionData), new {id = Model.CompetitionList.Id})';
-                    vm.$http.get(getUrl).then( function(res) {
-                        var data = res.body;
-                        vm.prItems = data.items;
-                        vm.prSuppliers = data.suppliers;
-                    }, function(res) {
-                        alert('error');
-                    });
+                    this.loadData();
                 },
                 watch: {
                 },
@@ -345,13 +337,23 @@
                         vm.isSendingPRRequests = true;
                         var postUrl = '@Url.Action(nameof(CompetitionListController.SendPriceReductionRequests), new { id = Model.CompetitionList.Id })';
                         vm.$http.post(postUrl, { items: vm.prRequests }).then(function (res) {
-                            var data = res.body;
-                            console.info('sentPRRequests', postUrl, data);
+                            vm.loadData();
                             vm.isSendingPRRequests = false;
                         }, function(res) {
                             alert('error');
                             vm.isSendingPRRequests = false;
                         });                                               
+                    },
+                    loadData: function() {
+                        var vm = this;
+                        var getUrl = '@Url.Action(nameof(CompetitionListController.PriceReductionData), new {id = Model.CompetitionList.Id})';
+                        vm.$http.get(getUrl).then( function(res) {
+                            var data = res.body;
+                            vm.prItems = data.items;
+                            vm.prSuppliers = data.suppliers;
+                        }, function(res) {
+                            alert('error');
+                        });
                     }
                 }
             });
