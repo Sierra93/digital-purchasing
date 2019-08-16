@@ -1,4 +1,5 @@
 @using DigitalPurchasing.Core
+@using DigitalPurchasing.Web.Controllers
 @model DigitalPurchasing.Web.ViewModels.CompetitionList.CompetitionListEditVm
 
 @{
@@ -197,11 +198,13 @@
                                            v-on:change="prToggleSupplier(supplier.id, !supplier.isChecked)" />
                                 </label>
                             </td>
+                            <td>Поставщики, кому уже отправлен<br />запрос на понижение</td>
+                            <td>Дата отправки<br />запроса на<br />понижение цен</td>
                         </tr>
                     </thead>
                     <tfoot>
                         <tr>
-                            <td :colspan="(prSuppliers.length + 2)"><p>&nbsp;</p></td>
+                            <td :colspan="(prSuppliers.length + 4)"><p>&nbsp;</p></td>
                         </tr>
                     </tfoot>
                     <tbody>
@@ -222,9 +225,11 @@
                                     </label>
                                 </div>
                             </td>
+                            <td>{{prSuppliersStr(item.suppliers)}}</td>
+                            <td>{{item.sentDate | formatDate}}</td>
                         </tr>
                         <tr v-else>
-                            <td colspan="7" style="text-align: center;">Не сопоставлено</td>
+                            <td :colspan="(prSuppliers.length + 4)" style="text-align: center;">Не сопоставлено</td>
                         </tr>
                     </tbody>
                 </table>
@@ -273,7 +278,7 @@
                 },
                 created: function() {
                     var vm = this;
-                    var getUrl = '@Url.Action("PriceReductionData", new {id = Model.CompetitionList.Id})';
+                    var getUrl = '@Url.Action(nameof(CompetitionListController.PriceReductionData), new {id = Model.CompetitionList.Id})';
                     vm.$http.get(getUrl).then( function(res) {
                         var data = res.body;
                         vm.prItems = data.items;
@@ -289,6 +294,12 @@
                         if (isNumber(value)) {
                             if (value === 0) return '';
                             return numeral(value).format('0,0.00');
+                        }
+                        return value;
+                    },
+                    formatDate: function(value) {
+                        if (value) {
+                            return moment(String(value)).format('DD.MM.YYYY');
                         }
                         return value;
                     }
@@ -310,6 +321,15 @@
                             });
                         });
                     },
+                    prSuppliersStr: function (supplierOffers) {
+                        var vm = this;
+                        var sentSupplierOffers = _.filter(supplierOffers, 'isSent');
+                        var supplierNames = _.map(sentSupplierOffers, function (so) {
+                            var supplier = _.find(vm.prSuppliers, ['id', so.id]);
+                            return supplier.name;
+                        });
+                        return _.join(supplierNames, ', ');
+                    },
                     onChangeTargetPrice: function(event, item) {
                         var targetPrice = event.target.value;
                         var discount = (1 - (targetPrice/item.minPrice)) * 100;
@@ -323,7 +343,7 @@
                     sendPRRequests: function () {
                         var vm = this;
                         vm.isSendingPRRequests = true;
-                        var postUrl = '@Url.Action("SendPriceReductionRequests", new { id = Model.CompetitionList.Id })';
+                        var postUrl = '@Url.Action(nameof(CompetitionListController.SendPriceReductionRequests), new { id = Model.CompetitionList.Id })';
                         vm.$http.post(postUrl, { items: vm.prRequests }).then(function (res) {
                             var data = res.body;
                             console.info('sentPRRequests', postUrl, data);

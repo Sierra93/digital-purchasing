@@ -181,6 +181,7 @@ namespace DigitalPurchasing.Web.Controllers
                 public Guid Id { get; set; }
                 public bool IsChecked { get; set; }
                 public bool IsEnabled { get; set; }
+                public bool IsSent { get; set; }
             }
 
             public class Item
@@ -189,8 +190,11 @@ namespace DigitalPurchasing.Web.Controllers
                 public decimal MinPrice { get; set; }
                 public decimal TargetPrice => MinPrice > 0 ? Math.Round(MinPrice * ( 1 - Discount/100), 2) : -1;
                 public decimal Discount { get; set; }
+
+                /// Supplier offers
                 public List<ItemSupplier> Suppliers { get; set; }
                 public Guid Id { get; set; }
+                public DateTime? SentDate { get; set; }
             }
 
             public List<Supplier> Suppliers { get; set; }
@@ -198,7 +202,7 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         [HttpGet]
-        public IActionResult PriceReductionData([FromRoute]Guid id)
+        public async Task<IActionResult> PriceReductionData([FromRoute]Guid id)
         {
             var cl = _competitionListService.GetById(id);
 
@@ -206,6 +210,8 @@ namespace DigitalPurchasing.Web.Controllers
                 .Where(q => q.Key.SupplierId.HasValue)
                 .Select(q => q.Value.Last())
                 .ToList();
+
+            var emails = (await _competitionListService.GetPriceReductionEmailsByCL(id)).ToList();
 
             var vm = new PriceReductionDataVm
             {
@@ -219,19 +225,28 @@ namespace DigitalPurchasing.Web.Controllers
 
                 Items = cl.PurchaseRequest.Items.Select(pri =>
                 {
+                    var itemEmails = emails.Where(q => q.Data.Contains(pri.Id)).ToList();
+                    
                     return new PriceReductionDataVm.Item
                     {
                         Id = pri.Id,
                         Position = pri.Position,
                         Discount = 5m,
                         MinPrice = cl.GetMinimalOfferPrice(pri.Id),
-                        Suppliers = offers.OrderBy(q => q.CreatedOn).Select(so => new PriceReductionDataVm.ItemSupplier
+                        Suppliers = offers.OrderBy(q => q.CreatedOn).Select(so =>
                         {
-                            Id = so.Id,
-                            IsChecked = true,
-                            IsEnabled = so.Items.Any(soi
-                                => soi.Request.ItemId == pri.Id && soi.Offer.Price > 0)
-                        }).ToList()
+                            return new PriceReductionDataVm.ItemSupplier
+                            {
+                                Id = so.Id,
+                                IsChecked = true,
+                                IsEnabled = so.Items.Any(soi
+                                    => soi.Request.ItemId == pri.Id && soi.Offer.Price > 0),
+                                IsSent = itemEmails.Any(q => q.SupplierOfferId == so.Id)
+                            };
+                        }).ToList(),
+                        SentDate = itemEmails.Any()
+                            ? itemEmails.Max(q => q.CreatedOn).ToRussianStandardTime()
+                            : (DateTime?)null
                     };
                 }).ToList()
             };
@@ -311,6 +326,16 @@ namespace DigitalPurchasing.Web.Controllers
                 Hangfire.BackgroundJob.Enqueue<EmailJobs>(q
                     => q.SendPriceReductionEmail(ownerId, emailUid, filePath, supplierContactPerson, userInfo,
                         DateTime.UtcNow.AddMinutes(30), lastOffer.InvoiceData));
+
+                var itemIds = model.Items
+                    .Where(q => q.SupplierOfferId == supplierOfferId)
+                    .Select(q => q.ItemId)
+                    .ToList();
+
+                await _competitionListService.SavePriceReductionEmail(
+                    supplierOfferId,
+                    supplierContactPerson.Id,
+                    userId, itemIds);
             }
 
             return Ok();

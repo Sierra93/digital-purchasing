@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190812131901_PriceReductionEmails")]
+    partial class PriceReductionEmails
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -773,21 +775,21 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<Guid>("CompetitionListId");
+
                     b.Property<Guid>("ContactPersonId");
 
                     b.Property<DateTime>("CreatedOn");
 
                     b.Property<string>("Data");
 
-                    b.Property<Guid>("SupplierOfferId");
-
                     b.Property<Guid?>("UserId");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ContactPersonId");
+                    b.HasIndex("CompetitionListId");
 
-                    b.HasIndex("SupplierOfferId");
+                    b.HasIndex("ContactPersonId");
 
                     b.HasIndex("UserId");
 
@@ -1459,8 +1461,6 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<Guid>("FromUomId");
 
-                    b.Property<Guid?>("NomenclatureAlternativeId");
-
                     b.Property<Guid?>("NomenclatureId");
 
                     b.Property<Guid>("OwnerId");
@@ -1470,8 +1470,6 @@ namespace DigitalPurchasing.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("FromUomId");
-
-                    b.HasIndex("NomenclatureAlternativeId");
 
                     b.HasIndex("NomenclatureId");
 
@@ -1836,14 +1834,14 @@ namespace DigitalPurchasing.Data.Migrations
 
             modelBuilder.Entity("DigitalPurchasing.Models.PriceReductionEmail", b =>
                 {
+                    b.HasOne("DigitalPurchasing.Models.CompetitionList", "CompetitionList")
+                        .WithMany()
+                        .HasForeignKey("CompetitionListId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("DigitalPurchasing.Models.SupplierContactPerson", "ContactPerson")
                         .WithMany()
                         .HasForeignKey("ContactPersonId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("DigitalPurchasing.Models.SupplierOffer", "SupplierOffer")
-                        .WithMany()
-                        .HasForeignKey("SupplierOfferId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("DigitalPurchasing.Models.Identity.User", "User")
@@ -2123,10 +2121,6 @@ namespace DigitalPurchasing.Data.Migrations
                         .WithMany("FromConversionRates")
                         .HasForeignKey("FromUomId")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("DigitalPurchasing.Models.NomenclatureAlternative", "NomenclatureAlternative")
-                        .WithMany()
-                        .HasForeignKey("NomenclatureAlternativeId");
 
                     b.HasOne("DigitalPurchasing.Models.Nomenclature", "Nomenclature")
                         .WithMany()
