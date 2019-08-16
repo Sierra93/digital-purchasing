@@ -213,14 +213,14 @@ namespace DigitalPurchasing.Services
         }
 
         public async Task SavePriceReductionEmail(
-            Guid competitionListId,
+            Guid supplierOfferId,
             Guid supplierContactPersonId,
             Guid? userId,
             List<Guid> ids)
         {
             var priceReductionEmail = new PriceReductionEmail
             {
-                CompetitionListId = competitionListId,
+                SupplierOfferId = supplierOfferId,
                 ContactPersonId = supplierContactPersonId,
                 UserId = userId,
                 Data = JsonConvert.SerializeObject(ids)
@@ -231,8 +231,8 @@ namespace DigitalPurchasing.Services
 
         public async Task<IEnumerable<PriceReductionEmailDto>> GetPriceReductionEmailsByCL(Guid competitionListId)
         {
-            var emails = await _db.PriceReductionEmails
-                .Where(q => q.CompetitionListId == competitionListId).ToListAsync();
+            var emails = await _db.PriceReductionEmails.Include(q => q.SupplierOffer)
+                .Where(q => q.SupplierOffer.CompetitionListId == competitionListId).ToListAsync();
             return emails.Adapt<List<PriceReductionEmailDto>>();
         }
     }

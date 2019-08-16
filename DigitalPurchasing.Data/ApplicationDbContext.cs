@@ -291,7 +291,7 @@ namespace DigitalPurchasing.Data
             builder.Entity<PriceReductionEmail>(e =>
             {
                 e.HasOne(q => q.User).WithMany().HasForeignKey(q => q.UserId).OnDelete(DeleteBehavior.Restrict);
-                e.HasOne(q => q.CompetitionList).WithMany().HasForeignKey(q => q.CompetitionListId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(q => q.SupplierOffer).WithMany().HasForeignKey(q => q.SupplierOfferId).OnDelete(DeleteBehavior.Restrict);
                 e.HasOne(q => q.ContactPerson).WithMany().HasForeignKey(q => q.ContactPersonId).OnDelete(DeleteBehavior.Restrict);
             });
 

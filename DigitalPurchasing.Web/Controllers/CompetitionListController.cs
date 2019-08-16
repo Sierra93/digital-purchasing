@@ -190,8 +190,11 @@ namespace DigitalPurchasing.Web.Controllers
                 public decimal MinPrice { get; set; }
                 public decimal TargetPrice => MinPrice > 0 ? Math.Round(MinPrice * ( 1 - Discount/100), 2) : -1;
                 public decimal Discount { get; set; }
+
+                /// Supplier offers
                 public List<ItemSupplier> Suppliers { get; set; }
                 public Guid Id { get; set; }
+                public DateTime? SentDate { get; set; }
             }
 
             public List<Supplier> Suppliers { get; set; }
@@ -208,7 +211,7 @@ namespace DigitalPurchasing.Web.Controllers
                 .Select(q => q.Value.Last())
                 .ToList();
 
-            var emails = await _competitionListService.GetPriceReductionEmailsByCL(id);
+            var emails = (await _competitionListService.GetPriceReductionEmailsByCL(id)).ToList();
 
             var vm = new PriceReductionDataVm
             {
@@ -222,20 +225,28 @@ namespace DigitalPurchasing.Web.Controllers
 
                 Items = cl.PurchaseRequest.Items.Select(pri =>
                 {
+                    var itemEmails = emails.Where(q => q.Data.Contains(pri.Id)).ToList();
+                    
                     return new PriceReductionDataVm.Item
                     {
                         Id = pri.Id,
                         Position = pri.Position,
                         Discount = 5m,
                         MinPrice = cl.GetMinimalOfferPrice(pri.Id),
-                        Suppliers = offers.OrderBy(q => q.CreatedOn).Select(so => new PriceReductionDataVm.ItemSupplier
+                        Suppliers = offers.OrderBy(q => q.CreatedOn).Select(so =>
                         {
-                            Id = so.Id,
-                            IsChecked = true,
-                            IsEnabled = so.Items.Any(soi
-                                => soi.Request.ItemId == pri.Id && soi.Offer.Price > 0),
-                            IsSent = true
-                        }).ToList()
+                            return new PriceReductionDataVm.ItemSupplier
+                            {
+                                Id = so.Id,
+                                IsChecked = true,
+                                IsEnabled = so.Items.Any(soi
+                                    => soi.Request.ItemId == pri.Id && soi.Offer.Price > 0),
+                                IsSent = itemEmails.Any(q => q.SupplierOfferId == so.Id)
+                            };
+                        }).ToList(),
+                        SentDate = itemEmails.Any()
+                            ? itemEmails.Max(q => q.CreatedOn).ToRussianStandardTime()
+                            : (DateTime?)null
                     };
                 }).ToList()
             };
@@ -322,7 +333,7 @@ namespace DigitalPurchasing.Web.Controllers
                     .ToList();
 
                 await _competitionListService.SavePriceReductionEmail(
-                    cl.Id,
+                    supplierOfferId,
                     supplierContactPerson.Id,
                     userId, itemIds);
             }

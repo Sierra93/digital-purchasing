@@ -16,7 +16,7 @@ namespace DigitalPurchasing.Core.Interfaces
         DeleteResultVm Delete(Guid id);
 
         Task SavePriceReductionEmail(
-            Guid competitionListId,
+            Guid supplierOfferId,
             Guid supplierContactPersonId,
             Guid? userId,
             List<Guid> ids);
@@ -121,12 +121,10 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class PriceReductionEmailDto
     {
-        public Guid CompetitionListId { get; set; }
-
+        public Guid SupplierOfferId { get; set; }
         public Guid ContactPersonId { get; set; }
-
         public Guid? UserId { get; set; }
-
         public List<Guid> Data { get; set; }
+        public DateTime CreatedOn { get; set; }
     }
 }

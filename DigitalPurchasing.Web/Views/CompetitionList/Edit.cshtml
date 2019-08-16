@@ -198,11 +198,13 @@
                                            v-on:change="prToggleSupplier(supplier.id, !supplier.isChecked)" />
                                 </label>
                             </td>
+                            <td>Поставщики, кому уже отправлен<br />запрос на понижение</td>
+                            <td>Дата отправки<br />запроса на<br />понижение цен</td>
                         </tr>
                     </thead>
                     <tfoot>
                         <tr>
-                            <td :colspan="(prSuppliers.length + 2)"><p>&nbsp;</p></td>
+                            <td :colspan="(prSuppliers.length + 4)"><p>&nbsp;</p></td>
                         </tr>
                     </tfoot>
                     <tbody>
@@ -223,9 +225,11 @@
                                     </label>
                                 </div>
                             </td>
+                            <td>{{prSuppliersStr(item.suppliers)}}</td>
+                            <td>{{item.sentDate | formatDate}}</td>
                         </tr>
                         <tr v-else>
-                            <td colspan="7" style="text-align: center;">Не сопоставлено</td>
+                            <td :colspan="(prSuppliers.length + 4)" style="text-align: center;">Не сопоставлено</td>
                         </tr>
                     </tbody>
                 </table>
@@ -292,6 +296,12 @@
                             return numeral(value).format('0,0.00');
                         }
                         return value;
+                    },
+                    formatDate: function(value) {
+                        if (value) {
+                            return moment(String(value)).format('DD.MM.YYYY');
+                        }
+                        return value;
                     }
                 },
                 methods: {
@@ -310,6 +320,15 @@
                                 }
                             });
                         });
+                    },
+                    prSuppliersStr: function (supplierOffers) {
+                        var vm = this;
+                        var sentSupplierOffers = _.filter(supplierOffers, 'isSent');
+                        var supplierNames = _.map(sentSupplierOffers, function (so) {
+                            var supplier = _.find(vm.prSuppliers, ['id', so.id]);
+                            return supplier.name;
+                        });
+                        return _.join(supplierNames, ', ');
                     },
                     onChangeTargetPrice: function(event, item) {
                         var targetPrice = event.target.value;
