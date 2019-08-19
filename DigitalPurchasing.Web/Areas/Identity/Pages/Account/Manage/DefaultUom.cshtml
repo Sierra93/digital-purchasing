@@ -1,0 +1,28 @@
+@page
+@model DefaultUomModel
+@{
+    ViewData["Title"] = "Единицы измерения";
+}
+
+<h4>@ViewData["Title"]</h4>
+<partial name="_StatusMessage" model="@Model.StatusMessage" />
+<div class="row">
+    <div class="col-md-6">
+        <section>
+            <form method="post">
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <div class="form-group">
+                    <label asp-for="Input.PackagingUomId"></label>
+                    <select class="form-control"
+                            asp-for="Input.PackagingUomId"
+                            asp-items="Model.UomsList">
+                        <option value="@Guid.Empty">Не выбрано</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-default">Сохранить</button>
+                </div>
+            </form>
+        </section>
+    </div>
+</div>
