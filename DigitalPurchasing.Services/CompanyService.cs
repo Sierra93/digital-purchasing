@@ -59,6 +59,12 @@ namespace DigitalPurchasing.Services
             return response;
         }
 
+        public async Task<CompanyDto> GetById(Guid companyId)
+        {
+            var company = await _db.Companies.FirstOrDefaultAsync(q => q.Id == companyId);
+            return company?.Adapt<CompanyDto>();
+        }
+
         public async Task<CompanyDto> GetByInvitationCode(string code)
         {
             var company = await _db.Companies.FirstOrDefaultAsync(q => q.InvitationCode == code);
@@ -127,6 +133,7 @@ namespace DigitalPurchasing.Services
         }
 
         public async Task<int> Count() => await _db.Companies.CountAsync();
+
         public async Task<List<CompanyDto>> GetAll()
         {
             var companies = await _db.Companies.ToListAsync();
@@ -137,6 +144,32 @@ namespace DigitalPurchasing.Services
         {
             var company = _db.Companies.FirstOrDefault(q => q.Id == ownerId);
             return company != null;
+        }
+
+        public async Task<bool> IsCompanyOwner(Guid companyId, Guid userId)
+            => await _db.UserRoles
+                .Include(q => q.Role)
+                .Include(q => q.User)
+                .AnyAsync(q => q.Role.Name == Consts.Roles.CompanyOwner
+                               && q.UserId == userId
+                               && q.User.CompanyId == companyId);
+
+        public async Task<bool> UserCanDeleteSupplierOffers(Guid companyId, Guid userId)
+        {
+            if (await IsCompanyOwner(companyId, userId)) return true;
+
+            var company = await GetById(companyId);
+            if (company.IsSODeleteEnabled) return true;
+            
+            return false;
+        }
+
+        public async Task Update(CompanyDto company)
+        {
+            var entity = await _db.Companies.FirstOrDefaultAsync(q => q.Id == company.Id);
+            entity.Name = company.Name;
+            entity.IsSODeleteEnabled = company.IsSODeleteEnabled;
+            await _db.SaveChangesAsync();
         }
 
         private async Task SeedCompanyData(Guid companyId)

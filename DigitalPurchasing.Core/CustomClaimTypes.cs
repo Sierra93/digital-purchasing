@@ -1,8 +1,13 @@
 namespace DigitalPurchasing.Core
 {
-    public class CustomClaimTypes
+    public static class CustomClaimTypes
     {
         public static string CompanyId = "Custom:CompanyId";
         public static string CompanyName = "Custom:CompanyName";
+
+        public static class SupplierOffers
+        {
+            public static string Delete = "Custom:SupplierOffers:Delete";
+        }
     }
 }

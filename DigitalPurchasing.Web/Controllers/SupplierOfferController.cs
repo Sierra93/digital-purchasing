@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
+using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.SupplierOffer;
 using Microsoft.AspNetCore.Mvc;
 
@@ -101,6 +102,17 @@ namespace DigitalPurchasing.Web.Controllers
         {
             _supplierOfferService.UpdateDeliveryCost(model.Id, model.DeliveryCost);
             return Ok();
+        }
+
+        [HttpPost]
+        public IActionResult Delete([FromBody] DeleteVm model)
+        {
+            if (!User.CanDeleteSupplierOffers()) return BadRequest();
+
+            var result = _supplierOfferService.Delete(model.Id);
+            if (result.IsSuccess) return Ok();
+
+            return BadRequest();
         }
 
         #region # MatchColumns

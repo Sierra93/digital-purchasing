@@ -38,27 +38,37 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
         {
             [Required, Display(Name = "Название")]
             public string CompanyName { get; set; }
+
+            [Display(Name = "Разрешить удаление КП пользователями")]
+            public bool IsSODeleteEnabled { get; set; }
         }
 
-        public void OnGet()
-            => Input = new InputModel
+        public async Task<IActionResult> OnGetAsync()
+        {
+            var company = await _companyService.GetById(User.CompanyId());
+
+            Input = new InputModel
             {
-                CompanyName = _companyService.GetByUser(User.Id()).Name
+                CompanyName = company.Name,
+                IsSODeleteEnabled = company.IsSODeleteEnabled
             };
+
+            return Page();
+        }
 
         public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid) return Page();
+            
+            var companyId = User.CompanyId();
 
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
+            await _companyService.Update(new CompanyDto
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
+                Id = companyId,
+                IsSODeleteEnabled = Input.IsSODeleteEnabled,
+                Name = Input.CompanyName
+            });
 
-            _companyService.UpdateName(user.Id, Input.CompanyName);
-
-            await _signInManager.RefreshSignInAsync(user);
             StatusMessage = "Изменения сохранены";
             return RedirectToPage();
         }
