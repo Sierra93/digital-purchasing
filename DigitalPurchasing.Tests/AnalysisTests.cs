@@ -245,7 +245,7 @@ namespace DigitalPurchasing.Tests
                 result.Data.Select(q => q.SupplierId).Distinct().Count());
         }
 
-        [Fact]
+        [Fact(Skip = "Always return result, even with low quantity")]
         public void LowItemQuantity()
         {
             var itemId1 = new Guid("5e654ae674ce4e03be619ec6c5701b21");
@@ -537,5 +537,65 @@ namespace DigitalPurchasing.Tests
             Assert.Equal(1, results.Count(q => q.SuppliersCount == 2));
         }
 
+        [Fact]
+        public void Select_best_price_first()
+        {
+            var itemId = new Guid("6bb32e07cf1a425f8281d2e5fa3719e9");
+
+            #region # Customer / Suppliers
+
+            var customer = new AnalysisCustomer(Guid.NewGuid(), Guid.NewGuid(), null,
+                new[] { new AnalysisCustomerItem (itemId, 3500) }
+            );
+
+            var supplier1 = new AnalysisSupplier(Guid.NewGuid(), Guid.NewGuid(), null,
+                new[] { new AnalysisSupplierItem (itemId, 3500, 5.29m ) }
+            );
+
+            var supplier2 = new AnalysisSupplier(Guid.NewGuid(), Guid.NewGuid(), null,
+                new[] { new AnalysisSupplierItem (itemId, 2400, 4.72m ) }
+            );
+
+            var suppliers = new List<AnalysisSupplier> { supplier1, supplier2 };
+
+            #endregion
+
+            var core = new AnalysisCore(customer, suppliers);
+
+            #region # Variants
+
+            var variant1 = new AnalysisVariantData
+            {
+                Id = new Guid("4650979df43843c3874737a2692d8b4d"),
+                SuppliersCountOptions = new VariantsSuppliersCountOptions
+                {
+                    Type = SupplierCountType.Any
+                }
+            };
+
+            var variant2 = new AnalysisVariantData
+            {
+                Id = new Guid("04a895f1f846495ca363693eba8d4b19"),
+                SuppliersCountOptions = new VariantsSuppliersCountOptions
+                {
+                    Count = 2,
+                    Type = SupplierCountType.Equal
+                }
+            };
+
+            #endregion
+
+            var results = core.Run(variant1, variant2);
+
+            Assert.Equal(2, results.Count);
+            Assert.Equal(2, results.Count(q => q.SuppliersCount == 2));
+            Assert.Contains(results, q => q.VariantId == variant1.Id);
+            Assert.Contains(results, q => q.VariantId == variant2.Id);
+            Assert.All(results, result =>
+            {
+                Assert.True(result.Data.Find(q => q.SupplierId == supplier1.SupplierId).Quantity == 1100);
+                Assert.True(result.Data.Find(q => q.SupplierId == supplier2.SupplierId).Quantity == 2400);
+            });
+        }
     }
 }

@@ -44,27 +44,14 @@ namespace DigitalPurchasing.Analysis
                     continue;
                 }
 
-                var minVariant = new Dictionary<Guid, (decimal TotalPrice, decimal Price)>();
+                var minVariant = new Dictionary<Guid, decimal>();
 
                 foreach (var customerItem in _customerItemsLookup)
                 {
-                    var customerQuantity = customerItem.Value.Quantity;
                     var supplierItems = suppliers.SelectMany(q => q.Items.Where(w => w.NomenclatureId == customerItem.Key)).ToList();
                     if (supplierItems.Any())
                     {
-                        var itemsWEnoughQuality = supplierItems.Any(q => q.Quantity >= customerQuantity);
-                        if (itemsWEnoughQuality)
-                        {
-                            minVariant.Add(customerItem.Key, (
-                                TotalPrice: supplierItems.Where(q => q.Quantity >= customerQuantity).Min(q => q.TotalPrice),
-                                Price: supplierItems.Where(q => q.Quantity >= customerQuantity).Min(q => q.Price)));
-                        }
-                        else
-                        {
-                            minVariant.Add(customerItem.Key, (
-                                TotalPrice: 0, // unused in this case
-                                Price: supplierItems.Min(q => q.Price)));
-                        }
+                        minVariant.Add(customerItem.Key, supplierItems.Min(q => q.Price));
                     }
                 }
 
@@ -114,28 +101,18 @@ namespace DigitalPurchasing.Analysis
                         {
                             itemsCount++;
 
-                            var itemsWEnoughQuality = suppliersItems.Where(q => q.Quantity >= customerQuantity).ToList();
-
-                            if (itemsWEnoughQuality.Any())
+                            var priceScoreMod = 0m;
+                            var currentQuantity = 0m;
+                            var minPrice = minVariant[nomenclatureId];
+                            foreach (var item in suppliersItems.OrderBy(q => q.Price).ThenByDescending(q => q.Quantity))
                             {
-                                var priceScoreMod = minVariant[nomenclatureId].TotalPrice / itemsWEnoughQuality.Min(q => q.TotalPrice);
-                                score += priceScoreMod * quantityScoreMod;
+                                var remainingQuantity = Math.Abs(customerQuantity - currentQuantity);
+                                var quantityToAdd = item.Quantity > remainingQuantity ? remainingQuantity : item.Quantity;
+                                currentQuantity += quantityToAdd;
+                                priceScoreMod += (quantityToAdd / customerQuantity) * minPrice / item.Price;
+                                if (currentQuantity == customerQuantity) break;
                             }
-                            else
-                            {
-                                var priceScoreMod = 0m;
-                                var currentQuantity = 0m;
-                                var minPriceData = minVariant[nomenclatureId];
-                                foreach (var item in suppliersItems.OrderBy(q => q.Price).ThenByDescending(q => q.Quantity))
-                                {
-                                    var remainingQuantity = Math.Abs(customerQuantity - currentQuantity);
-                                    var quantityToAdd = item.Quantity > remainingQuantity ? remainingQuantity : item.Quantity;
-                                    currentQuantity += quantityToAdd;
-                                    priceScoreMod += (quantityToAdd / customerQuantity) * minPriceData.Price / item.Price;
-                                    if (currentQuantity == customerQuantity) break;
-                                }
-                                score += priceScoreMod * quantityScoreMod;
-                            }
+                            score += priceScoreMod * quantityScoreMod;
                         }
                     }
 
