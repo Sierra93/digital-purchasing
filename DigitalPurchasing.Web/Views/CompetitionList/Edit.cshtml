@@ -98,9 +98,11 @@
                         </ul>
                         @if (baseOffer.SupplierId.HasValue)
                         {
-                            <a href="@Url.Action("PriceReductionDownload", new {clId = Model.CompetitionList.Id, supplierId = baseOffer.SupplierId.Value })">
+                            var filename = $"{cl.CreatedOn:yyyyMMdd}_КЛ_{cl.PublicId}_{lastOffer.SupplierName}_Запрос_на_изменение_условий.xlsx";
+                            var postUrl = @Url.Action("PriceReductionDownload", new { id = Model.CompetitionList.Id, supplierId = baseOffer.SupplierId.Value });
+                            <button @@click="downloadPRXls('@filename','@postUrl')" class="btn btn-link">
                                 <span>Скачать запрос на понижение</span>
-                            </a>
+                            </button>
                         }
                     </div>
                     <table class="table table-striped with-left-border">
@@ -199,7 +201,7 @@
                                 </label>
                             </td>
                             <td>Поставщики, кому уже отправлен<br />запрос на понижение</td>
-                            <td>Дата отправки<br />запроса на<br />понижение цен</td>
+                            <td>Дата отправки запроса<br />на понижение цен</td>
                         </tr>
                     </thead>
                     <tfoot>
@@ -331,6 +333,20 @@
                         var discount = event.target.value;
                         var targetPrice = item.minPrice * (1 - (discount / 100));
                         item.targetPrice = _.round(targetPrice, 2);
+                    },
+                    downloadPRXls: function (filename, postUrl) {
+                        var vm = this;
+                        vm.$http.post(postUrl, { items: vm.prRequests }, { responseType: 'arraybuffer' }).then(function(response) {
+                            console.info(response);
+                            var blob = new Blob(
+                                [response.data],
+                                { type: response.headers.get('content-type') }
+                            );
+                            var link = document.createElement('a');
+                            link.href = window.URL.createObjectURL(blob);
+                            link.download = filename;
+                            link.click();
+                        });
                     },
                     sendPRRequests: function () {
                         var vm = this;

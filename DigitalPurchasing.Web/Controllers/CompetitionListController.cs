@@ -121,16 +121,17 @@ namespace DigitalPurchasing.Web.Controllers
             return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }
 
-        [HttpGet]
-        public IActionResult PriceReductionDownload(Guid clId, Guid supplierId)
+        [HttpPost]
+        public IActionResult PriceReductionDownload([FromRoute] Guid id, [FromQuery] Guid supplierId,
+            [FromBody] SendPriceReductionRequestsVm model)
         {
-            var cl = _competitionListService.GetById(clId);//todo: use supplierId
+            var cl = _competitionListService.GetById(id);//todo: use supplierId
             if (cl == null) return NotFound();
 
             var offers = cl.GroupBySupplier().First(q => q.Value.First().SupplierId == supplierId);
             var lastOffer = offers.Value.Last();
 
-            var reportData = CreatePriceReductionData(lastOffer, cl); 
+            var reportData = CreatePriceReductionData(lastOffer, cl, model); 
 
             var report = new PriceReductionWriter(reportData);
             var fileBytes = report.Build();
@@ -374,7 +375,7 @@ namespace DigitalPurchasing.Web.Controllers
                     var minimalPrice = cl.GetMinimalOfferPrice(item.Request.ItemId);
                     var defaultDiscount = 0.05m; // todo: get from database
                     var convertedTargetPrice = minimalPrice * (1 - defaultDiscount);
-                    targetPrice = item.Conversion.ToFinalCostCostPer1(convertedTargetPrice);
+                    targetPrice = convertedTargetPrice;
                 }
                 
                 var dataItem = new PriceReductionData.DataItem();
@@ -391,7 +392,7 @@ namespace DigitalPurchasing.Web.Controllers
                         item.Offer.Uom,
                         item.Offer.Qty,
                         item.Offer.Price)
-                    .SetTargetPrice(targetPrice);
+                    .SetTargetPrice(item.Conversion.ToFinalCostCostPer1(targetPrice));
 
                 reportData.Items.Add(dataItem);
             }
