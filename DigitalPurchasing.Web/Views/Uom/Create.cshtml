@@ -8,7 +8,7 @@
 <h2>@ViewData["Title"]</h2>
 
 <hr />
-<div class="row">
+<div class="row" id="app">
     <div class="col-md-4">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -16,6 +16,18 @@
                 <label asp-for="Name" class="control-label"></label>
                 <input asp-for="Name" class="form-control" />
                 <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="AlternativeNames" class="control-label"></label>
+                <input v-for="(alternativeName, index) in alternativeNames"
+                       v-bind:name="'AlternativeNames['+index+']'"
+                       v-model="alternativeNames[index]" style="display: none" />
+                <vue-tags-input v-model="alternativeNameTag"
+                                :tags="alternativeNameTags"
+                                v-on:tags-changed="alternativeNameTags = $event"
+                                placeholder="Добавить название"
+                                style="max-width: 100%;" />
+                <span asp-validation-for="AlternativeNames" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" class="btn btn-primary" value="Создать" />
@@ -27,4 +39,25 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        var vue = new Vue({
+            el: '#app',
+            data: function() {
+                return {
+                    alternativeNameTag: '',
+                    alternativeNameTags: []
+                };
+            },
+            computed: {
+                alternativeNames: function() {
+                    var names = _.map(this.alternativeNameTags, function(tag) {
+                        return tag.text;
+                    });
+
+                    return names;
+                }
+            }
+        });
+    </script>
 }

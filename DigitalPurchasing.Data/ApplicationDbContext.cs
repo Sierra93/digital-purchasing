@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Extensions;
@@ -10,6 +11,7 @@ using DigitalPurchasing.Models.SSR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace DigitalPurchasing.Data
 {
@@ -143,6 +145,13 @@ namespace DigitalPurchasing.Data
             builder.Entity<UserLogin>().ToTable("UserLogins");
             builder.Entity<UserToken>().ToTable("UserTokens");
             builder.Entity<RoleClaim>().ToTable("RoleClaims");
+
+            builder.Entity<UnitsOfMeasurement>().Property(b => b.Json)
+                .HasConversion(
+                    q => JsonConvert.SerializeObject(q),
+                    q => JsonConvert.DeserializeObject<UomJsonData>(q));
+
+            builder.Query<UomAutocomplete>();
 
             builder.Entity<NomenclatureCategory>().HasOne(q => q.Parent).WithMany(q => q.Children).HasForeignKey(q => q.ParentId);
             builder.Entity<NomenclatureCategory>().HasOne(q => q.Owner).WithMany().HasForeignKey(q => q.OwnerId);

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace DigitalPurchasing.Core.Interfaces
 {
@@ -26,6 +27,7 @@ namespace DigitalPurchasing.Core.Interfaces
         UomIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
         UomFactorData GetFactorData(Guid uomId, int page, int perPage, string sortField, bool sortAsc);
         Task<UomDto> Create(Guid ownerId, string name, decimal? quantity = null);
+        Task<UomDto> Create(Guid companyId, string name, List<string> alternativeNames, decimal? quantity = null);
         UomDto CreateOrUpdate(string name);
         IEnumerable<UomDto> GetAll();
         IEnumerable<UomDto> GetByNames(params string[] uomNames);
@@ -41,6 +43,7 @@ namespace DigitalPurchasing.Core.Interfaces
         void Delete(Guid id);
         UomDto GetById(Guid id);
         UomDto Update(Guid id, string name);
+        UomDto Update(Guid id, string name, List<string> alternativeNames);
         void DeleteConversionRate(Guid id);
 
         Task SetPackagingUom(Guid ownerId, Guid uomId);
@@ -50,11 +53,34 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class UomDto
     {
+        public class JsonData
+        {
+            public class UomAlternativeName
+            {
+                public string Name { get; set; }
+                public string NormalizedName { get; set; }
+            }
+
+            public List<UomAlternativeName> AlternativeNames { get; set; } = new List<UomAlternativeName>();
+        }
+
         public Guid Id { get; set; }
         public string Name { get; set; }
         public Guid OwnerId { get; set; }
         public decimal? Quantity { get; set; }
+        public JsonData Json { get; set; } = new JsonData();
     }
+
+    public class UomAutocompleteDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public Guid OwnerId { get; set; }
+        public decimal? Quantity { get; set; }
+        public string AlternativeName { get; set; }
+    }
+
+
 
     public class UomFactorDataItem
     {

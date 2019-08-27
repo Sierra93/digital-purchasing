@@ -13,6 +13,7 @@ using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using MoreLinq;
 
 namespace DigitalPurchasing.Services
 {
@@ -102,7 +103,15 @@ namespace DigitalPurchasing.Services
         public async Task<UomDto> Create(Guid ownerId, string name, decimal? quantity = null)
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
-            var entry = await _db.UnitsOfMeasurements.AddAsync(CreateEntity(name, ownerId, quantity));
+            var entry = await _db.UnitsOfMeasurements.AddAsync(CreateEntity(name, ownerId, quantity, new List<string>()));
+            await _db.SaveChangesAsync();
+            return entry.Entity.Adapt<UomDto>();
+        }
+
+        public async Task<UomDto> Create(Guid companyId, string name, List<string> alternativeNames, decimal? quantity = null)
+        {
+            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
+            var entry = await _db.UnitsOfMeasurements.AddAsync(CreateEntity(name, companyId, quantity, alternativeNames));
             await _db.SaveChangesAsync();
             return entry.Entity.Adapt<UomDto>();
         }
@@ -120,7 +129,7 @@ namespace DigitalPurchasing.Services
 
             if (entity == null)
             {
-                var entry = _db.UnitsOfMeasurements.Add(CreateEntity(name, Guid.Empty, null));
+                var entry = _db.UnitsOfMeasurements.Add(CreateEntity(name, Guid.Empty, null, new List<string>()));
                 _db.SaveChanges();
                 entity = entry.Entity;
             }
@@ -128,8 +137,18 @@ namespace DigitalPurchasing.Services
             return entity.Adapt<UomDto>();
         }
 
-        private UnitsOfMeasurement CreateEntity(string name, Guid ownerId, decimal? quantity)
-            => new UnitsOfMeasurement { Name = name, NormalizedName = name.CustomNormalize(), OwnerId = ownerId, Quantity = quantity };
+        private UnitsOfMeasurement CreateEntity(string name, Guid ownerId, decimal? quantity, List<string> alternativeNames)
+            => new UnitsOfMeasurement
+            {
+                Name = name.Trim(),
+                NormalizedName = name.CustomNormalize(),
+                OwnerId = ownerId,
+                Quantity = quantity,
+                Json =
+                {
+                    AlternativeNames = alternativeNames.Select(q => new UomAlternativeName{ Name = q }).ToList()
+                }
+            };
 
         public IEnumerable<UomDto> GetAll() => _db.UnitsOfMeasurements.Where(q => !q.IsDeleted).ProjectToType<UomDto>().ToList();
 
@@ -160,19 +179,30 @@ namespace DigitalPurchasing.Services
             {
                 var normalizedName = s.CustomNormalize();
 
-                var qry = _db.UnitsOfMeasurements
+                var qry = _db.Query<UomAutocomplete>()
+                    .FromSql("SELECT * FROM UnitsOfMeasurements " +
+                             "OUTER APPLY OPENJSON([Json], '$.AlternativeNames') " +
+                             "WITH (AlternativeName nvarchar(255) '$.Name', NormalizedAlternativeName nvarchar(255) '$.NormalizedName')")
                     .IgnoreQueryFilters()
                     .AsNoTracking()
-                    .Where(q => q.OwnerId == ownerId);
+                    .Where(q => q.OwnerId == ownerId && !q.IsDeleted);
 
                 var autocompleteItems = qry
-                    .Where(q => (q.Name == s || q.NormalizedName == normalizedName || q.Name.Contains(s)) && !q.IsDeleted)
+                    .Where(q => q.Name == s
+                                || q.Name.Contains(s)
+                                || q.AlternativeName == s
+                                || q.AlternativeName.Contains(s)
+                                || q.NormalizedName == normalizedName
+                                || q.NormalizedAlternativeName == normalizedName)
+                    .ToList()
                     .Select(q => new
                     {
                         q.Id, q.Name, q.NormalizedName,
-                        IsFullMatch = q.Name == s || q.NormalizedName == normalizedName
+                        IsFullMatch = q.Name == s || q.NormalizedName == normalizedName || q.AlternativeName == s || q.NormalizedAlternativeName == normalizedName
                     })
                     .OrderByDescending(q => q.IsFullMatch)
+                    .GroupBy(q => q.Id)
+                    .Select(q => q.FirstOrDefault())
                     .ToList();
 
                 items = autocompleteItems.Adapt<List<UomAutocompleteResponse.AutocompleteItem>>();
@@ -248,13 +278,30 @@ namespace DigitalPurchasing.Services
             _db.SaveChanges();
         }
 
-        public UomDto GetById(Guid id) => _db.UnitsOfMeasurements.Find(id)?.Adapt<UomDto>();
+        public UomDto GetById(Guid id)
+        {
+            var entity = _db.UnitsOfMeasurements.Find(id);
+
+            return entity?.Adapt<UomDto>();
+        }
 
         public UomDto Update(Guid id, string name)
         {
             var entity = _db.UnitsOfMeasurements.Find(id);
             entity.Name = name.Trim();
             entity.NormalizedName = name.CustomNormalize();
+            _db.SaveChanges();
+            return entity.Adapt<UomDto>();
+        }
+
+        public UomDto Update(Guid id, string name, List<string> alternativeNames)
+        {
+            var entity = _db.UnitsOfMeasurements.Find(id);
+            entity.Name = name.Trim();
+            if (entity.Json == null)
+                entity.Json = new UomJsonData();
+            entity.Json.AlternativeNames = alternativeNames.Select(q => new UomAlternativeName { Name = q }).ToList();
+            _db.Entry(entity).Property(q => q.Json).IsModified = true;
             _db.SaveChanges();
             return entity.Adapt<UomDto>();
         }
