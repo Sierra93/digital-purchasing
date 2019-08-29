@@ -20,8 +20,8 @@ namespace DigitalPurchasing.Core.Interfaces
             List<AddOrUpdateAltDto> alts);
 
         void Delete(Guid id);
-        NomenclatureAlternativeVm GetForCustomer(Guid customerId);
-        NomenclatureAlternativeVm GetForSupplier(Guid supplierId);
+        NomenclatureAlternativeVm GetForCustomer(Guid customerId, Guid nomenclatureId);
+        NomenclatureAlternativeVm GetForSupplier(Guid supplierId, Guid nomenclatureId);
     }
 
     public class AddOrUpdateAltDto

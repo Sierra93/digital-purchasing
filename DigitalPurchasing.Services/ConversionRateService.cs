@@ -62,17 +62,29 @@ namespace DigitalPurchasing.Services
                 {
                     var packUom = _uomService.GetById(nomenclatureAlternative.PackUomId.Value);
                     var toUom = _uomService.GetById(toUomId);
+                    var isSameUom = packUom.Id == toUom.Id;
+                    if (isSameUom)
+                    {
+                        result.CommonFactor = nomenclatureAlternative.PackUomValue.Value;
+                    }
                     if (toUom.Quantity.HasValue && packUom.Quantity.HasValue)
                     {
-                        result.CommonFactor = toUom.Quantity.Value / (nomenclatureAlternative.PackUomValue.Value * packUom.Quantity.Value);
+                        result.CommonFactor = (nomenclatureAlternative.PackUomValue.Value * packUom.Quantity.Value) / toUom.Quantity.Value;
                     }
                 } else if (nomenclature.PackUomId.HasValue && nomenclature.PackUomValue > 0)
                 {
                     var packUom = _uomService.GetById(nomenclature.PackUomId.Value);
                     var toUom = _uomService.GetById(toUomId);
-                    if (toUom.Quantity.HasValue && packUom.Quantity.HasValue)
+
+                    var isSameUom = packUom.Id == toUom.Id;
+
+                    if (isSameUom)
                     {
-                        result.CommonFactor = toUom.Quantity.Value / (nomenclature.PackUomValue * packUom.Quantity.Value);
+                        result.CommonFactor = nomenclature.PackUomValue;
+                    }
+                    else if (toUom.Quantity.HasValue && packUom.Quantity.HasValue)
+                    {
+                        result.CommonFactor = (nomenclature.PackUomValue * packUom.Quantity.Value) / toUom.Quantity.Value;
                     }
                 }
             }
@@ -134,12 +146,12 @@ namespace DigitalPurchasing.Services
 
             if (customerId.HasValue)
             {
-                nomenclatureAlternative = _nomenclatureAlternativeService.GetForCustomer(customerId.Value);
+                nomenclatureAlternative = _nomenclatureAlternativeService.GetForCustomer(customerId.Value, nomenclatureId);
             }
 
             if (supplierId.HasValue)
             {
-                nomenclatureAlternative = _nomenclatureAlternativeService.GetForSupplier(supplierId.Value);
+                nomenclatureAlternative = _nomenclatureAlternativeService.GetForSupplier(supplierId.Value, nomenclatureId);
             }
 
             var toUomId = nomenclature.BatchUomId;

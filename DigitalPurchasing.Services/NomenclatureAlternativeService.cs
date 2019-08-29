@@ -321,17 +321,17 @@ namespace DigitalPurchasing.Services
             }
         }
 
-        private NomenclatureAlternativeVm GetByClient(Guid clientId, bool isCustomer)
+        private NomenclatureAlternativeVm GetByClient(Guid clientId, bool isCustomer, Guid nomenclatureId)
         {
             var qry = _db.NomenclatureAlternatives.Include(q => q.Link).AsQueryable();
             var entity = isCustomer
-                ? qry.FirstOrDefault(q => q.Link.CustomerId == clientId)
-                : qry.FirstOrDefault(q => q.Link.SupplierId == clientId);
+                ? qry.FirstOrDefault(q => q.Link.CustomerId == clientId && q.NomenclatureId == nomenclatureId)
+                : qry.FirstOrDefault(q => q.Link.SupplierId == clientId && q.NomenclatureId == nomenclatureId);
             return entity.Adapt<NomenclatureAlternativeVm>();
         }
 
-        public NomenclatureAlternativeVm GetForCustomer(Guid customerId) => GetByClient(customerId, true);
+        public NomenclatureAlternativeVm GetForCustomer(Guid customerId, Guid nomenclatureId) => GetByClient(customerId, true, nomenclatureId);
 
-        public NomenclatureAlternativeVm GetForSupplier(Guid supplierId) => GetByClient(supplierId, false);
+        public NomenclatureAlternativeVm GetForSupplier(Guid supplierId, Guid nomenclatureId) => GetByClient(supplierId, false, nomenclatureId);
     }
 }
