@@ -7,6 +7,7 @@ using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Services;
 using DigitalPurchasing.Web.Core;
+using DigitalPurchasing.Web.Core.Select2;
 using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.NomenclatureCategory;
 using DigitalPurchasing.Web.ViewModels.Uom;
@@ -151,6 +152,21 @@ namespace DigitalPurchasing.Web.Controllers
         {
             _uomService.Delete(vm.Id);
             return Ok();
+        }
+
+        public IActionResult Select2(Select2Get request)
+        {
+            var companyId = User.CompanyId();
+            var autocompleteResponse = _uomService.Autocomplete(request.Q, companyId);
+
+            var results = autocompleteResponse.Items.OrderByDescending(q => q.IsFullMatch)
+                .Select(q => new Select2ResultItem<Guid> { Id = q.Id, Text = q.Name })
+                .ToList();
+            
+            return Ok(new Select2Data<Guid>(false)
+            {
+               Results = results
+            });
         }
     }
 }

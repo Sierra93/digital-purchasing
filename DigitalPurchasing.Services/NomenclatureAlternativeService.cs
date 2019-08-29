@@ -64,7 +64,13 @@ namespace DigitalPurchasing.Services
 
         public NomenclatureAlternativeVm GetAlternativeById(Guid id)
         {
-            var entity = _db.NomenclatureAlternatives.Find(id);
+            var entity = _db.NomenclatureAlternatives
+                .Include(q => q.BatchUom)
+                .Include(q => q.MassUom)
+                .Include(q => q.PackUom)
+                .Include(q => q.ResourceUom)
+                .Include(q => q.ResourceBatchUom)
+                .First(q => q.Id == id);
             var result = entity.Adapt<NomenclatureAlternativeVm>();
             var link = _db.NomenclatureAlternativeLinks
                 .Include(q => q.Supplier)

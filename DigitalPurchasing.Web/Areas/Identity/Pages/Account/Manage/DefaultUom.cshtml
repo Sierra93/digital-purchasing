@@ -13,10 +13,14 @@
                 <div asp-validation-summary="All" class="text-danger"></div>
                 <div class="form-group">
                     <label asp-for="Input.PackagingUomId"></label>
-                    <select class="form-control"
+                    <select class="form-control remote-select-uom"
                             asp-for="Input.PackagingUomId"
-                            asp-items="Model.UomsList">
+                            asp-items="Model.EmptyList">
                         <option value="@Guid.Empty">Не выбрано</option>
+                        @if (Model.Input.PackagingUomId != Guid.Empty)
+                        {
+                            <option value="@Model.Input.PackagingUomId" selected="selected">@Model.Input.PackagingUomName</option>
+                        }
                     </select>
                 </div>
                 <div class="form-group">

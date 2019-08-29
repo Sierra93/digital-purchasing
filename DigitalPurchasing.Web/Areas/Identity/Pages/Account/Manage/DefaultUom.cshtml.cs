@@ -20,6 +20,8 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
             [Required]
             [Display(Name = "Упаковка")]
             public Guid PackagingUomId { get; set; }
+
+            public string PackagingUomName { get; set; }
         }
 
         private readonly IUomService _uomService;
@@ -30,21 +32,19 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
         [BindProperty]
         public InputModel Input { get; set; } = new InputModel();
 
-        public List<SelectListItem> UomsList { get; set; } = new List<SelectListItem>();
+        public List<SelectListItem> EmptyList { get; set; } = new List<SelectListItem>();
 
         public DefaultUomModel(IUomService uomService)
-        {
-            _uomService = uomService;
-            UomsList = _uomService.GetAll()
-                .OrderBy(q => q.Name)
-                .Select(q => new SelectListItem(q.Name, q.Id.ToString()))
-                .ToList();
-        }
+            => _uomService = uomService;
 
         public async Task OnGetAsync()
         {
             var companyId = User.CompanyId();
             Input.PackagingUomId = await _uomService.GetPackagingUom(companyId);
+            if (Input.PackagingUomId != Guid.Empty)
+            {
+                Input.PackagingUomName = _uomService.AutocompleteSingle(Input.PackagingUomId).Data.Name;
+            }
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -52,7 +52,7 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
             var companyId = User.CompanyId();
             await _uomService.SetPackagingUom(companyId, Input.PackagingUomId);
             StatusMessage = "Изменения сохранены";
-            return Page();
+            return RedirectToPage();
         }
     }
 }

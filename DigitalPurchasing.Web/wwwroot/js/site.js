@@ -70,29 +70,42 @@ $(document).on('change', ':file', function () {
 
 //numeral.locale('ru');
 
-// show delete modal
-$('button[data-delete-modal]').click(function () {
-  var $this = $(this);
-  var $deleteModal = $($this.data().deleteModal);
-  $deleteModal.modal('show');
-});
+$(document).ready(function() {
+  // show delete modal
+  $('button[data-delete-modal]').click(function () {
+    var $this = $(this);
+    var $deleteModal = $($this.data().deleteModal);
+    $deleteModal.modal('show');
+  });
 
-// confirm delete
-$('body').on('click', 'button[data-delete-id][data-delete-url][data-delete-redirect]', function() {
-  var $this = $(this);
-  var postUrl = $this.data().deleteUrl;
-  var postData = {
-    id: $this.data().deleteId
-  };
-  var redirect = $this.data().deleteRedirect;
-  axios.post(postUrl, postData).then(function (res) {
-    window.location.href = redirect;
-  }, function (res) {
-    var $modal = $this.parents('.modal');
-    $modal.on('hidden.bs.modal', function (e) {
-      $modal.off();
-      alert('Ошибка удаления');
+  // confirm delete
+  $('body').on('click', 'button[data-delete-id][data-delete-url][data-delete-redirect]', function () {
+    var $this = $(this);
+    var postUrl = $this.data().deleteUrl;
+    var postData = {
+      id: $this.data().deleteId
+    };
+    var redirect = $this.data().deleteRedirect;
+    axios.post(postUrl, postData).then(function (res) {
+      window.location.href = redirect;
+    }, function (res) {
+      var $modal = $this.parents('.modal');
+      $modal.on('hidden.bs.modal', function (e) {
+        $modal.off();
+        alert('Ошибка удаления');
+      });
+      $modal.modal('hide');
     });
-    $modal.modal('hide');
+  });
+
+  $.fn.select2.defaults.set("theme", "bootstrap");
+
+  $('.remote-select-uom').select2({
+    ajax: {
+      url: '/uom/select2',
+      dataType: 'json'
+    }
   });
 });
+
+
