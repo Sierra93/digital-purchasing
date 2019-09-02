@@ -68,6 +68,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public Guid? PackUomId { get; set; }
         public decimal? PackUomValue { get; set; }
+        public UomDto PackUom { get; set; }
 
         public Guid NomenclatureId { get; set; }
     }
