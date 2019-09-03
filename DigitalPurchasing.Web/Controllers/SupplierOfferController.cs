@@ -147,15 +147,40 @@ namespace DigitalPurchasing.Web.Controllers
         public async Task<IActionResult> SaveMatchItem([FromBody] SaveMatchItemVm model)
         {
             var companyId = User.CompanyId();
-            var nomenclature = _nomenclatureService.AutocompleteSingle(model.NomenclatureId);
+            var fromUomId = model.UomId;
+            var nomenclature = _nomenclatureService.GetById(model.NomenclatureId);
             var nomenclatureAlternativeId = _nomenclatureAlternativeService.AddNomenclatureForSupplier(model.ItemId); // must be above than "SaveConversionRate"
-            _uomService.SaveConversionRate(
-                companyId,
-                model.UomId,
-                nomenclature.Data.BatchUomId,
-                nomenclatureAlternativeId,
-                model.FactorC,
-                model.FactorN);
+
+            var isSaved = false;
+
+            if (nomenclatureAlternativeId.HasValue && model.FactorN > 0)
+            {
+                if (fromUomId == nomenclature.MassUomId)
+                {
+                    // todo: get !1! from uom
+                    var mass = 1 / model.FactorN;
+                    await _nomenclatureAlternativeService.UpdateMassUom(nomenclatureAlternativeId.Value, fromUomId, mass);
+                    isSaved = true;
+                }
+                else if (fromUomId == await _uomService.GetPackagingUom(companyId))
+                {
+                    var quantityInPackage = model.FactorN;
+                    await _nomenclatureAlternativeService.UpdatePackUom(nomenclatureAlternativeId.Value, nomenclature.BatchUomId, quantityInPackage);
+                    isSaved = true;
+                }
+            }
+
+            if (!isSaved)
+            {
+                _uomService.SaveConversionRate(
+                    companyId,
+                    fromUomId,
+                    nomenclature.BatchUomId,
+                    nomenclatureAlternativeId,
+                    model.FactorC,
+                    model.FactorN);
+            }
+
             _supplierOfferService.SaveMatch(model.ItemId, model.NomenclatureId, model.UomId, model.FactorC, model.FactorN);
             
             var clId = await _supplierOfferService.GetCLIdBySoItem(model.ItemId);

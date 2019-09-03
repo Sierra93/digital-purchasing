@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 using DigitalPurchasing.Core.Enums;
 
 namespace DigitalPurchasing.Core.Interfaces
@@ -22,6 +22,9 @@ namespace DigitalPurchasing.Core.Interfaces
         void Delete(Guid id);
         NomenclatureAlternativeVm GetForCustomer(Guid customerId, Guid nomenclatureId);
         NomenclatureAlternativeVm GetForSupplier(Guid supplierId, Guid nomenclatureId);
+
+        Task UpdateMassUom(Guid id, Guid massUomId, decimal mass);
+        Task UpdatePackUom(Guid id, Guid packUomId, decimal quantityInPackage);
     }
 
     public class AddOrUpdateAltDto

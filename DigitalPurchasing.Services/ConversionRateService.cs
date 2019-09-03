@@ -40,6 +40,7 @@ namespace DigitalPurchasing.Services
             var calcFromUom = fromUomId == nomenclature.MassUomId || fromUomId == nomenclatureAlternative?.MassUomId;
             if (calcFromUom)
             {
+                // todo: get !1! from uom
                 if (nomenclatureAlternative?.MassUomValue > 0)
                 {
                     result.CommonFactor = 1 / nomenclatureAlternative.MassUomValue;
