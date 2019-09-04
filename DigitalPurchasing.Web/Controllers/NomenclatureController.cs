@@ -437,7 +437,7 @@ namespace DigitalPurchasing.Web.Controllers
 
             var nomenclatures = datas.Select(data => new NomenclatureVm
             {
-                Name = data.Name,
+                Name = data.Name.Trim(),
                 NameEng =  data.NameEng,
                 Code = data.Code,
                 BatchUomId = FindUomId(dbUoms, data.Uom),
@@ -450,9 +450,7 @@ namespace DigitalPurchasing.Web.Controllers
                 PackUomId = FindUomId(dbUoms, data.PackUom),
                 PackUomValue = data.PackUomValue ?? 0
             }).GroupBy(q => q.Name).Select(q => q.First()).ToList();
-
             
-
             _nomenclatureService.CreateOrUpdate(nomenclatures, companyId);
 
             return RedirectToAction(nameof(Index));
