@@ -303,7 +303,7 @@ namespace DigitalPurchasing.Services
                 .Where(q => q.OwnerId == ownerId)
                 .Select(q => new
                 {
-                    q.Name,
+                    Name = q.Name.Trim(),
                     q.Id
                 })
                 .ToList();
