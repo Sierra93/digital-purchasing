@@ -158,19 +158,43 @@ namespace DigitalPurchasing.Services
                     .Select(q => new AnalysisCustomerItem(q.NomenclatureId, q.RawQty))
             );
 
-            var offers = cl.GroupBySupplier().Where(q => q.Key.SupplierId.HasValue).Select(q => q.Value.Last());
-
-            var suppliers = offers.Select(q =>
+            var offers = cl.GroupBySupplier().Where(q => q.Key.SupplierId.HasValue);
+            
+            var suppliers = offers.Select(groupedOffers =>
             {
-                return new AnalysisSupplier(
-                    q.SupplierId.Value,
-                    q.Id,
-                    null,
-                    q.Items.Where(w => w.Offer.Qty > 0).Select(w =>
-                        new AnalysisSupplierItem(w.NomenclatureId,
-                        w.Conversion.OfferQty,
-                        w.ResourceConversion.OfferPrice
-                    )));
+                var lastOffer = groupedOffers.Value.Last();
+                var offerItemsCount = lastOffer.Items.Count;
+
+                var items = new List<AnalysisSupplierItem>(offerItemsCount);
+
+                var lastOfferItems = lastOffer.Items
+                    .Where(item => item.Offer.Qty > 0)
+                    .Select(item => new AnalysisSupplierItem(
+                        item.NomenclatureId,
+                        item.Conversion.OfferQty,
+                        item.ResourceConversion.OfferPrice
+                    ));
+
+                items.AddRange(lastOfferItems);
+
+                if (items.Count < offerItemsCount)
+                {
+                    foreach (var offer in groupedOffers.Value.Where(q => q.Id != lastOffer.Id))
+                    {
+                        var offerItems = offer.Items
+                            .Where(item => item.Offer.Qty > 0 && items.All(q => q.NomenclatureId != item.NomenclatureId))
+                            .Select(item => new AnalysisSupplierItem(
+                                item.NomenclatureId,
+                                item.Conversion.OfferQty,
+                                item.ResourceConversion.OfferPrice
+                            ));
+                        items.AddRange(offerItems);
+                    }
+                }
+
+                var supplier = new AnalysisSupplier(lastOffer.SupplierId.Value, lastOffer.Id, null, items);
+                
+                return supplier;
             }).ToList();
 
             return ( Customer: customer, Suppliers: suppliers );

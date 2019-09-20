@@ -1,4 +1,5 @@
 @using DigitalPurchasing.Core
+@using DigitalPurchasing.Core.Interfaces
 @using DigitalPurchasing.Web.Controllers
 @model DigitalPurchasing.Web.ViewModels.CompetitionList.CompetitionListEditVm
 
@@ -81,6 +82,7 @@
                         .Where(w => !string.IsNullOrEmpty(w.Offer.Currency))
                         .Select(w => w.Offer.Currency))
                     .Distinct();
+                var mergedOffer = group.Value.Merge();
                 <div class="long-table-item">
                     <div class="header">
                         <p>
@@ -127,13 +129,13 @@
                                 <td></td>
                                 <td></td>
                                 <td></td>
-                                <td>@lastOffer.Items.Sum(q => q.Offer.Qty).ToString(Consts.Format.Qty)</td>
+                                <td>@mergedOffer.Items.Sum(q => q.Offer.Qty).ToString(Consts.Format.Qty)</td>
                                 @foreach (var so in group.Value)
                                 {
                                     <td></td>
                                 }
 
-                                <td>@lastOffer.Items.Sum(q => q.Offer.TotalPrice).ToString(Consts.Format.Money2)</td>
+                                <td>@mergedOffer.Items.Sum(q => q.Offer.TotalPrice).ToString(Consts.Format.Money2)</td>
                             </tr>
                             <tr>
                                 <td colspan="@colCount">
@@ -163,7 +165,7 @@
                                                 .Offer.Price;
                                             <td>@price.ToString(Consts.Format.Money2)</td>
                                         }
-                                        <td>@lastOffer.Items.First(q => q.NomenclatureId == item.NomenclatureId).Offer.TotalPrice.ToString(Consts.Format.Money2)</td>
+                                        <td>@mergedOffer.Items.First(q => q.NomenclatureId == item.NomenclatureId).Offer.TotalPrice.ToString(Consts.Format.Money2)</td>
                                     </tr>
                                 }
                                 else
