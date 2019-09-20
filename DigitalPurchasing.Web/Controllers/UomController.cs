@@ -1,15 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Services;
 using DigitalPurchasing.Web.Core;
+using DigitalPurchasing.Web.Core.Select2;
 using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.NomenclatureCategory;
 using DigitalPurchasing.Web.ViewModels.Uom;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace DigitalPurchasing.Web.Controllers
 {
@@ -60,7 +64,8 @@ namespace DigitalPurchasing.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                _uomService.CreateOrUpdate(vm.Name);
+                var companyId = User.CompanyId();
+                _uomService.Create(companyId, vm.Name, vm.AlternativeNames);
                 return RedirectToAction("Index");
             }
 
@@ -80,11 +85,27 @@ namespace DigitalPurchasing.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                _uomService.Update(vm.Id, vm.Name);
+                _uomService.Update(vm.Id, vm.Name, vm.AlternativeNames);
                 return RedirectToAction("Index");
             }
 
             return View(vm);
+        }
+
+        public class EditDataVm
+        {
+            public List<string> AlternativeNames { get; set; }
+        }
+
+        public IActionResult EditData(Guid id)
+        {
+            var uom = _uomService.GetById(id);
+            if (uom == null) return NotFound();
+            var vm = new EditDataVm
+            {
+                AlternativeNames = uom.Json?.AlternativeNames.Select(q => q.Name).ToList() ?? new List<string>()
+            };
+            return Json(vm);
         }
 
         [HttpGet]
@@ -98,13 +119,24 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult AutocompleteSingle([FromQuery] Guid id) => Json(_uomService.AutocompleteSingle(id));
 
         [HttpPost]
-        public async Task<IActionResult> Factor([FromBody]UomFactorVm vm) => Json(await _conversionRateService.GetRate(vm.FromId, vm.NomenclatureId));
+        public async Task<IActionResult> Factor([FromBody]UomFactorVm vm)
+        {
+            var result = await _conversionRateService
+                .GetRate(vm.FromId, vm.NomenclatureId, vm.CustomerId, vm.SupplierId);
+
+            return Json(result);
+        }
 
         [HttpPost]
         public IActionResult SaveFactor([FromBody]UomSaveFactorVm vm)
         {
             var companyId = User.CompanyId();
-            _uomService.SaveConversionRate(companyId, vm.FromUomId, vm.ToUomId, vm.NomenclatureId ?? Guid.Empty, vm.FactorC, vm.FactorN);
+            _uomService.SaveConversionRate(
+                companyId,
+                vm.FromUomId,
+                vm.ToUomId,
+                vm.NomenclatureAlternativeId,
+                vm.FactorC, vm.FactorN);
             return Ok();
         }
 
@@ -120,6 +152,21 @@ namespace DigitalPurchasing.Web.Controllers
         {
             _uomService.Delete(vm.Id);
             return Ok();
+        }
+
+        public IActionResult Select2(Select2Get request)
+        {
+            var companyId = User.CompanyId();
+            var autocompleteResponse = _uomService.Autocomplete(request.Q, companyId);
+
+            var results = autocompleteResponse.Items.OrderByDescending(q => q.IsFullMatch)
+                .Select(q => new Select2ResultItem<Guid> { Id = q.Id, Text = q.Name })
+                .ToList();
+            
+            return Ok(new Select2Data<Guid>(false)
+            {
+               Results = results
+            });
         }
     }
 }

@@ -14,5 +14,8 @@ namespace DigitalPurchasing.Core.Extensions
             => principal.HasClaim(q => q.Type == CustomClaimTypes.CompanyId)
                 ? Guid.Parse(principal.FindFirst(CustomClaimTypes.CompanyId).Value)
                 : Guid.Empty;
+
+        public static bool CanDeleteSupplierOffers(this ClaimsPrincipal principal)
+            => principal.HasClaim(q => q.Type == CustomClaimTypes.SupplierOffers.Delete);
     }
 }

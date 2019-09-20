@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DigitalPurchasing.Core.Enums;
 
 namespace DigitalPurchasing.Core.Interfaces
 {
@@ -14,6 +13,14 @@ namespace DigitalPurchasing.Core.Interfaces
         Task<Guid> GetIdByQR(Guid qrId, bool globalSearch);
         CompetitionListVm GetById(Guid id);
         DeleteResultVm Delete(Guid id);
+
+        Task SavePriceReductionEmail(
+            Guid supplierOfferId,
+            Guid supplierContactPersonId,
+            Guid? userId,
+            List<Guid> ids);
+
+        Task<IEnumerable<PriceReductionEmailDto>> GetPriceReductionEmailsByCL(Guid competitionListId);
     }
 
     public class CompetitionListIndexDataItem
@@ -32,6 +39,18 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class CompetitionListVm
     {
+        public readonly struct SOGroup
+        {
+            public DateTime CreatedOn { get; }
+            public Guid? SupplierId { get; }
+
+            public SOGroup(DateTime createdOn, Guid? supplierId)
+            {
+                CreatedOn = createdOn;
+                SupplierId = supplierId;
+            }
+        }
+
         public class CustomerVm
         {
             public Guid Id { get; set; }
@@ -69,9 +88,9 @@ namespace DigitalPurchasing.Core.Interfaces
         public PurchaseRequestVm PurchaseRequest { get; set; }
         public List<SupplierOfferDetailsVm> SupplierOffers { get; set; }
 
-        public Dictionary<(DateTime CreatedOn, Guid? SupplierId), List<SupplierOfferDetailsVm>> GroupBySupplier()
+        public Dictionary<SOGroup, List<SupplierOfferDetailsVm>> GroupBySupplier()
         {
-            var result = new Dictionary<(DateTime CreatedOn, Guid? SupplierId), List<SupplierOfferDetailsVm>>();
+            var result = new Dictionary<SOGroup, List<SupplierOfferDetailsVm>>();
 
             foreach (var grouping in SupplierOffers.GroupBy(q => q.SupplierId))
             {
@@ -79,17 +98,13 @@ namespace DigitalPurchasing.Core.Interfaces
                 {
                     var minDate = grouping.Min(q => q.CreatedOn);
                     var supplierId = grouping.First().SupplierId;
-                    result.Add(
-                        (CreatedOn: minDate, SupplierId: supplierId),
-                        grouping.OrderBy(q => q.CreatedOn).ToList());
+                    result.Add(new SOGroup(minDate, supplierId), grouping.OrderBy(q => q.CreatedOn).ToList());
                 }
                 else
                 {
                     foreach (var offer in grouping)
                     {
-                        result.Add(
-                            (offer.CreatedOn, offer.SupplierId),
-                            new List<SupplierOfferDetailsVm> { offer });
+                        result.Add(new SOGroup(offer.CreatedOn, offer.SupplierId), new List<SupplierOfferDetailsVm> { offer });
                     }
                 }
             }
@@ -109,5 +124,44 @@ namespace DigitalPurchasing.Core.Interfaces
                 ? soItems.Min(soi => soi.ResourceConversion.OfferPrice)
                 : -1;
         }
+    }
+
+    public static class Extensions
+    {
+        public static Dictionary<CompetitionListVm.SOGroup, SupplierOfferDetailsVm> Merge(
+            this Dictionary<CompetitionListVm.SOGroup, List<SupplierOfferDetailsVm>> value)
+        {
+            var result = value.ToDictionary(
+                group => group.Key,
+                group => group.Value.Merge());
+
+            return result;
+        }
+
+        public static SupplierOfferDetailsVm Merge(this List<SupplierOfferDetailsVm> offers)
+        {
+            var lastOffer = offers.Last();
+            var lastOfferItemsCount = lastOffer.Items.Count;
+            lastOffer.Items = lastOffer.Items.Where(q => q.Offer.Qty > 0).ToList();
+            if (lastOffer.Items.Count < lastOfferItemsCount)
+            {
+                foreach (var offer in offers.Where(q => q.Id != lastOffer.Id))
+                {
+                    var items = offer.Items.Where(item =>
+                        item.Offer.Qty > 0 && lastOffer.Items.All(q => q.NomenclatureId != item.NomenclatureId));
+                    lastOffer.Items.AddRange(items);
+                }
+            }
+            return lastOffer;
+        }
+    }
+
+    public class PriceReductionEmailDto
+    {
+        public Guid SupplierOfferId { get; set; }
+        public Guid ContactPersonId { get; set; }
+        public Guid? UserId { get; set; }
+        public List<Guid> Data { get; set; }
+        public DateTime CreatedOn { get; set; }
     }
 }

@@ -10,6 +10,7 @@ using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace DigitalPurchasing.Services
 {
@@ -209,6 +210,30 @@ namespace DigitalPurchasing.Services
                     return DeleteResultVm.Failure("Внутренняя ошибка. Обратитесь в службу поддержки");
                 }
             }
+        }
+
+        public async Task SavePriceReductionEmail(
+            Guid supplierOfferId,
+            Guid supplierContactPersonId,
+            Guid? userId,
+            List<Guid> ids)
+        {
+            var priceReductionEmail = new PriceReductionEmail
+            {
+                SupplierOfferId = supplierOfferId,
+                ContactPersonId = supplierContactPersonId,
+                UserId = userId,
+                Data = JsonConvert.SerializeObject(ids)
+            };
+            await _db.PriceReductionEmails.AddAsync(priceReductionEmail);
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<PriceReductionEmailDto>> GetPriceReductionEmailsByCL(Guid competitionListId)
+        {
+            var emails = await _db.PriceReductionEmails.Include(q => q.SupplierOffer)
+                .Where(q => q.SupplierOffer.CompetitionListId == competitionListId).ToListAsync();
+            return emails.Adapt<List<PriceReductionEmailDto>>();
         }
     }
 }

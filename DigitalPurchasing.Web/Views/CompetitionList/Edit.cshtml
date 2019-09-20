@@ -1,4 +1,6 @@
 @using DigitalPurchasing.Core
+@using DigitalPurchasing.Core.Interfaces
+@using DigitalPurchasing.Web.Controllers
 @model DigitalPurchasing.Web.ViewModels.CompetitionList.CompetitionListEditVm
 
 @{
@@ -80,6 +82,7 @@
                         .Where(w => !string.IsNullOrEmpty(w.Offer.Currency))
                         .Select(w => w.Offer.Currency))
                     .Distinct();
+                var mergedOffer = group.Value.Merge();
                 <div class="long-table-item">
                     <div class="header">
                         <p>
@@ -97,9 +100,11 @@
                         </ul>
                         @if (baseOffer.SupplierId.HasValue)
                         {
-                            <a href="@Url.Action("PriceReductionDownload", new {clId = Model.CompetitionList.Id, supplierId = baseOffer.SupplierId.Value })">
+                            var filename = $"{cl.CreatedOn:yyyyMMdd}_КЛ_{cl.PublicId}_{lastOffer.SupplierName}_Запрос_на_изменение_условий.xlsx";
+                            var postUrl = @Url.Action("PriceReductionDownload", new { id = Model.CompetitionList.Id, supplierId = baseOffer.SupplierId.Value });
+                            <button @@click="downloadPRXls('@filename','@postUrl')" class="btn btn-link">
                                 <span>Скачать запрос на понижение</span>
-                            </a>
+                            </button>
                         }
                     </div>
                     <table class="table table-striped with-left-border">
@@ -124,13 +129,13 @@
                                 <td></td>
                                 <td></td>
                                 <td></td>
-                                <td>@lastOffer.Items.Sum(q => q.Offer.Qty).ToString(Consts.Format.Qty)</td>
+                                <td>@mergedOffer.Items.Sum(q => q.Offer.Qty).ToString(Consts.Format.Qty)</td>
                                 @foreach (var so in group.Value)
                                 {
                                     <td></td>
                                 }
 
-                                <td>@lastOffer.Items.Sum(q => q.Offer.TotalPrice).ToString(Consts.Format.Money2)</td>
+                                <td>@mergedOffer.Items.Sum(q => q.Offer.TotalPrice).ToString(Consts.Format.Money2)</td>
                             </tr>
                             <tr>
                                 <td colspan="@colCount">
@@ -160,7 +165,7 @@
                                                 .Offer.Price;
                                             <td>@price.ToString(Consts.Format.Money2)</td>
                                         }
-                                        <td>@lastOffer.Items.First(q => q.NomenclatureId == item.NomenclatureId).Offer.TotalPrice.ToString(Consts.Format.Money2)</td>
+                                        <td>@mergedOffer.Items.First(q => q.NomenclatureId == item.NomenclatureId).Offer.TotalPrice.ToString(Consts.Format.Money2)</td>
                                     </tr>
                                 }
                                 else
@@ -197,11 +202,13 @@
                                            v-on:change="prToggleSupplier(supplier.id, !supplier.isChecked)" />
                                 </label>
                             </td>
+                            <td>Поставщики, кому уже отправлен<br />запрос на понижение</td>
+                            <td>Дата отправки запроса<br />на понижение цен</td>
                         </tr>
                     </thead>
                     <tfoot>
                         <tr>
-                            <td :colspan="(prSuppliers.length + 2)"><p>&nbsp;</p></td>
+                            <td :colspan="(prSuppliers.length + 4)"><p>&nbsp;</p></td>
                         </tr>
                     </tfoot>
                     <tbody>
@@ -222,9 +229,11 @@
                                     </label>
                                 </div>
                             </td>
+                            <td>{{prSuppliersStr(item.suppliers)}}</td>
+                            <td>{{item.sentDate | formatDate}}</td>
                         </tr>
                         <tr v-else>
-                            <td colspan="7" style="text-align: center;">Не сопоставлено</td>
+                            <td :colspan="(prSuppliers.length + 4)" style="text-align: center;">Не сопоставлено</td>
                         </tr>
                     </tbody>
                 </table>
@@ -272,15 +281,7 @@
                     }
                 },
                 created: function() {
-                    var vm = this;
-                    var getUrl = '@Url.Action("PriceReductionData", new {id = Model.CompetitionList.Id})';
-                    vm.$http.get(getUrl).then( function(res) {
-                        var data = res.body;
-                        vm.prItems = data.items;
-                        vm.prSuppliers = data.suppliers;
-                    }, function(res) {
-                        alert('error');
-                    });
+                    this.loadData();
                 },
                 watch: {
                 },
@@ -289,6 +290,12 @@
                         if (isNumber(value)) {
                             if (value === 0) return '';
                             return numeral(value).format('0,0.00');
+                        }
+                        return value;
+                    },
+                    formatDate: function(value) {
+                        if (value) {
+                            return moment(String(value)).format('DD.MM.YYYY');
                         }
                         return value;
                     }
@@ -310,6 +317,15 @@
                             });
                         });
                     },
+                    prSuppliersStr: function (supplierOffers) {
+                        var vm = this;
+                        var sentSupplierOffers = _.filter(supplierOffers, 'isSent');
+                        var supplierNames = _.map(sentSupplierOffers, function (so) {
+                            var supplier = _.find(vm.prSuppliers, ['id', so.id]);
+                            return supplier.name;
+                        });
+                        return _.join(supplierNames, ', ');
+                    },
                     onChangeTargetPrice: function(event, item) {
                         var targetPrice = event.target.value;
                         var discount = (1 - (targetPrice/item.minPrice)) * 100;
@@ -320,18 +336,42 @@
                         var targetPrice = item.minPrice * (1 - (discount / 100));
                         item.targetPrice = _.round(targetPrice, 2);
                     },
+                    downloadPRXls: function (filename, postUrl) {
+                        var vm = this;
+                        vm.$http.post(postUrl, { items: vm.prRequests }, { responseType: 'arraybuffer' }).then(function(response) {
+                            console.info(response);
+                            var blob = new Blob(
+                                [response.data],
+                                { type: response.headers.get('content-type') }
+                            );
+                            var link = document.createElement('a');
+                            link.href = window.URL.createObjectURL(blob);
+                            link.download = filename;
+                            link.click();
+                        });
+                    },
                     sendPRRequests: function () {
                         var vm = this;
                         vm.isSendingPRRequests = true;
-                        var postUrl = '@Url.Action("SendPriceReductionRequests", new { id = Model.CompetitionList.Id })';
+                        var postUrl = '@Url.Action(nameof(CompetitionListController.SendPriceReductionRequests), new { id = Model.CompetitionList.Id })';
                         vm.$http.post(postUrl, { items: vm.prRequests }).then(function (res) {
-                            var data = res.body;
-                            console.info('sentPRRequests', postUrl, data);
+                            vm.loadData();
                             vm.isSendingPRRequests = false;
                         }, function(res) {
                             alert('error');
                             vm.isSendingPRRequests = false;
                         });                                               
+                    },
+                    loadData: function() {
+                        var vm = this;
+                        var getUrl = '@Url.Action(nameof(CompetitionListController.PriceReductionData), new {id = Model.CompetitionList.Id})';
+                        vm.$http.get(getUrl).then( function(res) {
+                            var data = res.body;
+                            vm.prItems = data.items;
+                            vm.prSuppliers = data.suppliers;
+                        }, function(res) {
+                            alert('error');
+                        });
                     }
                 }
             });

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Extensions;
@@ -10,6 +11,7 @@ using DigitalPurchasing.Models.SSR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace DigitalPurchasing.Data
 {
@@ -44,6 +46,7 @@ namespace DigitalPurchasing.Data
         public DbSet<QuotationRequestEmail> QuotationRequestEmails { get; set; }
 
         public DbSet<CompetitionList> CompetitionLists { get; set; }
+        public DbSet<PriceReductionEmail> PriceReductionEmails { get; set; }
 
         public DbSet<Customer> Customers { get; set; }
         public DbSet<PurchaseRequest> PurchaseRequests { get; set; }
@@ -142,6 +145,13 @@ namespace DigitalPurchasing.Data
             builder.Entity<UserLogin>().ToTable("UserLogins");
             builder.Entity<UserToken>().ToTable("UserTokens");
             builder.Entity<RoleClaim>().ToTable("RoleClaims");
+
+            builder.Entity<UnitsOfMeasurement>().Property(b => b.Json)
+                .HasConversion(
+                    q => JsonConvert.SerializeObject(q),
+                    q => JsonConvert.DeserializeObject<UomJsonData>(q));
+
+            builder.Query<UomAutocomplete>();
 
             builder.Entity<NomenclatureCategory>().HasOne(q => q.Parent).WithMany(q => q.Children).HasForeignKey(q => q.ParentId);
             builder.Entity<NomenclatureCategory>().HasOne(q => q.Owner).WithMany().HasForeignKey(q => q.OwnerId);
@@ -285,6 +295,13 @@ namespace DigitalPurchasing.Data
                 e.HasIndex(q => new { q.Gram, q.OwnerId })
                     .ForSqlServerInclude("Discriminator", nameof(NomenclatureComparisonDataNGram.NomenclatureComparisonDataId))
                     .HasName("IX_AppNGrams_Gram_OwnerId_INCL_Discriminator_NomenclatureComparisonDataId");
+            });
+
+            builder.Entity<PriceReductionEmail>(e =>
+            {
+                e.HasOne(q => q.User).WithMany().HasForeignKey(q => q.UserId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(q => q.SupplierOffer).WithMany().HasForeignKey(q => q.SupplierOfferId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(q => q.ContactPerson).WithMany().HasForeignKey(q => q.ContactPersonId).OnDelete(DeleteBehavior.Restrict);
             });
 
             // default filters to show company data

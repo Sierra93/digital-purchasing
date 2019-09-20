@@ -106,6 +106,8 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<string>("InvitationCode");
 
+                    b.Property<bool>("IsSODeleteEnabled");
+
                     b.Property<string>("Name");
 
                     b.HasKey("Id");
@@ -768,6 +770,32 @@ namespace DigitalPurchasing.Data.Migrations
                     b.ToTable("NomenclatureComparisonDatas");
                 });
 
+            modelBuilder.Entity("DigitalPurchasing.Models.PriceReductionEmail", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<Guid>("ContactPersonId");
+
+                    b.Property<DateTime>("CreatedOn");
+
+                    b.Property<string>("Data");
+
+                    b.Property<Guid>("SupplierOfferId");
+
+                    b.Property<Guid?>("UserId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContactPersonId");
+
+                    b.HasIndex("SupplierOfferId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PriceReductionEmails");
+                });
+
             modelBuilder.Entity("DigitalPurchasing.Models.PurchaseRequest", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1405,6 +1433,8 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<bool>("IsDeleted");
 
+                    b.Property<string>("Json");
+
                     b.Property<string>("Name");
 
                     b.Property<string>("NormalizedName");
@@ -1433,6 +1463,8 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<Guid>("FromUomId");
 
+                    b.Property<Guid?>("NomenclatureAlternativeId");
+
                     b.Property<Guid?>("NomenclatureId");
 
                     b.Property<Guid>("OwnerId");
@@ -1442,6 +1474,8 @@ namespace DigitalPurchasing.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("FromUomId");
+
+                    b.HasIndex("NomenclatureAlternativeId");
 
                     b.HasIndex("NomenclatureId");
 
@@ -1804,6 +1838,24 @@ namespace DigitalPurchasing.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
+            modelBuilder.Entity("DigitalPurchasing.Models.PriceReductionEmail", b =>
+                {
+                    b.HasOne("DigitalPurchasing.Models.SupplierContactPerson", "ContactPerson")
+                        .WithMany()
+                        .HasForeignKey("ContactPersonId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DigitalPurchasing.Models.SupplierOffer", "SupplierOffer")
+                        .WithMany()
+                        .HasForeignKey("SupplierOfferId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DigitalPurchasing.Models.Identity.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("DigitalPurchasing.Models.PurchaseRequest", b =>
                 {
                     b.HasOne("DigitalPurchasing.Models.Customer", "Customer")
@@ -2075,6 +2127,10 @@ namespace DigitalPurchasing.Data.Migrations
                         .WithMany("FromConversionRates")
                         .HasForeignKey("FromUomId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DigitalPurchasing.Models.NomenclatureAlternative", "NomenclatureAlternative")
+                        .WithMany()
+                        .HasForeignKey("NomenclatureAlternativeId");
 
                     b.HasOne("DigitalPurchasing.Models.Nomenclature", "Nomenclature")
                         .WithMany()

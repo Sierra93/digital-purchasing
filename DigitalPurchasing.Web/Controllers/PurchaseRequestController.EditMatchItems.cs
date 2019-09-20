@@ -17,6 +17,7 @@ namespace DigitalPurchasing.Web.Controllers
             public Guid UomId { get; set; }
             public decimal FactorN { get; set; }
             public decimal FactorC { get; set; }
+            public Guid CustomerId { get; set; }
         }
 
         [HttpGet]
@@ -27,13 +28,46 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         [HttpPost]
-        public IActionResult SaveMatchItem([FromBody] SaveMatchItemVm model)
+        public async Task<IActionResult> SaveMatchItem([FromBody] SaveMatchItemVm model)
         {
             var companyId = User.CompanyId();
-            var nomenclature = _nomenclatureService.AutocompleteSingle(model.NomenclatureId);
-            _uomService.SaveConversionRate(companyId, model.UomId, nomenclature.Data.BatchUomId, nomenclature.Data.Id, model.FactorC, model.FactorN);
+            var fromUomId = model.UomId;
+            var nomenclature = _nomenclatureService.GetById(model.NomenclatureId);
+            var nomenclatureAlternativeId =
+                _nomenclatureAlternativeService.AddNomenclatureForCustomer(model.ItemId);
+
+            var isSaved = false;
+
+            if (nomenclatureAlternativeId.HasValue && model.FactorN > 0)
+            {
+                if (fromUomId == nomenclature.MassUomId)
+                {
+                    // todo: get !1! from uom
+                    var mass = 1 / model.FactorN;
+                    await _nomenclatureAlternativeService.UpdateMassUom(nomenclatureAlternativeId.Value, fromUomId, mass);
+                    isSaved = true;
+                }
+                else if (fromUomId == await _uomService.GetPackagingUom(companyId))
+                {
+                    var quantityInPackage = model.FactorN;
+                    await _nomenclatureAlternativeService.UpdatePackUom(nomenclatureAlternativeId.Value, nomenclature.BatchUomId, quantityInPackage);
+                    isSaved = true;
+                }
+            }
+
+            if (!isSaved)
+            {
+                _uomService.SaveConversionRate(
+                    companyId,
+                    model.UomId,
+                    nomenclature.BatchUomId,
+                    nomenclatureAlternativeId,
+                    model.FactorC,
+                    model.FactorN);
+            }
+
             _purchasingRequestService.SaveMatch(model.ItemId, model.NomenclatureId, model.UomId, model.FactorC, model.FactorN);
-            _nomenclatureAlternativeService.AddNomenclatureForCustomer(model.ItemId);
+
             return Ok();
         }
     }

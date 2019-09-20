@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
+using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.SupplierOffer;
 using Microsoft.AspNetCore.Mvc;
 
@@ -31,6 +32,7 @@ namespace DigitalPurchasing.Web.Controllers
             public Guid UomId { get; set; }
             public decimal FactorN { get; set; }
             public decimal FactorC { get; set; }
+            public Guid SupplierId { get; set; }
         }
 
         private readonly ISupplierOfferService _supplierOfferService;
@@ -102,6 +104,17 @@ namespace DigitalPurchasing.Web.Controllers
             return Ok();
         }
 
+        [HttpPost]
+        public IActionResult Delete([FromBody] DeleteVm model)
+        {
+            if (!User.CanDeleteSupplierOffers()) return BadRequest();
+
+            var result = _supplierOfferService.Delete(model.Id);
+            if (result.IsSuccess) return Ok();
+
+            return BadRequest();
+        }
+
         #region # MatchColumns
 
         public IActionResult ColumnsData(Guid id)
@@ -134,11 +147,42 @@ namespace DigitalPurchasing.Web.Controllers
         public async Task<IActionResult> SaveMatchItem([FromBody] SaveMatchItemVm model)
         {
             var companyId = User.CompanyId();
-            var nomenclature = _nomenclatureService.AutocompleteSingle(model.NomenclatureId);
-            _uomService.SaveConversionRate(companyId, model.UomId, nomenclature.Data.BatchUomId, nomenclature.Data.Id, model.FactorC, model.FactorN);
-            _supplierOfferService.SaveMatch(model.ItemId, model.NomenclatureId, model.UomId, model.FactorC, model.FactorN);
-            _nomenclatureAlternativeService.AddNomenclatureForSupplier(model.ItemId);
+            var fromUomId = model.UomId;
+            var nomenclature = _nomenclatureService.GetById(model.NomenclatureId);
+            var nomenclatureAlternativeId = _nomenclatureAlternativeService.AddNomenclatureForSupplier(model.ItemId); // must be above than "SaveConversionRate"
 
+            var isSaved = false;
+
+            if (nomenclatureAlternativeId.HasValue && model.FactorN > 0)
+            {
+                if (fromUomId == nomenclature.MassUomId)
+                {
+                    // todo: get !1! from uom
+                    var mass = 1 / model.FactorN;
+                    await _nomenclatureAlternativeService.UpdateMassUom(nomenclatureAlternativeId.Value, fromUomId, mass);
+                    isSaved = true;
+                }
+                else if (fromUomId == await _uomService.GetPackagingUom(companyId))
+                {
+                    var quantityInPackage = model.FactorN;
+                    await _nomenclatureAlternativeService.UpdatePackUom(nomenclatureAlternativeId.Value, nomenclature.BatchUomId, quantityInPackage);
+                    isSaved = true;
+                }
+            }
+
+            if (!isSaved)
+            {
+                _uomService.SaveConversionRate(
+                    companyId,
+                    fromUomId,
+                    nomenclature.BatchUomId,
+                    nomenclatureAlternativeId,
+                    model.FactorC,
+                    model.FactorN);
+            }
+
+            _supplierOfferService.SaveMatch(model.ItemId, model.NomenclatureId, model.UomId, model.FactorC, model.FactorN);
+            
             var clId = await _supplierOfferService.GetCLIdBySoItem(model.ItemId);
 
             var rootId = await _rootService.GetIdByCL(clId);

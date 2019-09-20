@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace DigitalPurchasing.Core.Interfaces
 {
     public interface IConversionRateService
     {
-        Task<UomConversionRateResponse> GetRate(Guid fromUomId, Guid nomenclatureId);
+        Task<UomConversionRateResponse> GetRate(Guid fromUomId, Guid nomenclatureId, Guid? customerId,
+            Guid? supplierId);
     }
 
     public class GetRateOptions
@@ -25,15 +27,23 @@ namespace DigitalPurchasing.Core.Interfaces
         UomIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
         UomFactorData GetFactorData(Guid uomId, int page, int perPage, string sortField, bool sortAsc);
         Task<UomDto> Create(Guid ownerId, string name, decimal? quantity = null);
+        Task<UomDto> Create(Guid companyId, string name, List<string> alternativeNames, decimal? quantity = null);
         UomDto CreateOrUpdate(string name);
         IEnumerable<UomDto> GetAll();
         IEnumerable<UomDto> GetByNames(params string[] uomNames);
         UomAutocompleteResponse Autocomplete(string s, Guid ownerId);
         BaseResult<UomAutocompleteResponse.AutocompleteItem> AutocompleteSingle(Guid id);
-        void SaveConversionRate(Guid ownerId, Guid fromUomId, Guid toUomId, Guid? nomenclatureId, decimal factorC, decimal factorN);
+        void SaveConversionRate(
+            Guid ownerId,
+            Guid fromUomId,
+            Guid toUomId,
+            Guid? nomenclatureAlternativeId,
+            decimal factorC,
+            decimal factorN);
         void Delete(Guid id);
         UomDto GetById(Guid id);
         UomDto Update(Guid id, string name);
+        UomDto Update(Guid id, string name, List<string> alternativeNames);
         void DeleteConversionRate(Guid id);
 
         Task SetPackagingUom(Guid ownerId, Guid uomId);
@@ -43,11 +53,34 @@ namespace DigitalPurchasing.Core.Interfaces
 
     public class UomDto
     {
+        public class JsonData
+        {
+            public class UomAlternativeName
+            {
+                public string Name { get; set; }
+                public string NormalizedName { get; set; }
+            }
+
+            public List<UomAlternativeName> AlternativeNames { get; set; } = new List<UomAlternativeName>();
+        }
+
         public Guid Id { get; set; }
         public string Name { get; set; }
         public Guid OwnerId { get; set; }
         public decimal? Quantity { get; set; }
+        public JsonData Json { get; set; } = new JsonData();
     }
+
+    public class UomAutocompleteDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public Guid OwnerId { get; set; }
+        public decimal? Quantity { get; set; }
+        public string AlternativeName { get; set; }
+    }
+
+
 
     public class UomFactorDataItem
     {
@@ -58,6 +91,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public Guid FromId { get; set; }
         public Guid ToId { get; set; }
         public Guid? NomenclatureId { get; set; }
+        public Guid? NomenclatureAlternativeId { get; set; }
     }
 
     public class UomFactorData : BaseDataResponse<UomFactorDataItem>

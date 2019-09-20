@@ -401,7 +401,7 @@ namespace DigitalPurchasing.Services
             {
                 if (item.NomenclatureId != null && item.RawUomId != null)
                 {
-                    var rate = _conversionRateService.GetRate(item.RawUomId.Value, item.NomenclatureId.Value).Result;
+                    var rate = _conversionRateService.GetRate(item.RawUomId.Value, item.NomenclatureId.Value, null, supplierOffer.SupplierId).Result;
                     item.CommonFactor = rate.CommonFactor;
                     item.NomenclatureFactor = rate.NomenclatureFactor;
                 }
@@ -552,7 +552,12 @@ namespace DigitalPurchasing.Services
                 .OrderBy(q => q.Position).ToList();
 
             // Mappings - SupplierOfferItemMappings
-            var res = new SOMatchItemsVm { Items = entities.Adapt<List<SOMatchItemsVm.Item>>(), SupplierName = supplierOffer.SupplierName };
+            var res = new SOMatchItemsVm
+            {
+                Items = entities.Adapt<List<SOMatchItemsVm.Item>>(),
+                SupplierName = supplierOffer.SupplierName,
+                SupplierId = supplierOffer.SupplierId
+            };
 
             return res;
         }
@@ -571,15 +576,20 @@ namespace DigitalPurchasing.Services
         {
             var so = _db.SupplierOffers.Find(id);
             if (so == null) return DeleteResultVm.Success();
-            
-            if (so.UploadedDocumentId.HasValue)
-            {
-                _uploadedDocumentService.Delete(so.UploadedDocumentId.Value);
-            }
 
-            _db.SupplierOfferItems.RemoveRange(_db.SupplierOfferItems.Where(q => q.SupplierOfferId == id));
-            _db.SupplierOffers.Remove(so);
-            _db.SaveChanges();
+            using (var transaction = _db.Database.BeginTransaction())
+            {
+                if (so.UploadedDocumentId.HasValue)
+                {
+                    _uploadedDocumentService.Delete(so.UploadedDocumentId.Value);
+                }
+
+                _db.PriceReductionEmails.RemoveRange(_db.PriceReductionEmails.Where(q => q.SupplierOfferId == id));
+                _db.SupplierOfferItems.RemoveRange(_db.SupplierOfferItems.Where(q => q.SupplierOfferId == id));
+                _db.SupplierOffers.Remove(so);
+                _db.SaveChanges();
+                transaction.Commit();
+            }
 
             return DeleteResultVm.Success();
         }

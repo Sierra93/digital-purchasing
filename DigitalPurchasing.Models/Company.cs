@@ -4,5 +4,6 @@ namespace DigitalPurchasing.Models
     {
         public string Name { get; set; }
         public string InvitationCode { get; set; }
+        public bool IsSODeleteEnabled { get; set; }
     }
 }

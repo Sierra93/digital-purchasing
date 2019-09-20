@@ -352,7 +352,13 @@ namespace DigitalPurchasing.Services
 
         public NomenclatureVm GetById(Guid id, bool globalSearch = false)
         {
-            var qry = _db.Nomenclatures.AsQueryable();
+            var qry = _db.Nomenclatures
+                .Include(q => q.BatchUom)
+                .Include(q => q.MassUom)
+                .Include(q => q.PackUom)
+                .Include(q => q.ResourceUom)
+                .Include(q => q.ResourceBatchUom)
+                .AsQueryable();
             if (globalSearch)
             {
                 qry = qry.IgnoreQueryFilters();

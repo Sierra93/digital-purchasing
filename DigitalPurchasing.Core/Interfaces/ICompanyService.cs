@@ -8,6 +8,7 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         Task<CompanyDto> Create(string name);
         CompanyDto GetByUser(Guid userId);
+        Task<CompanyDto> GetById(Guid companyId);
         Task<CompanyDto> GetByInvitationCode(string code);
         void UpdateName(Guid userId, string newName);
         Task<bool> HaveOwner(Guid companyId);
@@ -19,10 +20,14 @@ namespace DigitalPurchasing.Core.Interfaces
         Task<int> Count();
         Task<List<CompanyDto>> GetAll();
         bool IsValidOwnerId(Guid ownerId);
+        Task<bool> IsCompanyOwner(Guid companyId, Guid userId);
+        Task<bool> UserCanDeleteSupplierOffers(Guid companyId, Guid userId);
+        Task Update(CompanyDto company);
     }
 
     public class CompanyDto
     {
+        public bool IsSODeleteEnabled { get; set; }
         public Guid Id { get; set; }
         public string Name { get; set; }
         public DateTime CreatedOn { get; set; }

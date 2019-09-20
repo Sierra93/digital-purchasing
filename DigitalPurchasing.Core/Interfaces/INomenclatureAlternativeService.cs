@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 using DigitalPurchasing.Core.Enums;
 
 namespace DigitalPurchasing.Core.Interfaces
@@ -10,16 +10,21 @@ namespace DigitalPurchasing.Core.Interfaces
         NomenclatureAlternativeVm GetAlternativeById(Guid id);
         void UpdateAlternative(NomenclatureAlternativeVm model);
 
-        void AddNomenclatureForCustomer(Guid prItemId);
-        void AddNomenclatureForSupplier(Guid soItemId);
+        Guid? AddNomenclatureForCustomer(Guid prItemId);
+        Guid? AddNomenclatureForSupplier(Guid soItemId);
 
-        void AddOrUpdateNomenclatureAlts(Guid ownerId, Guid clientId, ClientType clientType,
+        Guid AddOrUpdateNomenclatureAlts(Guid ownerId, Guid clientId, ClientType clientType,
             Guid nomenclatureId, string name, string code, Guid? batchUomId);
 
-        void AddOrUpdateNomenclatureAlts(Guid ownerId, Guid clientId, ClientType clientType,
+        List<Guid> AddOrUpdateNomenclatureAlts(Guid ownerId, Guid clientId, ClientType clientType,
             List<AddOrUpdateAltDto> alts);
 
         void Delete(Guid id);
+        NomenclatureAlternativeVm GetForCustomer(Guid customerId, Guid nomenclatureId);
+        NomenclatureAlternativeVm GetForSupplier(Guid supplierId, Guid nomenclatureId);
+
+        Task UpdateMassUom(Guid id, Guid massUomId, decimal mass);
+        Task UpdatePackUom(Guid id, Guid packUomId, decimal quantityInPackage);
     }
 
     public class AddOrUpdateAltDto
@@ -66,6 +71,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
         public Guid? PackUomId { get; set; }
         public decimal? PackUomValue { get; set; }
+        public UomDto PackUom { get; set; }
 
         public Guid NomenclatureId { get; set; }
     }
