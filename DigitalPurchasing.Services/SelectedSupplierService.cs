@@ -106,14 +106,15 @@ namespace DigitalPurchasing.Services
                     // supplier items
                     foreach (var supplierOffer in cl.SupplierOffers.Where(q => q.SupplierId.HasValue))
                     {
-                        // supplier + so data
+                        // supplier
                         var ssSupplier = new SSSupplier
                         {
                             Name = supplierOffer.SupplierName,
                             InternalId = supplierOffer.SupplierId.Value,
                             SOCreatedOn = supplierOffer.CreatedOn,
                             SONumber = supplierOffer.PublicId,
-                            SOInternalId = supplierOffer.Id
+                            SOInternalId = supplierOffer.Id,
+                            ReportId = ssReport.Id
                         };
 
                         await _db.SSSuppliers.AddAsync(ssSupplier);
@@ -232,15 +233,10 @@ namespace DigitalPurchasing.Services
            
             var customer = await _db.SSCustomers.FirstAsync(q => q.ReportId == reportId);
             var customerItems = await _db.SSCustomerItems.Where(q => q.CustomerId == customer.Id).ToListAsync();
-            
-            var suppliersIds = await _db.SSDatas
-                .Include(q => q.Variant)
-                .Where(q => q.Variant.ReportId == reportId)
-                .Select(q => q.SupplierId)
-                .Distinct()
-                .ToListAsync();
+            var suppliers = await _db.SSSuppliers.Where(q => q.ReportId == reportId).OrderBy(q => q.SOCreatedOn).ToListAsync();
 
-            var suppliers = await _db.SSSuppliers.Where(q => suppliersIds.Contains(q.Id)).OrderBy(q => q.SOCreatedOn).ToListAsync();
+            var suppliersIds = suppliers.Select(q => q.Id).Distinct().ToList();
+
             var supplierItems = await _db.SSSupplierItems.Where(q => suppliersIds.Contains(q.SupplierId)).ToListAsync();
             
             var datas = await _db.SSDatas
@@ -255,7 +251,7 @@ namespace DigitalPurchasing.Services
             result.Customer = customer.Adapt<SSCustomerDto>();
             result.CustomerItems = customerItems.Adapt<List<SSCustomerItemDto>>();
             result.Suppliers = suppliers.Adapt<List<SSSupplierDto>>();
-            result.SSSupplierItems = supplierItems.Adapt<List<SSSupplierItemDto>>();
+            result.SupplierItems = supplierItems.Adapt<List<SSSupplierItemDto>>();
             result.Datas = datas.Adapt<List<SSDataDto>>();
             result.Variants = variants.Adapt<List<SSVariantDto>>();
 

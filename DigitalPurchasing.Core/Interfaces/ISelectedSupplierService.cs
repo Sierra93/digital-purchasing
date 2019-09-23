@@ -28,7 +28,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public List<SSCustomerItemDto> CustomerItems { get; set; }
 
         public List<SSSupplierDto> Suppliers { get; set; }
-        public List<SSSupplierItemDto> SSSupplierItems { get; set; }
+        public List<SSSupplierItemDto> SupplierItems { get; set; }
 
         public List<SSVariantDto> Variants { get; set; }
 

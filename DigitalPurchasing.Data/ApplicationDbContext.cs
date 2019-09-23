@@ -249,8 +249,10 @@ namespace DigitalPurchasing.Data
             });
             builder.Entity<SSCustomer>().HasOne(q => q.Report).WithMany().HasForeignKey(q => q.ReportId);
             builder.Entity<SSCustomerItem>().HasOne(q => q.Customer).WithMany().HasForeignKey(q => q.CustomerId);
+           
+            builder.Entity<SSSupplier>().HasOne(q => q.Report).WithMany().HasForeignKey(q => q.ReportId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<SSSupplierItem>().HasOne(q => q.Supplier).WithMany().HasForeignKey(q => q.SupplierId);
-
+            
             #endregion
 
             builder.Entity<EmailAttachment>(e =>

@@ -14,5 +14,8 @@ namespace DigitalPurchasing.Models.SSR
 
         // SupplierOffer Id
         public Guid SOInternalId { get; set; }
+
+        public SSReport Report { get; set;}
+        public Guid ReportId { get; set; }
     }
 }
