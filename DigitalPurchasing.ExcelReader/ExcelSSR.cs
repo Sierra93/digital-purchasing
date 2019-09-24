@@ -65,7 +65,9 @@ namespace DigitalPurchasing.ExcelReader
                 ws.Column(colPriceStart - 1).Width = separatorWidth; // separator 2
                 ws.Column(colMinPriceStart - 1).Width = separatorWidth; // separator 3
                 ws.Column(colLastPriceStart - 1).Width = separatorWidth; // separator 4
+                ws.Column(colLastPriceStart - 1).Hidden = true;
                 ws.Column(colMinPriceDiffStart - 1).Width = separatorWidth; // separator 5
+                ws.Column(colMinPriceDiffStart - 1).Hidden = true;
                 ws.Column(colTotalPriceStart - 1).Width = separatorWidth; // separator 6
                 ws.Column(colVariantQuantityStart - 1).Width = separatorWidth; // separator 7
                 ws.Column(colVariantTotalPriceStart - 1).Width = separatorWidth; // separator 8
@@ -88,7 +90,7 @@ namespace DigitalPurchasing.ExcelReader
                     ws.Cells[5, colQuantityStart + pos].HeaderBorders().BackgroundLight().HeaderText(supplier.Name);
                     ws.Column(col).Width = 15;
                     ws.Cells[rowTotal, colQuantityStart + pos].HeaderBorders().BackgroundLight();
-                    foreach (var item in _report.SSSupplierItems.Where(q => q.SupplierId == supplier.Id))
+                    foreach (var item in _report.SupplierItems.Where(q => q.SupplierId == supplier.Id))
                     {
                         var nomPos = GetPositionByNomenclature(item.NomenclatureId);
                         ws.Cells[6 + nomPos, col].TableText(item.ConvertedQuantity);
@@ -105,7 +107,7 @@ namespace DigitalPurchasing.ExcelReader
                     ws.Cells[5, col].HeaderBorders().BackgroundLight().HeaderText(supplier.Name);
                     ws.Cells[rowTotal, col].HeaderBorders().BackgroundLight();
                     ws.Column(col).Width = 15;
-                    foreach (var item in _report.SSSupplierItems.Where(q => q.SupplierId == supplier.Id))
+                    foreach (var item in _report.SupplierItems.Where(q => q.SupplierId == supplier.Id))
                     {
                         var nomPos = GetPositionByNomenclature(item.NomenclatureId);
                         ws.Cells[6 + nomPos, col].TableText(item.ConvertedPrice);
@@ -134,7 +136,7 @@ namespace DigitalPurchasing.ExcelReader
                 foreach (var customerItem in orderedCustomerItems)
                 {
                     var index = orderedCustomerItems.IndexOf(customerItem);
-                    var nomSupplierItems = _report.SSSupplierItems.Where(si => si.NomenclatureId == customerItem.NomenclatureId);
+                    var nomSupplierItems = _report.SupplierItems.Where(si => si.NomenclatureId == customerItem.NomenclatureId);
 
                     var withMinPrice = nomSupplierItems.OrderBy(si => si.ConvertedPrice).FirstOrDefault();
                     ws.Cells[6 + index, colMinPriceStart].TableText(withMinPrice?.ConvertedPrice ?? 0);
@@ -154,18 +156,23 @@ namespace DigitalPurchasing.ExcelReader
 
                 ws.Cells[5, colLastPriceStart].HeaderText("Последняя цена закупки");
                 ws.Column(colLastPriceStart).Width = 12;
+                ws.Column(colLastPriceStart).Hidden = true;
                 ws.Cells[5, colLastPriceStart + 1].HeaderText("Последний поставщик");
                 ws.Column(colLastPriceStart + 1).Width = 12;
+                ws.Column(colLastPriceStart + 1).Hidden = true;
                 ws.Cells[5, colLastPriceStart + 2].HeaderText("Дата последней закупки");
                 ws.Column(colLastPriceStart + 2).Width = 12;
+                ws.Column(colLastPriceStart + 2).Hidden = true;
                 ws.Cells[5, colLastPriceStart, 5, colMinPriceDiffStart - 2].BackgroundLight().HeaderBorders();
                 ws.Cells[rowDataStart, colLastPriceStart, rowTotal - 1, colMinPriceDiffStart - 2].ItemBorders();
                 ws.Cells[rowTotal, colLastPriceStart, rowTotal, colMinPriceDiffStart - 2].BackgroundLight().HeaderBorders();
 
                 ws.Cells[5, colMinPriceDiffStart].HeaderText("Отклонение минимальной цены от последней");
                 ws.Column(colMinPriceDiffStart).Width = 20;
+                ws.Column(colMinPriceDiffStart).Hidden = true;
                 ws.Cells[5, colMinPriceDiffStart + 1].HeaderText("Отклонение минимальной цены от последней");
                 ws.Column(colMinPriceDiffStart + 1).Width = 20;
+                ws.Column(colMinPriceDiffStart + 1).Hidden = true;
                 ws.Cells[5, colMinPriceDiffStart, 5, colMinPriceDiffStart + 1].BackgroundLight().HeaderBorders();
                 ws.Cells[rowDataStart, colMinPriceDiffStart, rowTotal - 1, colMinPriceDiffStart + 1].ItemBorders();
                 ws.Cells[rowTotal, colMinPriceDiffStart, rowTotal, colMinPriceDiffStart + 1].BackgroundLight().HeaderBorders();
@@ -180,7 +187,7 @@ namespace DigitalPurchasing.ExcelReader
                     ws.Cells[5, col].HeaderBorders().BackgroundLight().HeaderText(supplier.Name);
                     ws.Column(col).Width = 15;
                     ws.Cells[rowTotal, colTotalPriceStart + pos].HeaderBorders().BackgroundLight();
-                    var supplierItems = _report.SSSupplierItems.Where(q => q.SupplierId == supplier.Id).ToList();
+                    var supplierItems = _report.SupplierItems.Where(q => q.SupplierId == supplier.Id).ToList();
                     foreach (var item in supplierItems)
                     {
                         var nomPos = GetPositionByNomenclature(item.NomenclatureId);
@@ -434,9 +441,6 @@ namespace DigitalPurchasing.ExcelReader
             var customerItems = _report.CustomerItems.OrderBy(q => q.Position).ToList();
             return customerItems.IndexOf(customerItems.Find(q => q.NomenclatureId == nomenclatureId));
         }
-
-        private decimal GetSupplierPrice(Guid supplierId, Guid nomenclatureId)
-            => _report.SSSupplierItems.Find(q => q.SupplierId == supplierId && q.NomenclatureId == nomenclatureId).Price;
     }
 
     public static class Extensions
