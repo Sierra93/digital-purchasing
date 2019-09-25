@@ -4,48 +4,60 @@
     ViewBag.Title = "Единицы измерения";
 }
 
-<h2 class="with-button">@ViewBag.Title</h2>
-<div class="btn-group">
-    <a asp-action="Create" class="btn btn-default">Создать</a>
-</div>
 <div id="app">
-    <vuetable ref="vuetable"
-              api-url="@Url.Action("Data")"
-              :per-page="20"
-              :fields="fields"
-              :sort-order="sortOrder"
-              pagination-path=""
-              no-data-template="Нет данных"
-              detail-row-component="row-details"
-              :css="css"
-              @@vuetable:pagination-data="onPaginationData"
-              @@vuetable:cell-clicked="onCellClicked">
-        <div slot="slot-actions" slot-scope="props">
-            <div class="btn-group" role="group" aria-label="..." v-if="!props.rowData.isSystem">
-                <a class="btn btn-default" :href="props.rowData.editUrl"><i class="far fa-edit"></i></a>
-                <button type="button" class="btn btn-default" @@click="deleteRow(props.rowData, props.rowIndex)"><i class="far fa-trash-alt"></i></button>
-            </div>
-        </div>
-    </vuetable>
-    <div>
-        <vuetable-pagination-info ref="paginationInfo"
-                                  info-template="Показано с {from} по {to} из {total}"
-                                  no-data-template="Нет данных"
-                                  info-class="pull-left"
-                                  :css="css.pagination">
-        </vuetable-pagination-info>
-        <vuetable-pagination ref="pagination"
-                             :css="css.pagination"
-                             @@vuetable-pagination:change-page="onChangePage">
-        </vuetable-pagination>
+    <h2 class="with-button">@ViewBag.Title</h2>
+    <div class="btn-group">
+        <a asp-action="Create" class="btn btn-default">Создать</a>
+        <button class="btn btn-danger" v-if="isMultipleDeleteEnabled" v-on:click="multipleDelete">{{isMultipleDeleteButtonText}}</button>
     </div>
-    <modal v-model="modalDelete" title="Удаление">
-        <p>Вы уверены что хотите удалить "<b>{{modalData.name}}</b>"?<br />Это действие нельзя отменить.</p>
-        <div slot="footer">
-            <button v-on:click="deleteOk" class="btn btn-danger">Удалить</button>
-            <button v-on:click="deleteCancel" class="btn btn-default">Отмена</button>
+    <div>
+        <vuetable ref="vuetable"
+                    api-url="@Url.Action("Data")"
+                    :per-page="20"
+                    :fields="fields"
+                    :sort-order="sortOrder"
+                    pagination-path=""
+                    no-data-template="Нет данных"
+                    detail-row-component="row-details"
+                    :css="css"
+                    @@vuetable:pagination-data="onPaginationData"
+                    @@vuetable:cell-clicked="onCellClicked"
+                    @@vuetable:checkbox-toggled="onCheckboxToggled"
+                    @@vuetable:checkbox-toggled-all="onCheckboxToggled">
+            <div slot="slot-actions" slot-scope="props">
+                <div class="btn-group" role="group" aria-label="..." v-if="!props.rowData.isSystem">
+                    <a class="btn btn-default" :href="props.rowData.editUrl"><i class="far fa-edit"></i></a>
+                    <button type="button" class="btn btn-default" @@click="deleteRow(props.rowData, props.rowIndex)"><i class="far fa-trash-alt"></i></button>
+                </div>
+            </div>
+        </vuetable>
+        <div>
+            <vuetable-pagination-info ref="paginationInfo"
+                                        info-template="Показано с {from} по {to} из {total}"
+                                        no-data-template="Нет данных"
+                                        info-class="pull-left"
+                                        :css="css.pagination">
+            </vuetable-pagination-info>
+            <vuetable-pagination ref="pagination"
+                                    :css="css.pagination"
+                                    @@vuetable-pagination:change-page="onChangePage">
+            </vuetable-pagination>
         </div>
-    </modal>
+        <modal v-model="modalDelete" title="Удаление">
+            <p>Вы уверены что хотите удалить "<b>{{modalData.name}}</b>"?<br />Это действие нельзя отменить.</p>
+            <div slot="footer">
+                <button v-on:click="deleteOk" class="btn btn-danger">Удалить</button>
+                <button v-on:click="deleteCancel" class="btn btn-default">Отмена</button>
+            </div>
+        </modal>
+        <modal v-model="modalMultipleDelete" title="Удаление">
+            <p>Вы уверены что хотите удалить выбранные ЕИ?<br />Это действие нельзя отменить.</p>
+            <div slot="footer">
+                <button v-on:click="multipleDeleteOk" class="btn btn-danger">Удалить</button>
+                <button v-on:click="multipleDeleteCancel" class="btn btn-default">Отмена</button>
+            </div>
+        </modal>
+    </div>
 </div>
 
 <template id="row-details">
@@ -193,6 +205,11 @@
                         css: cssTable,
                         fields: [
                             {
+                                name: '__checkbox',
+                                titleClass: 'text-center w-50',
+                                dataClass: 'text-center'
+                            },
+                            {
                                 title: 'Название',
                                 name: 'name',
                                 sortField: 'Name'
@@ -200,7 +217,7 @@
                             {
                                 name: 'slot-actions',
                                 title: 'Действия',
-                                titleClass: 'text-center',
+                                titleClass: 'text-center w-140',
                                 dataClass: 'text-center'
                             }
                         ],
@@ -209,8 +226,17 @@
                         modalData: {
                             name: '',
                             id: null
-                        }
+                        },
+                        isMultipleDeleteEnabled: false,
+                        modalMultipleDelete: false
                     };
+                },
+                computed: {
+                    isMultipleDeleteButtonText: function () {
+                        if (!this.isMultipleDeleteEnabled) return '';
+                        if (this.$refs.vuetable.selectedTo.length === 1) return 'Удалить';
+                        return 'Удалить ('+this.$refs.vuetable.selectedTo.length+')';
+                    }
                 },
                 methods: {
                     onCellClicked: function (dataItem, field, event) {
@@ -222,6 +248,9 @@
                     },
                     onChangePage: function(page) {
                         this.$refs.vuetable.changePage(page);
+                    },
+                    onCheckboxToggled: function(payload, dataItem) {
+                        this.isMultipleDeleteEnabled = this.$refs.vuetable.selectedTo.length > 0;
                     },
                     formatYesNo: function (value) {
                         if (value === null) return '';
@@ -236,6 +265,8 @@
                         var $this = this;
                         this.$http.post('@Url.Action("Delete")', { id: $this.modalData.id }).then(function(res) {
                             $this.$refs.vuetable.refresh();
+                            $this.$refs.vuetable.selectedTo = [];
+                            $this.isMultipleDeleteEnabled = false;
                             $this.modalDelete = false;
                         }, function(res) {
                             alert('Ошибка удаления');
@@ -243,6 +274,23 @@
                     },
                     deleteCancel: function() {
                         this.modalDelete = false;
+                    },
+                    multipleDelete: function() {
+                        this.modalMultipleDelete = true;
+                    },
+                    multipleDeleteOk: function() {
+                        var $this = this;
+                        this.$http.post('@Url.Action("MultipleDelete")', { ids: $this.$refs.vuetable.selectedTo }).then(function(res) {
+                            $this.$refs.vuetable.refresh();
+                            $this.$refs.vuetable.selectedTo = [];
+                            $this.isMultipleDeleteEnabled = false;
+                            $this.modalMultipleDelete = false;
+                        }, function(res) {
+                            alert('Ошибка удаления');
+                        });
+                    },
+                    multipleDeleteCancel: function() {
+                        this.modalMultipleDelete = false;
                     }
                 }
             });

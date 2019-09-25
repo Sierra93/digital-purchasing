@@ -41,6 +41,7 @@ namespace DigitalPurchasing.Core.Interfaces
             decimal factorC,
             decimal factorN);
         void Delete(Guid id);
+        void Delete(List<Guid> ids, Guid ownerId);
         UomDto GetById(Guid id);
         UomDto Update(Guid id, string name);
         UomDto Update(Guid id, string name, List<string> alternativeNames);

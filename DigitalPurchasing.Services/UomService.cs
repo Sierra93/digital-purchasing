@@ -9,6 +9,7 @@ using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models;
+using EFCore.BulkExtensions;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -275,6 +276,21 @@ namespace DigitalPurchasing.Services
             var entity = _db.UnitsOfMeasurements.Find(id);
             if (entity == null) return;
             entity.IsDeleted = true;
+            _db.SaveChanges();
+        }
+
+        public void Delete(List<Guid> ids, Guid ownerId)
+        {
+            var uoms = _db.UnitsOfMeasurements
+                .IgnoreQueryFilters()
+                .Where(q => ids.Contains(q.Id) && q.OwnerId == ownerId)
+                .ToList();
+
+            foreach (var uom in uoms)
+            {
+                uom.IsDeleted = true;
+            }
+
             _db.SaveChanges();
         }
 
