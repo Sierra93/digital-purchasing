@@ -154,6 +154,14 @@ namespace DigitalPurchasing.Web.Controllers
             return Ok();
         }
 
+        [HttpPost]
+        public IActionResult MultipleDelete([FromBody]MultipleDeleteVm vm)
+        {
+            var ownerId = User.CompanyId();
+            _uomService.Delete(vm.Ids, ownerId);
+            return Ok();
+        }
+
         public IActionResult Select2(Select2Get request)
         {
             var companyId = User.CompanyId();

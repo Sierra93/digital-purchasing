@@ -162,6 +162,10 @@ td.align-right, th.align-right {
   transform: scale(1.2);
 }
 
+.w-50 {
+  width: 50px;
+}
+
 .w-140 {
   width: 140px;
 }
