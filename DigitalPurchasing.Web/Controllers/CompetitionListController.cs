@@ -214,6 +214,8 @@ namespace DigitalPurchasing.Web.Controllers
 
             var emails = (await _competitionListService.GetPriceReductionEmailsByCL(id)).ToList();
 
+            var user = await _userService.GetById(User.Id());
+
             var vm = new PriceReductionDataVm
             {
                 Suppliers = offers.OrderBy(q => q.CreatedOn).Select(q => new PriceReductionDataVm.Supplier
@@ -232,7 +234,7 @@ namespace DigitalPurchasing.Web.Controllers
                     {
                         Id = pri.Id,
                         Position = pri.Position,
-                        Discount = 5m,
+                        Discount = user.PRDiscountPercentage,
                         MinPrice = cl.GetMinimalOfferPrice(pri.Id),
                         Suppliers = offers.OrderBy(q => q.CreatedOn).Select(so =>
                         {

@@ -130,7 +130,7 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
             }
 
             await _signInManager.RefreshSignInAsync(user);
-            StatusMessage = "Ваш профиль был обновлен";
+            StatusMessage = "Изменения сохранены";
             return RedirectToPage();
         }
 

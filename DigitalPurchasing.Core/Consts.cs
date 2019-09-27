@@ -8,6 +8,7 @@ namespace DigitalPurchasing.Core
         public static class Settings
         {
             public static string AppPath = "App";
+            public static decimal PRDiscountPercentage = 3m;
         }
 
         public static class Format

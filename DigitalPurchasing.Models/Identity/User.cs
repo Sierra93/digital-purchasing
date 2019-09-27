@@ -18,5 +18,7 @@ namespace DigitalPurchasing.Models.Identity
         public string JobTitle { get; set; }
 
         public ICollection<UserRole> UserRoles { get; set; }
+
+        public decimal PRDiscountPercentage { get; set; }
     }
 }

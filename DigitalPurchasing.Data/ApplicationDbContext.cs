@@ -122,7 +122,15 @@ namespace DigitalPurchasing.Data
                     .IsRequired();
             });
 
-            builder.Entity<User>().ToTable("Users");
+            builder.Entity<User>(e =>
+            {
+                e.Property(q => q.PRDiscountPercentage)
+                    .HasDefaultValue(Consts.Settings.PRDiscountPercentage)
+                    .HasColumnType("decimal(18,2)");
+
+                e.ToTable("Users");
+            });
+
             builder.Entity<Role>(e =>
             {
                 e.ToTable("Roles");

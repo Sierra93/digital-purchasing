@@ -60,5 +60,8 @@ namespace DigitalPurchasing.Services
         public async Task<int> TotalCountByCompany(Guid companyId) => await _db.Users.CountAsync(q => q.CompanyId == companyId);
 
         public async Task<int> ConfirmedEmailCount() => await _db.Users.CountAsync(q => q.EmailConfirmed);
+
+        public async Task<UserDto> GetById(Guid userId)
+            => (await _db.Users.FirstOrDefaultAsync(q => q.Id == userId))?.Adapt<UserDto>();
     }
 }
