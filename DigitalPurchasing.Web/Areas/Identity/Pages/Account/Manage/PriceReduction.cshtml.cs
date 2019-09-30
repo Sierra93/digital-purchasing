@@ -15,7 +15,6 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
 {
     public class PriceReductionModel : PageModel
     {
-        private readonly IUserService _userService;
         private readonly UserManager<User> _userManager;
 
         [TempData]
@@ -35,11 +34,11 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
             public decimal PriceReductionResponseHours { get; set; }
 
             [Required, Display(Name = "Deadline по сроку закрытия конкурса в часах с момент отправки 1-го запроса КП")]
-            [Range(1, int.MaxValue)]
+            [Range(0.5, int.MaxValue)]
             public decimal AutoCloseCLHours { get; set; }
 
             [Required, Display(Name = "Целевая скидка к минимальной цене, %")]
-            [Range(1, int.MaxValue)]
+            [Range(1, 99)]
             public decimal DiscountPercentage { get; set; }
 
             [Required, Display(Name = "Количество раундов для отправки запросов в автоматическом режиме")]
@@ -50,11 +49,8 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
             public SendPriceReductionTo SendPriceReductionTo { get; set; }
         }
 
-        public PriceReductionModel(IUserService userService, UserManager<User> userManager)
-        {
-            _userService = userService;
-            _userManager = userManager;
-        }
+        public PriceReductionModel(UserManager<User> userManager)
+            => _userManager = userManager;
 
         public async Task<IActionResult> OnGetAsync()
         {
