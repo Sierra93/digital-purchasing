@@ -21,6 +21,10 @@ namespace DigitalPurchasing.Core.Interfaces
             List<Guid> ids);
 
         Task<IEnumerable<PriceReductionEmailDto>> GetPriceReductionEmailsByCL(Guid competitionListId);
+
+        Task Close(Guid competitionListId);
+        Task CloseExpired();
+        Task SetAutomaticCloseInHours(Guid competitionListId, double hours);
     }
 
     public class CompetitionListIndexDataItem
@@ -31,6 +35,8 @@ namespace DigitalPurchasing.Core.Interfaces
         public string QuotationRequestPurchaseRequestCustomerName { get; set; }
         public string QuotationRequestPurchaseRequestErpCode { get; set; }
         public string Suppliers { get; set; }
+        public bool? IsClosed { get; set; }
+        public DateTime AutomaticCloseDate { get; set; }
     }
 
     public class CompetitionListIndexData : BaseDataResponse<CompetitionListIndexDataItem>

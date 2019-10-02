@@ -5,10 +5,14 @@ using System.Threading.Tasks;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.ExcelReader;
+using DigitalPurchasing.Models;
+using DigitalPurchasing.Models.Identity;
 using DigitalPurchasing.Web.Core;
+using DigitalPurchasing.Web.Jobs;
 using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.QuotationRequest;
 using Mapster;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -31,9 +35,21 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         private readonly IQuotationRequestService _quotationRequestService;
+        private readonly ICompetitionListService _competitionListService;
+        private readonly IRootService _rootService;
+        private readonly UserManager<User> _userManager;
 
-        public QuotationRequestController(IQuotationRequestService quotationRequestService)
-            => _quotationRequestService = quotationRequestService;
+        public QuotationRequestController(
+            IQuotationRequestService quotationRequestService,
+            ICompetitionListService competitionListService,
+            IRootService rootService,
+            UserManager<User> userManager)
+        {
+            _quotationRequestService = quotationRequestService;
+            _competitionListService = competitionListService;
+            _rootService = rootService;
+            _userManager = userManager;
+        }
 
         public IActionResult Index() => View();
 
@@ -98,6 +114,16 @@ namespace DigitalPurchasing.Web.Controllers
                     .Select(q => (SupplierId: q.SupplierId, ItemId: q.ItemId))
                     .ToList());
             var sentRequests = _quotationRequestService.GetSentRequests(model.QuotationRequestId);
+
+            var root = await _rootService.GetByQR(model.QuotationRequestId);
+            var competitionListId = root.CompetitionListId
+                                    ?? await _competitionListService.GetIdByQR(model.QuotationRequestId, true);
+            
+            var user = await _userManager.GetUserAsync(User);
+            await _competitionListService.SetAutomaticCloseInHours(competitionListId, user.AutoCloseCLHours);
+            Hangfire.BackgroundJob.Schedule<CompetitionListJobs>(q => q.Close(competitionListId),
+                TimeSpan.FromHours(user.AutoCloseCLHours));
+
             return Ok(sentRequests);
         }
     }

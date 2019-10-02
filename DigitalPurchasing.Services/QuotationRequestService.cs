@@ -313,6 +313,20 @@ namespace DigitalPurchasing.Services
             return quotationRequestEmail?.User?.Email;
         }
 
+        public string RequestSentBy(Guid quotationRequestId)
+        {
+            if (quotationRequestId == Guid.Empty)
+                throw new ArgumentOutOfRangeException(nameof(quotationRequestId));
+
+            var quotationRequestEmail = _db.QuotationRequestEmails
+                .IgnoreQueryFilters()
+                .Where(q => q.RequestId == quotationRequestId)
+                .Include(q => q.User)
+                .FirstOrDefault();
+
+            return quotationRequestEmail?.User?.Email;
+        }
+
         public byte[] GenerateExcelByCategory(Guid quotationRequestId, params Guid[] categoryIds)
         {
             var qr = _db.QuotationRequests.Find(quotationRequestId);

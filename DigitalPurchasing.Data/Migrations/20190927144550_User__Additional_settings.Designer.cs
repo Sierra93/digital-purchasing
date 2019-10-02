@@ -4,14 +4,16 @@ using DigitalPurchasing.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitalPurchasing.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190927144550_User__Additional_settings")]
+    partial class User__Additional_settings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -120,11 +122,7 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<DateTime>("AutomaticCloseDate");
-
                     b.Property<DateTime>("CreatedOn");
-
-                    b.Property<bool?>("IsClosed");
 
                     b.Property<Guid>("OwnerId");
 
@@ -461,9 +459,10 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<int>("AccessFailedCount");
 
-                    b.Property<double>("AutoCloseCLHours")
+                    b.Property<decimal>("AutoCloseCLHours")
                         .ValueGeneratedOnAdd()
-                        .HasDefaultValue(2.0);
+                        .HasColumnType("decimal(18, 2)")
+                        .HasDefaultValue(2m);
 
                     b.Property<Guid>("CompanyId");
 
@@ -491,9 +490,10 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256);
 
-                    b.Property<double>("PRDiscountPercentage")
+                    b.Property<decimal>("PRDiscountPercentage")
                         .ValueGeneratedOnAdd()
-                        .HasDefaultValue(3.0);
+                        .HasColumnType("decimal(18, 2)")
+                        .HasDefaultValue(3m);
 
                     b.Property<string>("PasswordHash");
 
@@ -503,13 +503,15 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed");
 
-                    b.Property<double>("PriceReductionResponseHours")
+                    b.Property<decimal>("PriceReductionResponseHours")
                         .ValueGeneratedOnAdd()
-                        .HasDefaultValue(0.5);
+                        .HasColumnType("decimal(18, 2)")
+                        .HasDefaultValue(0.5m);
 
-                    b.Property<double>("QuotationRequestResponseHours")
+                    b.Property<decimal>("QuotationRequestResponseHours")
                         .ValueGeneratedOnAdd()
-                        .HasDefaultValue(1.0);
+                        .HasColumnType("decimal(18, 2)")
+                        .HasDefaultValue(1m);
 
                     b.Property<int>("RoundsCount")
                         .ValueGeneratedOnAdd()

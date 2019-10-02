@@ -125,8 +125,22 @@ namespace DigitalPurchasing.Data
             builder.Entity<User>(e =>
             {
                 e.Property(q => q.PRDiscountPercentage)
-                    .HasDefaultValue(Consts.Settings.PRDiscountPercentage)
-                    .HasColumnType("decimal(18,2)");
+                    .HasDefaultValue(Consts.Settings.PRDiscountPercentage);
+
+                e.Property(q => q.QuotationRequestResponseHours)
+                    .HasDefaultValue(Consts.Settings.QuotationRequestResponseHours);
+
+                e.Property(q => q.PriceReductionResponseHours)
+                    .HasDefaultValue(Consts.Settings.PriceReductionResponseHours);
+
+                e.Property(q => q.AutoCloseCLHours)
+                    .HasDefaultValue(Consts.Settings.AutoCloseCLHours);
+
+                e.Property(q => q.RoundsCount)
+                    .HasDefaultValue(Consts.Settings.RoundsCount);
+
+                e.Property(q => q.SendPriceReductionTo)
+                    .HasDefaultValue(Consts.Settings.SendPriceReductionTo);
 
                 e.ToTable("Users");
             });
