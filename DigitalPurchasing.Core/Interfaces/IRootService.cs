@@ -11,6 +11,7 @@ namespace DigitalPurchasing.Core.Interfaces
         Task<Guid> GetIdByQR(Guid qrId);
         Task<Guid> GetIdByCL(Guid competitionListId);
         Task<RootDto> GetByCL(Guid competitionListId);
+        Task<RootDto> GetByQR(Guid qrId);
         Task AssignQR(Guid ownerId, Guid rootId, Guid qrId);
         Task AssignCL(Guid ownerId, Guid rootId, Guid clId);
         Task SetStatus(Guid rootId, RootStatus status);

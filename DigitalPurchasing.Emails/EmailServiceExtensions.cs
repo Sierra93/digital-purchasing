@@ -138,5 +138,17 @@ namespace DigitalPurchasing.Emails
             var attachments = new[] { attachment };
             await emailService.SendFromRobotAsync(ownerId, supplierContactPerson.Email, subject, htmlMessage, attachments);
         }
+
+        public static async Task SendCLClosedEmail(this IEmailService emailService, string email, string url, int publicId)
+        {
+            var subject = $"КП №{publicId} - Конкурс закрыт";
+            var model = new CLClosedEmail
+            {
+                Url = url
+            };
+            
+            var htmlResult = await GetHtmlString(model);
+            await emailService.SendEmailAsync(email, subject, htmlResult);
+        }
     }
 }

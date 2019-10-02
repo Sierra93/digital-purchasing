@@ -7,9 +7,12 @@ using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
+using DigitalPurchasing.Emails;
 using DigitalPurchasing.Models;
 using Mapster;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 
 namespace DigitalPurchasing.Services
@@ -20,17 +23,29 @@ namespace DigitalPurchasing.Services
         private readonly ICounterService _counterService;
         private readonly ISupplierOfferService _supplierOfferService;
         private readonly IRootService _rootService;
+        private readonly IEmailService _emailService;
+        private readonly LinkGenerator _linkGenerator;
+        private readonly IQuotationRequestService _quotationRequestService;
+        private readonly AppSettings _settings;
 
         public CompetitionListService(
             ApplicationDbContext db,
             ICounterService counterService,
             ISupplierOfferService supplierOfferService,
-            IRootService rootService)
+            IRootService rootService,
+            IEmailService emailService,
+            LinkGenerator linkGenerator,
+            IQuotationRequestService quotationRequestService,
+            IConfiguration configuration)
         {
             _db = db;
             _counterService = counterService;
             _supplierOfferService = supplierOfferService;
             _rootService = rootService;
+            _emailService = emailService;
+            _linkGenerator = linkGenerator;
+            _quotationRequestService = quotationRequestService;
+            _settings = configuration.GetSection(Consts.Settings.AppPath).Get<AppSettings>();
         }
 
         public async Task<int> CountByCompany(Guid companyId) => await _db.CompetitionLists.IgnoreQueryFilters().CountAsync(q => q.OwnerId == companyId);
@@ -120,7 +135,8 @@ namespace DigitalPurchasing.Services
             {
                 PublicId = _counterService.GetCLNextId(qr.OwnerId),
                 QuotationRequestId = qr.Id,
-                OwnerId = qr.OwnerId
+                OwnerId = qr.OwnerId,
+                IsClosed = false
             };
             var entry = await _db.CompetitionLists.AddAsync(entity);
             await _db.SaveChangesAsync();
@@ -234,6 +250,45 @@ namespace DigitalPurchasing.Services
             var emails = await _db.PriceReductionEmails.Include(q => q.SupplierOffer)
                 .Where(q => q.SupplierOffer.CompetitionListId == competitionListId).ToListAsync();
             return emails.Adapt<List<PriceReductionEmailDto>>();
+        }
+
+        public async Task Close(Guid competitionListId)
+        {
+            var cl = await _db.CompetitionLists.FindAsync(competitionListId);
+            cl.IsClosed = true;
+            await _db.SaveChangesAsync();
+            await SendCLClosedEmail(cl.Id, cl.PublicId);
+        }
+
+        public async Task CloseExpired()
+        {
+            var now = DateTime.UtcNow;
+            var cls = await _db.CompetitionLists
+                .IgnoreQueryFilters()
+                .Where(q => q.IsClosed.HasValue && q.IsClosed.Value == false && q.AutomaticCloseDate <= now)
+                .ToListAsync();
+            foreach (var cl in cls)
+            {
+                cl.IsClosed = true;
+                await _db.SaveChangesAsync();
+                await SendCLClosedEmail(cl.Id, cl.PublicId);
+            }
+        }
+        
+        public async Task SetAutomaticCloseInHours(Guid competitionListId, double hours)
+        {
+            var cl = await _db.CompetitionLists.FindAsync(competitionListId);
+            cl.AutomaticCloseDate = DateTime.UtcNow.AddHours(hours);
+            await _db.SaveChangesAsync();
+        }
+
+        private async Task SendCLClosedEmail(Guid clId, int publicId)
+        {
+            var root = await _rootService.GetByCL(clId);
+            var email = _quotationRequestService.RequestSentBy(root.QuotationRequestId.Value);
+            var url = _linkGenerator.GetPathByAction("Edit", "CompetitionList", new {id = clId});
+            var fullUrl = $"{_settings.DefaultDomain}{url}";
+            await _emailService.SendCLClosedEmail(email, fullUrl, publicId);
         }
     }
 }

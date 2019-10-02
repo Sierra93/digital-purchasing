@@ -27,19 +27,19 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
         {
             [Required, Display(Name = "Deadline предоставления КП после 1-го запроса в часах")]
             [Range(0.5, int.MaxValue)]
-            public decimal QuotationRequestResponseHours { get; set; }
+            public double QuotationRequestResponseHours { get; set; }
 
             [Required, Display(Name = "Deadline предоставления КП в ответ на запрос на понижение в часах")]
             [Range(0.5, int.MaxValue)]
-            public decimal PriceReductionResponseHours { get; set; }
+            public double PriceReductionResponseHours { get; set; }
 
             [Required, Display(Name = "Deadline по сроку закрытия конкурса в часах с момент отправки 1-го запроса КП")]
             [Range(0.5, int.MaxValue)]
-            public decimal AutoCloseCLHours { get; set; }
+            public double AutoCloseCLHours { get; set; }
 
             [Required, Display(Name = "Целевая скидка к минимальной цене, %")]
             [Range(1, 99)]
-            public decimal DiscountPercentage { get; set; }
+            public double DiscountPercentage { get; set; }
 
             [Required, Display(Name = "Количество раундов для отправки запросов в автоматическом режиме")]
             [Range(0, int.MaxValue)]

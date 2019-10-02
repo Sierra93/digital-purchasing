@@ -67,6 +67,13 @@
                                 dataClass: 'text-center'
                             },
                             {
+                                title: 'Номер заявки в ERP',
+                                name: 'quotationRequestPurchaseRequestErpCode',
+                                sortField: 'QuotationRequest.PurchaseRequest.ErpCode',
+                                titleClass: 'text-center w-180',
+                                dataClass: 'text-center'
+                            },
+                            {
                                 title: 'Дата создания',
                                 name: 'createdOn',
                                 sortField: 'CreatedOn',
@@ -75,10 +82,19 @@
                                 dataClass: 'text-center'
                             },
                             {
-                                title: 'Номер заявки в ERP',
-                                name: 'quotationRequestPurchaseRequestErpCode',
-                                sortField: 'QuotationRequest.PurchaseRequest.ErpCode',
-                                titleClass: 'text-center w-180',
+                                title: 'Дата окончания',
+                                name: 'automaticCloseDate',
+                                sortField: 'AutomaticCloseDate',
+                                formatter: this.formatDate,
+                                titleClass: 'text-center w-140',
+                                dataClass: 'text-center'
+                            },
+                            {
+                                title: 'Статус аукциона',
+                                name: 'isClosed',
+                                sortField: 'IsClosed',
+                                formatter: this.formatIsClosed,
+                                titleClass: 'text-center w-140',
                                 dataClass: 'text-center'
                             },
                             {
@@ -88,7 +104,7 @@
                             },
                             {
                                 title: 'Поставщики',
-                                name: 'suppliers',
+                                name: 'suppliers'
                             },
                             {
                                 name: 'slot-actions',
@@ -107,8 +123,12 @@
                 },
                 methods: {
                     formatDate: function (value) {
-                        if (value === null) return '';
+                        if (value === null || value === '0001-01-01T00:00:00') return '';
                         return moment(value).format('DD.MM.YYYY h:mm');
+                    },
+                    formatIsClosed: function (value) {
+                        if (value === null) return '';
+                        return value === true ? 'Закрыт' : 'Открыт';
                     },
                     onPaginationData(paginationData) {
                         this.$refs.pagination.setPaginationData(paginationData);

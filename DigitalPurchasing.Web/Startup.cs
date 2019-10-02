@@ -196,6 +196,10 @@ namespace DigitalPurchasing.Web
             RecurringJob.AddOrUpdate<EmailJobs>("check_robot_emails",
                 q => q.CheckRobotEmails(),
                 Cron.MinuteInterval(5));
+
+            RecurringJob.AddOrUpdate<CompetitionListJobs>("close_expired_competition_lists",
+                q => q.CloseExpired(),
+                Cron.MinuteInterval(5));
         }
 
         private void DatabaseSetup(ApplicationDbContext dbContext)

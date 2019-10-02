@@ -9,10 +9,10 @@ namespace DigitalPurchasing.Core
         public static class Settings
         {
             public static string AppPath = "App";
-            public static decimal PRDiscountPercentage = 3m;
-            public static decimal QuotationRequestResponseHours = 1m;
-            public static decimal PriceReductionResponseHours = 0.5m;
-            public static decimal AutoCloseCLHours = 2m;
+            public static double PRDiscountPercentage = 3;
+            public static double QuotationRequestResponseHours = 1;
+            public static double PriceReductionResponseHours = 0.5;
+            public static double AutoCloseCLHours = 2;
             public static int RoundsCount = 1;
             public static SendPriceReductionTo SendPriceReductionTo = SendPriceReductionTo.MinPrice;
         }
