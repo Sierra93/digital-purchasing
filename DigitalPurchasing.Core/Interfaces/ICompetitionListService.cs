@@ -11,7 +11,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
         CompetitionListIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
         Task<Guid> GetIdByQR(Guid qrId, bool globalSearch);
-        CompetitionListVm GetById(Guid id);
+        CompetitionListVm GetById(Guid id, bool globalSearch = false);
         DeleteResultVm Delete(Guid id);
 
         Task SavePriceReductionEmail(

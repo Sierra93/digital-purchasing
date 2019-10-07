@@ -173,30 +173,55 @@ namespace DigitalPurchasing.Services
             return vm;
         }
 
-        public SupplierOfferDetailsVm GetDetailsById(Guid id)
+        public SupplierOfferDetailsVm GetDetailsById(Guid id, bool globalSearch = false)
         {
-            var supplierOffer = _db.SupplierOffers
+            var supplierOffersQry = _db.SupplierOffers
                 .Include(q => q.Currency)
                 .Include(q => q.Supplier)
                 .Include(q => q.CompetitionList)
-                .ThenInclude(q => q.QuotationRequest)
-                .First(q => q.Id == id);
+                    .ThenInclude(q => q.QuotationRequest)
+                .AsNoTracking()
+                .AsQueryable();
 
-            var purchaseRequestId = supplierOffer.CompetitionList.QuotationRequest.PurchaseRequestId;
-            
-            var requestItems = _db.PurchaseRequestItems
+            var supplierOfferItemsQry = _db.SupplierOfferItems
+                .Include(q => q.RawUom)
+                .Include(q => q.Nomenclature)
+                    .ThenInclude(q => q.BatchUom)
+                .AsNoTracking()
+                .AsQueryable();
+
+            var purchaseRequestItemsQry = _db.PurchaseRequestItems
                 .Include(q => q.Nomenclature)
                     .ThenInclude(q => q.BatchUom)
                 .Include(q => q.Nomenclature.MassUom)
                 .Include(q => q.Nomenclature.ResourceUom)
                 .Include(q => q.Nomenclature.ResourceBatchUom)
+                .AsNoTracking()
+                .AsQueryable();
+
+            var nomenclatureAlternativesQry = _db.NomenclatureAlternatives
+                .Include(q => q.Link)
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (globalSearch)
+            {
+                supplierOffersQry = supplierOffersQry.IgnoreQueryFilters();
+                supplierOfferItemsQry = supplierOfferItemsQry.IgnoreQueryFilters();
+                purchaseRequestItemsQry = purchaseRequestItemsQry.IgnoreQueryFilters();
+                nomenclatureAlternativesQry = nomenclatureAlternativesQry.IgnoreQueryFilters();
+            }
+
+            var supplierOffer = supplierOffersQry
+                .First(q => q.Id == id);
+
+            var purchaseRequestId = supplierOffer.CompetitionList.QuotationRequest.PurchaseRequestId;
+            
+            var requestItems = purchaseRequestItemsQry
                 .Where(q => q.PurchaseRequestId == purchaseRequestId)
                 .ToList();
 
-            var offerItems = _db.SupplierOfferItems
-                .Include(q => q.RawUom)
-                .Include(q => q.Nomenclature)
-                    .ThenInclude(q => q.BatchUom)
+            var offerItems = supplierOfferItemsQry
                 .Where(q => q.SupplierOfferId == id)
                 .ToList();
 
@@ -204,8 +229,7 @@ namespace DigitalPurchasing.Services
                 .Select(q => q.Nomenclature.Id)
                 .ToList();
 
-            var nomAlts = _db.NomenclatureAlternatives
-                .Include(q => q.Link)
+            var nomAlts = nomenclatureAlternativesQry
                 .Where(q => q.Link.SupplierId == supplierOffer.SupplierId && nomIds.Contains(q.NomenclatureId))
                 .ToList();
 

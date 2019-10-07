@@ -146,27 +146,48 @@ namespace DigitalPurchasing.Services
             return clId;
         }
 
-        public CompetitionListVm GetById(Guid id)
+        public CompetitionListVm GetById(Guid id, bool globalSearch = false)
         {
-            var competitionList = _db.CompetitionLists
-                .FirstOrDefault(q => q.Id == id);
+            var competitionListsQry = _db.CompetitionLists.AsNoTracking().AsQueryable();
+
+            if (globalSearch)
+            {
+                competitionListsQry = competitionListsQry.IgnoreQueryFilters();
+            }
+
+            var competitionList = competitionListsQry.FirstOrDefault(q => q.Id == id);
             
             var vm = competitionList?.Adapt<CompetitionListVm>();
 
             if (vm != null)
             {
-                var quotationRequest = _db.QuotationRequests.Find(competitionList.QuotationRequestId);
-                var purchaseRequest = _db.PurchaseRequests
+                var quotationRequestsQry = _db.QuotationRequests.AsNoTracking().AsQueryable();
+                var purchaseRequestsQry = _db.PurchaseRequests
                     .Include(q => q.Customer)
                     .Include(q => q.Items)
                         .ThenInclude(q => q.Nomenclature)
                             .ThenInclude(q => q.BatchUom)
-                    .First(q => q.Id == quotationRequest.PurchaseRequestId);
+                    .AsNoTracking()
+                    .AsQueryable();
+
+                var supplierOffersQry = _db.SupplierOffers
+                    .AsNoTracking()
+                    .AsQueryable();
+
+                if (globalSearch)
+                {
+                    quotationRequestsQry = quotationRequestsQry.IgnoreQueryFilters();
+                    purchaseRequestsQry = purchaseRequestsQry.IgnoreQueryFilters();
+                    supplierOffersQry = supplierOffersQry.IgnoreQueryFilters();
+                }
+
+                var quotationRequest = quotationRequestsQry.First(q => q.Id == competitionList.QuotationRequestId);
+                var purchaseRequest = purchaseRequestsQry.First(q => q.Id == quotationRequest.PurchaseRequestId);
 
                 vm.PurchaseRequest = purchaseRequest.Adapt<CompetitionListVm.PurchaseRequestVm>();
                 vm.PurchaseRequest.Items = vm.PurchaseRequest.Items.OrderBy(q => q.Position).ToList();
 
-                var supplierOffersIds = _db.SupplierOffers
+                var supplierOffersIds = supplierOffersQry
                     .AsNoTracking()
                     .Where(q => q.CompetitionListId == id)
                     .Select(q => q.Id)
@@ -174,7 +195,7 @@ namespace DigitalPurchasing.Services
                 
                 // mappings for items - SupplierOfferItemMappings
                 var supplierOffers = supplierOffersIds.Select(q
-                    => _supplierOfferService.GetDetailsById(q)).ToList();
+                    => _supplierOfferService.GetDetailsById(q, globalSearch)).ToList();
 
                 vm.SupplierOffers = supplierOffers;
 
