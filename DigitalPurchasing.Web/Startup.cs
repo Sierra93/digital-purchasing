@@ -68,9 +68,10 @@ namespace DigitalPurchasing.Web
             });
 
             // Job duplication fix https://github.com/HangfireIO/Hangfire/issues/1197
-            services.AddHangfire(x => {
-                //x.UseSqlServerStorage(Configuration.GetConnectionString("HangfireConnection"))
-                x.UseMemoryStorage();
+            services.AddHangfire(x =>
+            {
+                x.UseSqlServerStorage(Configuration.GetConnectionString("DefaultConnection"));
+                //x.UseMemoryStorage();
             });
             services.AddHangfireServer();
 
