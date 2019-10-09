@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core.Enums;
 
 namespace DigitalPurchasing.Core.Interfaces
 {
@@ -11,20 +12,24 @@ namespace DigitalPurchasing.Core.Interfaces
 
         CompetitionListIndexData GetData(int page, int perPage, string sortField, bool sortAsc);
         Task<Guid> GetIdByQR(Guid qrId, bool globalSearch);
-        CompetitionListVm GetById(Guid id);
+        CompetitionListVm GetById(Guid id, bool globalSearch = false);
         DeleteResultVm Delete(Guid id);
 
         Task SavePriceReductionEmail(
             Guid supplierOfferId,
             Guid supplierContactPersonId,
             Guid? userId,
-            List<Guid> ids);
+            List<Guid> ids,
+            PriceReductionSendingType sender);
 
+        Task<bool> IsPriceReductionEmailSent(Guid supplierOfferId);
         Task<IEnumerable<PriceReductionEmailDto>> GetPriceReductionEmailsByCL(Guid competitionListId);
 
         Task Close(Guid competitionListId);
         Task CloseExpired();
+        Task<bool> IsAutomaticCloseDateSet(Guid competitionListId);
         Task SetAutomaticCloseInHours(Guid competitionListId, double hours);
+        Task<PriceReductionDataVm> PriceReductionData(Guid competitionListId, Guid userId);
     }
 
     public class CompetitionListIndexDataItem
@@ -130,6 +135,30 @@ namespace DigitalPurchasing.Core.Interfaces
                 ? soItems.Min(soi => soi.ResourceConversion.OfferPrice)
                 : -1;
         }
+
+        public List<Guid> GetSOIdsWMinimalPrice(Guid prItemId)
+        {
+            var soItems = SupplierOffers
+                .SelectMany(so
+                    => so.Items.Where(soi
+                        => soi.Request.ItemId == prItemId && soi.Offer.Price > 0))
+                .ToList();
+
+            var minPrice = soItems.Any()
+                ? soItems.Min(soi => soi.ResourceConversion.OfferPrice)
+                : -1;
+
+            if (minPrice == -1) return new List<Guid>();
+
+            var soIds = soItems
+                .Where(soi => soi.ResourceConversion.OfferPrice == minPrice)
+                .Select(q => q.Offer.ItemId);
+
+            return SupplierOffers
+                .Where(q => q.Items.Any(i => soIds.Contains(i.Offer.ItemId)))
+                .Select(q => q.Id)
+                .ToList();
+        }
     }
 
     public static class Extensions
@@ -170,4 +199,41 @@ namespace DigitalPurchasing.Core.Interfaces
         public List<Guid> Data { get; set; }
         public DateTime CreatedOn { get; set; }
     }
+
+    public class PriceReductionDataVm
+    {
+        public class Supplier
+        {
+            public Guid Id { get; set; }
+            public string Name { get; set; }
+            public DateTime CreatedOn { get; set; }
+            public bool IsChecked { get; set; }
+        }
+
+        public class ItemSupplier
+        {
+            public Guid Id { get; set; }
+            public bool IsChecked { get; set; }
+            public bool IsEnabled { get; set; }
+            public bool IsSent { get; set; }
+        }
+
+        public class Item
+        {
+            public int Position { get; set; }
+            public decimal MinPrice { get; set; }
+            public decimal TargetPrice => MinPrice > 0 ? Math.Round(MinPrice * ( 1 - Discount/100), 2) : -1;
+            public decimal Discount { get; set; }
+
+            /// Supplier offers
+            public List<ItemSupplier> Suppliers { get; set; }
+            public Guid Id { get; set; }
+            public DateTime? SentDate { get; set; }
+            public List<Guid> MinPriceSOIds { get; set; }
+        }
+
+        public List<Supplier> Suppliers { get; set; }
+        public List<Item> Items { get; set; }
+    }
+
 }

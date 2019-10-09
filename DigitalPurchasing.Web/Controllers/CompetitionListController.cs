@@ -3,16 +3,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Emails;
 using DigitalPurchasing.ExcelReader;
+using DigitalPurchasing.Models.Identity;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.Jobs;
 using DigitalPurchasing.Web.ViewModels;
 using DigitalPurchasing.Web.ViewModels.CompetitionList;
+using Hangfire;
 using Mapster;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DigitalPurchasing.Web.Controllers
@@ -27,6 +31,7 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly ISupplierService _supplierService;
         private readonly IQuotationRequestService _quotationRequestService;
         private readonly IRootService _rootService;
+        private readonly UserManager<User> _userManager;
 
         public CompetitionListController(
             ICompetitionListService competitionListService,
@@ -36,7 +41,8 @@ namespace DigitalPurchasing.Web.Controllers
             IUserService userService,
             ISupplierService supplierService,
             IQuotationRequestService quotationRequestService,
-            IRootService rootService)
+            IRootService rootService,
+            UserManager<User> userManager)
         {
             _competitionListService = competitionListService;
             _supplierOfferService = supplierOfferService;
@@ -46,6 +52,7 @@ namespace DigitalPurchasing.Web.Controllers
             _supplierService = supplierService;
             _quotationRequestService = quotationRequestService;
             _rootService = rootService;
+            _userManager = userManager;
         }
 
         public IActionResult Index() => View();
@@ -75,7 +82,7 @@ namespace DigitalPurchasing.Web.Controllers
 
         public async Task<IActionResult> Edit(Guid id)
         {
-            var cl = _competitionListService.GetById(id);
+            var cl = _competitionListService.GetById(id, false);
             if (cl == null) return NotFound();
 
             var vm = new CompetitionListEditVm
@@ -125,7 +132,7 @@ namespace DigitalPurchasing.Web.Controllers
         public IActionResult PriceReductionDownload([FromRoute] Guid id, [FromQuery] Guid supplierId,
             [FromBody] SendPriceReductionRequestsVm model)
         {
-            var cl = _competitionListService.GetById(id);//todo: use supplierId
+            var cl = _competitionListService.GetById(id, false);//todo: use supplierId
             if (cl == null) return NotFound();
 
             var offers = cl.GroupBySupplier().First(q => q.Value.First().SupplierId == supplierId);
@@ -167,179 +174,22 @@ namespace DigitalPurchasing.Web.Controllers
             return Ok();
         }
 
-        public class PriceReductionDataVm
-        {
-            public class Supplier
-            {
-                public Guid Id { get; set; }
-                public string Name { get; set; }
-                public DateTime CreatedOn { get; set; }
-                public bool IsChecked { get; set; }
-            }
-
-            public class ItemSupplier
-            {
-                public Guid Id { get; set; }
-                public bool IsChecked { get; set; }
-                public bool IsEnabled { get; set; }
-                public bool IsSent { get; set; }
-            }
-
-            public class Item
-            {
-                public int Position { get; set; }
-                public decimal MinPrice { get; set; }
-                public decimal TargetPrice => MinPrice > 0 ? Math.Round(MinPrice * ( 1 - Discount/100), 2) : -1;
-                public decimal Discount { get; set; }
-
-                /// Supplier offers
-                public List<ItemSupplier> Suppliers { get; set; }
-                public Guid Id { get; set; }
-                public DateTime? SentDate { get; set; }
-            }
-
-            public List<Supplier> Suppliers { get; set; }
-            public List<Item> Items { get; set; }
-        }
-
         [HttpGet]
         public async Task<IActionResult> PriceReductionData([FromRoute]Guid id)
         {
-            var cl = _competitionListService.GetById(id);
-
-            var offers = cl.GroupBySupplier()
-                .Where(q => q.Key.SupplierId.HasValue)
-                .Select(q => q.Value.Last())
-                .ToList();
-
-            var emails = (await _competitionListService.GetPriceReductionEmailsByCL(id)).ToList();
-
-            var user = await _userService.GetById(User.Id());
-
-            var vm = new PriceReductionDataVm
-            {
-                Suppliers = offers.OrderBy(q => q.CreatedOn).Select(q => new PriceReductionDataVm.Supplier
-                {
-                    Id = q.Id,
-                    Name = q.SupplierName,
-                    CreatedOn = q.CreatedOn,
-                    IsChecked = true
-                }).ToList(),
-
-                Items = cl.PurchaseRequest.Items.Select(pri =>
-                {
-                    var itemEmails = emails.Where(q => q.Data.Contains(pri.Id)).ToList();
-                    
-                    return new PriceReductionDataVm.Item
-                    {
-                        Id = pri.Id,
-                        Position = pri.Position,
-                        Discount = user.PRDiscountPercentage,
-                        MinPrice = cl.GetMinimalOfferPrice(pri.Id),
-                        Suppliers = offers.OrderBy(q => q.CreatedOn).Select(so =>
-                        {
-                            return new PriceReductionDataVm.ItemSupplier
-                            {
-                                Id = so.Id,
-                                IsChecked = true,
-                                IsEnabled = so.Items.Any(soi
-                                    => soi.Request.ItemId == pri.Id && soi.Offer.Price > 0),
-                                IsSent = itemEmails.Any(q => q.SupplierOfferId == so.Id)
-                            };
-                        }).ToList(),
-                        SentDate = itemEmails.Any()
-                            ? itemEmails.Max(q => q.CreatedOn).ToRussianStandardTime()
-                            : (DateTime?)null
-                    };
-                }).ToList()
-            };
-
+            var vm = await _competitionListService.PriceReductionData(id, User.Id());
             return Json(vm);
         }
-
-        public class SendPriceReductionRequestsVm
-        {
-            public class Item
-            {
-                public Guid SupplierOfferId { get; set; }
-                public Guid ItemId { get; set; }
-                public decimal TargetPrice { get; set; }
-            }
-
-            public List<Item> Items { get; set; }
-        }
-
+        
         [HttpPost]
         public async Task<IActionResult> SendPriceReductionRequests(
             [FromRoute] Guid id,
             [FromBody] SendPriceReductionRequestsVm model)
         {
-            var cl = _competitionListService.GetById(id);
-            if (cl == null) return NotFound();
-
             var userId = User.Id();
             var ownerId = User.CompanyId();
-            var userInfo = _userService.GetUserInfo(userId);
-
-            var supplierOffersIds = model.Items.Select(q => q.SupplierOfferId).Distinct().ToList();
-
-            var offersBySupplier = cl.GroupBySupplier();
-
-            foreach (var supplierOfferId in supplierOffersIds)
-            {
-                var so = _supplierOfferService.GetById(supplierOfferId);
-
-                if (!so.SupplierId.HasValue) continue;
-
-                var supplierId = so.SupplierId.Value;
-
-                var offers = offersBySupplier.First(q => q.Key.SupplierId == so.SupplierId.Value);
-                var lastOffer = offers.Value.Last();
-                var reportData = CreatePriceReductionData(lastOffer, cl, model);
-                if (!reportData.Items.Any())
-                {
-                    continue;
-                }
-
-                SupplierContactPersonVm supplierContactPerson;
-
-                if (so.ContactPersonId.HasValue)
-                {
-                    supplierContactPerson = _supplierService.GetContactPersonsById(so.ContactPersonId.Value);
-                }
-                else
-                {
-                    supplierContactPerson = _supplierService
-                        .GetContactPersonsBySupplier(supplierId, true)
-                        .FirstOrDefault();
-                }
-
-                if (supplierContactPerson == null) continue;
-
-                var report = new PriceReductionWriter(reportData);
-                var fileBytes = report.Build();
-                var fileName = $"{cl.CreatedOn:yyyyMMdd}_КЛ_{cl.PublicId}_{lastOffer.SupplierName}_Запрос_на_изменение_условий.xlsx";
-                var filePath = Path.Combine(Path.GetTempPath(), fileName);
-
-                System.IO.File.WriteAllBytes(filePath, fileBytes);
-
-                var root = _rootService.GetByCL(cl.Id).Result;
-                var emailUid = _quotationRequestService.QuotationRequestToUid(root.QuotationRequestId.Value);
-
-                Hangfire.BackgroundJob.Enqueue<EmailJobs>(q
-                    => q.SendPriceReductionEmail(ownerId, emailUid, filePath, supplierContactPerson, userInfo,
-                        DateTime.UtcNow.AddMinutes(30), lastOffer.InvoiceData));
-
-                var itemIds = model.Items
-                    .Where(q => q.SupplierOfferId == supplierOfferId)
-                    .Select(q => q.ItemId)
-                    .ToList();
-
-                await _competitionListService.SavePriceReductionEmail(
-                    supplierOfferId,
-                    supplierContactPerson.Id,
-                    userId, itemIds);
-            }
+            
+            BackgroundJob.Enqueue<PriceReductionJobs>(q => q.SendPriceReductionRequests(id, model, userId, ownerId, PriceReductionSendingType.User));
 
             return Ok();
         }

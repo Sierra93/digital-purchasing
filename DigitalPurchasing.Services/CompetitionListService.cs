@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core;
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
@@ -27,6 +28,7 @@ namespace DigitalPurchasing.Services
         private readonly LinkGenerator _linkGenerator;
         private readonly IQuotationRequestService _quotationRequestService;
         private readonly AppSettings _settings;
+        private readonly IUserService _userService;
 
         public CompetitionListService(
             ApplicationDbContext db,
@@ -36,7 +38,8 @@ namespace DigitalPurchasing.Services
             IEmailService emailService,
             LinkGenerator linkGenerator,
             IQuotationRequestService quotationRequestService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IUserService userService)
         {
             _db = db;
             _counterService = counterService;
@@ -45,6 +48,7 @@ namespace DigitalPurchasing.Services
             _emailService = emailService;
             _linkGenerator = linkGenerator;
             _quotationRequestService = quotationRequestService;
+            _userService = userService;
             _settings = configuration.GetSection(Consts.Settings.AppPath).Get<AppSettings>();
         }
 
@@ -146,27 +150,48 @@ namespace DigitalPurchasing.Services
             return clId;
         }
 
-        public CompetitionListVm GetById(Guid id)
+        public CompetitionListVm GetById(Guid id, bool globalSearch = false)
         {
-            var competitionList = _db.CompetitionLists
-                .FirstOrDefault(q => q.Id == id);
+            var competitionListsQry = _db.CompetitionLists.AsNoTracking().AsQueryable();
+
+            if (globalSearch)
+            {
+                competitionListsQry = competitionListsQry.IgnoreQueryFilters();
+            }
+
+            var competitionList = competitionListsQry.FirstOrDefault(q => q.Id == id);
             
             var vm = competitionList?.Adapt<CompetitionListVm>();
 
             if (vm != null)
             {
-                var quotationRequest = _db.QuotationRequests.Find(competitionList.QuotationRequestId);
-                var purchaseRequest = _db.PurchaseRequests
+                var quotationRequestsQry = _db.QuotationRequests.AsNoTracking().AsQueryable();
+                var purchaseRequestsQry = _db.PurchaseRequests
                     .Include(q => q.Customer)
                     .Include(q => q.Items)
                         .ThenInclude(q => q.Nomenclature)
                             .ThenInclude(q => q.BatchUom)
-                    .First(q => q.Id == quotationRequest.PurchaseRequestId);
+                    .AsNoTracking()
+                    .AsQueryable();
+
+                var supplierOffersQry = _db.SupplierOffers
+                    .AsNoTracking()
+                    .AsQueryable();
+
+                if (globalSearch)
+                {
+                    quotationRequestsQry = quotationRequestsQry.IgnoreQueryFilters();
+                    purchaseRequestsQry = purchaseRequestsQry.IgnoreQueryFilters();
+                    supplierOffersQry = supplierOffersQry.IgnoreQueryFilters();
+                }
+
+                var quotationRequest = quotationRequestsQry.First(q => q.Id == competitionList.QuotationRequestId);
+                var purchaseRequest = purchaseRequestsQry.First(q => q.Id == quotationRequest.PurchaseRequestId);
 
                 vm.PurchaseRequest = purchaseRequest.Adapt<CompetitionListVm.PurchaseRequestVm>();
                 vm.PurchaseRequest.Items = vm.PurchaseRequest.Items.OrderBy(q => q.Position).ToList();
 
-                var supplierOffersIds = _db.SupplierOffers
+                var supplierOffersIds = supplierOffersQry
                     .AsNoTracking()
                     .Where(q => q.CompetitionListId == id)
                     .Select(q => q.Id)
@@ -174,7 +199,7 @@ namespace DigitalPurchasing.Services
                 
                 // mappings for items - SupplierOfferItemMappings
                 var supplierOffers = supplierOffersIds.Select(q
-                    => _supplierOfferService.GetDetailsById(q)).ToList();
+                    => _supplierOfferService.GetDetailsById(q, globalSearch)).ToList();
 
                 vm.SupplierOffers = supplierOffers;
 
@@ -232,18 +257,23 @@ namespace DigitalPurchasing.Services
             Guid supplierOfferId,
             Guid supplierContactPersonId,
             Guid? userId,
-            List<Guid> ids)
+            List<Guid> ids,
+            PriceReductionSendingType sender)
         {
             var priceReductionEmail = new PriceReductionEmail
             {
                 SupplierOfferId = supplierOfferId,
                 ContactPersonId = supplierContactPersonId,
                 UserId = userId,
-                Data = JsonConvert.SerializeObject(ids)
+                Data = JsonConvert.SerializeObject(ids),
+                SendingType = sender
             };
             await _db.PriceReductionEmails.AddAsync(priceReductionEmail);
             await _db.SaveChangesAsync();
         }
+
+        public async Task<bool> IsPriceReductionEmailSent(Guid supplierOfferId)
+            => await _db.PriceReductionEmails.AnyAsync(q => q.SupplierOfferId == supplierOfferId);
 
         public async Task<IEnumerable<PriceReductionEmailDto>> GetPriceReductionEmailsByCL(Guid competitionListId)
         {
@@ -274,12 +304,73 @@ namespace DigitalPurchasing.Services
                 await SendCLClosedEmail(cl.Id, cl.PublicId);
             }
         }
+
+        public async Task<bool> IsAutomaticCloseDateSet(Guid competitionListId)
+        {
+            var cl = await _db.CompetitionLists.FindAsync(competitionListId);
+            return cl.AutomaticCloseDate != DateTime.MinValue;
+        }
         
         public async Task SetAutomaticCloseInHours(Guid competitionListId, double hours)
         {
             var cl = await _db.CompetitionLists.FindAsync(competitionListId);
             cl.AutomaticCloseDate = DateTime.UtcNow.AddHours(hours);
             await _db.SaveChangesAsync();
+        }
+
+        public async Task<PriceReductionDataVm> PriceReductionData(Guid competitionListId, Guid userId)
+        {
+            var cl = GetById(competitionListId, true);
+
+            var offers = cl.GroupBySupplier()
+                .Where(q => q.Key.SupplierId.HasValue)
+                .Select(q => q.Value.Last())
+                .ToList();
+
+            var emails = (await GetPriceReductionEmailsByCL(competitionListId)).ToList();
+
+            var user = await _userService.GetById(userId);
+
+            var vm = new PriceReductionDataVm
+            {
+                Suppliers = offers.OrderBy(q => q.CreatedOn).Select(q => new PriceReductionDataVm.Supplier
+                {
+                    Id = q.Id,
+                    Name = q.SupplierName,
+                    CreatedOn = q.CreatedOn,
+                    IsChecked = true
+                }).ToList(),
+
+                Items = cl.PurchaseRequest.Items.Select(pri =>
+                {
+                    var itemEmails = emails.Where(q => q.Data.Contains(pri.Id)).ToList();
+                    
+                    return new PriceReductionDataVm.Item
+                    {
+                        Id = pri.Id,
+                        Position = pri.Position,
+                        Discount = user.PRDiscountPercentage,
+                        MinPrice = cl.GetMinimalOfferPrice(pri.Id),
+                        MinPriceSOIds = cl.GetSOIdsWMinimalPrice(pri.Id),
+                        Suppliers = offers.OrderBy(q => q.CreatedOn).Select(so =>
+                        {
+                            return new PriceReductionDataVm.ItemSupplier
+                            {
+                                Id = so.Id,
+                                IsChecked = true,
+                                IsEnabled = so.Items.Any(soi
+                                    => soi.Request.ItemId == pri.Id && soi.Offer.Price > 0),
+                                IsSent = itemEmails.Any(q => q.SupplierOfferId == so.Id)
+                            };
+                        }).ToList(),
+                        SentDate = itemEmails.Any()
+                            ? itemEmails.Max(q => q.CreatedOn).ToRussianStandardTime()
+                            : (DateTime?)null
+                    };
+                }).ToList()
+            };
+
+            return vm;
         }
 
         private async Task SendCLClosedEmail(Guid clId, int publicId)

@@ -68,10 +68,12 @@ namespace DigitalPurchasing.Web
             });
 
             // Job duplication fix https://github.com/HangfireIO/Hangfire/issues/1197
-            services.AddHangfire(x => {
-                //x.UseSqlServerStorage(Configuration.GetConnectionString("HangfireConnection"))
-                x.UseMemoryStorage();
+            services.AddHangfire(x =>
+            {
+                x.UseSqlServerStorage(Configuration.GetConnectionString("DefaultConnection"));
+                //x.UseMemoryStorage();
             });
+            services.AddHangfireServer();
 
             //services.AddHangfire();
             GlobalJobFilters.Filters.Add(new AutomaticRetryAttribute { Attempts = 0 });
@@ -187,7 +189,6 @@ namespace DigitalPurchasing.Web
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
 
-            app.UseHangfireServer();
             app.UseHangfireDashboard("/hangfire", new DashboardOptions
             {
                 Authorization = new [] { new HangfireDashboardAuthorizationFilter() }

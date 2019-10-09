@@ -120,10 +120,30 @@ namespace DigitalPurchasing.Web.Controllers
                                     ?? await _competitionListService.GetIdByQR(model.QuotationRequestId, true);
             
             var user = await _userManager.GetUserAsync(User);
-            await _competitionListService.SetAutomaticCloseInHours(competitionListId, user.AutoCloseCLHours);
-            Hangfire.BackgroundJob.Schedule<CompetitionListJobs>(q => q.Close(competitionListId),
-                TimeSpan.FromHours(user.AutoCloseCLHours));
 
+            // todo: set pr data
+
+            var isAutomaticCloseDateSet = await _competitionListService.IsAutomaticCloseDateSet(competitionListId);
+            if (!isAutomaticCloseDateSet)
+            {
+                await _competitionListService.SetAutomaticCloseInHours(competitionListId, user.AutoCloseCLHours);
+                Hangfire.BackgroundJob.Schedule<CompetitionListJobs>(q => q.Close(competitionListId),
+                    TimeSpan.FromHours(user.AutoCloseCLHours));
+
+                if (user.RoundsCount > 0)
+                {
+                    var now = DateTime.UtcNow;
+                    for (var i = 0; i < user.RoundsCount; i++)
+                    {
+                        var delay = now
+                            .AddHours(user.QuotationRequestResponseHours)
+                            .AddHours(user.PriceReductionResponseHours * i);
+                        var round = i + 1;
+                        Hangfire.BackgroundJob.Schedule<PriceReductionJobs>(q => q.SendPriceReductionRequests(competitionListId, user.Id, user.CompanyId, round), delay);
+                    }
+                }
+            }
+            
             return Ok(sentRequests);
         }
     }

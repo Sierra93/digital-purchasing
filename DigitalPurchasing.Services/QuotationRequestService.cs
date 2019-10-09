@@ -432,7 +432,7 @@ namespace DigitalPurchasing.Services
 
         public string QuotationRequestToUid(Guid quotationRequestId)
         {
-            var qr = _db.QuotationRequests.Find(quotationRequestId);
+            var qr = _db.QuotationRequests.IgnoreQueryFilters().First(q => q.Id == quotationRequestId);
             var md5Time = qr.CreatedOn.ToString("hh:mm:ss").ToMD5().Substring(0, 4).ToUpperInvariant();
             return $"RFQ-{qr.CreatedOn:yyMMdd}-{qr.PublicId}-{md5Time}";
         }
