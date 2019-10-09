@@ -1,4 +1,5 @@
 using System;
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Models.Identity;
 
 namespace DigitalPurchasing.Models
@@ -15,5 +16,7 @@ namespace DigitalPurchasing.Models
         public User User { get; set; }
 
         public string Data { get; set; }
+
+        public PriceReductionSendingType SendingType { get; set; }
     }
 }

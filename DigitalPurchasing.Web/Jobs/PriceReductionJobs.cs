@@ -2,11 +2,14 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.ExcelReader;
+using DigitalPurchasing.Models;
 using DigitalPurchasing.Models.Identity;
 using DigitalPurchasing.Web.ViewModels.CompetitionList;
 using Microsoft.AspNetCore.Identity;
+using File = System.IO.File;
 
 namespace DigitalPurchasing.Web.Jobs
 {
@@ -40,7 +43,7 @@ namespace DigitalPurchasing.Web.Jobs
 
         public async Task SendPriceReductionRequests(
             Guid competitionListId,
-            SendPriceReductionRequestsVm model, Guid userId, Guid companyId)
+            SendPriceReductionRequestsVm model, Guid userId, Guid companyId, PriceReductionSendingType sender)
         {
             var cl = _competitionListService.GetById(competitionListId, true);
             if (cl == null) throw new NullReferenceException(nameof(cl));
@@ -107,7 +110,7 @@ namespace DigitalPurchasing.Web.Jobs
                 await _competitionListService.SavePriceReductionEmail(
                     supplierOfferId,
                     supplierContactPerson.Id,
-                    userId, itemIds);
+                    userId, itemIds, sender);
             }
         }
 
@@ -167,6 +170,58 @@ namespace DigitalPurchasing.Web.Jobs
             }
 
             return reportData;
+        }
+
+        public async Task SendPriceReductionRequests(Guid competitionListId, Guid userId, Guid companyId, int round)
+        {
+            var prData = await _competitionListService.PriceReductionData(competitionListId, userId);
+
+            var model = new SendPriceReductionRequestsVm();
+
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+
+            if (user.SendPriceReductionTo == SendPriceReductionTo.All)
+            {
+                foreach (var prItem in prData.Items)
+                {
+                    foreach (var itemSupplier in prItem.Suppliers)
+                    {
+                        var isSent = await _competitionListService.IsPriceReductionEmailSent(itemSupplier.Id);
+                        if (!isSent)
+                        {
+                            model.Items.Add(new SendPriceReductionRequestsVm.Item
+                            {
+                                ItemId = prItem.Id,
+                                SupplierOfferId = itemSupplier.Id,
+                                TargetPrice = prItem.TargetPrice
+                            });
+                        }
+                    }
+                }
+            }
+            else
+            {
+                var soIds = prData.Items.SelectMany(q => q.MinPriceSOIds).ToList();
+
+                foreach (var prItem in prData.Items.Where(q => q.Suppliers.Any(so => soIds.Contains(so.Id))))
+                {
+                    foreach (var itemSupplier in prItem.Suppliers.Where(so => soIds.Contains(so.Id)))
+                    {
+                        var isSent = await _competitionListService.IsPriceReductionEmailSent(itemSupplier.Id);
+                        if (!isSent)
+                        {
+                            model.Items.Add(new SendPriceReductionRequestsVm.Item()
+                            {
+                                ItemId = prItem.Id,
+                                SupplierOfferId = itemSupplier.Id,
+                                TargetPrice = prItem.TargetPrice
+                            });
+                        }
+                    }
+                }
+            }
+            
+            await SendPriceReductionRequests(competitionListId, model, userId, companyId, PriceReductionSendingType.System);
         }
     }
 }

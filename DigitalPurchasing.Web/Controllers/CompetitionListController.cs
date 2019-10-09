@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Emails;
@@ -173,93 +174,10 @@ namespace DigitalPurchasing.Web.Controllers
             return Ok();
         }
 
-        public class PriceReductionDataVm
-        {
-            public class Supplier
-            {
-                public Guid Id { get; set; }
-                public string Name { get; set; }
-                public DateTime CreatedOn { get; set; }
-                public bool IsChecked { get; set; }
-            }
-
-            public class ItemSupplier
-            {
-                public Guid Id { get; set; }
-                public bool IsChecked { get; set; }
-                public bool IsEnabled { get; set; }
-                public bool IsSent { get; set; }
-            }
-
-            public class Item
-            {
-                public int Position { get; set; }
-                public decimal MinPrice { get; set; }
-                public decimal TargetPrice => MinPrice > 0 ? Math.Round(MinPrice * ( 1 - Discount/100), 2) : -1;
-                public decimal Discount { get; set; }
-
-                /// Supplier offers
-                public List<ItemSupplier> Suppliers { get; set; }
-                public Guid Id { get; set; }
-                public DateTime? SentDate { get; set; }
-            }
-
-            public List<Supplier> Suppliers { get; set; }
-            public List<Item> Items { get; set; }
-        }
-
         [HttpGet]
         public async Task<IActionResult> PriceReductionData([FromRoute]Guid id)
         {
-            var cl = _competitionListService.GetById(id, false);
-
-            var offers = cl.GroupBySupplier()
-                .Where(q => q.Key.SupplierId.HasValue)
-                .Select(q => q.Value.Last())
-                .ToList();
-
-            var emails = (await _competitionListService.GetPriceReductionEmailsByCL(id)).ToList();
-
-            var user = await _userService.GetById(User.Id());
-
-            var vm = new PriceReductionDataVm
-            {
-                Suppliers = offers.OrderBy(q => q.CreatedOn).Select(q => new PriceReductionDataVm.Supplier
-                {
-                    Id = q.Id,
-                    Name = q.SupplierName,
-                    CreatedOn = q.CreatedOn,
-                    IsChecked = true
-                }).ToList(),
-
-                Items = cl.PurchaseRequest.Items.Select(pri =>
-                {
-                    var itemEmails = emails.Where(q => q.Data.Contains(pri.Id)).ToList();
-                    
-                    return new PriceReductionDataVm.Item
-                    {
-                        Id = pri.Id,
-                        Position = pri.Position,
-                        Discount = user.PRDiscountPercentage,
-                        MinPrice = cl.GetMinimalOfferPrice(pri.Id),
-                        Suppliers = offers.OrderBy(q => q.CreatedOn).Select(so =>
-                        {
-                            return new PriceReductionDataVm.ItemSupplier
-                            {
-                                Id = so.Id,
-                                IsChecked = true,
-                                IsEnabled = so.Items.Any(soi
-                                    => soi.Request.ItemId == pri.Id && soi.Offer.Price > 0),
-                                IsSent = itemEmails.Any(q => q.SupplierOfferId == so.Id)
-                            };
-                        }).ToList(),
-                        SentDate = itemEmails.Any()
-                            ? itemEmails.Max(q => q.CreatedOn).ToRussianStandardTime()
-                            : (DateTime?)null
-                    };
-                }).ToList()
-            };
-
+            var vm = await _competitionListService.PriceReductionData(id, User.Id());
             return Json(vm);
         }
         
@@ -271,7 +189,7 @@ namespace DigitalPurchasing.Web.Controllers
             var userId = User.Id();
             var ownerId = User.CompanyId();
             
-            BackgroundJob.Enqueue<PriceReductionJobs>(q => q.SendPriceReductionRequests(id, model, userId, ownerId));
+            BackgroundJob.Enqueue<PriceReductionJobs>(q => q.SendPriceReductionRequests(id, model, userId, ownerId, PriceReductionSendingType.User));
 
             return Ok();
         }
