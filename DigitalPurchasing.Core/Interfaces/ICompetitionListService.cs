@@ -27,6 +27,7 @@ namespace DigitalPurchasing.Core.Interfaces
 
         Task Close(Guid competitionListId);
         Task CloseExpired();
+        Task<bool> IsAutomaticCloseDateSet(Guid competitionListId);
         Task SetAutomaticCloseInHours(Guid competitionListId, double hours);
         Task<PriceReductionDataVm> PriceReductionData(Guid competitionListId, Guid userId);
     }

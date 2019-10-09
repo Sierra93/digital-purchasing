@@ -123,20 +123,24 @@ namespace DigitalPurchasing.Web.Controllers
 
             // todo: set pr data
 
-            await _competitionListService.SetAutomaticCloseInHours(competitionListId, user.AutoCloseCLHours);
-            Hangfire.BackgroundJob.Schedule<CompetitionListJobs>(q => q.Close(competitionListId),
-                TimeSpan.FromHours(user.AutoCloseCLHours));
-
-            if (user.RoundsCount > 0)
+            var isAutomaticCloseDateSet = await _competitionListService.IsAutomaticCloseDateSet(competitionListId);
+            if (!isAutomaticCloseDateSet)
             {
-                var now = DateTime.UtcNow;
-                for (var i = 0; i < user.RoundsCount; i++)
+                await _competitionListService.SetAutomaticCloseInHours(competitionListId, user.AutoCloseCLHours);
+                Hangfire.BackgroundJob.Schedule<CompetitionListJobs>(q => q.Close(competitionListId),
+                    TimeSpan.FromHours(user.AutoCloseCLHours));
+
+                if (user.RoundsCount > 0)
                 {
-                    var delay = now
-                        .AddHours(user.QuotationRequestResponseHours)
-                        .AddHours(user.PriceReductionResponseHours * i);
-                    var round = i + 1;
-                    Hangfire.BackgroundJob.Schedule<PriceReductionJobs>(q => q.SendPriceReductionRequests(competitionListId, user.Id, user.CompanyId, round), delay);
+                    var now = DateTime.UtcNow;
+                    for (var i = 0; i < user.RoundsCount; i++)
+                    {
+                        var delay = now
+                            .AddHours(user.QuotationRequestResponseHours)
+                            .AddHours(user.PriceReductionResponseHours * i);
+                        var round = i + 1;
+                        Hangfire.BackgroundJob.Schedule<PriceReductionJobs>(q => q.SendPriceReductionRequests(competitionListId, user.Id, user.CompanyId, round), delay);
+                    }
                 }
             }
             

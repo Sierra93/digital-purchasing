@@ -304,6 +304,12 @@ namespace DigitalPurchasing.Services
                 await SendCLClosedEmail(cl.Id, cl.PublicId);
             }
         }
+
+        public async Task<bool> IsAutomaticCloseDateSet(Guid competitionListId)
+        {
+            var cl = await _db.CompetitionLists.FindAsync(competitionListId);
+            return cl.AutomaticCloseDate != DateTime.MinValue;
+        }
         
         public async Task SetAutomaticCloseInHours(Guid competitionListId, double hours)
         {

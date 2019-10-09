@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace DigitalPurchasing.Web.ViewModels.CompetitionList
 {
@@ -15,5 +13,8 @@ namespace DigitalPurchasing.Web.ViewModels.CompetitionList
         }
 
         public List<Item> Items { get; set; }
+
+        public SendPriceReductionRequestsVm()
+            => Items = new List<Item>();
     }
 }
