@@ -63,7 +63,12 @@ namespace DigitalPurchasing.Web.Controllers
 
             var data = result.Data
                 .Adapt<List<QuotationRequestIndexDataItemVm>>()
-                .Select(q => { q.EditUrl = Url.Action(nameof(View), new { id = q.Id }); return q; })
+                .Select(q =>
+                {
+                    q.EditUrl = Url.Action(nameof(View), new { id = q.Id });
+                    q.CreatedOn = User.ToLocalTime(q.CreatedOn);
+                    return q;
+                })
                 .ToList();
 
             return Json(new VueTableResponse<QuotationRequestIndexDataItemVm, VueTableRequest>(data, request, result.Total, nextUrl, prevUrl));

@@ -2,7 +2,7 @@
 @using DigitalPurchasing.Web.Controllers
 
 @{
-    ViewBag.Title = $"Запрос коммерческого предложения № {Model.PublicId} от {Model.CreatedOn:dd.MM.yyyy HH:mm}";
+    ViewBag.Title = $"Запрос коммерческого предложения № {Model.PublicId} от {User.ToLocalTime(Model.CreatedOn):dd.MM.yyyy HH:mm}";
     Layout = "_Layout";
 }
 

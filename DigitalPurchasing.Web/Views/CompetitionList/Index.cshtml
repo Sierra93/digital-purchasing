@@ -123,8 +123,8 @@
                 },
                 methods: {
                     formatDate: function (value) {
-                        if (value === null || value === '0001-01-01T00:00:00') return '';
-                        return moment(value).format('DD.MM.YYYY h:mm');
+                        if (value === null || value.startsWith('0001-01-01T')) return '';
+                        return moment(value).format('DD.MM.YYYY H:mm');
                     },
                     formatIsClosed: function (value) {
                         if (value === null) return '';

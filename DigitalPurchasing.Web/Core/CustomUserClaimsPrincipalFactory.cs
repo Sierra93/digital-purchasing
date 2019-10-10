@@ -12,15 +12,18 @@ namespace DigitalPurchasing.Web.Core
     public class CustomUserClaimsPrincipalFactory : UserClaimsPrincipalFactory<User, Role>
     {
         private readonly ICompanyService _companyService;
-        
+        private readonly ITimeZoneService _timeZoneService;
+
         public CustomUserClaimsPrincipalFactory(
             UserManager<User> userManager,
             RoleManager<Role> roleManager,
             IOptions<IdentityOptions> optionsAccessor,
-            ICompanyService companyService)
+            ICompanyService companyService,
+            ITimeZoneService timeZoneService)
             : base(userManager, roleManager, optionsAccessor)
         {
             _companyService = companyService;
+            _timeZoneService = timeZoneService;
         }
 
         protected override async Task<ClaimsIdentity> GenerateClaimsAsync(User user)
@@ -32,6 +35,7 @@ namespace DigitalPurchasing.Web.Core
             {
                 identity.AddClaim(new Claim(CustomClaimTypes.SupplierOffers.Delete, string.Empty));
             }
+            identity.AddClaim(new Claim(CustomClaimTypes.User.TimeZoneId, _timeZoneService.GetUserTimeZoneId(user.Id)));
             return identity;
         }
     }

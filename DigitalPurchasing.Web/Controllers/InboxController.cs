@@ -60,6 +60,7 @@ namespace DigitalPurchasing.Web.Controllers
                 request.Page, request.PerPage, request.SortField, request.SortAsc, request.Search);
             var nextUrl = Url.Action("Data", "Inbox", request.NextPageRequest(), Request.Scheme);
             var prevUrl = Url.Action("Data", "Inbox", request.PrevPageRequest(), Request.Scheme);
+
             return Json(new VueTableResponse<InboxIndexDataItem, VueTableRequest>(result.Data, request, result.Total, nextUrl, prevUrl));
         }
 

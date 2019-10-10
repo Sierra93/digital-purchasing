@@ -10,6 +10,7 @@ using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Emails;
 using DigitalPurchasing.Models;
+using DigitalPurchasing.Models.Identity;
 using Mapster;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;

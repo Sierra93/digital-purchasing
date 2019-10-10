@@ -107,7 +107,7 @@
                 methods: {
                     formatDate: function (value) {
                         if (value === null) return '';
-                        return moment(value).format('DD.MM.YYYY h:mm');
+                        return moment(value).format('DD.MM.YYYY H:mm');
                     },
                     onPaginationData(paginationData) {
                         this.$refs.pagination.setPaginationData(paginationData);
