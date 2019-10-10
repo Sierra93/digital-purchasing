@@ -67,7 +67,13 @@ namespace DigitalPurchasing.Web.Controllers
 
             var data = result.Data
                 .Adapt<List<CompetitionListIndexDataItemVm>>()
-                .Select(q => { q.EditUrl = Url.Action(nameof(Edit), new { id = q.Id }); return q; })
+                .Select(q =>
+                {
+                    q.EditUrl = Url.Action(nameof(Edit), new { id = q.Id });
+                    q.CreatedOn = User.ToLocalTime(q.CreatedOn);
+                    q.AutomaticCloseDate = User.ToLocalTime(q.AutomaticCloseDate);
+                    return q;
+                })
                 .ToList();
 
             return Json(new VueTableResponse<CompetitionListIndexDataItemVm, VueTableRequest>(data, request, result.Total, nextUrl, prevUrl));

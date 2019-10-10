@@ -1,7 +1,7 @@
 @model DigitalPurchasing.Core.Interfaces.PurchaseRequestDetailsResponse
 
 @{
-    ViewBag.Title = $"Заявка № {Model.PublicId} от {Model.CreatedOn:dd.MM.yyyy HH:mm}";
+    ViewBag.Title = $"Заявка № {Model.PublicId} от {User.ToLocalTime(Model.CreatedOn):dd.MM.yyyy HH:mm}";
     Layout = "_Layout";
 }
 

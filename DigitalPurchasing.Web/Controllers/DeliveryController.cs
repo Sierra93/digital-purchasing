@@ -1,4 +1,5 @@
 using System;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,11 +16,15 @@ namespace DigitalPurchasing.Web.Controllers
         {
             if (prId.HasValue)
             {
-                return Ok(_deliveryService.GetByPrId(prId.Value));
+                var delivery = _deliveryService.GetByPrId(prId.Value);
+                delivery.DeliverAt = User.ToLocalTime(delivery.DeliverAt);
+                return Ok(delivery);
             }
             if (qrId.HasValue)
             {
-                return Ok(_deliveryService.GetByQrId(qrId.Value));
+                var delivery = _deliveryService.GetByQrId(qrId.Value);
+                delivery.DeliverAt = User.ToLocalTime(delivery.DeliverAt);
+                return Ok(delivery);
             }
 
             return NotFound();
@@ -28,6 +33,7 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpPost]
         public IActionResult Save([FromBody]DeliveryVm req, [FromQuery]Guid? prId, [FromQuery]Guid? qrId)
         {
+            req.DeliverAt = User.ToUtcTime(req.DeliverAt);
             _deliveryService.CreateOrUpdate(req, prId, qrId);
             return Ok();
         }

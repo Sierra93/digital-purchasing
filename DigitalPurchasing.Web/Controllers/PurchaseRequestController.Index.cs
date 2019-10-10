@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
 using Mapster;
@@ -20,6 +21,7 @@ namespace DigitalPurchasing.Web.Controllers
             foreach (var d in data)
             {
                 d.EditUrl = Url.Action("Edit", new { id = d.Id });
+                d.CreatedOn = User.ToLocalTime(d.CreatedOn);
             }
             return Json(new VueTableResponse<PurchaseRequestDataVm, VueTableRequest>(data, request, result.Total, nextUrl, prevUrl));
         }

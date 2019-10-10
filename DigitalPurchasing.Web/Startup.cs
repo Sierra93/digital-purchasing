@@ -146,6 +146,7 @@ namespace DigitalPurchasing.Web
             services.AddScoped<IConversionRateService, ConversionRateService>();
             services.AddScoped<INomenclatureAlternativeService, NomenclatureAlternativeService>();
             services.AddScoped<IFileService, FileService>();
+            services.AddScoped<ITimeZoneService, TimeZoneService>();
             services.AddMandrill();
 
             services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
