@@ -14,22 +14,22 @@
             <div asp-validation-summary="All" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="Input.QuotationRequestResponseHours"></label>
-                <input asp-for="Input.QuotationRequestResponseHours" class="form-control" v-model="quotationRequestResponseHours" />
+                <input asp-for="Input.QuotationRequestResponseHours" class="form-control" v-model.number="quotationRequestResponseHours" />
                 <span asp-validation-for="Input.QuotationRequestResponseHours" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Input.PriceReductionResponseHours"></label>
-                <input asp-for="Input.PriceReductionResponseHours" class="form-control" v-model="priceReductionResponseHours" />
+                <input asp-for="Input.PriceReductionResponseHours" class="form-control" v-model.number="priceReductionResponseHours" />
                 <span asp-validation-for="Input.PriceReductionResponseHours" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Input.RoundsCount"></label>
-                <input asp-for="Input.RoundsCount" class="form-control" v-model="roundsCount" />
+                <input asp-for="Input.RoundsCount" class="form-control" v-model.number="roundsCount" />
                 <span asp-validation-for="Input.RoundsCount" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Input.AutoCloseCLHours"></label>
-                <input asp-for="Input.AutoCloseCLHours" class="form-control" readonly="readonly" v-model="autoCloseCLHours" />
+                <input asp-for="Input.AutoCloseCLHours" class="form-control" readonly="readonly" v-model.number="autoCloseCLHours" />
                 <span asp-validation-for="Input.AutoCloseCLHours" class="text-danger"></span>
             </div>
             <div class="form-group">
