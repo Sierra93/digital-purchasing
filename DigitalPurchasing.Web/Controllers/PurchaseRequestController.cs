@@ -21,6 +21,7 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly IUomService _uomService;
         private readonly INomenclatureAlternativeService _nomenclatureAlternativeService;
         private readonly ITimeZoneService _timeZoneService;
+        private readonly INomenclatureCategoryService _nomenclatureCategoryService;
 
         public PurchaseRequestController(
             IPurchaseRequestService purchasingRequestService,
@@ -29,7 +30,8 @@ namespace DigitalPurchasing.Web.Controllers
             UserManager<User> userManager,  
             IUomService uomService,
             INomenclatureAlternativeService nomenclatureAlternativeService,
-            ITimeZoneService timeZoneService)
+            ITimeZoneService timeZoneService,
+            INomenclatureCategoryService nomenclatureCategoryService)
         {
             _purchasingRequestService = purchasingRequestService;
             _nomenclatureService = nomenclatureService;
@@ -38,6 +40,7 @@ namespace DigitalPurchasing.Web.Controllers
             _uomService = uomService;
             _nomenclatureAlternativeService = nomenclatureAlternativeService;
             _timeZoneService = timeZoneService;
+            _nomenclatureCategoryService = nomenclatureCategoryService;
         }
 
         public IActionResult Edit(Guid id)
