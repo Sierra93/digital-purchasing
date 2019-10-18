@@ -341,6 +341,45 @@ namespace DigitalPurchasing.Services
             return settings.PackagingUomId;
         }
 
+        public async Task SetMassUom(Guid ownerId, Guid uomId)
+        {
+            var settings = await GetDefaultUomSettings(ownerId);
+            settings.MassUomId = uomId;
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task<Guid> GetMassUom(Guid ownerId)
+        {
+            var settings = await GetDefaultUomSettings(ownerId);
+            return settings.MassUomId;
+        }
+
+        public async Task SetResourceUom(Guid ownerId, Guid uomId)
+        {
+            var settings = await GetDefaultUomSettings(ownerId);
+            settings.ResourceUomId = uomId;
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task<Guid> GetResourceUom(Guid ownerId)
+        {
+            var settings = await GetDefaultUomSettings(ownerId);
+            return settings.ResourceUomId;
+        }
+
+        public async Task SetResourceBatchUom(Guid ownerId, Guid uomId)
+        {
+            var settings = await GetDefaultUomSettings(ownerId);
+            settings.ResourceBatchUomId = uomId;
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task<Guid> GetResourceBatchUom(Guid ownerId)
+        {
+            var settings = await GetDefaultUomSettings(ownerId);
+            return settings.ResourceBatchUomId;
+        }
+
         public IEnumerable<string> GetAllNormalizedNames(Guid ownerId)
         {
             var cacheKey = Consts.CacheKeys.UomAllNormalizedNames(ownerId);

@@ -1,7 +1,7 @@
 @page
 @model DefaultUomModel
 @{
-    ViewData["Title"] = "Единицы измерения";
+    ViewData["Title"] = "ЕИ по-умолчанию";
 }
 
 <h4>@ViewData["Title"]</h4>
@@ -20,6 +20,42 @@
                         @if (Model.Input.PackagingUomId != Guid.Empty)
                         {
                             <option value="@Model.Input.PackagingUomId" selected="selected">@Model.Input.PackagingUomName</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Input.MassUomId"></label>
+                    <select class="form-control remote-select-uom"
+                            asp-for="Input.MassUomId"
+                            asp-items="Model.EmptyList">
+                        <option value="@Guid.Empty">Не выбрано</option>
+                        @if (Model.Input.MassUomId != Guid.Empty)
+                        {
+                            <option value="@Model.Input.MassUomId" selected="selected">@Model.Input.MassUomName</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Input.ResourceUomId"></label>
+                    <select class="form-control remote-select-uom"
+                            asp-for="Input.ResourceUomId"
+                            asp-items="Model.EmptyList">
+                        <option value="@Guid.Empty">Не выбрано</option>
+                        @if (Model.Input.ResourceUomId != Guid.Empty)
+                        {
+                            <option value="@Model.Input.ResourceUomId" selected="selected">@Model.Input.ResourceUomName</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Input.ResourceBatchUomId"></label>
+                    <select class="form-control remote-select-uom"
+                            asp-for="Input.ResourceBatchUomId"
+                            asp-items="Model.EmptyList">
+                        <option value="@Guid.Empty">Не выбрано</option>
+                        @if (Model.Input.ResourceBatchUomId != Guid.Empty)
+                        {
+                            <option value="@Model.Input.ResourceBatchUomId" selected="selected">@Model.Input.ResourceBatchUomName</option>
                         }
                     </select>
                 </div>
