@@ -196,7 +196,6 @@
                         this.show = val;
                     },
                     item: function(val) {
-                        console.info('create-nomenclature-modal','item', val);
                         this.nomName = val.rawName;
                         if (val.rawUomMatchId) {
                             this.loadUom(val.rawUomMatchId);
@@ -234,7 +233,6 @@
                         }
                         this.$http.post('@Url.Action("CreateAndSaveMatchItem", "PurchaseRequest")', postData).then(function(res) {
                             var dataRes = res.body;
-                            console.info('CreateAndSaveMatchItem', 'result', dataRes);
                             if (dataRes.isSuccess) {
                                 vm.show = false;
                                 var createdData = {
@@ -387,10 +385,8 @@
                     },
                     nomenclatureCreated: function(data) {
                         var vm = this;
-                        console.info('nomenclatureCreated', data);
-
                         var index = vm.getRowIndex0ById(data.itemId); 
-                        console.info('item index',index);
+                        
                         vm.items[index].nomenclatureId = data.nomId;
                         vm.items[index].nomenclatureName = data.nomName;
                         vm.items[index].nomenclatureCode = data.nomCode;
