@@ -16,7 +16,7 @@ namespace DigitalPurchasing.Core.Interfaces
         Task<CreateFromFileResponse> CreateFromFile(Guid competitionListId, string filePath);
 
         SupplierOfferVm GetById(Guid id, bool globalSearch = false);
-        SupplierOfferDetailsVm GetDetailsById(Guid id);
+        SupplierOfferDetailsVm GetDetailsById(Guid id, bool globalSearch = false);
 
         SupplierOfferColumnsDataVm GetColumnsData(Guid id, bool globalSearch = false);
         void SaveColumns(Guid supplierOfferId, SupplierOfferColumnsVm columns, bool globalSearch = false);

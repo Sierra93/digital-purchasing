@@ -120,7 +120,11 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<DateTime>("AutomaticCloseDate");
+
                     b.Property<DateTime>("CreatedOn");
+
+                    b.Property<bool?>("IsClosed");
 
                     b.Property<Guid>("OwnerId");
 
@@ -316,9 +320,15 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<DateTime>("CreatedOn");
 
+                    b.Property<Guid>("MassUomId");
+
                     b.Property<Guid>("OwnerId");
 
                     b.Property<Guid>("PackagingUomId");
+
+                    b.Property<Guid>("ResourceBatchUomId");
+
+                    b.Property<Guid>("ResourceUomId");
 
                     b.HasKey("Id");
 
@@ -457,6 +467,10 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<int>("AccessFailedCount");
 
+                    b.Property<double>("AutoCloseCLHours")
+                        .ValueGeneratedOnAdd()
+                        .HasDefaultValue(2.0);
+
                     b.Property<Guid>("CompanyId");
 
                     b.Property<string>("ConcurrencyStamp")
@@ -483,6 +497,10 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256);
 
+                    b.Property<double>("PRDiscountPercentage")
+                        .ValueGeneratedOnAdd()
+                        .HasDefaultValue(3.0);
+
                     b.Property<string>("PasswordHash");
 
                     b.Property<string>("Patronymic");
@@ -491,7 +509,23 @@ namespace DigitalPurchasing.Data.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed");
 
+                    b.Property<double>("PriceReductionResponseHours")
+                        .ValueGeneratedOnAdd()
+                        .HasDefaultValue(0.5);
+
+                    b.Property<double>("QuotationRequestResponseHours")
+                        .ValueGeneratedOnAdd()
+                        .HasDefaultValue(1.0);
+
+                    b.Property<int>("RoundsCount")
+                        .ValueGeneratedOnAdd()
+                        .HasDefaultValue(1);
+
                     b.Property<string>("SecurityStamp");
+
+                    b.Property<byte>("SendPriceReductionTo")
+                        .ValueGeneratedOnAdd()
+                        .HasDefaultValue((byte)0);
 
                     b.Property<bool>("TwoFactorEnabled");
 
@@ -780,6 +814,8 @@ namespace DigitalPurchasing.Data.Migrations
                     b.Property<DateTime>("CreatedOn");
 
                     b.Property<string>("Data");
+
+                    b.Property<byte>("SendingType");
 
                     b.Property<Guid>("SupplierOfferId");
 

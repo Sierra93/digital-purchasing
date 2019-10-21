@@ -49,6 +49,16 @@ namespace DigitalPurchasing.Core.Interfaces
 
         Task SetPackagingUom(Guid ownerId, Guid uomId);
         Task<Guid> GetPackagingUom(Guid ownerId);
+
+        Task SetMassUom(Guid ownerId, Guid uomId);
+        Task<Guid> GetMassUom(Guid ownerId);
+
+        Task SetResourceUom(Guid ownerId, Guid uomId);
+        Task<Guid> GetResourceUom(Guid ownerId);
+
+        Task SetResourceBatchUom(Guid ownerId, Guid uomId);
+        Task<Guid> GetResourceBatchUom(Guid ownerId);
+
         IEnumerable<string> GetAllNormalizedNames(Guid ownerId);
     }
 

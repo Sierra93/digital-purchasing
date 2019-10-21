@@ -10,6 +10,7 @@ namespace DigitalPurchasing.Core.Interfaces
         Task<int> TotalCount();
         Task<int> TotalCountByCompany(Guid companyId);
         Task<int> ConfirmedEmailCount();
+        Task<UserDto> GetById(Guid userId);
     }
 
     public class UserDto
@@ -22,6 +23,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public string Patronymic { get; set; }
         public string JobTitle { get; set; }
         public bool EmailConfirmed { get; set; }
+        public decimal PRDiscountPercentage { get; set; }
     }
 
     public class UserInfoDto

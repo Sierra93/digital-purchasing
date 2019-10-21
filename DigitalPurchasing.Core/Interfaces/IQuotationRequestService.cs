@@ -21,6 +21,7 @@ namespace DigitalPurchasing.Core.Interfaces
         byte[] GenerateExcelByItem(Guid quotationRequestId, params Guid[] itemIds);
         List<SentRequest> GetSentRequests(Guid quotationRequestId);
         string RequestSentBy(Guid quotationRequestId, string fromEmail);
+        string RequestSentBy(Guid quotationRequestId);
     }
 
     public class QuotationRequestIndexDataItem

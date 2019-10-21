@@ -1,16 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Models.Identity;
-using DigitalPurchasing.Web.Core;
 using DigitalPurchasing.Web.ViewModels;
-using DigitalPurchasing.Web.ViewModels.PurchasingRequest;
-using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -25,6 +20,8 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly UserManager<User> _userManager;
         private readonly IUomService _uomService;
         private readonly INomenclatureAlternativeService _nomenclatureAlternativeService;
+        private readonly ITimeZoneService _timeZoneService;
+        private readonly INomenclatureCategoryService _nomenclatureCategoryService;
 
         public PurchaseRequestController(
             IPurchaseRequestService purchasingRequestService,
@@ -32,7 +29,9 @@ namespace DigitalPurchasing.Web.Controllers
             ICompanyService companyService,
             UserManager<User> userManager,  
             IUomService uomService,
-            INomenclatureAlternativeService nomenclatureAlternativeService)
+            INomenclatureAlternativeService nomenclatureAlternativeService,
+            ITimeZoneService timeZoneService,
+            INomenclatureCategoryService nomenclatureCategoryService)
         {
             _purchasingRequestService = purchasingRequestService;
             _nomenclatureService = nomenclatureService;
@@ -40,6 +39,8 @@ namespace DigitalPurchasing.Web.Controllers
             _userManager = userManager;
             _uomService = uomService;
             _nomenclatureAlternativeService = nomenclatureAlternativeService;
+            _timeZoneService = timeZoneService;
+            _nomenclatureCategoryService = nomenclatureCategoryService;
         }
 
         public IActionResult Edit(Guid id)

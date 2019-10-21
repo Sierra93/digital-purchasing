@@ -11,5 +11,8 @@ namespace DigitalPurchasing.Models
         public Guid QuotationRequestId { get; set; }
 
         public ICollection<SupplierOffer> SupplierOffers { get; set; }
+
+        public bool? IsClosed { get; set; }
+        public DateTime AutomaticCloseDate { get; set; }
     }
 }

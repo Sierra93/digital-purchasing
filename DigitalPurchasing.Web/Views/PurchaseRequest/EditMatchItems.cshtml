@@ -1,7 +1,7 @@
 @model DigitalPurchasing.Core.Interfaces.PurchaseRequestDetailsResponse
 
 @{
-    ViewBag.Title = $"Заявка № {Model.PublicId} от {Model.CreatedOn:dd.MM.yyyy HH:mm}";
+    ViewBag.Title = $"Заявка № {Model.PublicId} от {User.ToLocalTime(Model.CreatedOn):dd.MM.yyyy HH:mm}";
     Layout = "_Layout";
 }
 
@@ -52,6 +52,7 @@
                 </td>
                 <td v-else class="border-left text-center" colspan="5">
                     <button type="button" class="btn btn-link" v-on:click="openMatch(item)">Сопоставить</button>
+                    <button type="button" class="btn btn-link" v-on:click="openCreate(item)">Создать</button>
                 </td>
             </tr>
         </tbody>
@@ -61,8 +62,8 @@
             <a class="btn btn-primary" v-show="isQuotationRequestAvailable" asp-controller="QuotationRequest" asp-action="Create" asp-route-prId="@Model.Id">Запросить предложение</a>
         </div>
     </div>
-    <modal v-model="matchModal" v-if="currentItem" title="Сопоставьте номенклатуру заявки с номенклатурой Вашего предприятия" size="lg">
-        <table class="table table-striped">
+    <modal v-model="matchModal" title="Сопоставьте номенклатуру заявки с номенклатурой Вашего предприятия" size="lg">
+        <table class="table table-striped" v-if="currentItem">
             <tbody>
             <tr>
                 <td><b>Юр лицо</b></td>
@@ -121,14 +122,43 @@
         </table>
         <div slot="footer" class="text-center">
             <button v-on:click="prevMatch" v-bind:style="{ visibility: isPrevEnabled ? 'visible' : 'hidden' }" class="btn btn-default pull-left">Предыдущая позиция</button>
+            <button v-on:click="closeMatch" class="btn btn-default">Отмена</button>
             <button v-on:click="saveMatch" class="btn btn-primary" :disabled="!isSaveEnabled">Подтвердить</button>
-            <button v-on:click="closeMatch" class="btn btn-default">Отменить</button>
             <button v-on:click="nextMatch" v-bind:style="{ visibility: isNextEnabled ? 'visible' : 'hidden' }" class="btn btn-default pull-right">Следующая позиция</button>
         </div>
     </modal>
+    <create-nomenclature-modal v-if="currentItem"
+                               :item="currentItem"
+                               :show-modal="createModal"
+                               v-on:hide="closeCreate"
+                               v-on:created="nomenclatureCreated">
+    </create-nomenclature-modal>
 </div>
 
 @section Scripts {
+
+    <script type="text/x-template" id="create-nomenclature-modal">
+        <modal v-model="show"
+               title="Создание новой номенклатуры"
+               ok-text="Создать"
+               cancel-text="Отмена"
+               v-on:hide="onModalHide" :backdrop="backdrop">
+            <div class="form-group" v-bind:class="{ 'has-error': nameHasError, 'has-success': !nameHasError }">
+                <label>Название</label>
+                <input id="nom-name" type="text" class="form-control" v-model.trim="nomName" />
+            </div>
+            <div class="form-group" v-bind:class="{ 'has-error': uomHasError, 'has-success': !uomHasError }">
+                <label>ЕИ</label>
+                <input id="nom-uom" type="text" class="form-control" v-model="nomUomAutocomplete" />
+                <typeahead v-model="nomUomSelected" target="#nom-uom" preselect="preselect" force-select async-src="@Url.Action("Autocomplete", "Uom")?q=" async-key="items" item-key="name"></typeahead>
+            </div>
+            <div slot="footer">
+                <button type="button" class="btn btn-default" v-on:click="show=false"><span>Отмена</span></button>
+                <button data-action="auto-focus" type="button" class="btn btn-primary" v-on:click="createNom" :disabled="anyError"><span>Создать</span></button>
+            </div>
+        </modal>
+    </script>
+
     <script>
         (function() {
             function getInputClass(hasError) {
@@ -138,6 +168,92 @@
                 };
             };
 
+            Vue.component('create-nomenclature-modal', {
+                template: '#create-nomenclature-modal',
+                props: ['showModal', 'item'],
+                data: function() {
+                    return {
+                        show: false,
+                        backdrop: false,
+                        nomName: null,
+                        nomUomAutocomplete: null,
+                        nomUomSelected: null
+                    };
+                },
+                computed: {
+                    nameHasError: function() {
+                        return !this.nomName || this.nomName.length === 0;
+                    },
+                    uomHasError: function() {
+                        return !this.nomUomSelected || !this.nomUomSelected.id;
+                    },
+                    anyError: function() {
+                        return this.nameHasError || this.uomHasError;
+                    }
+                },
+                watch: {
+                    showModal: function(val) {
+                        this.show = val;
+                    },
+                    item: function(val) {
+                        this.nomName = val.rawName;
+                        if (val.rawUomMatchId) {
+                            this.loadUom(val.rawUomMatchId);
+                        } else {
+                            this.nomUomSelected = val.rawUom;
+                            this.nomUomAutocomplete = val.rawUom;
+                        }
+                    }
+                },
+                methods: {
+                    onModalHide: function() {
+                        this.$emit('hide');
+                    },
+                    loadUom: function(id) {
+                        var $this = this;
+                        this.$http.get('@Url.Action("AutocompleteSingle", "Uom")' + '?id=' + id).then(function(res) {
+                            var dataRes = res.body;
+                            if (dataRes.isSuccess) {
+                                $this.nomUomSelected = dataRes.data;
+                                $this.nomUomAutocomplete = dataRes.data.name;
+                            } else {
+                                alert('error');
+                            }
+                        },
+                        function(res) {
+                            alert('error');
+                        });
+                    },
+                    createNom: function() {
+                        var vm = this;
+                        var postData  = {
+                            itemId: vm.item.id,
+                            uomId: vm.nomUomSelected.id,
+                            name: vm.nomName
+                        }
+                        this.$http.post('@Url.Action("CreateAndSaveMatchItem", "PurchaseRequest")', postData).then(function(res) {
+                            var dataRes = res.body;
+                            if (dataRes.isSuccess) {
+                                vm.show = false;
+                                var createdData = {
+                                    itemId: postData.itemId,
+                                    nomId: dataRes.nomenclatureId,
+                                    nomName: postData.name,
+                                    nomCode: '',
+                                    uomId: vm.nomUomSelected.id,
+                                    uomName: vm.nomUomSelected.name
+                            };
+                                vm.$emit('created', createdData);
+                            } else {
+                                alert(dataRes.message);
+                            }
+                        }, function(res) {
+                            alert('error');
+                        });
+                    }
+                }
+            });
+
             var app = new Vue({
                 el: '#app',
                 data: function() {
@@ -146,7 +262,8 @@
                         customerName: '',
                         customerId: null,
                         matchModal: false,
-                        currentItem: null,
+                        createModal: false,
+                        currentItem: {},
                         selectedNomenclature: null,
                         selectedUom: null,
                         nomenclatureAutocomplete: '',
@@ -157,15 +274,7 @@
                     };
                 },
                 created: function() {
-                    var $this = this;
-                    this.$http.get('@Url.Action("MatchItemsData", new { id = Model.Id })').then(function(res) {
-                        var dataRes = res.body;
-                        $this.items = dataRes.items;
-                        $this.customerName = dataRes.customerName;
-                        $this.customerId = dataRes.customerId;
-                    }, function(res) {
-
-                    });
+                    this.loadData();
                 },
                 watch: {
                     selectedNomenclature: function(val) {
@@ -174,7 +283,7 @@
                         }
                         this.loadFactor();
                     },
-                    selectedUom: function (val) {
+                    selectedUom: function(val) {
                         if (val) {
                             this.uomAutocomplete = val.name;
                         }
@@ -188,7 +297,7 @@
                     },
                     isNextEnabled: function() {
                         if (!this.currentItem) return false;
-                        var length0 = this.items.length-1;
+                        var length0 = this.items.length - 1;
                         return this.getRowIndex0(this.currentItem) < length0;
                     },
                     isSaveEnabled: function() {
@@ -221,33 +330,72 @@
                         }
                         return '';
                     },
-                    nomenclatureClass: function () { return getInputClass(this.nomenclatureHasError); },
-                    uomClass: function () { return getInputClass(this.uomHasError); },
-                    factorErrorClass: function () { return getInputClass(this.factorHasError); },
+                    nomenclatureClass: function() { return getInputClass(this.nomenclatureHasError); },
+                    uomClass: function() { return getInputClass(this.uomHasError); },
+                    factorErrorClass: function() { return getInputClass(this.factorHasError); },
                     isQuotationRequestAvailable: function() {
                         var $this = this;
                         if (this.items.length === 0) return false;
-                        return _.every(this.items, function (i) { return $this.isMatched(i); });
+                        return _.every(this.items, function(i) { return $this.isMatched(i); });
                     }
                 },
                 methods: {
-                    getRowIndex0: function (item) {
+                    loadData: function() {
+                        var $this = this;
+                        this.$http.get('@Url.Action("MatchItemsData", new {id = Model.Id})').then(function(res) {
+                            var dataRes = res.body;
+                            $this.items = dataRes.items;
+                            $this.currentItem = $this.items[0];
+                            $this.customerName = dataRes.customerName;
+                            $this.customerId = dataRes.customerId;
+                        },
+                        function(res) {
+
+                        });
+                    },
+                    getRowIndex0: function(item) {
                         return this.items.indexOf(item);
                     },
-                    getRowIndex: function (item) {
+                    getRowIndex0ById: function(itemId) {
+                        return _.findIndex(this.items, function(item){ return item.id === itemId; });
+                        //return this.getRowIndex0(item);
+                    },
+                    getRowIndex: function(item) {
                         return this.getRowIndex0(item) + 1;
                     },
                     isMatched: function(item) {
-                        return item.nomenclatureId && item.rawUomMatchId && (item.nomenclatureFactor > 0 || item.commonFactor > 0);
+                        return item.nomenclatureId &&
+                            item.rawUomMatchId &&
+                            (item.nomenclatureFactor > 0 || item.commonFactor > 0);
                     },
-                    openMatch: function (item) {
+                    openMatch: function(item) {
                         this.currentItem = item;
                         this.matchModal = true;
                         this.loadMatch();
                     },
-                    closeMatch: function () {
-                        this.currentItem = null;
+                    closeMatch: function() {
                         this.matchModal = false;
+                    },
+                    openCreate: function(item) {
+                        this.currentItem = item;
+                        this.createModal = true;
+                    },
+                    closeCreate: function() {
+                        this.createModal = false;
+                    },
+                    nomenclatureCreated: function(data) {
+                        var vm = this;
+                        var index = vm.getRowIndex0ById(data.itemId); 
+                        
+                        vm.items[index].nomenclatureId = data.nomId;
+                        vm.items[index].nomenclatureName = data.nomName;
+                        vm.items[index].nomenclatureCode = data.nomCode;
+                        vm.items[index].commonFactor = 1;
+                        vm.items[index].rawUomMatchId = data.uomId;
+                        vm.items[index].nomenclatureUom = data.uomName;
+                        //vm.items[index].nomenclatureUom = $this.selectedNomenclature.batchUomName;
+                        //vm.items[index].rawUomMatchId = $this.selectedUom.id;
+
                     },
                     loadMatch: function() {
                         if (this.currentItem.nomenclatureId) {
@@ -263,19 +411,17 @@
                             this.selectedUom = null;
                         }
                     },
-                    prevMatch: function () {
+                    prevMatch: function() {
                         var index = this.getRowIndex0(this.currentItem);
-                        this.currentItem = null;
-                        this.currentItem = this.items[index-1];
+                        this.currentItem = this.items[index - 1];
                         this.loadMatch();
                     },
-                    nextMatch: function () {
+                    nextMatch: function() {
                         var index = this.getRowIndex0(this.currentItem);
-                        this.currentItem = null;
-                        this.currentItem = this.items[index+1];
+                        this.currentItem = this.items[index + 1];
                         this.loadMatch();
                     },
-                    saveMatch: function () {
+                    saveMatch: function() {
                         var $this = this;
                         var data = {
                             itemId: $this.currentItem.id,
@@ -292,13 +438,14 @@
                             $this.items[index].nomenclatureCode = $this.selectedNomenclature.code;
                             $this.items[index].nomenclatureUom = $this.selectedNomenclature.batchUomName;
                             $this.items[index].rawUomMatchId = $this.selectedUom.id;
-                        }, function(res) {
+                        },
+                        function(res) {
                             alert('error');
                         });
                     },
                     loadNomenclature: function(id) {
                         var $this = this;
-                        this.$http.get('@Url.Action("AutocompleteSingle", "Nomenclature")' + '?id=' + id).then(function(res) {
+                        this.$http.get('@Url.Action("AutocompleteSingle", "Nomenclature")' + '?id=' + id).then( function(res) {
                             var dataRes = res.body;
                             if (dataRes.isSuccess) {
                                 $this.selectedNomenclature = dataRes.data;
@@ -306,7 +453,8 @@
                             } else {
                                 alert('error');
                             }
-                        }, function(res) {
+                        },
+                        function(res) {
                             alert('error');
                         });
                     },
@@ -320,11 +468,12 @@
                             } else {
                                 alert('error');
                             }
-                        }, function(res) {
+                        },
+                        function(res) {
                             alert('error');
                         });
                     },
-                    loadFactor: _.debounce(function (e) {
+                    loadFactor: _.debounce(function(e) {
                         var $this = this;
 
                         if (!this.nomenclatureHasError && !this.uomHasError) {
@@ -332,19 +481,23 @@
                             var to = this.selectedNomenclature.batchUomId;
                             var nom = this.selectedNomenclature.id;
                             var customerId = $this.customerId;
-                            this.$http.post('@Url.Action("Factor", "Uom")', { from, to, nom, customerId }).then(function (res) {
-                                var dataRes = res.body;
-                                $this.currentItem.commonFactor = dataRes.commonFactor;
-                                $this.currentItem.nomenclatureFactor = dataRes.nomenclatureFactor;
-                                if (dataRes.nomenclatureFactor > 0) {
-                                    $this.factor = 'n';
-                                } else {
-                                    $this.factor = 'c';
-                                }
-                            }, function (res) {
-                                alert('error');
-                            });
-                        } else { $this.factor = 'c' }
+                            this.$http.post('@Url.Action("Factor", "Uom")', { from, to, nom, customerId }).then(
+                                function(res) {
+                                    var dataRes = res.body;
+                                    $this.currentItem.commonFactor = dataRes.commonFactor;
+                                    $this.currentItem.nomenclatureFactor = dataRes.nomenclatureFactor;
+                                    if (dataRes.nomenclatureFactor > 0) {
+                                        $this.factor = 'n';
+                                    } else {
+                                        $this.factor = 'c';
+                                    }
+                                },
+                                function(res) {
+                                    alert('error');
+                                });
+                        } else {
+                            $this.factor = 'c';
+                        }
                     }, 300)
                 }
             });

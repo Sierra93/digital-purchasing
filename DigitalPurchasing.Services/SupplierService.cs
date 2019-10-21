@@ -145,6 +145,7 @@ namespace DigitalPurchasing.Services
         public List<SupplierContactPersonVm> GetContactPersonsBySupplier(Guid supplierId, bool whichCouldBeUsedForRequestsOnly = false)
         {
             var query = _db.SupplierContactPersons
+                .IgnoreQueryFilters()
                 .Where(q => q.SupplierId == supplierId);
 
             if (whichCouldBeUsedForRequestsOnly)

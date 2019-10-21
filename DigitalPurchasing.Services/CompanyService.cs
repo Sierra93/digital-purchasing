@@ -184,6 +184,7 @@ namespace DigitalPurchasing.Services
             var month = await _uomService.Create(companyId, "мес");
 
             var durability = await _uomService.Create(companyId, "стойкость");
+            var resource = await _uomService.Create(companyId, "ресурс");
 
             var packaging = await _uomService.Create(companyId, "упаковка");
 
@@ -191,6 +192,9 @@ namespace DigitalPurchasing.Services
             _uomService.SaveConversionRate(companyId, ton.Id, kilogram.Id, null, 1000, 0);
 
             await _uomService.SetPackagingUom(companyId, packaging.Id);
+            await _uomService.SetMassUom(companyId, kilogram.Id);
+            await _uomService.SetResourceUom(companyId, resource.Id);
+            await _uomService.SetResourceBatchUom(companyId, month.Id);
         }
     }
 }

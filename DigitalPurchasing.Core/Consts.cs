@@ -1,4 +1,5 @@
 using System;
+using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Extensions;
 
 namespace DigitalPurchasing.Core
@@ -8,6 +9,12 @@ namespace DigitalPurchasing.Core
         public static class Settings
         {
             public static string AppPath = "App";
+            public static double PRDiscountPercentage = 3;
+            public static double QuotationRequestResponseHours = 1;
+            public static double PriceReductionResponseHours = 0.5;
+            public static double AutoCloseCLHours = 2;
+            public static int RoundsCount = 1;
+            public static SendPriceReductionTo SendPriceReductionTo = SendPriceReductionTo.MinPrice;
         }
 
         public static class Format

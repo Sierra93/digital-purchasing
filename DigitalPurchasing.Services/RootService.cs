@@ -53,6 +53,15 @@ namespace DigitalPurchasing.Services
             return root?.Adapt<RootDto>();
         }
 
+        public async Task<RootDto> GetByQR(Guid quotationRequestId)
+        {
+            var root = await _db.Roots
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(q => q.QuotationRequestId == quotationRequestId);
+
+            return root?.Adapt<RootDto>();
+        }
+
         public async Task AssignQR(Guid ownerId, Guid rootId, Guid qrId)
         {
             var root = await _db.Roots

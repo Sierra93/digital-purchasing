@@ -7,7 +7,7 @@
     var cl = Model.CompetitionList;
     var hasErpCode = !string.IsNullOrEmpty(cl.PurchaseRequest.ErpCode);
     var hasInvoiceData = cl.SupplierOffers.Any(q => !string.IsNullOrEmpty(q.InvoiceData));
-    ViewBag.Title = $"Конкурентный лист № {cl.PublicId} от {cl.CreatedOn:dd.MM.yyyy HH:mm}";
+    ViewBag.Title = $"Конкурентный лист № {cl.PublicId} от {User.ToLocalTime(cl.CreatedOn):dd.MM.yyyy HH:mm}";
     Layout = "_Layout";
 }
 
@@ -28,7 +28,7 @@
                 <div class="header">
                     <p>
                         <b>Клиент: @cl.PurchaseRequest.CustomerName</b>&nbsp;
-                        <a asp-action="Edit" asp-controller="PurchaseRequest" asp-route-id="@cl.PurchaseRequest.Id">@($"Заявка № {cl.PurchaseRequest.PublicId} от {cl.PurchaseRequest.CreatedOn:dd.MM.yyyy HH:mm}")</a>
+                        <a asp-action="Edit" asp-controller="PurchaseRequest" asp-route-id="@cl.PurchaseRequest.Id">@($"Заявка № {cl.PurchaseRequest.PublicId} от {User.ToLocalTime(cl.PurchaseRequest.CreatedOn):dd.MM.yyyy HH:mm}")</a>
                     </p>
                     @if (hasErpCode)
                     {<p>Номер заявки в ERP - @cl.PurchaseRequest.ErpCode</p>}
@@ -92,6 +92,9 @@
                         <ul>
                             @foreach (var so in group.Value)
                             {
+                                {
+                                    so.CreatedOn = User.ToLocalTime(so.CreatedOn);
+                                }
                                 <li>
                                     <span>Раунд @(index++)</span>&nbsp;
                                     <a asp-action="Edit" asp-controller="SupplierOffer" asp-route-id="@so.Id">@so.Title</a>
@@ -100,7 +103,7 @@
                         </ul>
                         @if (baseOffer.SupplierId.HasValue)
                         {
-                            var filename = $"{cl.CreatedOn:yyyyMMdd}_КЛ_{cl.PublicId}_{lastOffer.SupplierName}_Запрос_на_изменение_условий.xlsx";
+                            var filename = $"{User.ToLocalTime(cl.CreatedOn):yyyyMMdd}_КЛ_{cl.PublicId}_{lastOffer.SupplierName}_Запрос_на_изменение_условий.xlsx";
                             var postUrl = @Url.Action("PriceReductionDownload", new { id = Model.CompetitionList.Id, supplierId = baseOffer.SupplierId.Value });
                             <button @@click="downloadPRXls('@filename','@postUrl')" class="btn btn-link">
                                 <span>Скачать запрос на понижение</span>

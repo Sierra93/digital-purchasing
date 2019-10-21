@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core.Extensions;
+using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,6 +19,24 @@ namespace DigitalPurchasing.Web.Controllers
             public decimal FactorN { get; set; }
             public decimal FactorC { get; set; }
             public Guid CustomerId { get; set; }
+        }
+
+        public class CreateAndSaveMatchItemPost
+        {
+            public Guid ItemId { get; set; }
+            public string Name { get; set; }
+            public Guid UomId { get; set; }
+        }
+
+        public class CreateAndSaveMatchItemResult
+        {
+            public bool IsSuccess { get; set; }
+            public string Message { get; set; }
+
+            public Guid NomenclatureId { get; set; }
+
+            public static CreateAndSaveMatchItemResult Success(Guid nomenclatureId) => new CreateAndSaveMatchItemResult { IsSuccess = true, NomenclatureId = nomenclatureId };
+            public static CreateAndSaveMatchItemResult Error(string message) => new CreateAndSaveMatchItemResult { IsSuccess = false, Message = message };
         }
 
         [HttpGet]
@@ -69,6 +88,50 @@ namespace DigitalPurchasing.Web.Controllers
             _purchasingRequestService.SaveMatch(model.ItemId, model.NomenclatureId, model.UomId, model.FactorC, model.FactorN);
 
             return Ok();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateAndSaveMatchItem([FromBody] CreateAndSaveMatchItemPost post)
+        {
+            var companyId = User.CompanyId();
+
+            var massUomId = await _uomService.GetMassUom(companyId);
+            if (massUomId == Guid.Empty)
+            {
+                return Ok(CreateAndSaveMatchItemResult.Error("Ошибка. Установите ЕИ по-умолчанию для массы"));
+            }
+
+            var resourceUomId = await _uomService.GetResourceUom(companyId);
+            if (resourceUomId == Guid.Empty)
+            {
+                return Ok(CreateAndSaveMatchItemResult.Error("Ошибка. Установите ЕИ по-умолчанию  для ресурса"));
+            }
+
+            var resourceBatchUom = await _uomService.GetResourceBatchUom(companyId);
+            if (resourceBatchUom == Guid.Empty)
+            {
+                return Ok(CreateAndSaveMatchItemResult.Error("Ошибка. Установите ЕИ по-умолчанию  для ЕИ ресурса"));
+            }
+
+            var category = _nomenclatureCategoryService.CreateOrUpdate(companyId, "---", null);
+
+            var model = new NomenclatureVm
+            {
+                Name = post.Name,
+                BatchUomId = post.UomId,
+                MassUomId = massUomId,
+                ResourceUomId = resourceUomId,
+                ResourceBatchUomId = resourceBatchUom,
+                CategoryId = category.Id,
+            };
+
+            var nomenclature = _nomenclatureService.CreateOrUpdate(model, companyId);
+
+            _nomenclatureAlternativeService.AddNomenclatureForCustomer(post.ItemId);
+
+            _purchasingRequestService.SaveMatch(post.ItemId, nomenclature.Id, post.UomId, 1, 0);
+            
+            return Ok(CreateAndSaveMatchItemResult.Success(nomenclature.Id));
         }
     }
 }

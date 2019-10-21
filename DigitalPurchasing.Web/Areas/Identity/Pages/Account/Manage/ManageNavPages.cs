@@ -30,6 +30,8 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
 
         public static string DefaultUom = "DefaultUom";
 
+        public static string PriceReduction = "PriceReduction";
+
         public static string IndexNavClass(ViewContext viewContext) => PageNavClass(viewContext, Index);
 
         public static string ChangePasswordNavClass(ViewContext viewContext) => PageNavClass(viewContext, ChangePassword);
@@ -47,6 +49,8 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
         public static string UsersNavClass(ViewContext viewContext) => PageNavClass(viewContext, Users);
 
         public static string DefaultUomNavClass(ViewContext viewContext) => PageNavClass(viewContext, DefaultUom);
+
+        public static string PriceReductionNavClass(ViewContext viewContext) => PageNavClass(viewContext, PriceReduction);
 
         public static string PersonalDataNavClass(ViewContext viewContext) => PageNavClass(viewContext, PersonalData);
 
