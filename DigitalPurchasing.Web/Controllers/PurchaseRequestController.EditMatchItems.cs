@@ -106,9 +106,9 @@ namespace DigitalPurchasing.Web.Controllers
             return Ok();
         }
 
-        public const string DefaultUomMassError = "Ошибка. Установите ЕИ по-умолчанию для массы";
-        public const string DefaultUomResourceError = "Ошибка. Установите ЕИ по-умолчанию для ресурса";
-        public const string DefaultUomResourceBatchError = "Ошибка. Установите ЕИ по-умолчанию для ЕИ ресурса";
+        public const string DefaultUomMassError = "Установите ЕИ по-умолчанию для массы";
+        public const string DefaultUomResourceError = "Установите ЕИ по-умолчанию для ресурса";
+        public const string DefaultUomResourceBatchError = "Установите ЕИ по-умолчанию для ЕИ ресурса";
 
         private NomenclatureCategoryVm GetDefaultCategory(Guid companyId)
             => _nomenclatureCategoryService.CreateOrUpdate(companyId, "---", null);
