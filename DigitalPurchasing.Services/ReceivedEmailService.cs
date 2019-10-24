@@ -91,7 +91,7 @@ namespace DigitalPurchasing.Services
                 Body = body,
                 FromEmail = fromEmail,
                 ToEmail = toEmail,
-                MessageDate = messageDate,
+                MessageDate = messageDate.UtcDateTime,
                 Attachments = attachments.Select(a => new EmailAttachment
                 {
                     FileName = a.fileName,

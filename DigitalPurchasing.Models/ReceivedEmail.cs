@@ -14,7 +14,7 @@ namespace DigitalPurchasing.Models
         public string Subject { get; set; }
         public string Body { get; set; }
         public string FromEmail { get; set; }
-        public DateTimeOffset MessageDate { get; set; }
+        public DateTime MessageDate { get; set; }
 
         public ICollection<EmailAttachment> Attachments { get; set; }
         public string ToEmail { get; set; }
