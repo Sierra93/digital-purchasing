@@ -152,8 +152,8 @@
                         name: name
                     };
                     this.$http.post('@Url.Action("VerifyName")', postData).then(function(res) {
-                        vm.isDeleted = res.data.isDeleted
-                        vm.nomenclatureId = res.data.nomenclatureId
+                        vm.isDeleted = res.data.isDeleted;
+                        vm.nomenclatureId = res.data.nomenclatureId;
                     });
                 },
                 restore: function () {
