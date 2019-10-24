@@ -96,9 +96,24 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpGet]
         public IActionResult AutocompleteSingle([FromQuery] Guid id) => Json(_nomenclatureService.AutocompleteSingle(id));
 
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            var vm = new NomenclatureEditVm();
+            var companyId = User.CompanyId();
+
+            var massUom = await _uomService.GetMassUom(companyId);
+            var resourceUom = await _uomService.GetResourceUom(companyId);
+            var resourceBatchUom = await _uomService.GetResourceBatchUom(companyId);
+
+            var vm = new NomenclatureEditVm
+            {
+                MassUomId = massUom.Id,
+                MassUomName = massUom.Name,
+                ResourceUomId = resourceUom.Id,
+                ResourceUomName = resourceUom.Name,
+                ResourceBatchUomId = resourceBatchUom.Id,
+                ResourceBatchUomName = resourceBatchUom.Name
+            };
+
             LoadDictionaries(vm);
             return View(nameof(Edit), vm);
         }
@@ -458,6 +473,51 @@ namespace DigitalPurchasing.Web.Controllers
         {
             var name = categoryFullName.Split('>', StringSplitOptions.RemoveEmptyEntries).Select(q => q.Trim()).Last();
             return categories.First(q => q.Value.Equals(name, StringComparison.InvariantCultureIgnoreCase)).Key;
+        }
+
+        public class VerifyNamePost
+        {
+            public string Name { get; set; }
+        }
+
+        public class VerifyNameResult
+        {
+            public bool IsDeleted { get; internal set; }
+            public Guid NomenclatureId { get; internal set; }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> VerifyName([FromBody] VerifyNamePost model)
+        {
+            var companyId = User.CompanyId();
+            var isDeletedResult = await _nomenclatureService.IsDeletedAsync(companyId, model.Name);
+            var result = new VerifyNameResult
+            {
+                IsDeleted = isDeletedResult.IsDeleted,
+                NomenclatureId = isDeletedResult.NomenclatureId
+            };
+            return Json(result);
+        }
+
+        public class RestorePost
+        {
+            public Guid NomenclatureId { get; set; }
+        }
+
+        public class RestorePostResult
+        {
+            public string Url { get; set; }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Restore([FromBody] RestorePost model)
+        {
+            await _nomenclatureService.RestoreAsync(model.NomenclatureId);
+            var result = new RestorePostResult
+            {
+                Url = Url.Action("Edit", new { id = model.NomenclatureId })
+            };
+            return Json(result);
         }
     }
 }

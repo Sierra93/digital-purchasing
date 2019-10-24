@@ -162,7 +162,7 @@ namespace DigitalPurchasing.Web.Controllers
                     await _nomenclatureAlternativeService.UpdateMassUom(nomenclatureAlternativeId.Value, fromUomId, mass);
                     isSaved = true;
                 }
-                else if (fromUomId == await _uomService.GetPackagingUom(companyId))
+                else if (fromUomId == await _uomService.GetPackagingUomId(companyId))
                 {
                     var quantityInPackage = model.FactorN;
                     await _nomenclatureAlternativeService.UpdatePackUom(nomenclatureAlternativeId.Value, nomenclature.BatchUomId, quantityInPackage);

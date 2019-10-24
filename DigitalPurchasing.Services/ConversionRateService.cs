@@ -52,7 +52,7 @@ namespace DigitalPurchasing.Services
             }
 
             // packaging -> ...
-            var packagingUom = await _uomService.GetPackagingUom(nomenclature.OwnerId);
+            var packagingUom = await _uomService.GetPackagingUomId(nomenclature.OwnerId);
 
             var calcFromPack = fromUomId == packagingUom;
             if (calcFromPack)

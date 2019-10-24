@@ -48,16 +48,20 @@ namespace DigitalPurchasing.Core.Interfaces
         void DeleteConversionRate(Guid id);
 
         Task SetPackagingUom(Guid ownerId, Guid uomId);
-        Task<Guid> GetPackagingUom(Guid ownerId);
+        Task<Guid> GetPackagingUomId(Guid ownerId);
+        Task<UomDto> GetPackagingUom(Guid ownerId);
 
         Task SetMassUom(Guid ownerId, Guid uomId);
-        Task<Guid> GetMassUom(Guid ownerId);
+        Task<Guid> GetMassUomId(Guid ownerId);
+        Task<UomDto> GetMassUom(Guid ownerId);
 
         Task SetResourceUom(Guid ownerId, Guid uomId);
-        Task<Guid> GetResourceUom(Guid ownerId);
+        Task<Guid> GetResourceUomId(Guid ownerId);
+        Task<UomDto> GetResourceUom(Guid ownerId);
 
         Task SetResourceBatchUom(Guid ownerId, Guid uomId);
-        Task<Guid> GetResourceBatchUom(Guid ownerId);
+        Task<Guid> GetResourceBatchUomId(Guid ownerId);
+        Task<UomDto> GetResourceBatchUom(Guid ownerId);
 
         IEnumerable<string> GetAllNormalizedNames(Guid ownerId);
     }

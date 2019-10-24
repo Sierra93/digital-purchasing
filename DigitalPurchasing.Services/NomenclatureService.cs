@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using System.Threading.Tasks;
 using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Extensions;
@@ -312,7 +313,7 @@ namespace DigitalPurchasing.Services
             var entities = nomenclatures.Adapt<List<Nomenclature>>();
             foreach (var entity in entities)
             {
-                var normName = entity.Name.ToLowerInvariant();
+                entity.Name = entity.Name.Trim();
                 var existed = allNames.FirstOrDefault(i => i.Name.Equals(entity.Name, StringComparison.InvariantCultureIgnoreCase));
                 entity.Id = existed?.Id ?? Guid.NewGuid();
                 if (existed == null)
@@ -394,6 +395,20 @@ namespace DigitalPurchasing.Services
             sw.Stop();
 
             return match;
+        }
+
+        public async Task<(bool IsDeleted, Guid NomenclatureId)> IsDeletedAsync(Guid companyId, string name)
+        {
+            if (string.IsNullOrEmpty(name)) return (false, Guid.Empty);
+
+            name = name.Trim();
+
+            var nomenclature = await _db.Nomenclatures
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(q =>
+                    q.OwnerId == companyId && q.Name.Trim().Equals(name, StringComparison.InvariantCultureIgnoreCase));            
+
+            return (nomenclature?.IsDeleted ?? false, nomenclature?.Id ?? Guid.Empty);
         }
 
         private NomenclatureVm FindBestFuzzyMatch(Guid ownerId, string nomName, int maxNameLevenshteinDistance,
@@ -601,6 +616,14 @@ namespace DigitalPurchasing.Services
                                  select item).ToList();
 
             return nomenclatures.Select(_ => _.Adapt<NomenclatureVm>());
+        }
+
+        public async Task RestoreAsync(Guid nomenclatureId)
+        {
+            var entity = await _db.Nomenclatures.FindAsync(nomenclatureId);
+            if (entity == null) return;
+            entity.IsDeleted = false;
+            _db.SaveChanges();
         }
     }
 }

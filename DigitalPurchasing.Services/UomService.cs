@@ -301,6 +301,12 @@ namespace DigitalPurchasing.Services
             return entity?.Adapt<UomDto>();
         }
 
+        public async Task<UomDto> GetById(Guid companyId, Guid id)
+        {
+            var entity = await _db.UnitsOfMeasurements.IgnoreQueryFilters().FirstOrDefaultAsync(q => q.Id == id && q.OwnerId == companyId);
+            return entity?.Adapt<UomDto>();
+        }
+
         public UomDto Update(Guid id, string name)
         {
             var entity = _db.UnitsOfMeasurements.Find(id);
@@ -335,10 +341,16 @@ namespace DigitalPurchasing.Services
             await _db.SaveChangesAsync();
         }
 
-        public async Task<Guid> GetPackagingUom(Guid ownerId)
+        public async Task<Guid> GetPackagingUomId(Guid ownerId)
         {
             var settings = await GetDefaultUomSettings(ownerId);
             return settings.PackagingUomId;
+        }
+
+        public async Task<UomDto> GetPackagingUom(Guid ownerId)
+        {
+            var settings = await GetDefaultUomSettings(ownerId);
+            return await GetById(ownerId, settings.PackagingUomId);
         }
 
         public async Task SetMassUom(Guid ownerId, Guid uomId)
@@ -348,10 +360,16 @@ namespace DigitalPurchasing.Services
             await _db.SaveChangesAsync();
         }
 
-        public async Task<Guid> GetMassUom(Guid ownerId)
+        public async Task<Guid> GetMassUomId(Guid ownerId)
         {
             var settings = await GetDefaultUomSettings(ownerId);
             return settings.MassUomId;
+        }
+
+        public async Task<UomDto> GetMassUom(Guid ownerId)
+        {
+            var settings = await GetDefaultUomSettings(ownerId);
+            return await GetById(ownerId, settings.MassUomId);
         }
 
         public async Task SetResourceUom(Guid ownerId, Guid uomId)
@@ -361,10 +379,16 @@ namespace DigitalPurchasing.Services
             await _db.SaveChangesAsync();
         }
 
-        public async Task<Guid> GetResourceUom(Guid ownerId)
+        public async Task<Guid> GetResourceUomId(Guid ownerId)
         {
             var settings = await GetDefaultUomSettings(ownerId);
             return settings.ResourceUomId;
+        }
+
+        public async Task<UomDto> GetResourceUom(Guid ownerId)
+        {
+            var settings = await GetDefaultUomSettings(ownerId);
+            return await GetById(ownerId, settings.ResourceUomId);
         }
 
         public async Task SetResourceBatchUom(Guid ownerId, Guid uomId)
@@ -374,10 +398,16 @@ namespace DigitalPurchasing.Services
             await _db.SaveChangesAsync();
         }
 
-        public async Task<Guid> GetResourceBatchUom(Guid ownerId)
+        public async Task<Guid> GetResourceBatchUomId(Guid ownerId)
         {
             var settings = await GetDefaultUomSettings(ownerId);
             return settings.ResourceBatchUomId;
+        }
+
+        public async Task<UomDto> GetResourceBatchUom(Guid ownerId)
+        {
+            var settings = await GetDefaultUomSettings(ownerId);
+            return await GetById(ownerId, settings.ResourceBatchUomId);
         }
 
         public IEnumerable<string> GetAllNormalizedNames(Guid ownerId)

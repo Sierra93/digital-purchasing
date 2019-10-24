@@ -82,7 +82,7 @@ namespace DigitalPurchasing.Web.Controllers
                     await _nomenclatureAlternativeService.UpdateMassUom(nomenclatureAlternativeId.Value, fromUomId, mass);
                     isSaved = true;
                 }
-                else if (fromUomId == await _uomService.GetPackagingUom(companyId))
+                else if (fromUomId == await _uomService.GetPackagingUomId(companyId))
                 {
                     var quantityInPackage = model.FactorN;
                     await _nomenclatureAlternativeService.UpdatePackUom(nomenclatureAlternativeId.Value, nomenclature.BatchUomId, quantityInPackage);
@@ -118,19 +118,19 @@ namespace DigitalPurchasing.Web.Controllers
         {
             var companyId = User.CompanyId();
 
-            var massUomId = await _uomService.GetMassUom(companyId);
+            var massUomId = await _uomService.GetMassUomId(companyId);
             if (massUomId == Guid.Empty)
             {
                 return Ok(CreateAndSaveMatchItemResult.Error(DefaultUomMassError));
             }
 
-            var resourceUomId = await _uomService.GetResourceUom(companyId);
+            var resourceUomId = await _uomService.GetResourceUomId(companyId);
             if (resourceUomId == Guid.Empty)
             {
                 return Ok(CreateAndSaveMatchItemResult.Error(DefaultUomResourceError));
             }
 
-            var resourceBatchUom = await _uomService.GetResourceBatchUom(companyId);
+            var resourceBatchUom = await _uomService.GetResourceBatchUomId(companyId);
             if (resourceBatchUom == Guid.Empty)
             {
                 return Ok(CreateAndSaveMatchItemResult.Error(DefaultUomResourceBatchError));
@@ -162,19 +162,19 @@ namespace DigitalPurchasing.Web.Controllers
         {
             var companyId = User.CompanyId();
 
-            var massUomId = await _uomService.GetMassUom(companyId);
+            var massUomId = await _uomService.GetMassUomId(companyId);
             if (massUomId == Guid.Empty)
             {
                 return Ok(CreateAndSaveAllResult.Error(DefaultUomMassError));
             }
 
-            var resourceUomId = await _uomService.GetResourceUom(companyId);
+            var resourceUomId = await _uomService.GetResourceUomId(companyId);
             if (resourceUomId == Guid.Empty)
             {
                 return Ok(CreateAndSaveAllResult.Error(DefaultUomResourceError));
             }
 
-            var resourceBatchUom = await _uomService.GetResourceBatchUom(companyId);
+            var resourceBatchUom = await _uomService.GetResourceBatchUomId(companyId);
             if (resourceBatchUom == Guid.Empty)
             {
                 return Ok(CreateAndSaveAllResult.Error(DefaultUomResourceBatchError));
