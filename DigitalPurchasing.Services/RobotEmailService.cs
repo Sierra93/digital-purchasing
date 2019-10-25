@@ -77,6 +77,8 @@ namespace DigitalPurchasing.Services
                         _receivedEmails.IncProcessingTries(uniqueId.Id);
                     }
                 }
+
+                client.Disconnect(true);
             }
         }
 
