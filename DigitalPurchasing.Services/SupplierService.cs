@@ -30,7 +30,7 @@ namespace DigitalPurchasing.Services
             _counterService = counterService;
         }
 
-        public SupplierAutocomplete Autocomplete(AutocompleteBaseOptions options)
+        public SupplierAutocomplete Autocomplete(AutocompleteBaseOptions options, bool includeCategories)
         {
             var entities = _db.Suppliers
                 .Where(q => !string.IsNullOrEmpty(q.Name))
@@ -43,7 +43,14 @@ namespace DigitalPurchasing.Services
 
             if (entities.Any())
             {
-                result.Items = entities.ToList();
+                foreach (var entity in entities)
+                {
+                    if (includeCategories)
+                    {
+                        entity.Categories = GetSupplierNomenclatureCategories(entity.Id);
+                    }
+                    result.Items.Add(entity);
+                }
             }
 
             return result;
@@ -390,28 +397,49 @@ namespace DigitalPurchasing.Services
                     select item).ToList().Select(_ => _.Adapt<SupplierVm>());
         }
 
-        public IEnumerable<SupplierVm> GetByCategoryIds(params Guid[] nomenclatureCategoryIds)
+        public Dictionary<SupplierVm, IEnumerable<Guid>> GetByCategoryIds(IList<Guid> nomenclatureCategoryIds, IList<Guid> ignoreSupplierIds)
         {
             if (!nomenclatureCategoryIds.Any())
             {
-                return Enumerable.Empty<SupplierVm>();
+                return new Dictionary<SupplierVm, IEnumerable<Guid>>();
             }
 
             var suppliersByAlternatives = from n in _db.Nomenclatures.Where(q => !q.IsDeleted)
                                           join na in _db.NomenclatureAlternatives on n.Id equals na.NomenclatureId
                                           join nal in _db.NomenclatureAlternativeLinks on na.Id equals nal.AlternativeId
                                           join s in _db.Suppliers on nal.SupplierId equals s.Id
-                                          where nomenclatureCategoryIds.Contains(n.CategoryId)
-                                          select s;
+                                          where nomenclatureCategoryIds.Contains(n.CategoryId) && !ignoreSupplierIds.Contains(s.Id)
+                                          select new SupplierWCategoryId(s, n.CategoryId);
 
             var suppliersByMainCategories = from s in _db.Suppliers
-                                            where s.CategoryId.HasValue && nomenclatureCategoryIds.Contains(s.CategoryId.Value)
-                                            select s;
+                                            where s.CategoryId.HasValue && nomenclatureCategoryIds.Contains(s.CategoryId.Value) && !ignoreSupplierIds.Contains(s.Id)
+                                            select new SupplierWCategoryId(s, s.CategoryId.Value);
 
-            return suppliersByAlternatives.Union(suppliersByMainCategories).OrderBy(s => s.Name)
-                .ToList()
-                .DistinctBy(s => s.Id)
-                .Select(_ => _.Adapt<SupplierVm>());
+            var suppliers = suppliersByAlternatives
+                .Union(suppliersByMainCategories)
+                .OrderBy(s => s.Supplier.Name)
+                .ToList();
+
+            var result = suppliers
+                .GroupBy(q => q.Supplier)
+                .ToDictionary(
+                    g => g.Key.Adapt<SupplierVm>(),
+                    g => g.Select(q => q.CategoryId).Distinct()
+                );
+
+            return result;
+        }
+
+        class SupplierWCategoryId
+        {
+            public Supplier Supplier { get; }
+            public Guid CategoryId { get; }
+
+            public SupplierWCategoryId(Supplier supplier, Guid categoryId)
+            {
+                Supplier = supplier;
+                CategoryId = categoryId;
+            }
         }
     }
 }

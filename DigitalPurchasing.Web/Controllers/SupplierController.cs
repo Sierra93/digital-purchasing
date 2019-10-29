@@ -61,7 +61,8 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         [HttpGet]
-        public IActionResult Autocomplete([FromQuery] string q) => Json(_supplierService.Autocomplete(new AutocompleteOptions { Query = q }));
+        public IActionResult Autocomplete([FromQuery] string q, [FromQuery] bool includeCategories = false)
+            => Json(_supplierService.Autocomplete(new AutocompleteOptions { Query = q }, includeCategories));
 
         [HttpGet]
         public IActionResult Edit(Guid id)
