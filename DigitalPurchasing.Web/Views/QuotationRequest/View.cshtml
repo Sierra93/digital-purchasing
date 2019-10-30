@@ -52,6 +52,9 @@
                         <td>{{selectedCompany == 0 ? item.companyUom : item.customerUom}}</td>
                         <td>{{sentToSuppliers(item)}}</td>
                         <td>
+                            <div style="display: inline-block; margin-right: 10px;">
+                                <span>{{toSend(item)}}</span>
+                            </div>
                             <item-request v-for="request in item.requests"
                                           :key="(request.itemId+request.supplierId)"
                                           :item-id="request.itemId"
@@ -98,7 +101,7 @@
                             <button class="btn btn-default" type="button" v-on:click="removeSupplier(supplier)"><i class="far fa-trash-alt"></i></button>
                         </span>
                     </div>
-                    <typeahead v-model="supplier.autocomplete" force-select force-clear v-bind:target="('#supplier-'+index)" async-src="@Url.Action("Autocomplete", "Supplier")?q=" async-key="items" item-key="name"></typeahead>
+                    <typeahead v-model="supplier.autocomplete" force-select force-clear v-bind:target="('#supplier-'+index)" async-src="@Url.Action("Autocomplete", "Supplier", new { includeCategories = true })&q=" async-key="items" item-key="name"></typeahead>
                 </div>
                 <div class="form-group">
                     <button class="btn btn-default" v-on:click="addSupplier">Добавить поставщика</button>
@@ -154,10 +157,15 @@
     <partial name="~/Views/Shared/Delivery/_AddressFormComponent.cshtml" />
     <script>
         (function () {
+
             Vue.component('item-request', {
                 props: ['supplierName', 'supplierId', 'itemId'],
-                template: '<div style="display: inline-block; margin-right: 10px;"><span>{{supplierName}}</span>&nbsp;<button v-on:click="$emit(\'remove-item\', itemId, supplierId)"><i class="far fa-trash-alt"></i></button></div>'
+                template: '<div style="display: inline-block; margin-right: 10px;">' +
+                    '<span>{{supplierName}}</span>&nbsp;' +
+                    '<button v-on:click="$emit(\'remove-item\', itemId, supplierId)"><i class="far fa-trash-alt"></i></button>' +
+                    '</div>'
             });
+
             var app = new Vue({
                 el: '#app',
                 data: function() {
@@ -252,12 +260,11 @@
                             _.each(res.data.applicableSuppliers, function (supplier) {
                                 vm.suppliers.push({
                                     autocomplete: supplier,
-                                    name: supplier.name
+                                    name: supplier.name,
+                                    categories: supplier.categories
                                 });
                             });
-                        }, function(res) {
-
-                        });
+                        }, function(res) { });
                     },
                     fixSuppliersNames: function() {
                         _.each(this.suppliers, function(supplier) {
@@ -297,7 +304,7 @@
                             }, function (res) {
                                 vm.sendingInProgress = false;
                                 alert('error');
-                                });
+                            });
                         _.each(this.items, function (item) {
                             item.requests = [];
                         });
@@ -320,12 +327,21 @@
 
                         return _.join(names, ', ');
                     },
+                    toSend: function(item) {
+                        var vm = this;
+                        var suppliers = _.filter(vm.suppliers, function(supplier) {
+                            return _.findIndex(supplier.categories, function(categoryId) {
+                                return categoryId === item.categoryId;
+                            }) > -1;
+                        });
+                        var names = _.map(suppliers, 'name');
+                        return _.join(names, ', ');
+                    },
                     addItemRequest: function (item) {
                         if (!item.requestAutocomplete) return;
 
                         var index = _.findIndex(item.requests, function(r) {
-                            return r.supplierId === item.requestAutocomplete.id
-                                && r.itemId === item.itemId;
+                            return r.supplierId === item.requestAutocomplete.id && r.itemId === item.itemId;
                         });
 
                         if (index > -1) return;

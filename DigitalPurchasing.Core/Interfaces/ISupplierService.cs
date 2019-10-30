@@ -5,7 +5,7 @@ namespace DigitalPurchasing.Core.Interfaces
 {
     public interface ISupplierService
     {
-        SupplierAutocomplete Autocomplete(AutocompleteBaseOptions options);
+        SupplierAutocomplete Autocomplete(AutocompleteBaseOptions options, bool includeCategories);
         Guid CreateSupplier(string name, Guid ownerId);
         Guid CreateSupplier(SupplierVm model, Guid ownerId);
         string GetNameById(Guid id);
@@ -23,7 +23,7 @@ namespace DigitalPurchasing.Core.Interfaces
         (Guid SupplierId, Guid ContactPersonId) GetSupplierIdByEmail(Guid ownerId, string email);
         string GetSupplierNameByEmail(Guid ownerId, string email);
         List<SupplierNomenclatureCategory> GetSupplierNomenclatureCategories(Guid supplierId);
-        IEnumerable<SupplierVm> GetByCategoryIds(params Guid[] nomenclatureCategoryIds);
+        Dictionary<SupplierVm, IEnumerable<Guid>> GetByCategoryIds(IList<Guid> nomenclatureCategoryIds, IList<Guid> ignoreSupplierId);
         void SaveSupplierNomenclatureCategoryContacts(Guid supplierId,
             IEnumerable<(Guid nomenclatureCategoryId, Guid? primarySupplierContactId, Guid? secondarySupplierContactId)> nomenclatureCategories2Contacts);
         void RemoveSupplierNomenclatureCategoryContacts(Guid supplierId, Guid nomenclatureCategoryId);
@@ -35,6 +35,7 @@ namespace DigitalPurchasing.Core.Interfaces
         {
             public string Name { get; set; }
             public Guid Id { get; set; }
+            public List<SupplierNomenclatureCategory> Categories { get; set; }
         }
 
         public List<Supplier> Items { get; set; } = new List<Supplier>();

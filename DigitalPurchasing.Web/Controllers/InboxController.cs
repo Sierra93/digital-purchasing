@@ -11,7 +11,6 @@ namespace DigitalPurchasing.Web.Controllers
     public class InboxController : BaseController
     {
         private readonly IReceivedEmailService _receivedEmailService;
-        private readonly IQuotationRequestService _quotationRequestService;
         private readonly ISupplierService _supplierService;
 
         public class InboxTableRequest: VueTableRequest
@@ -21,11 +20,9 @@ namespace DigitalPurchasing.Web.Controllers
 
         public InboxController(
             IReceivedEmailService receivedEmailService,
-            IQuotationRequestService quotationRequestService,
             ISupplierService supplierService)
         {
             _receivedEmailService = receivedEmailService;
-            _quotationRequestService = quotationRequestService;
             _supplierService = supplierService;
         }
 
@@ -43,7 +40,7 @@ namespace DigitalPurchasing.Web.Controllers
             {
                 SupplierName = string.IsNullOrEmpty(supplierName) ? "Не определен" : supplierName,
                 EmailBody = soEmail.Body,
-                EmailDate = soEmail.MessageDate,
+                EmailDate = User.ToLocalTime(soEmail.MessageDate),
                 EmailSubject = soEmail.Subject,
                 EmailFrom = soEmail.FromEmail,
                 Attachments = soEmail.Attachments.Select(a => new InboxViewVm.EmailAttachment()
@@ -63,7 +60,7 @@ namespace DigitalPurchasing.Web.Controllers
 
             foreach (var dataItem in result.Data)
             {
-                dataItem.MessageDate = User.ToLocalTime(dataItem.MessageDate.UtcDateTime);
+                dataItem.MessageDate = User.ToLocalTime(dataItem.MessageDate);
             }
 
             return Json(new VueTableResponse<InboxIndexDataItem, VueTableRequest>(result.Data, request, result.Total, nextUrl, prevUrl));

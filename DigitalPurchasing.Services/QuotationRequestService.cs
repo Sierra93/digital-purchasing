@@ -149,20 +149,27 @@ namespace DigitalPurchasing.Services
                       }).First();
 
             var data = _purchaseRequestService.MatchItemsData(pr.Id);
-            var uniqueCategoryIds = data.Items.Select(_ => _.NomenclatureCategoryId).Distinct();
+            var uniqueCategoryIds = data.Items.Select(_ => _.NomenclatureCategoryId).Distinct().ToList();
             var sentRequests = GetSentRequests(qrId);
-            var suppliersByCategories = _supplierService.GetByCategoryIds(uniqueCategoryIds.ToArray())
-                .Where(s => !sentRequests.Any(sr => sr.SupplierId == s.Id));
-            
+            var ignoreSupplierIds = sentRequests.Select(sr => sr.SupplierId).ToList();
+            var suppliersByCategories = _supplierService.GetByCategoryIds(uniqueCategoryIds, ignoreSupplierIds);
+
             var result = new QuotationRequestViewData(pr.CompanyName, pr.CustomerName)
             {
-                ApplicableSuppliers = suppliersByCategories.Select(q => new QuotationRequestApplicableSupplier
-                {
-                    Id = q.Id,
-                    Name = q.Name
-                }).ToList(),
+                ApplicableSuppliers = new List<QuotationRequestApplicableSupplier>(),
                 SentRequests = sentRequests
             };
+
+            foreach (var suppliersByCategory in suppliersByCategories)
+            {
+                var supplier = new QuotationRequestApplicableSupplier
+                {
+                    Id = suppliersByCategory.Key.Id,
+                    Name = suppliersByCategory.Key.Name,
+                    Categories = suppliersByCategory.Value
+                };
+                result.ApplicableSuppliers.Add(supplier);
+            }
 
             foreach (var dataItem in data.Items)
             {

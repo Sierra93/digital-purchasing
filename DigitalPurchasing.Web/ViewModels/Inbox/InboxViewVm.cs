@@ -16,7 +16,7 @@ namespace DigitalPurchasing.Web.ViewModels.Inbox
         public string SupplierName { get; set; }
         public string EmailSubject { get; set; }
         public string EmailBody { get; set; }
-        public DateTimeOffset EmailDate { get; set; }
+        public DateTime EmailDate { get; set; }
         public IReadOnlyList<EmailAttachment> Attachments { get; set; } = new List<EmailAttachment>();
         public string EmailFrom { get; set; }
     }

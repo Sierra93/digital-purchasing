@@ -37,6 +37,7 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
+        public IEnumerable<Guid> Categories { get; set; }
     }
 
     public class QuotationRequestVm

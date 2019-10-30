@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DigitalPurchasing.Models
 {
-    public class Supplier : BaseModelWithOwner
+    public class Supplier : BaseModelWithOwner, IEquatable<Supplier>
     {
         public string Name { get; set; }
         public string OwnershipType { get; set; }
@@ -34,5 +34,12 @@ namespace DigitalPurchasing.Models
         public ICollection<SupplierOffer> Offers { get; set; }
 
         public ICollection<SupplierContactPerson> ContactPersons { get; set; }
+
+        public bool Equals(Supplier other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Id == other.Id;
+        }
     }
 }

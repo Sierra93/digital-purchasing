@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using DigitalPurchasing.Core.Enums;
 
 namespace DigitalPurchasing.Core.Interfaces
@@ -17,6 +18,8 @@ namespace DigitalPurchasing.Core.Interfaces
         void Delete(Guid id);
         NomenclatureWholeData GetWholeNomenclature();
         NomenclatureVm FindBestFuzzyMatch(Guid ownerId, string nomName);
+        Task<(bool IsDeleted, Guid NomenclatureId)> IsDeletedAsync(Guid companyId, string name);
+        Task RestoreAsync(Guid nomenclatureId);
     }
 
     public class NomenclatureWholeData

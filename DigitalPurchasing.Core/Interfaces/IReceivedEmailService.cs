@@ -49,7 +49,7 @@ namespace DigitalPurchasing.Core.Interfaces
         public string Body { get; set; }
         public string FromEmail { get; set; }
         public int ProcessingTries { get; set; }
-        public DateTimeOffset MessageDate { get; set; }
+        public DateTime MessageDate { get; set; }
 
         public IReadOnlyList<EmailAttachmentDto> Attachments { get; set; }
     }
@@ -75,7 +75,7 @@ namespace DigitalPurchasing.Core.Interfaces
     public class InboxIndexDataItem
     {
         public Guid Id { get; set; }
-        public DateTimeOffset MessageDate { get; set; }
+        public DateTime MessageDate { get; set; }
         public string Subject { get; set; }
         public string SupplierName { get; set; }
         public string Body { get; set; }

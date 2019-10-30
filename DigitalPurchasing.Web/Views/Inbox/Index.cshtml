@@ -29,7 +29,6 @@
                       detail-row-component="row-details"
                       no-data-template="Нет данных"
                       :css="css"
-                      :transform="transform"
                       @@vuetable:pagination-data="onPaginationData"
                       @@vuetable:cell-clicked="onCellClicked">
             </vuetable>
@@ -113,7 +112,8 @@
                                 title: 'Дата',
                                 name: 'messageDate',
                                 sortField: 'messageDate',
-                                titleClass: 'w-140px'
+                                titleClass: 'w-140px',
+                                formatter: this.formatDate,
                             },
                             {
                                 title: 'Поставщик',
@@ -166,6 +166,10 @@
                     };
                 },
                 methods: {
+                    formatDate: function (value) {
+                        if (value === null) return '';
+                        return moment(value).format('DD.MM.YYYY H:mm');
+                    },
                     onPaginationData: function (paginationData) {
                         this.$refs.pagination.setPaginationData(paginationData);
                         this.$refs.paginationInfo.setPaginationData(paginationData);
@@ -183,12 +187,6 @@
                     },
                     onCellClicked: function (dataItem, field, event) {
                         this.$refs.vuetable.toggleDetailRow(dataItem.data.id);
-                    },
-                    transform: function (data) {
-                        for (var i = 0; i < data.data.length; i++) {
-                            data.data[i].messageDate = moment.utc(data.data[i].messageDate).local().format('DD.MM.YYYY H:mm');
-                        }
-                        return data
                     },
                     reloadData: function () {
                         this.$refs.vuetable.reload();

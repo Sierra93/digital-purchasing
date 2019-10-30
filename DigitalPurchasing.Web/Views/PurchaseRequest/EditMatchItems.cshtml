@@ -21,8 +21,9 @@
             <th colspan="5" class="form-inline">
                 <div class="form-group">
                     <label class="control-label">Номенклатура предприятия</label>&nbsp;
-                    <input class="form-control" type="text" value="@Model.CompanyName" readonly="readonly"/>
+                    <input class="form-control" type="text" value="@Model.CompanyName" readonly="readonly" />
                 </div>
+                <button class="btn btn-default" v-on:click="createAll" v-show="!isQuotationRequestAvailable">Создать все не сопоставленные позиции</button>
             </th>
         </tr>
         <tr>
@@ -154,7 +155,7 @@
             </div>
             <div slot="footer">
                 <button type="button" class="btn btn-default" v-on:click="show=false"><span>Отмена</span></button>
-                <button data-action="auto-focus" type="button" class="btn btn-primary" v-on:click="createNom" :disabled="anyError"><span>Создать</span></button>
+                <button data-action="auto-focus" type="button" class="btn btn-primary" v-on:click="createNom" :disabled="anyError"><span>Создать и сопоставить</span></button>
             </div>
         </modal>
     </script>
@@ -206,22 +207,35 @@
                     }
                 },
                 methods: {
+                    error: function(text) {
+                        var msg = '';
+                        if (text) {
+                            msg = text;
+                        } else {
+                            msg = 'Что-то пошло не так. Обратитесь к администратору';
+                        }
+                        this.$notify({
+                            type: 'danger',
+                            title: 'Ошибка!',
+                            content: msg
+                        });
+                    },
                     onModalHide: function() {
                         this.$emit('hide');
                     },
                     loadUom: function(id) {
-                        var $this = this;
+                        var vm = this;
                         this.$http.get('@Url.Action("AutocompleteSingle", "Uom")' + '?id=' + id).then(function(res) {
                             var dataRes = res.body;
                             if (dataRes.isSuccess) {
-                                $this.nomUomSelected = dataRes.data;
-                                $this.nomUomAutocomplete = dataRes.data.name;
+                                vm.nomUomSelected = dataRes.data;
+                                vm.nomUomAutocomplete = dataRes.data.name;
                             } else {
-                                alert('error');
+                                vm.error();
                             }
                         },
                         function(res) {
-                            alert('error');
+                            vm.error();
                         });
                     },
                     createNom: function() {
@@ -245,10 +259,10 @@
                             };
                                 vm.$emit('created', createdData);
                             } else {
-                                alert(dataRes.message);
+                                vm.error(dataRes.message);
                             }
                         }, function(res) {
-                            alert('error');
+                            vm.error();
                         });
                     }
                 }
@@ -334,20 +348,33 @@
                     uomClass: function() { return getInputClass(this.uomHasError); },
                     factorErrorClass: function() { return getInputClass(this.factorHasError); },
                     isQuotationRequestAvailable: function() {
-                        var $this = this;
+                        var vm = this;
                         if (this.items.length === 0) return false;
-                        return _.every(this.items, function(i) { return $this.isMatched(i); });
+                        return _.every(this.items, function(i) { return vm.isMatched(i); });
                     }
                 },
                 methods: {
+                    error: function(text) {
+                        var msg = '';
+                        if (text) {
+                            msg = text;
+                        } else {
+                            msg = 'Что-то пошло не так. Обратитесь к администратору';
+                        }
+                        this.$notify({
+                            type: 'danger',
+                            title: 'Ошибка!',
+                            content: msg
+                        });
+                    },
                     loadData: function() {
-                        var $this = this;
+                        var vm = this;
                         this.$http.get('@Url.Action("MatchItemsData", new {id = Model.Id})').then(function(res) {
                             var dataRes = res.body;
-                            $this.items = dataRes.items;
-                            $this.currentItem = $this.items[0];
-                            $this.customerName = dataRes.customerName;
-                            $this.customerId = dataRes.customerId;
+                            vm.items = dataRes.items;
+                            vm.currentItem = vm.items[0];
+                            vm.customerName = dataRes.customerName;
+                            vm.customerId = dataRes.customerId;
                         },
                         function(res) {
 
@@ -393,8 +420,8 @@
                         vm.items[index].commonFactor = 1;
                         vm.items[index].rawUomMatchId = data.uomId;
                         vm.items[index].nomenclatureUom = data.uomName;
-                        //vm.items[index].nomenclatureUom = $this.selectedNomenclature.batchUomName;
-                        //vm.items[index].rawUomMatchId = $this.selectedUom.id;
+                        //vm.items[index].nomenclatureUom = vm.selectedNomenclature.batchUomName;
+                        //vm.items[index].rawUomMatchId = vm.selectedUom.id;
 
                     },
                     loadMatch: function() {
@@ -422,83 +449,98 @@
                         this.loadMatch();
                     },
                     saveMatch: function() {
-                        var $this = this;
+                        var vm = this;
                         var data = {
-                            itemId: $this.currentItem.id,
-                            nomenclatureId: $this.selectedNomenclature.id,
-                            uomId: $this.selectedUom.id,
-                            factorC: $this.factor === 'c' ? $this.currentItem.commonFactor : 0,
-                            factorN: $this.factor === 'n' ? $this.currentItem.nomenclatureFactor : 0,
-                            customerId: $this.customerId
+                            itemId: vm.currentItem.id,
+                            nomenclatureId: vm.selectedNomenclature.id,
+                            uomId: vm.selectedUom.id,
+                            factorC: vm.factor === 'c' ? vm.currentItem.commonFactor : 0,
+                            factorN: vm.factor === 'n' ? vm.currentItem.nomenclatureFactor : 0,
+                            customerId: vm.customerId
                         };
                         this.$http.post('@Url.Action("SaveMatchItem")', data).then(function(res) {
-                            var index = $this.getRowIndex0($this.currentItem);
-                            $this.items[index].nomenclatureId = $this.selectedNomenclature.id;
-                            $this.items[index].nomenclatureName = $this.selectedNomenclature.name;
-                            $this.items[index].nomenclatureCode = $this.selectedNomenclature.code;
-                            $this.items[index].nomenclatureUom = $this.selectedNomenclature.batchUomName;
-                            $this.items[index].rawUomMatchId = $this.selectedUom.id;
+                            var index = vm.getRowIndex0(vm.currentItem);
+                            vm.items[index].nomenclatureId = vm.selectedNomenclature.id;
+                            vm.items[index].nomenclatureName = vm.selectedNomenclature.name;
+                            vm.items[index].nomenclatureCode = vm.selectedNomenclature.code;
+                            vm.items[index].nomenclatureUom = vm.selectedNomenclature.batchUomName;
+                            vm.items[index].rawUomMatchId = vm.selectedUom.id;
                         },
                         function(res) {
-                            alert('error');
+                            vm.error();
                         });
                     },
                     loadNomenclature: function(id) {
-                        var $this = this;
+                        var vm = this;
                         this.$http.get('@Url.Action("AutocompleteSingle", "Nomenclature")' + '?id=' + id).then( function(res) {
                             var dataRes = res.body;
                             if (dataRes.isSuccess) {
-                                $this.selectedNomenclature = dataRes.data;
-                                //$this.nomenclatureAutocomplete = dataRes.data.name;
+                                vm.selectedNomenclature = dataRes.data;
+                                //vm.nomenclatureAutocomplete = dataRes.data.name;
                             } else {
-                                alert('error');
+                                vm.error();
                             }
                         },
                         function(res) {
-                            alert('error');
+                            vm.error();
                         });
                     },
                     loadUom: function(id) {
-                        var $this = this;
+                        var vm = this;
                         this.$http.get('@Url.Action("AutocompleteSingle", "Uom")' + '?id=' + id).then(function(res) {
                             var dataRes = res.body;
                             if (dataRes.isSuccess) {
-                                $this.selectedUom = dataRes.data;
-                                //$this.uomAutocomplete = dataRes.data.name;
+                                vm.selectedUom = dataRes.data;
+                                //vm.uomAutocomplete = dataRes.data.name;
                             } else {
-                                alert('error');
+                                vm.error();
                             }
                         },
                         function(res) {
-                            alert('error');
+                            vm.error();
                         });
                     },
                     loadFactor: _.debounce(function(e) {
-                        var $this = this;
-
-                        if (!this.nomenclatureHasError && !this.uomHasError) {
-                            var from = this.selectedUom.id;
-                            var to = this.selectedNomenclature.batchUomId;
-                            var nom = this.selectedNomenclature.id;
-                            var customerId = $this.customerId;
-                            this.$http.post('@Url.Action("Factor", "Uom")', { from, to, nom, customerId }).then(
+                        var vm = this;
+                        if (!vm.nomenclatureHasError && !vm.uomHasError) {
+                            var from = vm.selectedUom.id;
+                            var to = vm.selectedNomenclature.batchUomId;
+                            var nom = vm.selectedNomenclature.id;
+                            var customerId = vm.customerId;
+                            vm.$http.post('@Url.Action("Factor", "Uom")', { from, to, nom, customerId }).then(
                                 function(res) {
                                     var dataRes = res.body;
-                                    $this.currentItem.commonFactor = dataRes.commonFactor;
-                                    $this.currentItem.nomenclatureFactor = dataRes.nomenclatureFactor;
+                                    vm.currentItem.commonFactor = dataRes.commonFactor;
+                                    vm.currentItem.nomenclatureFactor = dataRes.nomenclatureFactor;
                                     if (dataRes.nomenclatureFactor > 0) {
-                                        $this.factor = 'n';
+                                        vm.factor = 'n';
                                     } else {
-                                        $this.factor = 'c';
+                                        vm.factor = 'c';
                                     }
                                 },
                                 function(res) {
-                                    alert('error');
+                                    vm.error();
                                 });
                         } else {
-                            $this.factor = 'c';
+                            vm.factor = 'c';
                         }
-                    }, 300)
+                    }, 300),
+                    createAll: function() {
+                        var vm = this;
+                        var postData = {
+                            id: vm.prId
+                        }
+                        vm.$http.post('@Url.Action("CreateAndSaveAll")', postData).then(function(res) {
+                            var data = res.body;
+                            if (data.isSuccess) {
+                                vm.loadData();
+                            } else {
+                                vm.error(data.message);
+                            }
+                        }, function(res) {
+                            vm.error();
+                        });
+                    }
                 }
             });
         })();

@@ -54,10 +54,10 @@ namespace DigitalPurchasing.Web.Areas.Identity.Pages.Account.Manage
         public async Task OnGetAsync()
         {
             var companyId = User.CompanyId();
-            Input.PackagingUomId = await _uomService.GetPackagingUom(companyId);
-            Input.MassUomId = await _uomService.GetMassUom(companyId);
-            Input.ResourceUomId = await _uomService.GetResourceUom(companyId);
-            Input.ResourceBatchUomId = await _uomService.GetResourceBatchUom(companyId);
+            Input.PackagingUomId = await _uomService.GetPackagingUomId(companyId);
+            Input.MassUomId = await _uomService.GetMassUomId(companyId);
+            Input.ResourceUomId = await _uomService.GetResourceUomId(companyId);
+            Input.ResourceBatchUomId = await _uomService.GetResourceBatchUomId(companyId);
             if (Input.PackagingUomId != Guid.Empty)
             {
                 Input.PackagingUomName = _uomService.AutocompleteSingle(Input.PackagingUomId).Data.Name;

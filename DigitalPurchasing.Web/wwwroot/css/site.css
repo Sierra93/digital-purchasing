@@ -178,3 +178,6 @@ td.align-right, th.align-right {
   height: 20px;
 }
 
+body > .alert {
+  z-index: 2000;
+}
