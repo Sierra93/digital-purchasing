@@ -409,18 +409,41 @@ namespace DigitalPurchasing.Services
                                           join nal in _db.NomenclatureAlternativeLinks on na.Id equals nal.AlternativeId
                                           join s in _db.Suppliers on nal.SupplierId equals s.Id
                                           where nomenclatureCategoryIds.Contains(n.CategoryId) && !ignoreSupplierIds.Contains(s.Id)
-                                          select new SupplierWCategoryId(s, n.CategoryId);
+                                          select new SupplierWCategoryId(s, n.CategoryId, false);
 
             var suppliersByMainCategories = from s in _db.Suppliers
                                             where s.CategoryId.HasValue && nomenclatureCategoryIds.Contains(s.CategoryId.Value) && !ignoreSupplierIds.Contains(s.Id)
-                                            select new SupplierWCategoryId(s, s.CategoryId.Value);
+                                            select new SupplierWCategoryId(s, s.CategoryId.Value, true);
 
             var suppliers = suppliersByAlternatives
                 .Union(suppliersByMainCategories)
                 .OrderBy(s => s.Supplier.Name)
                 .ToList();
 
-            var result = suppliers
+            var suppliersIds = suppliers.Select(q => q.Supplier.Id).Distinct().ToList();
+
+            var categories = _db.SupplierCategories
+                .Include(q => q.PrimaryContactPerson)
+                .Include(q => q.SecondaryContactPerson)
+                .Where(q => q.PrimaryContactPersonId.HasValue && suppliersIds.Contains(q.PrimaryContactPerson.SupplierId)
+                            || q.SecondaryContactPersonId.HasValue && suppliersIds.Contains(q.SecondaryContactPerson.SupplierId))
+                .ToList();
+
+            var resultSuppliers = new List<SupplierWCategoryId>();
+
+            foreach (var supplier in suppliers)
+            {
+                var haveContacts = categories
+                    .Any(q => (q.PrimaryContactPersonId.HasValue && q.PrimaryContactPerson.SupplierId == supplier.Supplier.Id && q.NomenclatureCategoryId == supplier.CategoryId)
+                           || (q.SecondaryContactPersonId.HasValue && q.SecondaryContactPerson.SupplierId == supplier.Supplier.Id && q.NomenclatureCategoryId == supplier.CategoryId));
+
+                if (haveContacts)
+                {
+                    resultSuppliers.Add(supplier);
+                }
+            }
+
+            var result = resultSuppliers
                 .GroupBy(q => q.Supplier)
                 .ToDictionary(
                     g => g.Key.Adapt<SupplierVm>(),
@@ -434,11 +457,13 @@ namespace DigitalPurchasing.Services
         {
             public Supplier Supplier { get; }
             public Guid CategoryId { get; }
+            public bool IsDefault { get; }
 
-            public SupplierWCategoryId(Supplier supplier, Guid categoryId)
+            public SupplierWCategoryId(Supplier supplier, Guid categoryId, bool isDefault)
             {
                 Supplier = supplier;
                 CategoryId = categoryId;
+                IsDefault = isDefault;
             }
         }
     }
