@@ -41,6 +41,9 @@ namespace DigitalPurchasing.Core
             
             public static string NomenclatureCategoryCreateOrUpdate(Guid ownerId, string qry)
                 => $"nc_cou_{ownerId:N}_{qry.ToMD5()}";
+
+            public static string SupplierServiceGetCategoryChildIds(Guid parentId)
+                => $"supplier_get_category_child_ids_{parentId:N}";
         }
 
         public static class Roles
