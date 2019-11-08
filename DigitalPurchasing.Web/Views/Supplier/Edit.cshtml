@@ -1,8 +1,23 @@
 @using DigitalPurchasing.Core.Extensions
+@using DigitalPurchasing.Core.Interfaces
 @model DigitalPurchasing.Web.ViewModels.Supplier.SupplierEditVm
 
 @{
     ViewData["Title"] = Model.Supplier.Name + " - Поставщики";
+
+    bool isCreateMode = Model.Supplier?.Id == default;
+
+    string GetCatNameInHierarchy(NomenclatureCategoryVm category)
+    {
+        if (category.ParentId.HasValue)
+        {
+            string categoryName = category.IsDeleted ? "[Удалена]" : category.Name;
+            var parentCategory = Model.AvailableCategories.First(_ => _.Id == category.ParentId.Value);
+            return $"{GetCatNameInHierarchy(parentCategory)} > {categoryName}";
+        }
+
+        return category.Name;
+    }
 }
 
 <h2 class="with-button">@ViewData["Title"]</h2>
@@ -16,6 +31,50 @@
         <a asp-action="Index" class="btn btn-default">Отмена</a>
     </div>
 </form>
+
+<hr />
+
+<div id="categories">
+    <h3 class="with-button">Категории закупок</h3>
+    <div class="btn-group">
+        <a class="btn btn-default" v-on:click="addCategory">Добавить</a>
+        <a class="btn btn-default" v-on:click="saveCategories">Сохранить</a>
+    </div>
+    <table class="table table-striped">
+        <tr>
+            <th>Категория</th>
+            <th style="width: 250px">Контакт 1</th>
+            <th style="width: 250px">Контакт 2</th>
+        </tr>
+        <tr v-for="category in orderedCategories">
+            <td v-if="category.isDefault">
+                <span>Основная</span>&nbsp;
+                <select class="form-control" v-model="category.id" style="max-width:500px; display: inline-block">
+                    <option value="null">-- Не выбрана --</option>
+                    <option v-for="option in orderedAvailableCategories" v-bind:value="option.id">{{option.name}}</option>
+                </select>&nbsp;
+                <button class="btn btn-default btn-sm" v-on:click="removeCategory(category)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </td>
+            <td v-else>
+                <span>{{category.name}}</span>
+            </td>
+            <td>
+                <select class="form-control" v-model="category.primaryContactId">
+                    <option value="null">-- Не выбран --</option>
+                    <option v-for="option in contactPersons" v-bind:value="option.id">{{option.name}}</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control" v-model="category.secondaryContactId">
+                    <option value="null">-- Не выбран --</option>
+                    <option v-for="option in contactPersons" v-bind:value="option.id">{{option.name}}</option>
+                </select>
+            </td>
+        </tr>
+    </table>
+</div>
 
 <hr />
 
@@ -104,18 +163,102 @@
                 $modalDelete.on('click', 'button[data-delete-id]', function() {
                     var id = $(this).attr('data-delete-id');
                     axios.post('@Url.Action("DeleteContactPerson")', { id: id }).then(function (res) {
-                        $tablePersons.find('tbody tr[data-id="' + id + '"]').remove();
-                        if ($tablePersons.find('tbody tr').length === 0) {
-                            $tablePersons.remove();
-                        }
-                        $modalDelete.modal('hide');
-                    })
-                    .catch(function (error) {
-                        alert('Ошибка');
-                    });
+                            $tablePersons.find('tbody tr[data-id="' + id + '"]').remove();
+                            if ($tablePersons.find('tbody tr').length === 0) {
+                                $tablePersons.remove();
+                            }
+                            $modalDelete.modal('hide');
+                        })
+                        .catch(function (error) {
+                            alert('Ошибка');
+                        });
                 });
             });
         })();
+    </script>
+    <script>
+        var categories = new Vue({
+            el: '#categories',
+            data: function() {
+                return {
+                    availableCategories: [],
+                    contactPersons: [],
+                    categories: []
+                }
+            },
+            created: function () {
+                var vm = this;
+                this.$http.get('@Url.Action("CategoriesData", new { supplierId = Model.Supplier.Id })').then(response => {
+                    var data = response.body;
+                    vm.availableCategories = data.availableCategories;
+                    vm.contactPersons = data.contactPersons;
+                    vm.categories = data.categories;
+                }, response => {
+                    vm.error();
+                });
+            },
+            computed: {
+                orderedCategories: function() {
+                    return _.orderBy(this.categories, ['isDefault'], ['desc']);
+                },
+                orderedAvailableCategories: function() {
+                    return _.orderBy(this.availableCategories, ['name'], ['asc']);
+                }
+            },
+            methods: {
+                error: function(text) {
+                    var msg = '';
+                    if (text) {
+                        msg = text;
+                    } else {
+                        msg = 'Что-то пошло не так. Обратитесь к администратору';
+                    }
+                    this.$notify({
+                        type: 'danger',
+                        title: 'Ошибка!',
+                        content: msg
+                    });
+                },
+                addCategory: function() {
+                    var vm = this;
+                    vm.categories.push({
+                        id: null,
+                        primaryContactId: null,
+                        secondaryContactId: null,
+                        isDefault: true
+                    });
+                },
+                removeCategory: function(item) {
+                    var vm = this;
+                    vm.categories.splice(vm.categories.indexOf(item), 1);
+                },
+                saveCategories: function() {
+                    var vm = this;
+                    var categories = _.map(vm.categories, function(item) {
+                        if (item.primaryContactId === 'null') {
+                            item.primaryContactId = null;
+                        }
+                        if (item.secondaryContactId === 'null') {
+                            item.secondaryContactId = null;
+                        }
+                        return item;
+                    });
+                    this.$http.post('@Url.Action("SaveCategories", new { supplierId = Model.Supplier.Id })', categories).then(response => {
+                        var data = response.body;
+                        vm.availableCategories = data.availableCategories;
+                        vm.contactPersons = data.contactPersons;
+                        vm.categories = data.categories;
+                        vm.$notify({
+                            type: 'success',
+                            title: 'Сохранение категорий',
+                            content: 'Категории успешно сохранены'
+                        });
+                    }, response => {
+                        vm.error();
+                    });
+                }
+            }
+        });
     </script>
 }
 

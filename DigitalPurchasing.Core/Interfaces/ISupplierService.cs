@@ -25,8 +25,9 @@ namespace DigitalPurchasing.Core.Interfaces
         List<SupplierNomenclatureCategory> GetSupplierNomenclatureCategories(Guid supplierId);
         Dictionary<SupplierVm, IEnumerable<Guid>> GetByCategoryIds(IList<Guid> nomenclatureCategoryIds, IList<Guid> ignoreSupplierId);
         void SaveSupplierNomenclatureCategoryContacts(Guid supplierId,
-            IEnumerable<(Guid nomenclatureCategoryId, Guid? primarySupplierContactId, Guid? secondarySupplierContactId)> nomenclatureCategories2Contacts);
+            IEnumerable<(Guid NomenclatureCategoryId, Guid? PrimarySupplierContactId, Guid? SecondarySupplierContactId, bool IsDefaultSupplierCategory)> valueTuples);
         void RemoveSupplierNomenclatureCategoryContacts(Guid supplierId, Guid nomenclatureCategoryId);
+        void RemoveSupplierNomenclatureCategories(Guid supplierId);
     }
 
     public class SupplierAutocomplete

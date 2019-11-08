@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using DigitalPurchasing.Core;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Data;
@@ -9,7 +10,7 @@ using DigitalPurchasing.Models;
 using DigitalPurchasing.Services.Exceptions;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
-using MoreLinq;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace DigitalPurchasing.Services
 {
@@ -19,15 +20,18 @@ namespace DigitalPurchasing.Services
         private const StringComparison StrComparison = StringComparison.InvariantCultureIgnoreCase;
         private readonly INomenclatureCategoryService _categoryService;
         private readonly ICounterService _counterService;
+        private readonly IMemoryCache _memoryCache;
 
         public SupplierService(
             ApplicationDbContext db,
             INomenclatureCategoryService categoryService,
-            ICounterService counterService)
+            ICounterService counterService,
+            IMemoryCache memoryCache)
         {
             _db = db;
             _categoryService = categoryService;
             _counterService = counterService;
+            _memoryCache = memoryCache;
         }
 
         public SupplierAutocomplete Autocomplete(AutocompleteBaseOptions options, bool includeCategories)
@@ -97,12 +101,7 @@ namespace DigitalPurchasing.Services
                                                  altCategoryId = n.CategoryId
                                              } by new { s.Id, altCategoryId = n.CategoryId } into g
                                              select g.FirstOrDefault()).ToList();
-            var supplier2NomCategories = (from s in qry
-                                          select new
-                                          {
-                                              supplierId = s.Id,
-                                              defaultCategoryId = s.CategoryId
-                                          }).ToList();
+
 
             foreach (var item in result)
             {                
@@ -110,12 +109,6 @@ namespace DigitalPurchasing.Services
                     .Where(_ => _.supplierId == item.Id)
                     .Select(_ => _.altCategoryId)
                     .ToList();
-                Guid? defaultCategoryId = supplier2NomCategories
-                    .FirstOrDefault(_ => _.supplierId == item.Id)?.defaultCategoryId;
-                if (defaultCategoryId.HasValue)
-                {
-                    supplierCategoryIds.Add(defaultCategoryId.Value);
-                }
 
                 var uniqueCategoryIds = new List<Guid>();
 
@@ -267,7 +260,6 @@ namespace DigitalPurchasing.Services
                 entity.PaymentDeferredDays = model.PaymentDeferredDays;
                 entity.Phone = model.Phone.CleanPhoneNumber();
                 entity.SupplierType = model.SupplierType;
-                entity.CategoryId = model.CategoryId;
 
                 _db.SaveChanges();
             }
@@ -304,7 +296,6 @@ namespace DigitalPurchasing.Services
                 PaymentDeferredDays = model.PaymentDeferredDays,
                 Phone = model.Phone.CleanPhoneNumber(),
                 SupplierType = model.SupplierType,
-                CategoryId = model.CategoryId,
                 PublicId = _counterService.GetSupplierNextId(ownerId)
             });
             _db.SaveChanges();
@@ -317,66 +308,66 @@ namespace DigitalPurchasing.Services
 
         public List<SupplierNomenclatureCategory> GetSupplierNomenclatureCategories(Guid supplierId)
         {
-            var qry = from n in _db.Nomenclatures.Where(q => !q.IsDeleted)
+            var supplierCategories = _db.SupplierCategories
+                .Include(q => q.PrimaryContactPerson)
+                .Include(q => q.SecondaryContactPerson)
+                .Where(q => q.PrimaryContactPerson.SupplierId == supplierId || q.SecondaryContactPerson.SupplierId == supplierId)
+                .ToList();
+
+            var nalIds = (from n in _db.Nomenclatures
                       join na in _db.NomenclatureAlternatives on n.Id equals na.NomenclatureId
                       join nal in _db.NomenclatureAlternativeLinks on na.Id equals nal.AlternativeId
-                      where nal.SupplierId == supplierId &&
-                            !n.Category.IsDeleted
-                      select n.CategoryId;
+                      where nal.SupplierId == supplierId && !n.Category.IsDeleted && !n.IsDeleted
+                      select n.CategoryId).ToList();
 
-            var categoryIds = qry.Distinct().ToList();
-
-            var defaultCategoryId = _db.Suppliers
-                .Where(_ => _.Id == supplierId)
-                .Select(_ => _.CategoryId)
-                .FirstOrDefault();
-
-            if (defaultCategoryId.HasValue && !categoryIds.Contains(defaultCategoryId.Value))
-            {
-                categoryIds.Add(defaultCategoryId.Value);
-            }
+            var categoryIds = supplierCategories.Select(q => q.NomenclatureCategoryId).Union(nalIds).Distinct();
 
             return categoryIds.Select(ncId =>
             {
-                var mapping = _db.SupplierCategories.Where(_ =>
-                    _.NomenclatureCategoryId == ncId &&
-                    (_.PrimaryContactPerson.SupplierId == supplierId || _.SecondaryContactPerson.SupplierId == supplierId)).FirstOrDefault();
-                return new SupplierNomenclatureCategory()
+                var mapping = supplierCategories.FirstOrDefault(q => q.NomenclatureCategoryId == ncId && (q.PrimaryContactPerson?.SupplierId == supplierId || q.SecondaryContactPerson?.SupplierId == supplierId));
+
+                return new SupplierNomenclatureCategory
                 {
                     NomenclatureCategoryId = ncId,
                     NomenclatureCategoryFullName = _categoryService.FullCategoryName(ncId),
                     NomenclatureCategoryPrimaryContactId = mapping?.PrimaryContactPersonId,
                     NomenclatureCategorySecondaryContactId = mapping?.SecondaryContactPersonId,
-                    IsDefaultSupplierCategory = defaultCategoryId == ncId
+                    IsDefaultSupplierCategory = mapping?.IsDefault ?? false
                 };
             }).ToList();
         }
 
         public void RemoveSupplierNomenclatureCategoryContacts(Guid supplierId, Guid nomenclatureCategoryId)
         {
-            _db.SupplierCategories.RemoveRange(
-                _db.SupplierCategories.Where(_ => _.NomenclatureCategoryId == nomenclatureCategoryId &&
-                    (_.PrimaryContactPerson.SupplierId == supplierId || _.SecondaryContactPerson.SupplierId == supplierId)));
+            var categories = _db.SupplierCategories.Where(q => q.NomenclatureCategoryId == nomenclatureCategoryId && (q.PrimaryContactPerson.SupplierId == supplierId || q.SecondaryContactPerson.SupplierId == supplierId));
+            _db.SupplierCategories.RemoveRange(categories);
+            _db.SaveChanges();
+        }
+
+        public void RemoveSupplierNomenclatureCategories(Guid supplierId)
+        {
+            var categories = _db.SupplierCategories.Where(q => q.PrimaryContactPerson.SupplierId == supplierId || q.SecondaryContactPerson.SupplierId == supplierId);
+            _db.SupplierCategories.RemoveRange(categories);
             _db.SaveChanges();
         }
 
         public void SaveSupplierNomenclatureCategoryContacts(Guid supplierId,
-            IEnumerable<(Guid nomenclatureCategoryId, Guid? primarySupplierContactId, Guid? secondarySupplierContactId)> nomenclatureCategories2Contacts)
+            IEnumerable<(Guid NomenclatureCategoryId, Guid? PrimarySupplierContactId, Guid? SecondarySupplierContactId, bool IsDefaultSupplierCategory)> nomenclatureCategories2Contacts)
         {
             if (nomenclatureCategories2Contacts.Any())
             {
                 foreach (var mapping in nomenclatureCategories2Contacts)
                 {
-                    RemoveSupplierNomenclatureCategoryContacts(supplierId, mapping.nomenclatureCategoryId);
+                    RemoveSupplierNomenclatureCategoryContacts(supplierId, mapping.NomenclatureCategoryId);
 
-                    if (mapping.primarySupplierContactId.HasValue ||
-                        mapping.secondarySupplierContactId.HasValue)
+                    if (mapping.PrimarySupplierContactId.HasValue || mapping.SecondarySupplierContactId.HasValue)
                     {
-                        _db.SupplierCategories.Add(new SupplierCategory()
+                        _db.SupplierCategories.Add(new SupplierCategory
                         {
-                            NomenclatureCategoryId = mapping.nomenclatureCategoryId,
-                            PrimaryContactPersonId = mapping.primarySupplierContactId,
-                            SecondaryContactPersonId = mapping.secondarySupplierContactId
+                            NomenclatureCategoryId = mapping.NomenclatureCategoryId,
+                            PrimaryContactPersonId = mapping.PrimarySupplierContactId,
+                            SecondaryContactPersonId = mapping.SecondarySupplierContactId,
+                            IsDefault = mapping.IsDefaultSupplierCategory
                         });
                     }
                 }
@@ -404,41 +395,87 @@ namespace DigitalPurchasing.Services
                 return new Dictionary<SupplierVm, IEnumerable<Guid>>();
             }
 
-            var suppliersByAlternatives = from n in _db.Nomenclatures.Where(q => !q.IsDeleted)
+            var suppliersByAlternatives1 = from n in _db.Nomenclatures
                                           join na in _db.NomenclatureAlternatives on n.Id equals na.NomenclatureId
                                           join nal in _db.NomenclatureAlternativeLinks on na.Id equals nal.AlternativeId
                                           join s in _db.Suppliers on nal.SupplierId equals s.Id
-                                          where nomenclatureCategoryIds.Contains(n.CategoryId) && !ignoreSupplierIds.Contains(s.Id)
-                                          select new SupplierWCategoryId(s, n.CategoryId);
+                                          join cs in _db.SupplierContactPersons on s.Id equals cs.SupplierId
+                                          join c in _db.SupplierCategories on cs.Id equals c.PrimaryContactPersonId
+                                          where !n.IsDeleted
+                                                && nomenclatureCategoryIds.Contains(n.CategoryId)
+                                                && !ignoreSupplierIds.Contains(s.Id) 
+                                                && c.PrimaryContactPersonId != null
+                                          select new SupplierWCategoryId(s, n.CategoryId, c.IsDefault);
 
-            var suppliersByMainCategories = from s in _db.Suppliers
-                                            where s.CategoryId.HasValue && nomenclatureCategoryIds.Contains(s.CategoryId.Value) && !ignoreSupplierIds.Contains(s.Id)
-                                            select new SupplierWCategoryId(s, s.CategoryId.Value);
-
-            var suppliers = suppliersByAlternatives
-                .Union(suppliersByMainCategories)
-                .OrderBy(s => s.Supplier.Name)
-                .ToList();
+            var suppliersByAlternatives2 = from n in _db.Nomenclatures
+                                            join na in _db.NomenclatureAlternatives on n.Id equals na.NomenclatureId
+                                            join nal in _db.NomenclatureAlternativeLinks on na.Id equals nal.AlternativeId
+                                            join s in _db.Suppliers on nal.SupplierId equals s.Id
+                                            join cs in _db.SupplierContactPersons on s.Id equals cs.SupplierId
+                                            join c in _db.SupplierCategories on cs.Id equals c.SecondaryContactPersonId
+                                            where !n.IsDeleted
+                                                  && nomenclatureCategoryIds.Contains(n.CategoryId)
+                                                  && !ignoreSupplierIds.Contains(s.Id) 
+                                                  && c.SecondaryContactPersonId != null
+                                            select new SupplierWCategoryId(s, n.CategoryId, c.IsDefault);
+            
+            var suppliers = suppliersByAlternatives1.Union(suppliersByAlternatives2).ToList();
 
             var result = suppliers
                 .GroupBy(q => q.Supplier)
                 .ToDictionary(
                     g => g.Key.Adapt<SupplierVm>(),
-                    g => g.Select(q => q.CategoryId).Distinct()
+                    g => g.Select(q => q.CategoryId).Distinct().SelectMany(GetCategoryChildIds).Distinct()
                 );
 
             return result;
+        }
+
+        private List<Guid> GetCategoryChildIds(Guid parentId)
+        {
+            var cacheKey = Consts.CacheKeys.SupplierServiceGetCategoryChildIds(parentId);
+
+            if (!_memoryCache.TryGetValue(cacheKey, out List<Guid> ids))
+            {
+                using (var command = _db.Database.GetDbConnection().CreateCommand())
+                {
+                    var qry = $";WITH Result AS " +
+                              $"(SELECT * FROM [NomenclatureCategories] WHERE Id = '{parentId}' " +
+                              $"UNION ALL SELECT t.* FROM [NomenclatureCategories] t " +
+                              $"INNER JOIN Result r ON t.ParentID = r.ID) " +
+                              $"SELECT Id FROM Result";
+
+                    command.CommandText = qry;
+                    _db.Database.OpenConnection();
+
+                    using (var result = command.ExecuteReader())
+                    {
+                        if (!result.HasRows) return ids;
+
+                        while (result.Read())
+                        {
+                            ids.Add(result.GetGuid(0));
+                        }
+                    }
+                }
+
+                _memoryCache.Set(cacheKey, ids, new MemoryCacheEntryOptions { SlidingExpiration = TimeSpan.FromSeconds(10) });
+            }
+
+            return ids;
         }
 
         class SupplierWCategoryId
         {
             public Supplier Supplier { get; }
             public Guid CategoryId { get; }
+            public bool IsDefault { get; }
 
-            public SupplierWCategoryId(Supplier supplier, Guid categoryId)
+            public SupplierWCategoryId(Supplier supplier, Guid categoryId, bool isDefault)
             {
                 Supplier = supplier;
                 CategoryId = categoryId;
+                IsDefault = isDefault;
             }
         }
     }

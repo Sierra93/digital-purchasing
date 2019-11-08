@@ -28,7 +28,6 @@ namespace DigitalPurchasing.Models
         public string OfferCurrency { get; set; }
         public string Phone { get; set; }
         public string Note { get; set; }
-        public Guid? CategoryId { get; set; }
         public int PublicId { get; set; }
 
         public ICollection<SupplierOffer> Offers { get; set; }
