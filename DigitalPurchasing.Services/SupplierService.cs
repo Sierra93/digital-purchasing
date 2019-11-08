@@ -318,9 +318,9 @@ namespace DigitalPurchasing.Services
                       join na in _db.NomenclatureAlternatives on n.Id equals na.NomenclatureId
                       join nal in _db.NomenclatureAlternativeLinks on na.Id equals nal.AlternativeId
                       where nal.SupplierId == supplierId && !n.Category.IsDeleted && !n.IsDeleted
-                      select n.CategoryId).Distinct().ToList();
+                      select n.CategoryId).ToList();
 
-            var categoryIds = supplierCategories.Select(q => q.NomenclatureCategoryId).Union(nalIds);
+            var categoryIds = supplierCategories.Select(q => q.NomenclatureCategoryId).Union(nalIds).Distinct();
 
             return categoryIds.Select(ncId =>
             {
