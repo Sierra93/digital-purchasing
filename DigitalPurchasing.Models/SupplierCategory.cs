@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace DigitalPurchasing.Models
 {
@@ -16,5 +14,7 @@ namespace DigitalPurchasing.Models
 
         public SupplierContactPerson SecondaryContactPerson { get; set; }
         public Guid? SecondaryContactPersonId { get; set; }
+
+        public bool IsDefault { get; set; }
     }
 }

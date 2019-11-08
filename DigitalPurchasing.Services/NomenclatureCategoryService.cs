@@ -57,18 +57,8 @@ namespace DigitalPurchasing.Services
                                           } by new { s.Id, n.CategoryId } into g
                                           select g.FirstOrDefault()).ToList();
 
-            var suppliersWithDefaultCategory = (from ncat in qry
-                                                join s in _db.Suppliers on ncat.Id equals s.CategoryId
-                                                where !ncat.IsDeleted
-                                                group new
-                                                {
-                                                    supplierId = s.Id,
-                                                    supplierName = s.Name,
-                                                    categoryId = ncat.Id
-                                                } by new { s.Id, catId = ncat.Id } into g
-                                                select g.FirstOrDefault()).ToList();
 
-            supplier2nomCategories = (from item in supplier2nomCategories.Union(suppliersWithDefaultCategory)
+            supplier2nomCategories = (from item in supplier2nomCategories
                                       group new
                                       {
                                           item.supplierId,

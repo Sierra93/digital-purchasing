@@ -85,8 +85,9 @@ namespace DigitalPurchasing.Web.Controllers
             if (supplierId.HasValue)
             {
                 vm.ContactPersons = _supplierService.GetContactPersonsBySupplier(supplierId.Value);
-                vm.NomenclatureCategoies = _supplierService.GetSupplierNomenclatureCategories(supplierId.Value)
+                var categories = _supplierService.GetSupplierNomenclatureCategories(supplierId.Value)
                     .OrderByDescending(_ => _.IsDefaultSupplierCategory).ToList();
+                vm.NomenclatureCategoies = categories;
             }
             if (!vm.NomenclatureCategoies.Any(nc => nc.IsDefaultSupplierCategory))
             {
@@ -106,6 +107,7 @@ namespace DigitalPurchasing.Web.Controllers
                 try
                 {
                     _supplierService.Update(vm.Supplier.Adapt<SupplierVm>());
+                    DeleteSupplierCategories(vm.Supplier.Id);
                     SaveSupplierCategories(vm, vm.Supplier.Id);
                     return RedirectToAction(nameof(Index));
                 }
@@ -120,28 +122,17 @@ namespace DigitalPurchasing.Web.Controllers
         }
 
         private void SaveSupplierCategories(SupplierEditVm vm, Guid supplierId)
-        {
-            var defaultCategory = vm.NomenclatureCategoies.FirstOrDefault(_ => _.IsDefaultSupplierCategory);
-            if (defaultCategory != null)
-            {
-                var supplier = _supplierService.GetById(supplierId);
-                if (supplier.CategoryId != defaultCategory.NomenclatureCategoryId)
-                {
-                    if (supplier.CategoryId.HasValue)
-                    {
-                        _supplierService.RemoveSupplierNomenclatureCategoryContacts(supplierId, supplier.CategoryId.Value);
-                    }
-                    supplier.CategoryId = defaultCategory.NomenclatureCategoryId;
-                    _supplierService.Update(supplier);
-                }
-            }
+            => _supplierService.SaveSupplierNomenclatureCategoryContacts(supplierId, vm.NomenclatureCategoies
+                    .Where(nc => nc.NomenclatureCategoryId.HasValue)
+                    .Select(nc => (
+                        nc.NomenclatureCategoryId.Value,
+                        nc.NomenclatureCategoryPrimaryContactId,
+                        nc.NomenclatureCategorySecondaryContactId,
+                        nc.IsDefaultSupplierCategory
+                    )));
 
-            var definedCategories = vm.NomenclatureCategoies.Where(nc => nc.NomenclatureCategoryId.HasValue);
-
-            _supplierService.SaveSupplierNomenclatureCategoryContacts(
-                supplierId,
-                definedCategories.Select(nc => (nc.NomenclatureCategoryId.Value, nc.NomenclatureCategoryPrimaryContactId, nc.NomenclatureCategorySecondaryContactId)));
-        }
+        private void DeleteSupplierCategories(Guid supplierId)
+            => _supplierService.RemoveSupplierNomenclatureCategories(supplierId);
 
         [HttpGet, Route("/contactpersons/add/{supplierId}")]
         public IActionResult AddContactPerson([FromRoute]Guid supplierId)
@@ -281,7 +272,7 @@ namespace DigitalPurchasing.Web.Controllers
                         }
                     }
 
-                    Guid supplierId = _supplierService.CreateSupplier(new SupplierVm()
+                    var supplierId = _supplierService.CreateSupplier(new SupplierVm
                     {
                         Inn = item.Inn,
                         ErpCode = item.ErpCode,
@@ -307,25 +298,23 @@ namespace DigitalPurchasing.Web.Controllers
                         CategoryId = category?.Id
                     }, User.CompanyId());
 
-                    Guid? mainContactId = item.ContactSpecified
-                        ? (Guid?)_supplierService.AddContactPerson(new SupplierContactPersonVm()
-                        {
-                            SupplierId = supplierId,
-                            Email = item.ContactEmail,
-                            FirstName = item.ContactFirstName,
-                            LastName = item.ContactLastName,
-                            JobTitle = item.ContactJobTitle,
-                            MobilePhoneNumber = item.ContactMobilePhone,
-                            PhoneNumber = item.ContactPhone
-                        })
-                    : null;
+                    var mainContactId = item.ContactSpecified ? (Guid?)_supplierService.AddContactPerson(new SupplierContactPersonVm
+                    {
+                        SupplierId = supplierId,
+                        Email = item.ContactEmail,
+                        FirstName = item.ContactFirstName,
+                        LastName = item.ContactLastName,
+                        JobTitle = item.ContactJobTitle,
+                        MobilePhoneNumber = item.ContactMobilePhone,
+                        PhoneNumber = item.ContactPhone
+                    }) : null;
 
                     if (mainContactId.HasValue && category != null)
                     {
                         _supplierService.SaveSupplierNomenclatureCategoryContacts(supplierId,
-                            new List<(Guid nomenclatureCategoryId, Guid? primarySupplierContactId, Guid? secondarySupplierContactId)>()
+                            new List<(Guid NomenclatureCategoryId, Guid? PrimarySupplierContactId, Guid? SecondarySupplierContactId, bool IsDefaultSupplierCategory)>
                             {
-                                (category.Id, mainContactId.Value, null)
+                                (category.Id, mainContactId.Value, null, false)
                             });
                     }
                 }
@@ -341,6 +330,95 @@ namespace DigitalPurchasing.Web.Controllers
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        public class CategoriesDataResult
+        {
+            public class DataItem
+            {
+                public Guid Id { get; set; }
+                public string Name { get; set; }
+            }
+
+            public class CategoryItem
+            {
+                public Guid? Id { get; set; }
+                public string Name { get; set; }
+                public Guid? PrimaryContactId { get; set; }
+                public Guid? SecondaryContactId { get; set; }
+                public bool IsDefault { get; set; }
+            }
+
+            public List<DataItem> AvailableCategories { get; set; }
+            public List<DataItem> ContactPersons { get; set; }
+            public List<CategoryItem> Categories { get; internal set; }
+        }
+
+        string GetCatNameInHierarchy(List<NomenclatureCategoryVm> availableCategories, NomenclatureCategoryVm category)
+        {
+            if (category.ParentId.HasValue)
+            {
+                var categoryName = category.IsDeleted ? "[Удалена]" : category.Name;
+                var parentCategory = availableCategories.First(q => q.Id == category.ParentId.Value);
+                return $"{GetCatNameInHierarchy(availableCategories, parentCategory)} > {categoryName}";
+            }
+
+            return category.Name;
+        }
+
+        [HttpGet]
+        public IActionResult CategoriesData(Guid supplierId)
+        {
+            var allCategories = _nomenclatureCategoryService.GetAll(true).ToList();
+            
+            var availableCategories = allCategories
+                .Select(q => new CategoriesDataResult.DataItem { Id = q.Id, Name = GetCatNameInHierarchy(allCategories, q) })
+                .ToList();
+
+            var contactPersons = _supplierService.GetContactPersonsBySupplier(supplierId)
+                .Select(q => new CategoriesDataResult.DataItem { Id = q.Id, Name = q.FullName })
+                .ToList();
+
+            var categories = _supplierService.GetSupplierNomenclatureCategories(supplierId)
+                .Select(q => new CategoriesDataResult.CategoryItem
+                {
+                    Id = q.NomenclatureCategoryId,
+                    Name = q.NomenclatureCategoryFullName,
+                    PrimaryContactId = q.NomenclatureCategoryPrimaryContactId,
+                    SecondaryContactId = q.NomenclatureCategorySecondaryContactId,
+                    IsDefault = q.IsDefaultSupplierCategory
+                })
+                .ToList();
+
+            var result = new CategoriesDataResult
+            {
+                AvailableCategories = availableCategories,
+                ContactPersons = contactPersons,
+                Categories = categories
+            };
+
+            return Json(result);
+        }
+
+        public class SaveCategoriesPostItem
+        {
+            public Guid? Id { get; set; }
+            public string Name { get; set; }
+            public Guid? PrimaryContactId { get; set; }
+            public Guid? SecondaryContactId { get; set; }
+            public bool IsDefault { get; set; }
+        }
+
+        [HttpPost]
+        public IActionResult SaveCategories([FromQuery] Guid supplierId, [FromBody] IEnumerable<SaveCategoriesPostItem> categories)
+        {
+            _supplierService.RemoveSupplierNomenclatureCategories(supplierId);
+            _supplierService.SaveSupplierNomenclatureCategoryContacts(supplierId,
+                categories
+                    .Where(nc => nc.Id.HasValue)
+                    .Select(nc => (nc.Id.Value, nc.PrimaryContactId, nc.SecondaryContactId, nc.IsDefault)));
+
+            return CategoriesData(supplierId);
         }
     }
 }

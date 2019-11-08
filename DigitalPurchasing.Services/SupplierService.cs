@@ -101,12 +101,7 @@ namespace DigitalPurchasing.Services
                                                  altCategoryId = n.CategoryId
                                              } by new { s.Id, altCategoryId = n.CategoryId } into g
                                              select g.FirstOrDefault()).ToList();
-            var supplier2NomCategories = (from s in qry
-                                          select new
-                                          {
-                                              supplierId = s.Id,
-                                              defaultCategoryId = s.CategoryId
-                                          }).ToList();
+
 
             foreach (var item in result)
             {                
@@ -114,12 +109,6 @@ namespace DigitalPurchasing.Services
                     .Where(_ => _.supplierId == item.Id)
                     .Select(_ => _.altCategoryId)
                     .ToList();
-                Guid? defaultCategoryId = supplier2NomCategories
-                    .FirstOrDefault(_ => _.supplierId == item.Id)?.defaultCategoryId;
-                if (defaultCategoryId.HasValue)
-                {
-                    supplierCategoryIds.Add(defaultCategoryId.Value);
-                }
 
                 var uniqueCategoryIds = new List<Guid>();
 
@@ -271,7 +260,6 @@ namespace DigitalPurchasing.Services
                 entity.PaymentDeferredDays = model.PaymentDeferredDays;
                 entity.Phone = model.Phone.CleanPhoneNumber();
                 entity.SupplierType = model.SupplierType;
-                entity.CategoryId = model.CategoryId;
 
                 _db.SaveChanges();
             }
@@ -308,7 +296,6 @@ namespace DigitalPurchasing.Services
                 PaymentDeferredDays = model.PaymentDeferredDays,
                 Phone = model.Phone.CleanPhoneNumber(),
                 SupplierType = model.SupplierType,
-                CategoryId = model.CategoryId,
                 PublicId = _counterService.GetSupplierNextId(ownerId)
             });
             _db.SaveChanges();
@@ -321,66 +308,66 @@ namespace DigitalPurchasing.Services
 
         public List<SupplierNomenclatureCategory> GetSupplierNomenclatureCategories(Guid supplierId)
         {
-            var qry = from n in _db.Nomenclatures.Where(q => !q.IsDeleted)
+            var supplierCategories = _db.SupplierCategories
+                .Include(q => q.PrimaryContactPerson)
+                .Include(q => q.SecondaryContactPerson)
+                .Where(q => q.PrimaryContactPerson.SupplierId == supplierId || q.SecondaryContactPerson.SupplierId == supplierId)
+                .ToList();
+
+            var nalIds = (from n in _db.Nomenclatures
                       join na in _db.NomenclatureAlternatives on n.Id equals na.NomenclatureId
                       join nal in _db.NomenclatureAlternativeLinks on na.Id equals nal.AlternativeId
-                      where nal.SupplierId == supplierId &&
-                            !n.Category.IsDeleted
-                      select n.CategoryId;
+                      where nal.SupplierId == supplierId && !n.Category.IsDeleted && !n.IsDeleted
+                      select n.CategoryId).ToList();
 
-            var categoryIds = qry.Distinct().ToList();
-
-            var defaultCategoryId = _db.Suppliers
-                .Where(_ => _.Id == supplierId)
-                .Select(_ => _.CategoryId)
-                .FirstOrDefault();
-
-            if (defaultCategoryId.HasValue && !categoryIds.Contains(defaultCategoryId.Value))
-            {
-                categoryIds.Add(defaultCategoryId.Value);
-            }
+            var categoryIds = supplierCategories.Select(q => q.NomenclatureCategoryId).Union(nalIds).Distinct();
 
             return categoryIds.Select(ncId =>
             {
-                var mapping = _db.SupplierCategories.Where(_ =>
-                    _.NomenclatureCategoryId == ncId &&
-                    (_.PrimaryContactPerson.SupplierId == supplierId || _.SecondaryContactPerson.SupplierId == supplierId)).FirstOrDefault();
-                return new SupplierNomenclatureCategory()
+                var mapping = supplierCategories.FirstOrDefault(q => q.NomenclatureCategoryId == ncId && (q.PrimaryContactPerson?.SupplierId == supplierId || q.SecondaryContactPerson?.SupplierId == supplierId));
+
+                return new SupplierNomenclatureCategory
                 {
                     NomenclatureCategoryId = ncId,
                     NomenclatureCategoryFullName = _categoryService.FullCategoryName(ncId),
                     NomenclatureCategoryPrimaryContactId = mapping?.PrimaryContactPersonId,
                     NomenclatureCategorySecondaryContactId = mapping?.SecondaryContactPersonId,
-                    IsDefaultSupplierCategory = defaultCategoryId == ncId
+                    IsDefaultSupplierCategory = mapping?.IsDefault ?? false
                 };
             }).ToList();
         }
 
         public void RemoveSupplierNomenclatureCategoryContacts(Guid supplierId, Guid nomenclatureCategoryId)
         {
-            _db.SupplierCategories.RemoveRange(
-                _db.SupplierCategories.Where(_ => _.NomenclatureCategoryId == nomenclatureCategoryId &&
-                    (_.PrimaryContactPerson.SupplierId == supplierId || _.SecondaryContactPerson.SupplierId == supplierId)));
+            var categories = _db.SupplierCategories.Where(q => q.NomenclatureCategoryId == nomenclatureCategoryId && (q.PrimaryContactPerson.SupplierId == supplierId || q.SecondaryContactPerson.SupplierId == supplierId));
+            _db.SupplierCategories.RemoveRange(categories);
+            _db.SaveChanges();
+        }
+
+        public void RemoveSupplierNomenclatureCategories(Guid supplierId)
+        {
+            var categories = _db.SupplierCategories.Where(q => q.PrimaryContactPerson.SupplierId == supplierId || q.SecondaryContactPerson.SupplierId == supplierId);
+            _db.SupplierCategories.RemoveRange(categories);
             _db.SaveChanges();
         }
 
         public void SaveSupplierNomenclatureCategoryContacts(Guid supplierId,
-            IEnumerable<(Guid nomenclatureCategoryId, Guid? primarySupplierContactId, Guid? secondarySupplierContactId)> nomenclatureCategories2Contacts)
+            IEnumerable<(Guid NomenclatureCategoryId, Guid? PrimarySupplierContactId, Guid? SecondarySupplierContactId, bool IsDefaultSupplierCategory)> nomenclatureCategories2Contacts)
         {
             if (nomenclatureCategories2Contacts.Any())
             {
                 foreach (var mapping in nomenclatureCategories2Contacts)
                 {
-                    RemoveSupplierNomenclatureCategoryContacts(supplierId, mapping.nomenclatureCategoryId);
+                    RemoveSupplierNomenclatureCategoryContacts(supplierId, mapping.NomenclatureCategoryId);
 
-                    if (mapping.primarySupplierContactId.HasValue ||
-                        mapping.secondarySupplierContactId.HasValue)
+                    if (mapping.PrimarySupplierContactId.HasValue || mapping.SecondarySupplierContactId.HasValue)
                     {
-                        _db.SupplierCategories.Add(new SupplierCategory()
+                        _db.SupplierCategories.Add(new SupplierCategory
                         {
-                            NomenclatureCategoryId = mapping.nomenclatureCategoryId,
-                            PrimaryContactPersonId = mapping.primarySupplierContactId,
-                            SecondaryContactPersonId = mapping.secondarySupplierContactId
+                            NomenclatureCategoryId = mapping.NomenclatureCategoryId,
+                            PrimaryContactPersonId = mapping.PrimarySupplierContactId,
+                            SecondaryContactPersonId = mapping.SecondarySupplierContactId,
+                            IsDefault = mapping.IsDefaultSupplierCategory
                         });
                     }
                 }
@@ -418,7 +405,7 @@ namespace DigitalPurchasing.Services
                                                 && nomenclatureCategoryIds.Contains(n.CategoryId)
                                                 && !ignoreSupplierIds.Contains(s.Id) 
                                                 && c.PrimaryContactPersonId != null
-                                          select new SupplierWCategoryId(s, n.CategoryId, false);
+                                          select new SupplierWCategoryId(s, n.CategoryId, c.IsDefault);
 
             var suppliersByAlternatives2 = from n in _db.Nomenclatures
                                             join na in _db.NomenclatureAlternatives on n.Id equals na.NomenclatureId
@@ -430,31 +417,9 @@ namespace DigitalPurchasing.Services
                                                   && nomenclatureCategoryIds.Contains(n.CategoryId)
                                                   && !ignoreSupplierIds.Contains(s.Id) 
                                                   && c.SecondaryContactPersonId != null
-                                            select new SupplierWCategoryId(s, n.CategoryId, false);
-
-            var suppliersByMainCategories1 = from s in _db.Suppliers
-                                            join cs in _db.SupplierContactPersons on s.Id equals cs.SupplierId
-                                            join c in _db.SupplierCategories on cs.Id equals c.PrimaryContactPersonId
-                                            where s.CategoryId.HasValue
-                                                  && nomenclatureCategoryIds.Contains(s.CategoryId.Value)
-                                                  && !ignoreSupplierIds.Contains(s.Id)
-                                                  && c.PrimaryContactPersonId != null
-                                            select new SupplierWCategoryId(s, s.CategoryId.Value, true);
-
-            var suppliersByMainCategories2 = from s in _db.Suppliers
-                                            join cs in _db.SupplierContactPersons on s.Id equals cs.SupplierId
-                                            join c in _db.SupplierCategories on cs.Id equals c.SecondaryContactPersonId
-                                            where s.CategoryId.HasValue
-                                                  && nomenclatureCategoryIds.Contains(s.CategoryId.Value)
-                                                  && !ignoreSupplierIds.Contains(s.Id)
-                                                  && c.SecondaryContactPersonId != null
-                                            select new SupplierWCategoryId(s, s.CategoryId.Value, true);
-
-            var suppliers = suppliersByAlternatives1
-                .Union(suppliersByAlternatives2)
-                .Union(suppliersByMainCategories1)
-                .Union(suppliersByMainCategories2)
-                .ToList();
+                                            select new SupplierWCategoryId(s, n.CategoryId, c.IsDefault);
+            
+            var suppliers = suppliersByAlternatives1.Union(suppliersByAlternatives2).ToList();
 
             var result = suppliers
                 .GroupBy(q => q.Supplier)
