@@ -14,6 +14,7 @@ using DigitalPurchasing.Core.Extensions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using System.IO;
+using DigitalPurchasing.Data;
 
 namespace DigitalPurchasing.Web.Controllers
 {
@@ -26,14 +27,17 @@ namespace DigitalPurchasing.Web.Controllers
 
         private readonly ISupplierService _supplierService;
         private readonly INomenclatureCategoryService _nomenclatureCategoryService;
+        private readonly ApplicationDbContext _db;
         private const string SameInnErrorMessage = "Контрагент с таким ИНН уже есть в системе";
 
         public SupplierController(
             ISupplierService supplierService,
-            INomenclatureCategoryService nomenclatureCategoryService)
+            INomenclatureCategoryService nomenclatureCategoryService,
+            ApplicationDbContext db)
         {
             _supplierService = supplierService;
             _nomenclatureCategoryService = nomenclatureCategoryService;
+            _db = db;
         }
 
         public IActionResult Index() => View();
@@ -412,13 +416,25 @@ namespace DigitalPurchasing.Web.Controllers
         [HttpPost]
         public IActionResult SaveCategories([FromQuery] Guid supplierId, [FromBody] IEnumerable<SaveCategoriesPostItem> categories)
         {
-            _supplierService.RemoveSupplierNomenclatureCategories(supplierId);
-            _supplierService.SaveSupplierNomenclatureCategoryContacts(supplierId,
-                categories
-                    .Where(nc => nc.Id.HasValue)
-                    .Select(nc => (nc.Id.Value, nc.PrimaryContactId, nc.SecondaryContactId, nc.IsDefault)));
+            using (var transaction = _db.Database.BeginTransaction())
+            {
+                try
+                {
+                    _supplierService.RemoveSupplierNomenclatureCategories(supplierId);
+                    _supplierService.SaveSupplierNomenclatureCategoryContacts(supplierId,
+                        categories
+                            .Where(nc => nc.Id.HasValue)
+                            .Select(nc => (nc.Id.Value, nc.PrimaryContactId, nc.SecondaryContactId, nc.IsDefault)));
 
-            return CategoriesData(supplierId);
+                    transaction.Commit();
+
+                    return CategoriesData(supplierId);
+                }
+                catch (Exception)
+                {
+                    return BadRequest();
+                }
+            }
         }
     }
 }

@@ -234,7 +234,16 @@
                 },
                 saveCategories: function() {
                     var vm = this;
-                    this.$http.post('@Url.Action("SaveCategories", new { supplierId = Model.Supplier.Id })', vm.categories).then(response => {
+                    var categories = _.map(vm.categories, function(item) {
+                        if (item.primaryContactId === 'null') {
+                            item.primaryContactId = null;
+                        }
+                        if (item.secondaryContactId === 'null') {
+                            item.secondaryContactId = null;
+                        }
+                        return item;
+                    });
+                    this.$http.post('@Url.Action("SaveCategories", new { supplierId = Model.Supplier.Id })', categories).then(response => {
                         var data = response.body;
                         vm.availableCategories = data.availableCategories;
                         vm.contactPersons = data.contactPersons;
