@@ -313,19 +313,39 @@
                         this.modalSendEmails = false;
                     },
                     sentToSuppliers: function (item) {
-                        var requestsByCategory = _.filter(this.requests, function(request) {
-                            return _.indexOf(request.categoryIds, item.categoryId) > -1;
+                        var requestsByCategoryNames = [];
+                        var requestsByItemNames = [];
+
+                        _.each(this.requests, function(request) {
+                            if (request.byCategory) {
+                                var anyContains = _.some(this.requests, function(r) {
+                                    if (r.byCategory) {
+                                        if (_.indexOf(r.categoryIds, item.categoryId) > -1) return true;
+                                    }
+                                    return false;
+                                });
+
+                                if (_.indexOf(request.categoryIds, item.categoryId) > -1) {
+                                    requestsByCategoryNames.push(request.supplierName);
+                                } else {
+                                    if (!anyContains) {
+                                        requestsByCategoryNames.push(request.supplierName);
+                                    }
+                                }
+                            }
+                            if (request.byItem) {
+                                if (_.indexOf(request.itemIds, item.id) > -1) {
+                                    requestsByItemNames.push(request.supplierName);
+                                }
+                            }
                         });
-                        var requestsByItem = _.filter(this.requests, function(request) {
-                            return _.indexOf(request.itemIds, item.id) > -1;
-                        });
-                        if (requestsByCategory.length === 0 && requestsByItem.length === 0) return '';
-                        var requestsByCategoryNames = _.map(requestsByCategory, 'supplierName');
-                        var requestsByItemNames = _.map(requestsByItem, 'supplierName');
+
+                        if (requestsByCategoryNames.length === 0 && requestsByItemNames.length === 0) return '';
 
                         var names = _.union(requestsByCategoryNames, requestsByItemNames);
+                        var orderedNames = _.sortBy(names);
 
-                        return _.join(names, ', ');
+                        return _.join(orderedNames, ', ');
                     },
                     toSend: function(item) {
                         var vm = this;
