@@ -222,14 +222,26 @@ namespace DigitalPurchasing.Services
 
         public NomenclatureVm CreateOrUpdate(NomenclatureVm vm, Guid ownerId)
         {
-            if (HasSameNomenclatureName(vm.Id == default ? (Guid?)null : vm.Id, vm.Name?.Trim()))
+            var name = vm.Name?.Trim();
+
+            if (vm.Id == default)
             {
-                throw new SameNomenclatureNameException();
+                var deletedEntity = _db.Nomenclatures
+                    .FirstOrDefault(q => q.IsDeleted && q.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
+
+                if (deletedEntity != null)
+                {
+                    vm.Id = deletedEntity.Id;
+                }
+            }
+
+            if (HasSameNomenclatureName(vm.Id == default ? (Guid?)null : vm.Id, name))
+            {
+                throw new SameNomenclatureNameException(name);
             }
 
             var entity = _db.Nomenclatures.FirstOrDefault(q => q.Id == vm.Id);
 
-            string name = vm.Name?.Trim();
             var isNew = entity == null;
             bool nameIsChanged = false;
 
@@ -262,6 +274,8 @@ namespace DigitalPurchasing.Services
 
             entity.PackUomId = vm.PackUomId;
             entity.PackUomValue = vm.PackUomValue;
+
+            entity.IsDeleted = false;
 
             _db.SaveChanges();
 
@@ -372,8 +386,8 @@ namespace DigitalPurchasing.Services
 
         private bool HasSameNomenclatureName(Guid? exceptNomenclatureId, string name) =>
             !string.IsNullOrWhiteSpace(name) &&
-            _db.Nomenclatures.Any(_ => _.Id != exceptNomenclatureId && _.Name == name);
-
+            _db.Nomenclatures.Any(_ => _.Id != exceptNomenclatureId && _.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
+        
         public NomenclatureVm FindBestFuzzyMatch(Guid ownerId, string nomName)
         {
             // Ngrams with specified length should already exist in the database
