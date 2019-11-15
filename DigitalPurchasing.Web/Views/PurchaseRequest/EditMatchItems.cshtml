@@ -50,6 +50,7 @@
                 <td v-if="isMatched(item)">{{item.nomenclatureFactor > 0 ? item.nomenclatureFactor : item.commonFactor}}</td>
                 <td v-if="isMatched(item)">
                     <button type="button" class="btn btn-link" v-on:click="openMatch(item)">Изменить</button>
+                    <button type="button" class="btn btn-link" v-on:click="openCreate(item)">Создать</button>
                 </td>
                 <td v-else class="border-left text-center" colspan="5">
                     <button type="button" class="btn btn-link" v-on:click="openMatch(item)">Сопоставить</button>

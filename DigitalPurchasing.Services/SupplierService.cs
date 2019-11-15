@@ -388,11 +388,11 @@ namespace DigitalPurchasing.Services
                     select item).ToList().Select(_ => _.Adapt<SupplierVm>());
         }
 
-        public Dictionary<SupplierVm, IEnumerable<Guid>> GetByCategoryIds(IList<Guid> nomenclatureCategoryIds, IList<Guid> ignoreSupplierIds)
+        public Dictionary<SupplierVm, List<Guid>> GetByCategoryIds(IList<Guid> nomenclatureCategoryIds, IList<Guid> ignoreSupplierIds)
         {
             if (!nomenclatureCategoryIds.Any())
             {
-                return new Dictionary<SupplierVm, IEnumerable<Guid>>();
+                return new Dictionary<SupplierVm, List<Guid>>();
             }
 
             var suppliersByAlternatives1 = from n in _db.Nomenclatures
@@ -425,7 +425,11 @@ namespace DigitalPurchasing.Services
                 .GroupBy(q => q.Supplier)
                 .ToDictionary(
                     g => g.Key.Adapt<SupplierVm>(),
-                    g => g.Select(q => q.CategoryId).Distinct().SelectMany(GetCategoryChildIds).Distinct()
+                    g => g.Select(q => q.CategoryId)
+                        .Distinct()
+                        .SelectMany(GetCategoryChildIds)
+                        .Distinct()
+                        .ToList()
                 );
 
             return result;
@@ -437,6 +441,8 @@ namespace DigitalPurchasing.Services
 
             if (!_memoryCache.TryGetValue(cacheKey, out List<Guid> ids))
             {
+                ids = new List<Guid>();
+
                 using (var command = _db.Database.GetDbConnection().CreateCommand())
                 {
                     var qry = $";WITH Result AS " +
@@ -454,7 +460,8 @@ namespace DigitalPurchasing.Services
 
                         while (result.Read())
                         {
-                            ids.Add(result.GetGuid(0));
+                            var id = result.GetGuid(0);
+                            ids.Add(id);
                         }
                     }
                 }

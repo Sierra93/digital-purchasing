@@ -23,7 +23,7 @@ namespace DigitalPurchasing.Core.Interfaces
         (Guid SupplierId, Guid ContactPersonId) GetSupplierIdByEmail(Guid ownerId, string email);
         string GetSupplierNameByEmail(Guid ownerId, string email);
         List<SupplierNomenclatureCategory> GetSupplierNomenclatureCategories(Guid supplierId);
-        Dictionary<SupplierVm, IEnumerable<Guid>> GetByCategoryIds(IList<Guid> nomenclatureCategoryIds, IList<Guid> ignoreSupplierId);
+        Dictionary<SupplierVm, List<Guid>> GetByCategoryIds(IList<Guid> nomenclatureCategoryIds, IList<Guid> ignoreSupplierId);
         void SaveSupplierNomenclatureCategoryContacts(Guid supplierId,
             IEnumerable<(Guid NomenclatureCategoryId, Guid? PrimarySupplierContactId, Guid? SecondarySupplierContactId, bool IsDefaultSupplierCategory)> valueTuples);
         void RemoveSupplierNomenclatureCategoryContacts(Guid supplierId, Guid nomenclatureCategoryId);

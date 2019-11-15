@@ -149,10 +149,8 @@ namespace DigitalPurchasing.Web.Controllers
             };
 
             var nomenclature = _nomenclatureService.CreateOrUpdate(model, companyId);
-
-            _nomenclatureAlternativeService.AddNomenclatureForCustomer(post.ItemId);
-
             _purchasingRequestService.SaveMatch(post.ItemId, nomenclature.Id, post.UomId, 1, 0);
+            _nomenclatureAlternativeService.AddNomenclatureForCustomer(post.ItemId);
             
             return Ok(CreateAndSaveMatchItemResult.Success(nomenclature.Id));
         }
@@ -201,8 +199,8 @@ namespace DigitalPurchasing.Web.Controllers
                 };
 
                 var nomenclature = _nomenclatureService.CreateOrUpdate(model, companyId);
-                _nomenclatureAlternativeService.AddNomenclatureForCustomer(item.Id);
                 _purchasingRequestService.SaveMatch(item.Id, nomenclature.Id, uomId, 1, 0);
+                _nomenclatureAlternativeService.AddNomenclatureForCustomer(item.Id);
 
                 count++;
             }
