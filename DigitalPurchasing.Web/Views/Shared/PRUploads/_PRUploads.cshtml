@@ -53,8 +53,8 @@
                     axios.post('@Url.Action("UploadAttachments", "PurchaseRequest")', formData,
                     {
                         headers: { 'Content-Type': 'multipart/form-data' }
-                    }).then(function(){
-                        console.log('SUCCESS!!');
+                    }).then(function(res){
+                        vm.attachments = res.data;
                     }).catch(function(){
                         console.log('FAILURE!!');
                     });
