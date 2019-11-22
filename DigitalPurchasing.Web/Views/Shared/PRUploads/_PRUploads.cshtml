@@ -55,6 +55,7 @@
                         headers: { 'Content-Type': 'multipart/form-data' }
                     }).then(function(res){
                         vm.attachments = res.data;
+                        vm.files = [];
                     }).catch(function(){
                         console.log('FAILURE!!');
                     });
