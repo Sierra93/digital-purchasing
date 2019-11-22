@@ -7,87 +7,92 @@
     Layout = "_Layout";
 }
 
-<h2>@ViewBag.Title</h2>
-
-<h3>Сопоставление названия колонок из заявки клиента с названиями колонок системы</h3>
 <div id="app">
-    <table class="table table-striped">
-        <thead>
-        <tr>
-            <th>Колонки в Системе</th>
-            <th>Код</th>
-            <th>Наименование</th>
-            <th>ЕИ</th>
-            <th>Количество</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <td>Колонки в Заявке</td>
-            <td>
-                <select class="form-control" v-model="columnCode">
-                    <option v-for="option in columns" v-bind:value="option.value">{{option.text}}</option>
-                </select>
-            </td>
-            <td>
-                <select class="form-control" v-model="columnName">
-                    <option v-for="option in columns" v-bind:value="option.value">{{option.text}}</option>
-                </select>
-            </td>
-            <td>
-                <select class="form-control" v-model="columnUom">
-                    <option v-for="option in columns" v-bind:value="option.value">{{option.text}}</option>
-                </select>
-            </td>
-            <td>
-                <select class="form-control" v-model="columnQty">
-                    <option v-for="option in columns" v-bind:value="option.value">{{option.text}}</option>
-                </select>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-    <button v-on:click="saveColumns" class="btn btn-primary" v-bind:disabled="saveStarted">Сохранить соответствие столбцов</button>&nbsp;
-    <label v-if="isSaved">Сохранено!</label>
-</div>
-
-@if (Model.IsUploaded && Model.Status == PurchaseRequestStatus.MatchColumns)
-{
-    <h3>Заявка в формате Клиента</h3>
-    <table class="table table-striped">
-        <thead>
+    <h2>@ViewBag.Title</h2>
+    <div>
+        <h3>Сопоставление названия колонок из заявки клиента с названиями колонок системы</h3>
+        <table class="table table-striped">
+            <thead>
             <tr>
-                @foreach (var column in Model.ExcelTable.Columns)
-                {
-                <th>@column.Header</th>
-                }
+                <th>Колонки в Системе</th>
+                <th>Код</th>
+                <th>Наименование</th>
+                <th>ЕИ</th>
+                <th>Количество</th>
             </tr>
-        </thead>
-        <tbody>
-            @{
-                var rowsCount = Model.ExcelTable.Columns.Find(q => q.Type == TableColumnType.Name).Values.Count;
-            }
-            @for (int i = 0; i < rowsCount; i++)
-            {
+            </thead>
+            <tbody>
+            <tr>
+                <td>Колонки в Заявке</td>
+                <td>
+                    <select class="form-control" v-model="columnCode">
+                        <option v-for="option in columns" v-bind:value="option.value">{{option.text}}</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="form-control" v-model="columnName">
+                        <option v-for="option in columns" v-bind:value="option.value">{{option.text}}</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="form-control" v-model="columnUom">
+                        <option v-for="option in columns" v-bind:value="option.value">{{option.text}}</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="form-control" v-model="columnQty">
+                        <option v-for="option in columns" v-bind:value="option.value">{{option.text}}</option>
+                    </select>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <button v-on:click="saveColumns" class="btn btn-primary" v-bind:disabled="saveStarted">Сохранить соответствие столбцов</button>&nbsp;
+        <label v-if="isSaved">Сохранено!</label>
+    </div>
+    <pr-uploads :pr="id"></pr-uploads>
+    @if (Model.IsUploaded && Model.Status == PurchaseRequestStatus.MatchColumns)
+    {
+        <div>
+            <h3>Заявка в формате Клиента</h3>
+            <table class="table table-striped">
+                <thead>
                 <tr>
                     @foreach (var column in Model.ExcelTable.Columns)
                     {
-                        <td>@(column.Values.Count > i ? column.Values[i] : "")</td>
+                        <th>@column.Header</th>
                     }
                 </tr>
-            }
-        </tbody>
-    </table>
-}
+                </thead>
+                <tbody>
+                @{
+                    var rowsCount = Model.ExcelTable.Columns.Find(q => q.Type == TableColumnType.Name).Values.Count;
+                }
+                @for (int i = 0; i < rowsCount; i++)
+                {
+                    <tr>
+                        @foreach (var column in Model.ExcelTable.Columns)
+                        {
+                            <td>@(column.Values.Count > i ? column.Values[i] : "")</td>
+                        }
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
 
 @section Scripts
 {
+    <partial name="~/Views/Shared/PRUploads/_PRUploads.cshtml" />
     <script>
         (function() {
             var app = new Vue({
                 el: '#app',
                 data: function() {
                     return {
+                        id: '@Model.Id',
                         columnCode: null,
                         columnName: null,
                         columnUom: null,

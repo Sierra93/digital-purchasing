@@ -1,0 +1,83 @@
+<script type="text/x-template" id="pr-uploads">
+    <div>
+        <h3>Дополнительные файлы&nbsp;<i class="fas fa-info-circle" v-tooltip="'Эти файлы будут приложены к письму для поставщиков'"></i></h3>
+        <input type="file" id="files" ref="files" multiple v-on:change="handleFilesUpload()" />
+        <p>Загруженные файлы:</p>
+        <div v-for="(attachment, key) in attachments">
+            {{attachment.fileName}}&nbsp;<button type="button" class="btn btn-link" v-on:click="deleteAttachment(key, attachment.id)">Удалить</button>
+        </div>
+        <p v-if="files.length > 0">Новые файлы:</p>
+        <div v-if="files.length > 0" v-for="(file, key) in files">
+            {{file.name}}&nbsp;<button type="button" class="btn btn-link" v-on:click="removeFile(key)">Удалить</button>
+        </div>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-default" v-on:click="addFiles()">Добавить файлы</button>
+            <button type="button" class="btn btn-default" v-on:click="submit()" v-if="files.length > 0">Сохранить новые файлы</button>
+        </div>
+    </div>
+</script>
+<style>
+    input[type="file"] {
+        position: absolute;
+        top: -500px;
+    }
+</style>
+<script>
+    (function (vue) {
+        vue.component('pr-uploads', {
+            template: '#pr-uploads',
+            props: ['pr'],
+            data: function () {
+                return {
+                    files: [],
+                    attachments: []
+                };
+            },
+            methods: {
+                load: function() {
+                    var vm = this;
+                    axios.get('@Url.Action("AttachmentsData", "PurchaseRequest")'+'?id='+this.pr).then(function(res) {
+                        vm.attachments = res.data;
+                    });
+                },
+                addFiles: function(){
+                    this.$refs.files.click();
+                },
+                submit: function(){
+                    var formData = new FormData();
+                    for (var i = 0; i < this.files.length; i++) {
+                        var file = this.files[i];
+                        formData.append('files[' + i + ']', file);
+                    }
+                    formData.append('id', this.pr);
+                    axios.post('@Url.Action("UploadAttachments", "PurchaseRequest")', formData,
+                    {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                    }).then(function(){
+                        console.log('SUCCESS!!');
+                    }).catch(function(){
+                        console.log('FAILURE!!');
+                    });
+                },
+                handleFilesUpload: function(){
+                    var uploadedFiles = this.$refs.files.files;
+                    for( var i = 0; i < uploadedFiles.length; i++ ){
+                        this.files.push(uploadedFiles[i]);
+                    }
+                },
+                removeFile: function(key){
+                    this.files.splice(key, 1);
+                },
+                deleteAttachment: function(key, id) {
+                    var vm = this;
+                    axios.post('@Url.Action("DeleteAttachment", "PurchaseRequest")', { id: id }).then(function() {
+                        vm.attachments.splice(key, 1);
+                    });
+                }
+            },
+            created: function() {
+                this.load();
+            }
+        });
+    })(Vue)
+</script>

@@ -29,6 +29,7 @@ namespace DigitalPurchasing.Services
         private readonly IEmailService _emailService;
         private readonly IUserService _userService;
         private readonly IRootService _rootService;
+        private readonly IPurchaseRequestAttachmentService _purchaseRequestAttachmentService;
 
         public QuotationRequestService(
             ApplicationDbContext db,
@@ -38,7 +39,8 @@ namespace DigitalPurchasing.Services
             ISupplierService supplierService,
             IEmailService emailService,
             IUserService userService,
-            IRootService rootService)
+            IRootService rootService,
+            IPurchaseRequestAttachmentService purchaseRequestAttachmentService)
         {
             _db = db;
             _counterService = counterService;
@@ -48,6 +50,7 @@ namespace DigitalPurchasing.Services
             _emailService = emailService;
             _userService = userService;
             _rootService = rootService;
+            _purchaseRequestAttachmentService = purchaseRequestAttachmentService;
         }
 
         public async Task<int> CountByCompany(Guid companyId) => await _db.QuotationRequests.IgnoreQueryFilters().CountAsync(q => q.OwnerId == companyId);
@@ -282,12 +285,17 @@ namespace DigitalPurchasing.Services
                         fs.Write(excelBytes, 0, excelBytes.Length);
                     }
 
+                    var attachments = new List<string> { filepath };
+
+                    var prAttachments = await _purchaseRequestAttachmentService.GetAttachmentsPathAsync(qr.PurchaseRequest.Id);
+                    attachments.AddRange(prAttachments);
+
                     // send emails for each contact
                     var emailUid = QuotationRequestToUid(quotationRequestId);
                     var userInfo = _userService.GetUserInfo(userId);
                     foreach (var contact in contacts)
                     {
-                        await _emailService.SendRFQEmail(qr, userInfo, contact, emailUid, filepath);
+                        await _emailService.SendRFQEmail(qr, userInfo, contact, emailUid, attachments);
                         await _db.QuotationRequestEmails.AddAsync(new QuotationRequestEmail
                         {
                             RequestId = qr.Id,

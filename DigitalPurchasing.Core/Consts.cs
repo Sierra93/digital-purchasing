@@ -9,6 +9,7 @@ namespace DigitalPurchasing.Core
         public static class Settings
         {
             public static string AppPath = "App";
+            public static string YandexObjectStorage = "YandexObjectStorage";
             public static double PRDiscountPercentage = 3;
             public static double QuotationRequestResponseHours = 1;
             public static double PriceReductionResponseHours = 0.5;
