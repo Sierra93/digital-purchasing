@@ -17,5 +17,6 @@ namespace DigitalPurchasing.Core.Interfaces
     {
         public Guid Id { get; set; }
         public string FileName { get; set; }
+        public DateTime CreatedOn { get; set; }
     }
 }

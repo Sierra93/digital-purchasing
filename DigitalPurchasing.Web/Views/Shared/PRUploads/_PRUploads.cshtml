@@ -1,15 +1,19 @@
 <script type="text/x-template" id="pr-uploads">
     <div>
-        <h3>Дополнительные файлы&nbsp;<i class="fas fa-info-circle" v-tooltip="'Эти файлы будут приложены к письму для поставщиков'"></i></h3>
+        <h4>Дополнительные файлы&nbsp;<i class="fas fa-info-circle" v-tooltip="'Эти файлы будут приложены к письму для поставщиков'"></i></h4>
         <input type="file" id="files" ref="files" multiple v-on:change="handleFilesUpload()" />
-        <p>Загруженные файлы:</p>
-        <div v-for="(attachment, key) in attachments">
-            {{attachment.fileName}}&nbsp;<button type="button" class="btn btn-link" v-on:click="deleteAttachment(key, attachment.id)">Удалить</button>
-        </div>
+        <p v-if="attachments.length > 0">Загруженные файлы:</p>
+        <ul v-if="attachments.length > 0">
+            <li v-for="(attachment, key) in orderedAttachments">
+                {{attachment.fileName}}&nbsp;<button type="button" class="btn btn-link" v-on:click="deleteAttachment(attachment.id)">Удалить</button>
+            </li>
+        </ul>
         <p v-if="files.length > 0">Новые файлы:</p>
-        <div v-if="files.length > 0" v-for="(file, key) in files">
+        <ul v-if="files.length > 0">
+            <li v-for="(file, key) in files">
             {{file.name}}&nbsp;<button type="button" class="btn btn-link" v-on:click="removeFile(key)">Удалить</button>
-        </div>
+            </li>
+        </ul>        
         <div class="btn-group" role="group">
             <button type="button" class="btn btn-default" v-on:click="addFiles()">Добавить файлы</button>
             <button type="button" class="btn btn-default" v-on:click="submit()" v-if="files.length > 0">Сохранить новые файлы</button>
@@ -33,6 +37,13 @@
                     attachments: []
                 };
             },
+            computed: {
+                orderedAttachments: function() {
+                    return _.orderBy(this.attachments, function(a) {
+                        return new Date(a.createdOn);
+                    }, ['asc']);
+                }
+            },
             methods: {
                 load: function() {
                     var vm = this;
@@ -43,21 +54,21 @@
                 addFiles: function(){
                     this.$refs.files.click();
                 },
-                submit: function(){
+                submit: function() {
+                    var vm = this;
                     var formData = new FormData();
-                    for (var i = 0; i < this.files.length; i++) {
-                        var file = this.files[i];
+                    for (var i = 0; i < vm.files.length; i++) {
+                        var file = vm.files[i];
                         formData.append('files[' + i + ']', file);
                     }
-                    formData.append('id', this.pr);
+                    formData.append('id', vm.pr);
                     axios.post('@Url.Action("UploadAttachments", "PurchaseRequest")', formData,
                     {
                         headers: { 'Content-Type': 'multipart/form-data' }
-                    }).then(function(res){
+                    }).then(function(res) {
                         vm.attachments = res.data;
+                        vm.$refs.files.value = '';
                         vm.files = [];
-                    }).catch(function(){
-                        console.log('FAILURE!!');
                     });
                 },
                 handleFilesUpload: function(){
@@ -69,10 +80,10 @@
                 removeFile: function(key){
                     this.files.splice(key, 1);
                 },
-                deleteAttachment: function(key, id) {
+                deleteAttachment: function(id) {
                     var vm = this;
                     axios.post('@Url.Action("DeleteAttachment", "PurchaseRequest")', { id: id }).then(function() {
-                        vm.attachments.splice(key, 1);
+                        vm.attachments = _.remove(vm.attachments, function (a) { return a.id !== id});
                     });
                 }
             },
