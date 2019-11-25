@@ -106,10 +106,17 @@ namespace DigitalPurchasing.Web.Controllers
         public async Task<IActionResult> UploadAttachments(IFormCollection formCollection)
         {
             var id = Guid.Parse(formCollection["id"]);
+
+            var allowedExts = new List<string>
+            {
+                ".pdf", ".xls", ".xlsx", ".png", ".jpg", ".jpeg", ".doc", ".docx"
+            };
             
             foreach (var formFile in formCollection.Files)
             {
-                if (formFile.Length > 0)
+                var ext = Path.GetExtension(formFile.FileName).ToLowerInvariant();
+                
+                if (allowedExts.Contains(ext) && formFile.Length > 0)
                 {
                     await _purchaseRequestAttachmentService.SaveAttachmentAsync(id, formFile.OpenReadStream(), formFile.FileName);
                 }

@@ -1,7 +1,7 @@
 <script type="text/x-template" id="pr-uploads">
     <div>
         <h4>Дополнительные файлы&nbsp;<i class="fas fa-info-circle" v-tooltip="'Эти файлы будут приложены к письму для поставщиков'"></i></h4>
-        <input type="file" id="files" ref="files" multiple v-on:change="handleFilesUpload()" />
+        <input type="file" id="files" ref="files" multiple v-on:change="handleFilesUpload()" :accept="allowedExtsAcceptStr" />
         <p v-if="attachments.length > 0">Загруженные файлы:</p>
         <ul v-if="attachments.length > 0">
             <li v-for="(attachment, key) in orderedAttachments">
@@ -18,6 +18,7 @@
             <button type="button" class="btn btn-default" v-on:click="addFiles()">Добавить файлы</button>
             <button type="button" class="btn btn-default" v-on:click="submit()" v-if="files.length > 0">Сохранить новые файлы</button>
         </div>
+        <p class="help-block">Разрешенные форматы файлов: {{allowedExtsStr}}</p>
     </div>
 </script>
 <style>
@@ -34,7 +35,8 @@
             data: function () {
                 return {
                     files: [],
-                    attachments: []
+                    attachments: [],
+                    allowedExts: ["pdf", "xls", "xlsx", "png", "jpg", "jpeg", "doc", "docx"]
                 };
             },
             computed: {
@@ -42,6 +44,13 @@
                     return _.orderBy(this.attachments, function(a) {
                         return new Date(a.createdOn);
                     }, ['asc']);
+                },
+                allowedExtsStr: function() {
+                    return _.join(this.allowedExts, ', '); 
+                },
+                allowedExtsAcceptStr: function() {
+                    var extsWdot = _.map(this.allowedExts, function(e) { return '.' + e; });
+                    return _.join(extsWdot, ',');
                 }
             },
             methods: {
@@ -59,7 +68,9 @@
                     var formData = new FormData();
                     for (var i = 0; i < vm.files.length; i++) {
                         var file = vm.files[i];
-                        formData.append('files[' + i + ']', file);
+                        if (this.haveValidExt(file.name)) {
+                            formData.append('files[' + i + ']', file);
+                        }
                     }
                     formData.append('id', vm.pr);
                     axios.post('@Url.Action("UploadAttachments", "PurchaseRequest")', formData,
@@ -73,8 +84,11 @@
                 },
                 handleFilesUpload: function(){
                     var uploadedFiles = this.$refs.files.files;
-                    for( var i = 0; i < uploadedFiles.length; i++ ){
-                        this.files.push(uploadedFiles[i]);
+                    for( var i = 0; i < uploadedFiles.length; i++ ) {
+                        var uploadedFile = uploadedFiles[i];
+                        if (this.haveValidExt(uploadedFile.name)) {
+                            this.files.push(uploadedFile);
+                        }
                     }
                 },
                 removeFile: function(key){
@@ -85,6 +99,11 @@
                     axios.post('@Url.Action("DeleteAttachment", "PurchaseRequest")', { id: id }).then(function() {
                         vm.attachments = _.remove(vm.attachments, function (a) { return a.id !== id});
                     });
+                },
+                haveValidExt: function(fileName) {
+                    if (!fileName) return false;
+                    var ext = fileName.split('.').pop();
+                    return _.includes(this.allowedExts, ext);
                 }
             },
             created: function() {
