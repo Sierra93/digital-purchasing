@@ -1,0 +1,114 @@
+<script type="text/x-template" id="pr-uploads">
+    <div>
+        <h4>Дополнительные файлы&nbsp;<i class="fas fa-info-circle" v-tooltip="'Эти файлы будут приложены к письму для поставщиков'"></i></h4>
+        <input type="file" id="files" ref="files" multiple v-on:change="handleFilesUpload()" :accept="allowedExtsAcceptStr" />
+        <p v-if="attachments.length > 0">Загруженные файлы:</p>
+        <ul v-if="attachments.length > 0">
+            <li v-for="(attachment, key) in orderedAttachments">
+                {{attachment.fileName}}&nbsp;<button type="button" class="btn btn-link" v-on:click="deleteAttachment(attachment.id)">Удалить</button>
+            </li>
+        </ul>
+        <p v-if="files.length > 0">Новые файлы:</p>
+        <ul v-if="files.length > 0">
+            <li v-for="(file, key) in files">
+            {{file.name}}&nbsp;<button type="button" class="btn btn-link" v-on:click="removeFile(key)">Удалить</button>
+            </li>
+        </ul>        
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-default" v-on:click="addFiles()">Добавить файлы</button>
+            <button type="button" class="btn btn-default" v-on:click="submit()" v-if="files.length > 0">Сохранить новые файлы</button>
+        </div>
+        <p class="help-block">Разрешенные форматы файлов: {{allowedExtsStr}}</p>
+    </div>
+</script>
+<style>
+    input[type="file"] {
+        position: absolute;
+        top: -500px;
+    }
+</style>
+<script>
+    (function (vue) {
+        vue.component('pr-uploads', {
+            template: '#pr-uploads',
+            props: ['pr'],
+            data: function () {
+                return {
+                    files: [],
+                    attachments: [],
+                    allowedExts: ["pdf", "xls", "xlsx", "png", "jpg", "jpeg", "doc", "docx"]
+                };
+            },
+            computed: {
+                orderedAttachments: function() {
+                    return _.orderBy(this.attachments, function(a) {
+                        return new Date(a.createdOn);
+                    }, ['asc']);
+                },
+                allowedExtsStr: function() {
+                    return _.join(this.allowedExts, ', '); 
+                },
+                allowedExtsAcceptStr: function() {
+                    var extsWdot = _.map(this.allowedExts, function(e) { return '.' + e; });
+                    return _.join(extsWdot, ',');
+                }
+            },
+            methods: {
+                load: function() {
+                    var vm = this;
+                    axios.get('@Url.Action("AttachmentsData", "PurchaseRequest")'+'?id='+this.pr).then(function(res) {
+                        vm.attachments = res.data;
+                    });
+                },
+                addFiles: function(){
+                    this.$refs.files.click();
+                },
+                submit: function() {
+                    var vm = this;
+                    var formData = new FormData();
+                    for (var i = 0; i < vm.files.length; i++) {
+                        var file = vm.files[i];
+                        if (this.haveValidExt(file.name)) {
+                            formData.append('files[' + i + ']', file);
+                        }
+                    }
+                    formData.append('id', vm.pr);
+                    axios.post('@Url.Action("UploadAttachments", "PurchaseRequest")', formData,
+                    {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                    }).then(function(res) {
+                        vm.attachments = res.data;
+                        vm.$refs.files.value = '';
+                        vm.files = [];
+                    });
+                },
+                handleFilesUpload: function(){
+                    var uploadedFiles = this.$refs.files.files;
+                    for( var i = 0; i < uploadedFiles.length; i++ ) {
+                        var uploadedFile = uploadedFiles[i];
+                        if (this.haveValidExt(uploadedFile.name)) {
+                            this.files.push(uploadedFile);
+                        }
+                    }
+                },
+                removeFile: function(key){
+                    this.files.splice(key, 1);
+                },
+                deleteAttachment: function(id) {
+                    var vm = this;
+                    axios.post('@Url.Action("DeleteAttachment", "PurchaseRequest")', { id: id }).then(function() {
+                        vm.attachments = _.remove(vm.attachments, function (a) { return a.id !== id});
+                    });
+                },
+                haveValidExt: function(fileName) {
+                    if (!fileName) return false;
+                    var ext = fileName.split('.').pop();
+                    return _.includes(this.allowedExts, ext);
+                }
+            },
+            created: function() {
+                this.load();
+            }
+        });
+    })(Vue)
+</script>

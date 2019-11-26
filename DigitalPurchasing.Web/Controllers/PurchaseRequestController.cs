@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using DigitalPurchasing.Core.Enums;
 using DigitalPurchasing.Core.Extensions;
 using DigitalPurchasing.Core.Interfaces;
 using DigitalPurchasing.Models.Identity;
+using DigitalPurchasing.Services;
 using DigitalPurchasing.Web.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -20,8 +22,8 @@ namespace DigitalPurchasing.Web.Controllers
         private readonly UserManager<User> _userManager;
         private readonly IUomService _uomService;
         private readonly INomenclatureAlternativeService _nomenclatureAlternativeService;
-        private readonly ITimeZoneService _timeZoneService;
         private readonly INomenclatureCategoryService _nomenclatureCategoryService;
+        private readonly IPurchaseRequestAttachmentService _purchaseRequestAttachmentService;
 
         public PurchaseRequestController(
             IPurchaseRequestService purchasingRequestService,
@@ -30,8 +32,8 @@ namespace DigitalPurchasing.Web.Controllers
             UserManager<User> userManager,  
             IUomService uomService,
             INomenclatureAlternativeService nomenclatureAlternativeService,
-            ITimeZoneService timeZoneService,
-            INomenclatureCategoryService nomenclatureCategoryService)
+            INomenclatureCategoryService nomenclatureCategoryService,
+            IPurchaseRequestAttachmentService purchaseRequestAttachmentService)
         {
             _purchasingRequestService = purchasingRequestService;
             _nomenclatureService = nomenclatureService;
@@ -39,8 +41,8 @@ namespace DigitalPurchasing.Web.Controllers
             _userManager = userManager;
             _uomService = uomService;
             _nomenclatureAlternativeService = nomenclatureAlternativeService;
-            _timeZoneService = timeZoneService;
             _nomenclatureCategoryService = nomenclatureCategoryService;
+            _purchaseRequestAttachmentService = purchaseRequestAttachmentService;
         }
 
         public IActionResult Edit(Guid id)
@@ -98,6 +100,45 @@ namespace DigitalPurchasing.Web.Controllers
         {
             var result = _purchasingRequestService.Delete(vm.Id);
             return Ok(result);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UploadAttachments(IFormCollection formCollection)
+        {
+            var id = Guid.Parse(formCollection["id"]);
+
+            var allowedExts = new List<string>
+            {
+                ".pdf", ".xls", ".xlsx", ".png", ".jpg", ".jpeg", ".doc", ".docx"
+            };
+            
+            foreach (var formFile in formCollection.Files)
+            {
+                var ext = Path.GetExtension(formFile.FileName).ToLowerInvariant();
+                
+                if (allowedExts.Contains(ext) && formFile.Length > 0)
+                {
+                    await _purchaseRequestAttachmentService.SaveAttachmentAsync(id, formFile.OpenReadStream(), formFile.FileName);
+                }
+            }
+
+            var attachments = await _purchaseRequestAttachmentService.GetAttachmentsAsync(id);
+
+            return Ok(attachments);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteAttachment([FromBody]DeleteVm vm)
+        {
+            await _purchaseRequestAttachmentService.DeleteAttachment(vm.Id);
+            return Ok();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AttachmentsData([FromQuery] Guid id)
+        {
+            var attachments = await _purchaseRequestAttachmentService.GetAttachmentsAsync(id);
+            return Ok(attachments);
         }
     }
 }

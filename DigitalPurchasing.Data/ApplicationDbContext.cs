@@ -51,6 +51,7 @@ namespace DigitalPurchasing.Data
         public DbSet<Customer> Customers { get; set; }
         public DbSet<PurchaseRequest> PurchaseRequests { get; set; }
         public DbSet<PurchaseRequestItem> PurchaseRequestItems { get; set; }
+        public DbSet<PurchaseRequestAttachment> PurchaseRequestAttachments { get; set; }
 
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<SupplierContactPerson> SupplierContactPersons { get; set; }
@@ -220,6 +221,8 @@ namespace DigitalPurchasing.Data
 
             builder.Entity<PurchaseRequestItem>().HasOne(q => q.Nomenclature).WithMany().HasForeignKey(q => q.NomenclatureId).OnDelete(DeleteBehavior.Restrict);
             builder.Entity<PurchaseRequestItem>().HasOne(q => q.RawUomMatch).WithMany(q => q.PurchasingRequestItems).HasForeignKey(q => q.RawUomMatchId).OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<PurchaseRequestAttachment>().HasOne(q => q.PurchaseRequest).WithMany().HasForeignKey(q => q.PurchaseRequestId).OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<QuotationRequest>(e =>
             {

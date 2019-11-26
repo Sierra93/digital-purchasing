@@ -6,6 +6,8 @@
 
   <ItemGroup>
     <PackageReference Include="EFCore.BulkExtensions" Version="2.4.3" />
+    <PackageReference Include="Foundatio" Version="8.1.2126" />
+    <PackageReference Include="Foundatio.AWS" Version="8.1.1556" />
     <PackageReference Include="MailKit" Version="2.3.2" />
     <PackageReference Include="Mandrill.net" Version="6.0.0" />
     <PackageReference Include="Mapster" Version="4.0.0" />

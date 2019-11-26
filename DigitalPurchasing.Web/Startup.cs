@@ -1,4 +1,5 @@
 using System;
+using DigitalPurchasing.Core;
 using DigitalPurchasing.Data;
 using DigitalPurchasing.Models.Identity;
 using DigitalPurchasing.Services;
@@ -148,6 +149,17 @@ namespace DigitalPurchasing.Web
             services.AddScoped<IFileService, FileService>();
             services.AddScoped<ITimeZoneService, TimeZoneService>();
             services.AddMandrill();
+
+            services.AddScoped<IObjectStorageService>(_ =>
+            {
+                var yosOptions = Configuration
+                    .GetSection(Consts.Settings.YandexObjectStorage)
+                    .Get<YandexObjectStorageOptions>();
+
+                return new ObjectStorageService(yosOptions.Bucket, yosOptions.AccessKey, yosOptions.SecretKey);
+            });
+
+            services.AddScoped<IPurchaseRequestAttachmentService, PurchaseRequestAttachmentService>();
 
             services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
             services.AddScoped<IUrlHelper>(x =>

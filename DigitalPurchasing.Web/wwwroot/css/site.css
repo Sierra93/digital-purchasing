@@ -156,6 +156,10 @@ td.align-right, th.align-right {
   margin: 0
 }
 
+.m-t-30 {
+  margin-top: 30px;
+}
+
 .radio-1_2 {
   -ms-transform: scale(1.2); /* IE 9 */
   -webkit-transform: scale(1.2); /* Chrome, Safari, Opera */

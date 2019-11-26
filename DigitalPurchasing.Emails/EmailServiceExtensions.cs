@@ -42,7 +42,7 @@ namespace DigitalPurchasing.Emails
             UserInfoDto userInfo,
             SupplierContactPersonVm supplierContact,
             string emailUid,
-            string attachment)
+            List<string> attachments)
         {
             var subject = $"[{emailUid}] Запрос коммерческого предложения №{quotationRequest.PublicId}";
             var until = DateTime.UtcNow.AddHours(1).ToRussianStandardTime();
@@ -61,7 +61,7 @@ namespace DigitalPurchasing.Emails
             };
 
             var htmlResult = await GetHtmlString(model);
-            await emailService.SendFromRobotAsync(quotationRequest.OwnerId, supplierContact.Email, subject, htmlResult, new List<string> { attachment });
+            await emailService.SendFromRobotAsync(quotationRequest.OwnerId, supplierContact.Email, subject, htmlResult, attachments);
         }
 
         public static async Task SendSOPartiallyProcessedEmail(this IEmailService emailService,
