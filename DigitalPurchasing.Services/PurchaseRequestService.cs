@@ -60,6 +60,18 @@ namespace DigitalPurchasing.Services
 
         public async Task<int> CountByCompany(Guid companyId) => await _db.PurchaseRequests.IgnoreQueryFilters().CountAsync(q => q.OwnerId == companyId);
 
+        public async Task<Guid> CreateEmpty(PurchaseRequestStatus status, Guid ownerId)
+        {
+            var entry = await _db.PurchaseRequests.AddAsync(new PurchaseRequest
+            {
+                Status = status,
+                PublicId = _counterService.GetPRNextId(ownerId),
+                OwnerId = ownerId
+            });
+            await _db.SaveChangesAsync();
+            return entry.Entity.Id;
+        }
+
         public async Task<CreateFromFileResponse> CreateFromFile(string filePath, Guid ownerId)
         {
             var result = _excelRequestReader.ToTable(filePath, ownerId);
@@ -94,8 +106,12 @@ namespace DigitalPurchasing.Services
             if (entity == null) return null;
 
             var result = entity.Adapt<PurchaseRequestDetailsResponse>();
-            result.ExcelTable =
-                entity.UploadedDocument.Data != null ? JsonConvert.DeserializeObject<ExcelTable>(entity.UploadedDocument.Data) : null;
+            if (entity.UploadedDocument != null)
+            {
+                result.ExcelTable = entity.UploadedDocument.Data != null
+                        ? JsonConvert.DeserializeObject<ExcelTable>(entity.UploadedDocument.Data)
+                        : null;
+            }
 
             return result;
         }
