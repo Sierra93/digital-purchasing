@@ -196,16 +196,14 @@
                         <tr>
                             <td>Минимальная<br />цена</td>
                             <td>Целевая цена,<br />валюта за ЕИ поставщика</td>
-                            <td>Целевая скидка<br />к минимальной цене11, %</td>
+                            <td>Целевая скидка<br />к минимальной цене, %</td>
                             <td v-for="supplier in prSuppliers" class="text-center">
-                                <div class="suppliers">
-                                    <div>{{supplier.name}}</div>
-                                    <label class="checkbox-inline">
-                                        <input type="checkbox"
-                                               v-model="supplier.isChecked"
-                                               v-on:change="prToggleSupplier(supplier.id, !supplier.isChecked)" />
-                                    </label>
-                                </div>
+                                <div>{{supplier.name}}</div>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox"
+                                           v-model="supplier.isChecked"
+                                           v-on:change="prToggleSupplier(supplier.id, !supplier.isChecked)" />
+                                </label>
                             </td>
                             <td>Поставщики, кому уже отправлен<br />запрос на понижение</td>
                             <td>Дата отправки запроса<br />на понижение цен</td>
