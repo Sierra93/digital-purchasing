@@ -35,9 +35,11 @@ body {
     display: none;
   }
 }
+
 .table {
   border-spacing: 7px 11px;
 }
+
 .table .btn-group {
   white-space: nowrap;
 }
