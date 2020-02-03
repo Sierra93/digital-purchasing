@@ -155,7 +155,7 @@
     <partial name="~/Views/Shared/PRUploads/_PRUploads.cshtml" />
     <script>
         window.onload = () => {
-            let toDeleteBtnUpload = document.querySelector("input#files")[0];
+            let toDeleteBtnUpload = document.querySelectorAll("input#files")[0];
             toDeleteBtnUpload.classList.add("hidden");
         }
         (function () {
