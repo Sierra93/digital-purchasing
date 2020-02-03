@@ -36,6 +36,10 @@ body {
   }
 }
 
+.table {
+  border-spacing: 7px 11px;
+}
+
 .table .btn-group {
   white-space: nowrap;
 }
@@ -185,3 +189,4 @@ td.align-right, th.align-right {
 body > .alert {
   z-index: 2000;
 }
+
