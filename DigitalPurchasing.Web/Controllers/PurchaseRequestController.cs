@@ -45,6 +45,14 @@ namespace DigitalPurchasing.Web.Controllers
             _purchaseRequestAttachmentService = purchaseRequestAttachmentService;
         }
 
+        public async Task<IActionResult> CreateManual()
+        {
+            var ownerId = User.CompanyId();
+            var id = await _purchasingRequestService.CreateEmpty(PurchaseRequestStatus.ManualInput, ownerId);
+            _purchasingRequestService.UpdateStatus(id, PurchaseRequestStatus.ManualInput);
+            return RedirectToAction("Edit", "PurchaseRequest", new { id });
+        }
+
         public IActionResult Edit(Guid id)
         {
             var response = _purchasingRequestService.GetById(id);

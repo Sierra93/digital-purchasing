@@ -19,9 +19,9 @@
                 <span class="help-block" v-show="isNewCustomer">Новый клиент</span>
             </div>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-1">
             <div class="form-group">
-                <label for="erp-code">№ заявки в ERP</label>
+                <label for="erp-code">№ в ERP</label>
                 <input type="text" class="form-control" id="erp-code" v-model.trim="erpCode" v-on:input="updateErpCode" />
             </div>
         </div>
@@ -56,10 +56,18 @@
                 <td class="text-center">
                     <label>{{getRowIndex(r)}}</label>
                 </td>
-                <td><input type="text" class="form-control" v-model="r.rawCode" /></td>
-                <td><input type="text" class="form-control" v-model="r.rawName" /></td>
-                <td><input type="number" class="form-control" v-model="r.rawQty" /></td>
-                <td><input type="text" class="form-control" v-model="r.rawUom" /></td>
+                <td>
+                    <input type="text" class="form-control" v-model.trim="r.rawCode"/>
+                </td>
+                <td v-bind:class="getInputClass(!isValidName(r.rawName))">
+                    <input type="text" class="form-control" v-model.trim="r.rawName"/>
+                </td>
+                <td v-bind:class="getInputClass(!isValidQty(r.rawQty))">
+                    <input type="number" class="form-control" v-model.number="r.rawQty" min="0"/>
+                </td>
+                <td v-bind:class="getInputClass(!isValidUom(r.rawUom))">
+                    <input type="text" class="form-control" v-model.trim="r.rawUom"/>
+                </td>
                 <td>
                     <button type="button" class="btn btn-default" v-on:click="removeRow(r)"><i class="far fa-minus-square"></i></button>
                     <button type="button" class="btn btn-default" v-on:click="addRow(r)"><i class="far fa-plus-square"></i></button>
@@ -109,6 +117,7 @@
                         vm.customerName = data.customerName;
                         vm.customerId = data.customerId;
                         vm.erpCode = data.erpCode;
+                        this.createEmptyRowIfNecessary();
                     }, response => {
                         alert('error');
                     });
@@ -141,13 +150,16 @@
                         return getInputClass(this.customerNameHasError);
                     },
                     isSaveDisabled: function() {
-                        return this.customerNameHasError || this.saveRawItemsStarted;
+                        return this.customerNameHasError || this.saveRawItemsStarted || !this.allRowAreValid();
                     },
                     isNewCustomer: function() {
                         return this.customerId === null && !this.customerNameHasError;
                     }
                 },
                 methods: {
+                    getInputClass: function(hasError) {
+                        return getInputClass(hasError)
+                    },
                     getRowIndex0: function (item) {
                         return this.rows.indexOf(item);
                     },
@@ -156,12 +168,12 @@
                     },
                     addRow: function(item) {
                         var index = this.getRowIndex(item);
-                        var newRow = { rawCode: '', rawName: '', rawUom: '', rawQty: 0 };
-                        this.rows.splice(index, 0, newRow);
+                        this.rows.splice(index, 0, this.createRow());
                     },
                     removeRow: function(item) {
                         var index = this.rows.indexOf(item);
                         this.rows.splice(index, 1);
+                        this.createEmptyRowIfNecessary();
                     },
                     saveRawItems: function () {
                         this.saveRawItemsStarted = true;
@@ -207,6 +219,35 @@
                                 // any error handler
                             });
                     },
+                    createRow: function() {
+                        return { rawCode: '', rawName: '', rawUom: '', rawQty: 0 };
+                    },
+                    createEmptyRowIfNecessary: function() {
+                        if (this.rows.length === 0) {
+                            this.rows.push(this.createRow());
+                        }
+                    },
+                    isValidName: function(val) {
+                        if (val === '') return false;
+                        return true;
+                    },
+                    isValidUom: function(val) {
+                        if (val === '') return false;
+                        return true;
+                    },
+                    isValidQty: function(val) {
+                        if (val <= 0) return false;
+                        return true;
+                    },
+                    isValidRow: function(row) {
+                        return this.isValidName(row.rawName) &&
+                            this.isValidUom(row.rawUom) &&
+                            this.isValidQty(row.rawQty);
+                    },
+                    allRowAreValid: function() {
+                        var vm = this;
+                        return _.every(this.rows, function (r) { return vm.isValidRow(r) });
+                    }
                 }
             });
         })();
